@@ -34,18 +34,24 @@ fi
 # Iniciar Frontend (Next.js)
 echo "Iniciando Frontend Next.js..."
 cd /home/thanos/dashboard/frontend
-npm run dev > /tmp/frontend_next.log 2>&1 &
+npx next dev --port 3000 > /tmp/frontend_next.log 2>&1 &
 FRONTEND_PID=$!
 echo "Frontend PID: $FRONTEND_PID"
-sleep 5
+sleep 10
 
 # Verificar se Frontend está rodando
 if curl -s http://localhost:3000 > /dev/null 2>&1; then
     echo "Frontend: OK (http://localhost:3000)"
 else
-    echo "Frontend: ERRO - Verifique /tmp/frontend_next.log"
-    tail -20 /tmp/frontend_next.log
-    exit 1
+    echo "Frontend: VERIFICANDO..."
+    sleep 5
+    if curl -s http://localhost:3000 > /dev/null 2>&1; then
+        echo "Frontend: OK (http://localhost:3000)"
+    else
+        echo "Frontend: ERRO - Verifique /tmp/frontend_next.log"
+        tail -30 /tmp/frontend_next.log
+        exit 1
+    fi
 fi
 
 echo ""
@@ -63,3 +69,6 @@ echo "  Frontend: /tmp/frontend_next.log"
 echo ""
 echo "Para parar:"
 echo "  kill $BACKEND_PID $FRONTEND_PID"
+echo ""
+echo "Para acessar de outra máquina:"
+echo "  Use o IP: 192.168.1.X"
