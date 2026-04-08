@@ -1,0 +1,335 @@
+/* App layout global */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-dark-950 text-dark-100 antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+
+  /* Font smoothing */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-revenue-accent/30 text-white;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-dark-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-dark-500;
+  }
+}
+
+/* ============================================
+   Custom Components
+   ============================================ */
+
+@layer components {
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-gradient-to-br from-dark-800/80 to-dark-900/90 
+           backdrop-blur-md border border-dark-700/50 
+           rounded-2xl shadow-card;
+  }
+
+  /* Glow effects */
+  .glow-green {
+    @apply shadow-glow-green;
+  }
+
+  .glow-orange {
+    @apply shadow-glow-orange;
+  }
+
+  .glow-blue {
+    @apply shadow-glow-blue;
+  }
+
+  /* Animated gradient background */
+  .gradient-animate {
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* KPI Card */
+  .kpi-card {
+    @apply glass-card p-6 transition-all duration-300;
+  }
+
+  .kpi-card:hover {
+    @apply shadow-card-hover border-dark-600;
+  }
+
+  /* Chart container */
+  .chart-container {
+    @apply glass-card p-4 relative;
+    min-height: 300px;
+  }
+
+  /* Metric value */
+  .metric-value {
+    @apply text-3xl md:text-4xl font-bold font-display tracking-tight;
+  }
+
+  /* Metric label */
+  .metric-label {
+    @apply text-sm text-dark-400 font-medium;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply bg-revenue-500/20 text-revenue-accent;
+  }
+
+  .badge-warning {
+    @apply bg-expense-500/20 text-expense-500;
+  }
+
+  .badge-danger {
+    @apply bg-red-500/20 text-red-400;
+  }
+
+  .badge-info {
+    @apply bg-forecast-500/20 text-forecast-accent;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    @apply absolute z-50 px-3 py-2 text-sm bg-dark-850 border border-dark-700 
+           rounded-lg shadow-lg opacity-0 invisible transition-all duration-200;
+  }
+
+  .tooltip-active {
+    @apply opacity-100 visible;
+  }
+}
+
+/* ============================================
+   Utilities
+   ============================================ */
+
+@layer utilities {
+  /* Hide scrollbar */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Gradient text */
+  .text-gradient-green {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-revenue-400 to-revenue-accent;
+  }
+
+  .text-gradient-orange {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-expense-400 to-expense-accent;
+  }
+
+  .text-gradient-blue {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-forecast-400 to-forecast-accent;
+  }
+
+  /* Chart lines animation */
+  .chart-line-draw {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: draw 2s ease-out forwards;
+  }
+
+  @keyframes draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Pulse animation for data loading */
+  .pulse-data {
+    animation: pulse-data 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-data {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  /* Fade in animations */
+  .fade-in {
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .fade-in-up {
+    animation: fadeInUp 0.5s ease-out;
+  }
+
+  .fade-in-down {
+    animation: fadeInDown 0.5s ease-out;
+  }
+
+  /* Stagger children animation */
+  .stagger-children > * {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+
+  .stagger-children > *:nth-child(1) {
+    animation-delay: 0s;
+  }
+  .stagger-children > *:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  .stagger-children > *:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  .stagger-children > *:nth-child(4) {
+    animation-delay: 0.3s;
+  }
+  .stagger-children > *:nth-child(n + 5) {
+    animation-delay: 0.4s;
+  }
+}
+
+/* ============================================
+   Recharts Custom Styles
+   ============================================ */
+
+.recharts-wrapper {
+  @apply font-sans;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(51, 65, 85, 0.3);
+}
+
+.recharts-tooltip-wrapper {
+  @apply outline-none;
+}
+
+.custom-tooltip {
+  @apply bg-dark-850 border border-dark-700 rounded-lg p-3 shadow-lg;
+}
+
+.recharts-legend-wrapper {
+  @apply text-dark-400;
+}
+
+/* ============================================
+   D3 Custom Styles  
+   ============================================ */
+
+.sankey-node rect {
+  @apply cursor-pointer transition-opacity duration-200;
+}
+
+.sankey-node rect:hover {
+  opacity: 0.9;
+}
+
+.sankey-link {
+  @apply fill-none transition-opacity duration-200;
+}
+
+.sankey-link:hover {
+  opacity: 0.8;
+}
+
+/* ============================================
+   Responsive Charts
+   ============================================ */
+
+@media (max-width: 768px) {
+  .chart-container {
+    min-height: 250px;
+  }
+
+  .metric-value {
+    @apply text-2xl;
+  }
+}
+
+@media (max-width: 640px) {
+  .chart-container {
+    min-height: 200px;
+  }
+
+  .metric-value {
+    @apply text-xl;
+  }
+
+  .kpi-card {
+    @apply p-4;
+  }
+}
