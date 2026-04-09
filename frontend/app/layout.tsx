@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Sora, JetBrains_Mono } from 'next/font/google';
+import Providers from '@/components/Providers';
 import './globals.css';
 
 // Fontes
@@ -77,15 +78,6 @@ export const metadata: Metadata = {
       'Visualize receitas, despesas e previsões orçamentárias do município de Bandeirantes MS.',
     images: ['/og-image.png'],
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-  },
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
-  ],
   manifest: '/manifest.json',
   icons: {
     icon: [
@@ -94,6 +86,16 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: '/apple-touch-icon.png' }],
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+  ],
 };
 
 export default function RootLayout({
@@ -106,9 +108,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${sora.variable} ${jetbrainsMono.variable} font-sans`}
       >
-        <div className="min-h-screen bg-dark-950">
-          {children}
-        </div>
+        <Providers>
+          <div className="min-h-screen bg-dark-950">
+            {children}
+          </div>
+        </Providers>
       </body>
     </html>
   );

@@ -16,6 +16,8 @@ from fastapi.encoders import jsonable_encoder
 
 from backend.api.schemas import HealthCheckResponse, ErrorResponse
 from backend.api.routes import receitas_router, despesas_router, kpis_router
+from backend.api.routes.forecast import router as forecast_router
+from backend.api.routes.export import router as export_router
 from backend.infrastructure.database.connection import db_manager, init_database
 
 # Diretório base do projeto
@@ -115,6 +117,8 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(receitas_router, prefix="/api/v1")
 app.include_router(despesas_router, prefix="/api/v1")
 app.include_router(kpis_router, prefix="/api/v1")
+app.include_router(forecast_router, prefix="/api/v1")
+app.include_router(export_router, prefix="/api/v1")
 
 
 # Endpoint de health check

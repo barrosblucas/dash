@@ -3,6 +3,7 @@
 import { Menu, Bell, Search, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
 import { MUNICIPIO } from '@/lib/constants';
+import FilterPanel from '@/components/ui/FilterPanel';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -26,16 +27,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
               <Menu className="w-5 h-5" />
             </button>
 
-            {/* Search */}
-            <div className="hidden sm:flex items-center">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-500" />
-                <input
-                  type="text"
-                  placeholder="Buscar..."
-                  className="pl-10 pr-4 py-2 w-64 bg-dark-800 border border-dark-700 rounded-lg text-dark-100 placeholder-dark-500 focus:outline-none focus:border-revenue-500 focus:ring-1 focus:ring-revenue-500 transition-colors"
-                />
-              </div>
+            {/* Filter Panel */}
+            <div className="hidden sm:block">
+              <FilterPanel />
             </div>
           </div>
 

@@ -17,7 +17,8 @@ sleep 2
 # Iniciar Backend (FastAPI)
 echo "Iniciando Backend API..."
 cd /home/thanos/dashboard
-backend/venv/bin/uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --app-dir . > /tmp/backend_api.log 2>&1 &
+source venv/bin/activate
+venv/bin/uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --app-dir . > /tmp/backend_api.log 2>&1 &
 BACKEND_PID=$!
 echo "Backend PID: $BACKEND_PID"
 sleep 3

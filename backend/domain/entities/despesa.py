@@ -14,9 +14,9 @@ from typing import Optional
 class TipoDespesa(str, Enum):
     """Enumeração dos tipos de despesa."""
 
-    CORRENTE = "DESPESAS CORRENTES"
-    CAPITAL = "DESPESAS DE CAPITAL"
-    CONTINGENCIA = "RESERVA DE CONTINGÊNCIA"
+    CORRENTE = "CORRENTE"
+    CAPITAL = "CAPITAL"
+    CONTINGENCIA = "CONTINGENCIA"
 
 
 @dataclass

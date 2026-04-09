@@ -193,6 +193,29 @@ class ErrorResponse(BaseModel):
     code: Optional[str] = Field(None, description="Código do erro")
 
 
+class ForecastPoint(BaseModel):
+    """Schema para um ponto de previsão."""
+
+    data: date = Field(..., description="Data da previsão")
+    valor_previsto: Decimal = Field(..., description="Valor previsto")
+    intervalo_inferior: Decimal = Field(
+        ..., description="Intervalo inferior de confiança"
+    )
+    intervalo_superior: Decimal = Field(
+        ..., description="Intervalo superior de confiança"
+    )
+    tendencia: str = Field(..., description="Tendência: 'alta', 'baixa' ou 'estavel'")
+
+
+class ForecastResponse(BaseModel):
+    """Schema de resposta para forecasting."""
+
+    tipo: str = Field(..., description="Tipo: 'receitas' ou 'despesas'")
+    horizonte_meses: int = Field(..., description="Número de meses previstos")
+    nivel_confianca: float = Field(..., description="Nível de confiança (0-1)")
+    previsoes: List[ForecastPoint] = Field(..., description="Lista de previsões")
+
+
 class ETLStatusResponse(BaseModel):
     """Schema de resposta para status do ETL."""
 

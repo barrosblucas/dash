@@ -374,7 +374,7 @@ export const API_ENDPOINTS = {
     kpi: '/api/v1/receitas/kpi',
     by_categoria: '/api/v1/receitas/por-categoria',
     by_fonte: '/api/v1/receitas/por-fonte',
-    export: '/api/v1/receitas/export',
+    export: '/api/v1/export/receitas/excel',
   },
   
   despesas: {
@@ -384,7 +384,7 @@ export const API_ENDPOINTS = {
     kpi: '/api/v1/despesas/kpi',
     by_funcao: '/api/v1/despesas/por-funcao',
     by_natureza: '/api/v1/despesas/por-natureza',
-    export: '/api/v1/despesas/export',
+    export: '/api/v1/export/despesas/excel',
   },
   
   forecast: {
@@ -394,9 +394,15 @@ export const API_ENDPOINTS = {
   },
   
   dashboard: {
-    summary: '/api/v1/dashboard/summary',
-    comparativo: '/api/v1/dashboard/comparativo',
-    sazonalidade: '/api/v1/dashboard/sazonalidade',
+    summary: '/api/v1/kpis',
+    comparativo: '/api/v1/kpis/anual/',
+    sazonalidade: '/api/v1/kpis/mensal/',
+  },
+  
+  export: {
+    receitas_excel: '/api/v1/export/receitas/excel',
+    despesas_excel: '/api/v1/export/despesas/excel',
+    kpis_excel: '/api/v1/export/kpis/excel',
   },
   
   websocket: {

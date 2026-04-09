@@ -1,61 +1,152 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG } from '@/lib/constants';
-import type { TimeSeriesDatum } from '@/types';
+import apiClient from '@/services/api';
+import { useDashboardFilters } from '@/stores/filtersStore';
+
+interface KPIsMensal {
+  mes: number;
+  ano: number;
+  total_receitas: number;
+  total_despesas: number;
+  saldo: number;
+}
+
+interface KPIsResponse {
+  periodo: string;
+  receitas_total: number;
+  despesas_total: number;
+  saldo: number;
+  percentual_execucao_receita: number | null;
+  percentual_execucao_despesa: number | null;
+  kpis_mensais: KPIsMensal[] | null;
+  kpis_anuais: Array<{
+    ano: number;
+    total_receitas: number;
+    total_despesas: number;
+    saldo: number;
+  }> | null;
+}
+
+const MESES_ABREV = [
+  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
+];
+
+async function fetchMonthlyExpense(ano: number): Promise<KPIsResponse> {
+  const response = await apiClient.get<KPIsResponse>(`/api/v1/kpis/mensal/${ano}`);
+  return response;
+}
 
 interface ExpenseChartProps {
-  data?: TimeSeriesDatum[];
   height?: number;
   className?: string;
 }
 
-// Dados mock para desenvolvimento
-const mockData: TimeSeriesDatum[] = [
-  { date: new Date('2024-01'), value: 9000000, label: 'Jan' },
-  { date: new Date('2024-02'), value: 9500000, label: 'Fev' },
-  { date: new Date('2024-03'), value: 9200000, label: 'Mar' },
-  { date: new Date('2024-04'), value: 9800000, label: 'Abr' },
-  { date: new Date('2024-05'), value: 10200000, label: 'Mai' },
-  { date: new Date('2024-06'), value: 10100000, label: 'Jun' },
-  { date: new Date('2024-07'), value: 10500000, label: 'Jul' },
-  { date: new Date('2024-08'), value: 10800000, label: 'Ago' },
-  { date: new Date('2024-09'), value: 11000000, label: 'Set' },
-  { date: new Date('2024-10'), value: 11200000, label: 'Out' },
-  { date: new Date('2024-11'), value: 11500000, label: 'Nov' },
-  { date: new Date('2024-12'), value: 11800000, label: 'Dez' },
-];
-
 export default function ExpenseChart({
-  data = mockData,
   height = 300,
   className = '',
 }: ExpenseChartProps) {
-  const chartData = data.map((item) => ({
-    ...item,
-    formattedDate: item.label || `${item.date.getMonth() + 1}/${item.date.getFullYear()}`,
-    formattedValue: formatCurrency(item.value, { compact: true, showSymbol: false }),
-  }));
+  const { anoSelecionado, compararComAnoAnterior } = useDashboardFilters();
+
+  // Buscar dados do ano selecionado
+  const { data: kpisResponse, isLoading, error } = useQuery({
+    queryKey: ['kpis', 'mensal', 'despesas', anoSelecionado],
+    queryFn: () => fetchMonthlyExpense(anoSelecionado),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Buscar dados do ano anterior para comparação
+  const anoAnterior = anoSelecionado - 1;
+  const { data: kpisAnterior } = useQuery({
+    queryKey: ['kpis', 'mensal', 'despesas', anoAnterior],
+    queryFn: () => fetchMonthlyExpense(anoAnterior),
+    enabled: compararComAnoAnterior,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  if (isLoading) {
+    return (
+      <div className={`chart-container ${className}`}>
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-dark-100">Despesas</h3>
+          <p className="text-sm text-dark-400">Carregando dados...</p>
+        </div>
+        <div className="animate-pulse" style={{ height }}>
+          <div className="w-full h-full bg-dark-800/50 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !kpisResponse?.kpis_mensais) {
+    return (
+      <div className={`chart-container ${className}`}>
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-dark-100">Despesas</h3>
+          <p className="text-sm text-red-400">Erro ao carregar dados</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Preparar dados para o gráfico
+  const chartData = kpisResponse.kpis_mensais.map((kpi, index) => {
+    const mesAnterior = kpisAnterior?.kpis_mensais?.find(m => m.mes === kpi.mes);
+    
+    return {
+      mes: kpi.mes,
+      name: MESES_ABREV[kpi.mes - 1] || `${kpi.mes}`,
+      despesas: Number(kpi.total_despesas),
+      despesasAnterior: mesAnterior ? Number(mesAnterior.total_despesas) : undefined,
+      despesasFormatado: formatCurrency(kpi.total_despesas, { compact: true, showSymbol: false }),
+    };
+  });
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || !payload.length) return null;
 
+    const despesas = payload[0]?.value;
+    const despesasAnterior = payload[1]?.value;
+
     return (
       <div className="custom-tooltip bg-dark-850 border border-dark-700 rounded-lg p-3 shadow-lg">
-        <p className="text-xs text-dark-400 mb-1">{label}</p>
-        <p className="text-sm font-semibold text-expense-DEFAULT">
-          {formatCurrency(payload[0].value)}
-        </p>
+        <p className="text-xs text-dark-400 mb-1 font-medium">{label}</p>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-expense-DEFAULT">
+            {`${anoSelecionado}: ${formatCurrency(despesas)}`}
+          </p>
+          {compararComAnoAnterior && despesasAnterior && (
+            <p className="text-xs text-dark-400">
+              {`${anoAnterior}: ${formatCurrency(despesasAnterior)}`}
+            </p>
+          )}
+        </div>
       </div>
     );
   };
 
+  // Total do ano
+  const totalAno = chartData.reduce((sum, item) => sum + item.despesas, 0);
+
   return (
     <div className={`chart-container ${className}`}>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-dark-100">Despesas</h3>
-        <p className="text-sm text-dark-400">Execução orçamentária</p>
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-dark-100">Despesas</h3>
+          <p className="text-sm text-dark-400">Execução orçamentária - {anoSelecionado}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-xs text-dark-400">Total {anoSelecionado}</p>
+          <p className="text-lg font-bold text-expense-DEFAULT">
+            {formatCurrency(totalAno, { compact: true })}
+          </p>
+        </div>
       </div>
 
       <ResponsiveContainer width="100%" height={height}>
@@ -70,7 +161,7 @@ export default function ExpenseChart({
           />
 
           <XAxis
-            dataKey="formattedDate"
+            dataKey="name"
             axisLine={false}
             tickLine={false}
             tick={{ fill: COLORS.text.muted, fontSize: 12 }}
@@ -85,8 +176,18 @@ export default function ExpenseChart({
 
           <Tooltip content={<CustomTooltip />} />
 
+          {compararComAnoAnterior && (
+            <Bar
+              dataKey="despesasAnterior"
+              fill={COLORS.expense.chart.primary}
+              fillOpacity={0.3}
+              radius={[4, 4, 0, 0]}
+              animationDuration={CHART_CONFIG.animation.duration}
+            />
+          )}
+
           <Bar
-            dataKey="value"
+            dataKey="despesas"
             fill={COLORS.expense.chart.primary}
             radius={[4, 4, 0, 0]}
             animationDuration={CHART_CONFIG.animation.duration}
@@ -101,6 +202,19 @@ export default function ExpenseChart({
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+
+      {compararComAnoAnterior && (
+        <div className="mt-3 flex items-center justify-center gap-6 text-xs text-dark-400">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-expense-DEFAULT rounded opacity-80"></div>
+            <span>{anoSelecionado}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-expense-DEFAULT rounded opacity-30"></div>
+            <span>{anoAnterior}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
