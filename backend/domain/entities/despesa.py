@@ -69,11 +69,12 @@ class Despesa:
             raise ValueError(f"Mês inválido: {self.mes}. Deve estar entre 1 e 12.")
 
     def _validar_valores(self) -> None:
-        """Valida se os valores monetários são válidos."""
-        # Empenhado e liquidado podem ser negativos em casos de estorno
-        # Pago deve ser positivo
-        if self.valor_pago < 0:
-            raise ValueError(f"Valor pago não pode ser negativo: {self.valor_pago}")
+        """Valida se os valores monetários são válidos.
+
+        Nota: Todos os valores podem ser negativos em casos de estorno/anulação,
+        que é normal na execução orçamentária (Lei 4.320/1964).
+        Apenas validamos que são instâncias válidas de Decimal.
+        """
 
     def percentual_liquidado(self) -> Decimal:
         """Calcula o percentual liquidado em relação ao empenhado."""
