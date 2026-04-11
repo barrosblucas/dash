@@ -38,7 +38,7 @@ export default function KPISection() {
   const { data: kpisResponse, isLoading, error } = useQuery({
     queryKey: [...QUERY_KEYS.dashboard.all, 'summary', anoSelecionado],
     queryFn: async () => {
-      const response = await apiClient.get<KPIsResponse>('/api/v1/kpis/', {
+      const response = await apiClient.get<KPIsResponse>('/api/v1/kpis', {
         params: { ano: anoSelecionado },
       });
       return response;

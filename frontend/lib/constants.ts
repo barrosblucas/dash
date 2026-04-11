@@ -395,8 +395,8 @@ export const API_ENDPOINTS = {
   
   dashboard: {
     summary: '/api/v1/kpis',
-    comparativo: '/api/v1/kpis/anual/',
-    sazonalidade: '/api/v1/kpis/mensal/',
+    comparativo: '/api/v1/kpis/anual',
+    sazonalidade: '/api/v1/kpis/mensal',
   },
   
   export: {

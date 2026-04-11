@@ -124,3 +124,100 @@ Correção do bug onde a opção "Comparar com ano anterior" não surtia efeito 
 
 ### Classificação
 - `borda_externa` — correção de comportamento visual no frontend
+
+---
+
+## Página Receitas Municipais
+
+Criação da página dedicada de receitas no frontend com tabela paginada, cards resumo, gráfico de receitas e exportação.
+
+### Classificação
+- `borda_externa` (UI) — nova página de visualização de dados
+
+### Arquivos criados
+- `frontend/app/receitas/page.tsx` (11 linhas) — Server Component com metadata
+- `frontend/app/receitas/receitas-client.tsx` (260 linhas) — Client Component com toda a lógica
+
+### Funcionalidades
+1. Header com filtro de ano e tipo de receita (CORRENTE/CAPITAL/TODOS)
+2. 3 cards resumo: Total Arrecadado, Total Previsto, % Execução
+3. Gráfico RevenueChart com lazy loading
+4. Tabela paginada com colunas: Ano, Mês, Categoria, Tipo, Previsto, Arrecadado, Anulado, % Execução
+5. Botões de exportação CSV e JSON
+6. Dark theme consistente com o dashboard
+
+### Validação
+- `npx tsc --noEmit` ✅
+- `npm run build` ✅ (rota `/receitas` gerada com 3.41 kB)
+
+---
+
+## feat: Páginas dedicadas do sidebar — Despesas, Previsões, Comparativo e Relatórios
+
+Implementação das 4 páginas restantes do sidebar e limpeza de links mortos (Configurações, Ajuda). Agora todas as rotas da navegação lateral apontam para páginas funcionais.
+
+### Classificação
+- `borda_externa` (UI) — novas páginas de visualização e exportação
+
+### Arquivos criados
+- `frontend/app/despesas/page.tsx` — Server Component com metadata
+- `frontend/app/despesas/despesas-client.tsx` — Client Component com tabela, filtros, gráfico, paginação e exportação CSV/JSON
+- `frontend/app/forecast/page.tsx` — Server Component com metadata
+- `frontend/app/forecast/forecast-client.tsx` — Client Component com projeção configurável (anos), cards de tendência
+- `frontend/app/comparativo/page.tsx` — Server Component com metadata
+- `frontend/app/comparativo/comparativo-client.tsx` — Client Component com tabela ano-a-ano e estatísticas resumo
+- `frontend/app/relatorios/page.tsx` — Server Component com metadata
+- `frontend/app/relatorios/relatorios-client.tsx` — Client Component com exportação CSV/JSON para receitas, despesas e KPIs
+
+### Arquivos modificados
+- `frontend/components/layouts/Sidebar.tsx` — removidos links mortos (Configurações, Ajuda), imports não usados (Settings, HelpCircle), `secondaryNavigation` e divisor sem conteúdo
+
+### Funcionalidades por página
+1. **Despesas** (`/despesas`): tabela paginada, filtro de ano e categoria, gráfico, exportação CSV/JSON
+2. **Previsões** (`/forecast`): anos de projeção configuráveis, cards de tendência (crescimento receita, despesa, saldo projetado)
+3. **Comparativo** (`/comparativo`): tabela ano-a-ano com receitas, despesas, saldo, variação percentual e estatísticas resumo
+4. **Relatórios** (`/relatorios`): centro de exportação com download CSV/JSON para receitas, despesas e KPIs
+
+### Impacto para o usuário
+- Sidebar 100% funcional — nenhum link morto
+- 5 páginas dedicadas com filtros, gráficos e exportação
+- Navegação consistente com o dark theme do dashboard
+
+---
+
+## fix: CORS redirect + serialização de receitas + configuração de rede
+
+Correção de três bugs que impediam o acesso do frontend às APIs quando acessado via IP da rede local (192.168.1.21:3000).
+
+### Problemas corrigidos
+
+1. **CORS redirect (307)**: O FastAPI redirecionava `/api/v1/receitas` → `/api/v1/receitas/` (trailing slash). O redirect perdia os headers CORS, bloqueando o browser. Corrigido com `redirect_slashes=False` no `FastAPI()`.
+
+2. **Serialização de tipo de receita**: O campo `tipo` na entidade de domínio usava `.value` (ex: `RECEITAS CORRENTES`) mas o schema Pydantic esperava `.name` (ex: `CORRENTE`). Corrigido de `r.tipo.value` para `r.tipo.name` nas rotas e endpoints.
+
+3. **Backend bindado em 127.0.0.1**: O `start.sh` e `dev.sh` iniciavam uvicorn em `--host 127.0.0.1`, impedindo acesso de outros dispositivos na rede. Corrigido para `--host 0.0.0.0`. O Next.js também foi corrigido para `--hostname 0.0.0.0`.
+
+4. **Frontend API URL**: O `.env.local` apontava para `http://localhost:8000`, inacessível do dispositivo cliente. Corrigido para `http://192.168.1.21:8000`.
+
+5. **Trailing slashes em hardcoded URLs**: Removidas trailing slashes de todas as URLs hardcoded no frontend (`/api/v1/kpis/anual/` → `/api/v1/kpis/anual`, `/api/v1/kpis/resumo/` → `/api/v1/kpis/resumo`, etc.)
+
+### Backend — arquivos modificados
+- `backend/api/main.py` — adicionado `redirect_slashes=False` no `FastAPI()`
+- `backend/api/routes/receitas.py` — `tipo=r.tipo.value` → `tipo=r.tipo.name`; `@router.get("/")` → `@router.get("")`
+- `backend/api/routes/despesas.py` — `@router.get("/")` → `@router.get("")`
+- `backend/api/routes/kpis.py` — `@router.get("/")` → `@router.get("")`; `/anual/` → `/anual`; `/resumo/` → `/resumo`
+- `start.sh` — `--host 127.0.0.1` → `--host 0.0.0.0`; `next dev --port 3000` → `next dev --port 3000 --hostname 0.0.0.0`
+- `dev.sh` — mesmo padrão de bind
+
+### Frontend — arquivos modificados
+- `frontend/.env.local` — `NEXT_PUBLIC_API_URL` apontando para `http://192.168.1.21:8000`
+- `frontend/services/api.ts` — removidas trailing slashes de URLs hardcoded (`/kpis/anual/` → `/kpis/anual`, `/kpis/resumo/` → `/kpis/resumo`, `/receitas/categorias/` → `/receitas/categorias`)
+- `frontend/lib/constants.ts` — removidas trailing slashes (`/kpis/anual/` → `/kpis/anual`, `/kpis/mensal/` → `/kpis/mensal`)
+- `frontend/components/dashboard/KPISection.tsx` — `/api/v1/kpis/` → `/api/v1/kpis`
+- `frontend/components/dashboard/ForecastSection.tsx` — `/api/v1/kpis/anual/?` → `/api/v1/kpis/anual?`
+- `frontend/components/dashboard/ComparativeSection.tsx` — `/api/v1/kpis/anual/?` → `/api/v1/kpis/anual?`
+- `frontend/app/forecast/forecast-client.tsx` — `/api/v1/kpis/anual/?` → `/api/v1/kpis/anual?`
+- `frontend/app/comparativo/comparativo-client.tsx` — `/api/v1/kpis/anual/?` → `/api/v1/kpis/anual?`
+
+### Classificação
+- `borda_externa` — correção de contratos de API e configuração de deploy

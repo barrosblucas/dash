@@ -58,6 +58,16 @@ Snapshot: 2026-04-11
 - `components/dashboard/`: componentes do dashboard
 - `components/kpi/`: cards de KPI
 - `components/layouts/`: layouts compartilhados
+- `app/receitas/page.tsx`: página de receitas municipais
+- `app/receitas/receitas-client.tsx`: componente client da página de receitas
+- `app/despesas/page.tsx`: página de despesas municipais
+- `app/despesas/despesas-client.tsx`: componente client da página de despesas
+- `app/forecast/page.tsx`: página de previsões financeiras
+- `app/forecast/forecast-client.tsx`: componente client da página de previsões
+- `app/comparativo/page.tsx`: página de comparativo anual
+- `app/comparativo/comparativo-client.tsx`: componente client do comparativo
+- `app/relatorios/page.tsx`: página de relatórios e exportação
+- `app/relatorios/relatorios-client.tsx`: componente client de relatórios
 - `components/ui/ChartTypeSelector.tsx`: seletor reutilizável de tipo de gráfico (bar/line/area/pie)
 - `components/ui/index.ts`: barrel de exports dos componentes UI
 - `components/Providers.tsx`: providers React (TanStack Query)

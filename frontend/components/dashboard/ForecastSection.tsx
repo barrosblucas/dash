@@ -28,7 +28,7 @@ async function fetchYearlyKPIs(anoInicio?: number, anoFim?: number): Promise<KPI
   if (anoInicio) params.append('ano_inicio', anoInicio.toString());
   if (anoFim) params.append('ano_fim', anoFim.toString());
   
-  const response = await apiClient.get<KPIsResponse>(`/api/v1/kpis/anual/?${params.toString()}`);
+  const response = await apiClient.get<KPIsResponse>(`/api/v1/kpis/anual?${params.toString()}`);
   return response;
 }
 

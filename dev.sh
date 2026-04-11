@@ -61,13 +61,13 @@ start_apps() {
     cd "$PROJECT_DIR"
 
     echo "[$(date '+%H:%M:%S')] Iniciando Backend (FastAPI)..."
-    uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --reload --log-level info > "$BACKEND_LOG" 2>&1 &
+    uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload --log-level info > "$BACKEND_LOG" 2>&1 &
     BACKEND_PID=$!
     echo "  -> PID: $BACKEND_PID | Porta: 8000 | Log: $BACKEND_LOG"
 
     echo "[$(date '+%H:%M:%S')] Iniciando Frontend (Next.js)..."
     cd "$FRONTEND_DIR"
-    npx next dev --port 3000 > "$FRONTEND_LOG" 2>&1 &
+    npx next dev --port 3000 --hostname 0.0.0.0 > "$FRONTEND_LOG" 2>&1 &
     FRONTEND_PID=$!
     echo "  -> PID: $FRONTEND_PID | Porta: 3000 | Log: $FRONTEND_LOG"
 

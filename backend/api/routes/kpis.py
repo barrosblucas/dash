@@ -17,7 +17,7 @@ from backend.infrastructure.database.models import ReceitaModel, DespesaModel
 router = APIRouter(prefix="/kpis", tags=["kpis"])
 
 
-@router.get("/", response_model=KPIsResponse, summary="KPIs principais")
+@router.get("", response_model=KPIsResponse, summary="KPIs principais")
 async def obter_kpis(
     ano: Optional[int] = Query(
         None, ge=2013, le=2030, description="Ano para cálculo dos KPIs"
@@ -162,7 +162,7 @@ async def obter_kpis_mensal(
     )
 
 
-@router.get("/anual/", response_model=KPIsResponse, summary="KPIs anuais")
+@router.get("/anual", response_model=KPIsResponse, summary="KPIs anuais")
 async def obter_kpis_anuais(
     ano_inicio: Optional[int] = Query(
         None, ge=2013, le=2030, description="Ano inicial"
@@ -286,7 +286,7 @@ async def obter_kpis_anuais(
     )
 
 
-@router.get("/resumo/", response_model=dict, summary="Resumo geral")
+@router.get("/resumo", response_model=dict, summary="Resumo geral")
 async def obter_resumo_geral(db: Session = Depends(get_db)):
     """
     Obtém resumo geral dos dados financeiros.

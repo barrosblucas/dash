@@ -170,7 +170,7 @@ export const receitasApi = {
   },
 
   getCategories: async (): Promise<string[]> => {
-    const url = `${API_ENDPOINTS.receitas.list}/categorias/`;
+    const url = `${API_ENDPOINTS.receitas.list}/categorias`;
     return apiClient.get<string[]>(url);
   },
 };
@@ -242,11 +242,11 @@ export const kpisApi = {
   },
 
   getYearlyKPIs: async (ano_inicio?: number, ano_fim?: number): Promise<KPIsResponse> => {
-    return apiClient.get<KPIsResponse>('/api/v1/kpis/anual/', { params: { ano_inicio, ano_fim } });
+    return apiClient.get<KPIsResponse>('/api/v1/kpis/anual', { params: { ano_inicio, ano_fim } });
   },
 
   getSummary: async (): Promise<ResumoResponse> => {
-    return apiClient.get<ResumoResponse>('/api/v1/kpis/resumo/');
+    return apiClient.get<ResumoResponse>('/api/v1/kpis/resumo');
   },
 };
 

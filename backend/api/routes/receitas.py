@@ -23,7 +23,7 @@ from backend.domain.entities.receita import TipoReceita
 router = APIRouter(prefix="/receitas", tags=["receitas"])
 
 
-@router.get("/", response_model=ReceitaListResponse, summary="Lista receitas")
+@router.get("", response_model=ReceitaListResponse, summary="Lista receitas")
 async def listar_receitas(
     ano: Optional[int] = Query(None, ge=2013, le=2030, description="Filtrar por ano"),
     mes: Optional[int] = Query(None, ge=1, le=12, description="Filtrar por mês"),
@@ -105,7 +105,7 @@ async def listar_receitas(
             mes=r.mes,
             categoria=r.categoria,
             subcategoria=r.subcategoria,
-            tipo=r.tipo.value,
+            tipo=r.tipo.name,
             valor_previsto=r.valor_previsto,
             valor_arrecadado=r.valor_arrecadado,
             valor_anulado=r.valor_anulado,
@@ -163,7 +163,7 @@ async def buscar_receita(
         mes=receita.mes,
         categoria=receita.categoria,
         subcategoria=receita.subcategoria,
-        tipo=receita.tipo.value,
+        tipo=receita.tipo.name,
         valor_previsto=receita.valor_previsto,
         valor_arrecadado=receita.valor_arrecadado,
         valor_anulado=receita.valor_anulado,
@@ -172,7 +172,7 @@ async def buscar_receita(
 
 
 @router.get(
-    "/categorias/", response_model=list[str], summary="Lista categorias de receitas"
+    "/categorias", response_model=list[str], summary="Lista categorias de receitas"
 )
 async def listar_categorias(db: Session = Depends(get_db)):
     """
@@ -234,7 +234,7 @@ async def total_receitas_ano(
 
     return {
         "ano": ano,
-        "tipo": tipo_enum.value if tipo_enum else None,
+        "tipo": tipo_enum.name if tipo_enum else None,
         "total_arrecadado": float(total),
     }
 
@@ -290,6 +290,6 @@ async def total_receitas_mes(
     return {
         "ano": ano,
         "mes": mes,
-        "tipo": tipo_enum.value if tipo_enum else None,
+        "tipo": tipo_enum.name if tipo_enum else None,
         "total_arrecadado": float(total),
     }

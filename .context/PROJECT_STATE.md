@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-11
+Snapshot: 2026-04-11 (atualizado)
 
 ## Status geral
 
@@ -33,6 +33,12 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Gráfico combinado de receitas x despesas sobrepostos
 - [x] Dark finance theme com Tailwind CSS
 - [x] Tipos TypeScript espelhando schemas da API
+- [x] Páginas dedicadas para Receitas, Despesas, Previsões, Comparativo e Relatórios
+- [x] Navegação lateral funcional com todas as rotas implementadas
+- [x] Remoção de links mortos (Configurações, Ajuda) do menu lateral
+- [x] CORS e redirect corrigidos (FastAPI `redirect_slashes=False`, trailing slashes removidas)
+- [x] Serialização de tipo de receita corrigida (`.value` → `.name` para enum Pydantic)
+- [x] Backend e frontend bindados em `0.0.0.0` para acesso na rede local
 
 ### Dados
 - [x] Receitas: ~160 registros (2013–2026) extraídos de PDFs
@@ -81,7 +87,8 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 
 ## Ambiente
 
-- Backend: `http://localhost:8000` | Docs: `http://localhost:8000/docs`
-- Frontend: `http://localhost:3000`
+- Backend: `http://0.0.0.0:8000` (acessível na rede local) | Docs: `http://localhost:8000/docs`
+- Frontend: `http://0.0.0.0:3000` (acessível na rede local)
 - Banco: `/home/thanos/dashboard/database/dashboard.db`
 - Scripts: `bash dev.sh` (menu) ou `bash start.sh` (inicialização rápida)
+- API URL no frontend: `NEXT_PUBLIC_API_URL=http://192.168.1.21:8000`

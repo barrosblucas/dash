@@ -18,7 +18,7 @@ sleep 2
 echo "Iniciando Backend API..."
 cd /home/thanos/dashboard
 source venv/bin/activate
-venv/bin/uvicorn backend.api.main:app --host 127.0.0.1 --port 8000 --app-dir . > /tmp/backend_api.log 2>&1 &
+venv/bin/uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --app-dir . > /tmp/backend_api.log 2>&1 &
 BACKEND_PID=$!
 echo "Backend PID: $BACKEND_PID"
 sleep 3
@@ -35,7 +35,7 @@ fi
 # Iniciar Frontend (Next.js)
 echo "Iniciando Frontend Next.js..."
 cd /home/thanos/dashboard/frontend
-npx next dev --port 3000 > /tmp/frontend_next.log 2>&1 &
+npx next dev --port 3000 --hostname 0.0.0.0 > /tmp/frontend_next.log 2>&1 &
 FRONTEND_PID=$!
 echo "Frontend PID: $FRONTEND_PID"
 sleep 10

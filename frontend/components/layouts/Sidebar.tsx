@@ -10,8 +10,6 @@ import {
   BarChart3,
   Calendar,
   FileDown,
-  Settings,
-  HelpCircle,
 } from 'lucide-react';
 import { MUNICIPIO } from '@/lib/constants';
 
@@ -26,11 +24,6 @@ const navigation = [
   { name: 'Previsões', href: '/forecast', icon: BarChart3 },
   { name: 'Comparativo', href: '/comparativo', icon: Calendar },
   { name: 'Relatórios', href: '/relatorios', icon: FileDown },
-];
-
-const secondaryNavigation = [
-  { name: 'Configurações', href: '/configuracoes', icon: Settings },
-  { name: 'Ajuda', href: '/ajuda', icon: HelpCircle },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {
@@ -83,27 +76,6 @@ export default function Sidebar({ onClose }: SidebarProps) {
                 `}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-revenue-accent' : ''}`} />
-                {item.name}
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Divider */}
-        <div className="my-4 border-t border-dark-700" />
-
-        {/* Secondary navigation */}
-        <div className="space-y-1">
-          {secondaryNavigation.map((item) => {
-            const Icon = item.icon;
-            
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-dark-400 hover:text-dark-100 hover:bg-dark-800 transition-all"
-              >
-                <Icon className="w-5 h-5" />
                 {item.name}
               </Link>
             );

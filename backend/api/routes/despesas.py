@@ -21,7 +21,7 @@ from backend.domain.entities.despesa import TipoDespesa
 router = APIRouter(prefix="/despesas", tags=["despesas"])
 
 
-@router.get("/", response_model=DespesaListResponse, summary="Lista despesas")
+@router.get("", response_model=DespesaListResponse, summary="Lista despesas")
 async def listar_despesas(
     ano: Optional[int] = Query(None, ge=2013, le=2030, description="Filtrar por ano"),
     mes: Optional[int] = Query(None, ge=1, le=12, description="Filtrar por mês"),
