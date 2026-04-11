@@ -109,3 +109,18 @@ Implementação de seletor de tipo de gráfico reutilizável e gráfico combinad
 - `npx tsc --noEmit` ✅
 - `npm run build` ✅
 - Gates de governança: file length ✅, frontend boundaries ✅
+
+---
+
+## Fix: Comparação ano anterior no gráfico combinado Receitas x Despesas
+
+Correção do bug onde a opção "Comparar com ano anterior" não surtia efeito no gráfico combinado de receitas x despesas. Ao ativar a comparação, o gráfico agora exibe séries do ano corrente e do ano anterior lado a lado em todos os tipos de gráfico (bar, line, area, pie).
+
+### Fixed
+- **Gráfico Receitas x Despesas**: Corrigido bug onde a opção "Comparar com ano anterior" não surtia efeito no gráfico combinado. Agora ao ativar a comparação, o gráfico exibe séries do ano corrente e do ano anterior lado a lado em todos os tipos de gráfico (bar, line, area, pie).
+
+### Arquivo modificado
+- `frontend/components/charts/CombinedOverviewChart.tsx`
+
+### Classificação
+- `borda_externa` — correção de comportamento visual no frontend
