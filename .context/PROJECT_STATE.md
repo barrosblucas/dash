@@ -29,6 +29,8 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Hooks customizados (useDashboardData, useFinanceData, useExport)
 - [x] Store de filtros (Zustand)
 - [x] Componentes de gráficos, KPI e dashboard
+- [x] Seletor de tipo de gráfico reutilizável (bar/line/area/pie)
+- [x] Gráfico combinado de receitas x despesas sobrepostos
 - [x] Dark finance theme com Tailwind CSS
 - [x] Tipos TypeScript espelhando schemas da API
 

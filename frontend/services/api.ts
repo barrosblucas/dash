@@ -109,6 +109,37 @@ class ApiClient {
 // Instância única do cliente
 export const apiClient = new ApiClient();
 
+// Tipos de retorno das APIs
+interface ReceitaListResponse {
+  receitas: Array<{
+    id: number | null; ano: number; mes: number; categoria: string;
+    subcategoria: string | null; tipo: 'CORRENTE' | 'CAPITAL';
+    valor_previsto: number; valor_arrecadado: number; valor_anulado: number; fonte: string;
+  }>;
+  total: number; page: number; page_size: number; has_next: boolean;
+}
+
+interface DespesaListResponse {
+  despesas: Array<{
+    id: number | null; ano: number; mes: number; categoria: string | null;
+    subcategoria: string | null; tipo: 'CORRENTE' | 'CAPITAL' | 'CONTINGENCIA';
+    valor_empenhado: number; valor_liquidado: number; valor_pago: number; fonte: string;
+  }>;
+  total: number; page: number; page_size: number; has_next: boolean;
+}
+
+interface ReceitaResponse {
+  id: number | null; ano: number; mes: number; categoria: string;
+  subcategoria: string | null; tipo: 'CORRENTE' | 'CAPITAL';
+  valor_previsto: number; valor_arrecadado: number; valor_anulado: number; fonte: string;
+}
+
+interface DespesaResponse {
+  id: number | null; ano: number; mes: number; categoria: string | null;
+  subcategoria: string | null; tipo: 'CORRENTE' | 'CAPITAL' | 'CONTINGENCIA';
+  valor_empenhado: number; valor_liquidado: number; valor_pago: number; fonte: string;
+}
+
 // Serviços específicos da API
 export const receitasApi = {
   list: async (params?: {
@@ -120,15 +151,15 @@ export const receitasApi = {
     ano_fim?: number;
     limit?: number;
     offset?: number;
-  }) => {
-    return apiClient.get(API_ENDPOINTS.receitas.list, { params });
+  }): Promise<ReceitaListResponse> => {
+    return apiClient.get<ReceitaListResponse>(API_ENDPOINTS.receitas.list, { params });
   },
 
-  getById: async (id: number) => {
-    return apiClient.get(`${API_ENDPOINTS.receitas.list}/${id}`);
+  getById: async (id: number): Promise<ReceitaResponse> => {
+    return apiClient.get<ReceitaResponse>(`${API_ENDPOINTS.receitas.list}/${id}`);
   },
 
-  totalByYear: async (ano: number, tipo?: string) => {
+  totalByYear: async (ano: number, tipo?: string): Promise<{ ano: number; tipo: string | null; total_arrecadado: number }> => {
     const url = API_ENDPOINTS.receitas.list.replace('/api/v1/receitas', `/api/v1/receitas/total/ano/${ano}`);
     return apiClient.get(url, { params: { tipo } });
   },
@@ -138,7 +169,7 @@ export const receitasApi = {
     return apiClient.get(url, { params: { tipo } });
   },
 
-  getCategories: async () => {
+  getCategories: async (): Promise<string[]> => {
     const url = `${API_ENDPOINTS.receitas.list}/categorias/`;
     return apiClient.get<string[]>(url);
   },
@@ -154,15 +185,15 @@ export const despesasApi = {
     ano_fim?: number;
     limit?: number;
     offset?: number;
-  }) => {
-    return apiClient.get(API_ENDPOINTS.despesas.list, { params });
+  }): Promise<DespesaListResponse> => {
+    return apiClient.get<DespesaListResponse>(API_ENDPOINTS.despesas.list, { params });
   },
 
-  getById: async (id: number) => {
-    return apiClient.get(`${API_ENDPOINTS.despesas.list}/${id}`);
+  getById: async (id: number): Promise<DespesaResponse> => {
+    return apiClient.get<DespesaResponse>(`${API_ENDPOINTS.despesas.list}/${id}`);
   },
 
-  totalByYear: async (ano: number, tipo?: string) => {
+  totalByYear: async (ano: number, tipo?: string): Promise<{ ano: number; tipo: string | null; total_pago: number }> => {
     const url = API_ENDPOINTS.despesas.list.replace('/api/v1/despesas', `/api/v1/despesas/total/ano/${ano}`);
     return apiClient.get(url, { params: { tipo } });
   },
@@ -173,22 +204,49 @@ export const despesasApi = {
   },
 };
 
+interface KPIsResponse {
+  periodo: string;
+  receitas_total: number;
+  despesas_total: number;
+  saldo: number;
+  percentual_execucao_receita: number | null;
+  percentual_execucao_despesa: number | null;
+  kpis_mensais: Array<{
+    mes: number; ano: number; total_receitas: number;
+    total_despesas: number; saldo: number;
+    percentual_execucao_receita: number | null;
+    percentual_execucao_despesa: number | null;
+  }> | null;
+  kpis_anuais: Array<{
+    ano: number; total_receitas: number; total_despesas: number; saldo: number;
+    receitas_correntes: number | null; receitas_capital: number | null;
+    despesas_correntes: number | null; despesas_capital: number | null;
+  }> | null;
+}
+
+interface ResumoResponse {
+  total_registros: { receitas: number; despesas: number };
+  anos_disponiveis: { receitas: number[]; despesas: number[]; todos: number[] };
+  periodo: { inicio: number | null; fim: number | null };
+  status: string;
+}
+
 export const kpisApi = {
-  getKPIs: async (ano?: number) => {
-    return apiClient.get(API_ENDPOINTS.dashboard.summary, { params: { ano } });
+  getKPIs: async (ano?: number): Promise<KPIsResponse> => {
+    return apiClient.get<KPIsResponse>(API_ENDPOINTS.dashboard.summary, { params: { ano } });
   },
 
-  getMonthlyKPIs: async (ano: number) => {
+  getMonthlyKPIs: async (ano: number): Promise<KPIsResponse> => {
     const url = `/api/v1/kpis/mensal/${ano}`;
-    return apiClient.get(url);
+    return apiClient.get<KPIsResponse>(url);
   },
 
-  getYearlyKPIs: async (ano_inicio?: number, ano_fim?: number) => {
-    return apiClient.get('/api/v1/kpis/anual/', { params: { ano_inicio, ano_fim } });
+  getYearlyKPIs: async (ano_inicio?: number, ano_fim?: number): Promise<KPIsResponse> => {
+    return apiClient.get<KPIsResponse>('/api/v1/kpis/anual/', { params: { ano_inicio, ano_fim } });
   },
 
-  getSummary: async () => {
-    return apiClient.get('/api/v1/kpis/resumo/');
+  getSummary: async (): Promise<ResumoResponse> => {
+    return apiClient.get<ResumoResponse>('/api/v1/kpis/resumo/');
   },
 };
 

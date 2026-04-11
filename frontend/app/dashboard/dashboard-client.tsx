@@ -32,6 +32,11 @@ const ComparativeSection = dynamic(
   { loading: () => <LoadingSpinner />, ssr: false }
 );
 
+const CombinedOverviewChart = dynamic(
+  () => import('@/components/charts/CombinedOverviewChart'),
+  { loading: () => <LoadingSpinner />, ssr: false }
+);
+
 export default function DashboardClient() {
   return (
     <DashboardLayout>
@@ -41,7 +46,12 @@ export default function DashboardClient() {
           <KPISection />
         </Suspense>
 
-        {/* Gráfico de receitas */}
+        {/* Gráfico combinado: receitas x despesas */}
+        <Suspense fallback={<LoadingSpinner />}>
+          <CombinedOverviewChart />
+        </Suspense>
+
+        {/* Gráficos individuais de receitas e despesas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Suspense fallback={<LoadingSpinner />}>
             <RevenueChart />

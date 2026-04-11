@@ -1,73 +1,55 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import {
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  Area, AreaChart, Bar, BarChart, Line, LineChart,
+  PieChart, Pie, Cell, Legend,
+} from 'recharts';
+import type { TooltipProps } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG } from '@/lib/constants';
 import apiClient from '@/services/api';
 import { useDashboardFilters } from '@/stores/filtersStore';
+import ChartTypeSelector, { ChartTypeOption } from '@/components/ui/ChartTypeSelector';
 
 interface KPIsMensal {
-  mes: number;
-  ano: number;
-  total_receitas: number;
-  total_despesas: number;
-  saldo: number;
+  mes: number; ano: number; total_receitas: number; total_despesas: number; saldo: number;
 }
 
 interface KPIsResponse {
-  periodo: string;
-  receitas_total: number;
-  despesas_total: number;
-  saldo: number;
-  percentual_execucao_receita: number | null;
-  percentual_execucao_despesa: number | null;
+  periodo: string; receitas_total: number; despesas_total: number; saldo: number;
+  percentual_execucao_receita: number | null; percentual_execucao_despesa: number | null;
   kpis_mensais: KPIsMensal[] | null;
-  kpis_anuais: Array<{
-    ano: number;
-    total_receitas: number;
-    total_despesas: number;
-    saldo: number;
-  }> | null;
+  kpis_anuais: Array<{ ano: number; total_receitas: number; total_despesas: number; saldo: number }> | null;
 }
 
-const MESES_ABREV = [
-  'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
-  'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez',
-];
+const MESES_ABREV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const PIE_COLORS = ['#22c55e','#16a34a','#4ade80','#15803d','#86efac','#166534','#bbf7d0','#14532d','#06b6d4','#0891b2','#0ea5e9','#0284c7'];
 
 async function fetchMonthlyRevenue(ano: number): Promise<KPIsResponse> {
-  const response = await apiClient.get<KPIsResponse>(`/api/v1/kpis/mensal/${ano}`);
-  return response;
+  return apiClient.get<KPIsResponse>(`/api/v1/kpis/mensal/${ano}`);
 }
 
-interface RevenueChartProps {
-  height?: number;
-  className?: string;
-}
+interface RevenueChartProps { height?: number; className?: string }
 
-export default function RevenueChart({
-  height = 300,
-  className = '',
-}: RevenueChartProps) {
+export default function RevenueChart({ height = 300, className = '' }: RevenueChartProps) {
   const { anoSelecionado, compararComAnoAnterior } = useDashboardFilters();
+  const [chartType, setChartType] = useState<ChartTypeOption>('area');
+  const anoAnterior = anoSelecionado - 1;
 
-  // Buscar dados do ano selecionado
   const { data: kpisResponse, isLoading, error } = useQuery({
     queryKey: ['kpis', 'mensal', 'receitas', anoSelecionado],
     queryFn: () => fetchMonthlyRevenue(anoSelecionado),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, gcTime: 10 * 60 * 1000,
   });
 
-  // Buscar dados do ano anterior para comparação
-  const anoAnterior = anoSelecionado - 1;
   const { data: kpisAnterior } = useQuery({
     queryKey: ['kpis', 'mensal', 'receitas', anoAnterior],
     queryFn: () => fetchMonthlyRevenue(anoAnterior),
     enabled: compararComAnoAnterior,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, gcTime: 10 * 60 * 1000,
   });
 
   if (isLoading) {
@@ -78,7 +60,7 @@ export default function RevenueChart({
           <p className="text-sm text-dark-400">Carregando dados...</p>
         </div>
         <div className="animate-pulse" style={{ height }}>
-          <div className="w-full h-full bg-dark-800/50 rounded"></div>
+          <div className="w-full h-full bg-dark-800/50 rounded" />
         </div>
       </div>
     );
@@ -95,44 +77,170 @@ export default function RevenueChart({
     );
   }
 
-  // Preparar dados para o gráfico
-  const chartData = kpisResponse.kpis_mensais.map((kpi) => {
-    const mesAnterior = kpisAnterior?.kpis_mensais?.find(m => m.mes === kpi.mes);
-    
+  const isCartesian = chartType !== 'pie';
+  const totalAno = kpisResponse.kpis_mensais.reduce((s, k) => s + Number(k.total_receitas), 0);
+  const mensais = kpisResponse.kpis_mensais;
+
+  // Dados cartesianos com comparação ano anterior
+  const cartesianData = mensais.map((kpi) => {
+    const anterior = kpisAnterior?.kpis_mensais?.find((m) => m.mes === kpi.mes);
     return {
       mes: kpi.mes,
       name: MESES_ABREV[kpi.mes - 1] || `${kpi.mes}`,
       receitas: Number(kpi.total_receitas),
-      receitasAnterior: mesAnterior ? Number(mesAnterior.total_receitas) : undefined,
-      receitasFormatado: formatCurrency(kpi.total_receitas, { compact: true, showSymbol: false }),
+      receitasAnterior: anterior ? Number(anterior.total_receitas) : undefined,
     };
   });
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload || !payload.length) return null;
+  // Dados do PieChart — cada mês como fatia
+  const pieData = mensais.map((kpi) => ({
+    mes: kpi.mes,
+    name: MESES_ABREV[kpi.mes - 1] || `${kpi.mes}`,
+    receitas: Number(kpi.total_receitas),
+    percentual: totalAno > 0 ? (Number(kpi.total_receitas) / totalAno) * 100 : 0,
+  }));
 
-    const receitas = payload[0]?.value;
-    const receitasAnterior = payload[1]?.value;
-
+  // Tooltip customizado para gráficos cartesianos
+  const cartesianTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+    if (!active || !payload?.length) return null;
     return (
       <div className="custom-tooltip bg-dark-850 border border-dark-700 rounded-lg p-3 shadow-lg">
         <p className="text-xs text-dark-400 mb-1 font-medium">{label}</p>
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-revenue-accent">
-            {`${anoSelecionado}: ${formatCurrency(receitas)}`}
-          </p>
-          {compararComAnoAnterior && receitasAnterior && (
-            <p className="text-xs text-dark-400">
-              {`${anoAnterior}: ${formatCurrency(receitasAnterior)}`}
-            </p>
-          )}
-        </div>
+        <p className="text-sm font-semibold text-revenue-accent">
+          {`${anoSelecionado}: ${formatCurrency(payload[0].value as number)}`}
+        </p>
+        {compararComAnoAnterior && payload[1]?.value !== undefined && (
+          <p className="text-xs text-dark-400">{`${anoAnterior}: ${formatCurrency(payload[1].value as number)}`}</p>
+        )}
       </div>
     );
   };
 
-  // Total do ano
-  const totalAno = chartData.reduce((sum, item) => sum + item.receitas, 0);
+  // Tooltip customizado para PieChart
+  const pieTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+    if (!active || !payload?.length) return null;
+    const d = (payload[0].payload as { name: string; receitas: number; percentual: number });
+    return (
+      <div className="custom-tooltip bg-dark-850 border border-dark-700 rounded-lg p-3 shadow-lg">
+        <p className="text-xs text-dark-400 mb-1 font-medium">{d.name}</p>
+        <p className="text-sm font-semibold text-revenue-accent">{formatCurrency(d.receitas)}</p>
+        <p className="text-xs text-dark-400">{`${d.percentual.toFixed(1)}% do total`}</p>
+      </div>
+    );
+  };
+
+  // Eixos e grid reutilizáveis
+  const xAxis = <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: COLORS.text.muted, fontSize: 12 }} />;
+  const yAxis = (
+    <YAxis axisLine={false} tickLine={false} tick={{ fill: COLORS.text.muted, fontSize: 12 }}
+      tickFormatter={(v: number) => formatCurrency(v, { compact: true, showSymbol: false })} />
+  );
+  const grid = <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border.default} vertical={false} />;
+  const margin = CHART_CONFIG.defaults.margin;
+  const dur = CHART_CONFIG.animation.duration;
+  const primary = COLORS.revenue.chart.primary;
+
+  // Label do PieChart (mostra nome e % apenas para fatias >= 4%)
+  const pieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: {
+    cx: number; cy: number; midAngle: number; outerRadius: number;
+    innerRadius: number; percent: number; name: string;
+  }) => {
+    if (percent < 0.04) return null;
+    const rad = Math.PI / 180;
+    const r = outerRadius * 1.4;
+    const x = cx + r * Math.cos(-midAngle * rad);
+    const y = cy + r * Math.sin(-midAngle * rad);
+    return (
+      <text x={x} y={y} fill="#94a3b8" textAnchor={x > cx ? 'start' : 'end'}
+        dominantBaseline="central" fontSize={11}>
+        {`${name} (${(percent * 100).toFixed(0)}%)`}
+      </text>
+    );
+  };
+
+  // Gradientes para AreaChart
+  const gradientDefs = (
+    <defs>
+      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="5%" stopColor={primary} stopOpacity={0.3} />
+        <stop offset="95%" stopColor={primary} stopOpacity={0} />
+      </linearGradient>
+      {compararComAnoAnterior && (
+        <linearGradient id="colorRevenueAnterior" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="5%" stopColor={primary} stopOpacity={0.15} />
+          <stop offset="95%" stopColor={primary} stopOpacity={0} />
+        </linearGradient>
+      )}
+    </defs>
+  );
+
+  function renderChart() {
+    switch (chartType) {
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height={height}>
+            <BarChart data={cartesianData} margin={margin}>
+              {gradientDefs}{grid}{xAxis}{yAxis}
+              <Tooltip content={cartesianTooltip} />
+              {compararComAnoAnterior && (
+                <Bar dataKey="receitasAnterior" fill={primary} fillOpacity={0.2}
+                  stroke={primary} strokeOpacity={0.3} strokeDasharray="5 5" animationDuration={dur} />
+              )}
+              <Bar dataKey="receitas" fill={primary} radius={[4,4,0,0]} animationDuration={dur} />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      case 'line':
+        return (
+          <ResponsiveContainer width="100%" height={height}>
+            <LineChart data={cartesianData} margin={margin}>
+              {grid}{xAxis}{yAxis}
+              <Tooltip content={cartesianTooltip} />
+              {compararComAnoAnterior && (
+                <Line type="monotone" dataKey="receitasAnterior" stroke={primary}
+                  strokeOpacity={0.3} strokeDasharray="5 5" dot={false} animationDuration={dur} />
+              )}
+              <Line type="monotone" dataKey="receitas" stroke={primary} strokeWidth={2}
+                dot={{ fill: primary, r: 3 }} activeDot={{ r: 5 }} animationDuration={dur} />
+            </LineChart>
+          </ResponsiveContainer>
+        );
+      case 'pie':
+        return (
+          <ResponsiveContainer width="100%" height={height}>
+            <PieChart>
+              <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={90}
+                dataKey="receitas" nameKey="name" label={pieLabel} labelLine={false}
+                animationDuration={dur}>
+                {pieData.map((entry, i) => (
+                  <Cell key={`cell-${entry.mes}`} fill={PIE_COLORS[i % PIE_COLORS.length]} stroke="transparent" />
+                ))}
+              </Pie>
+              <Tooltip content={pieTooltip} />
+              <Legend verticalAlign="bottom" height={36}
+                formatter={(v: string) => <span className="text-xs text-dark-400">{v}</span>} />
+            </PieChart>
+          </ResponsiveContainer>
+        );
+      case 'area':
+      default:
+        return (
+          <ResponsiveContainer width="100%" height={height}>
+            <AreaChart data={cartesianData} margin={margin}>
+              {gradientDefs}{grid}{xAxis}{yAxis}
+              <Tooltip content={cartesianTooltip} />
+              {compararComAnoAnterior && (
+                <Area type="monotone" dataKey="receitasAnterior" stroke={primary}
+                  strokeOpacity={0.3} strokeDasharray="5 5" fillOpacity={1}
+                  fill="url(#colorRevenueAnterior)" animationDuration={dur} />
+              )}
+              <Area type="monotone" dataKey="receitas" stroke={primary} strokeWidth={2}
+                fillOpacity={1} fill="url(#colorRevenue)" animationDuration={dur} />
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+    }
+  }
 
   return (
     <div className={`chart-container ${className}`}>
@@ -141,87 +249,24 @@ export default function RevenueChart({
           <h3 className="text-lg font-semibold text-dark-100">Receitas</h3>
           <p className="text-sm text-dark-400">Evolução mensal - {anoSelecionado}</p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-dark-400">Total {anoSelecionado}</p>
-          <p className="text-lg font-bold text-revenue-accent">
-            {formatCurrency(totalAno, { compact: true })}
-          </p>
+        <div className="flex items-center gap-4">
+          <ChartTypeSelector value={chartType} onChange={setChartType} />
+          <div className="text-right">
+            <p className="text-xs text-dark-400">Total {anoSelecionado}</p>
+            <p className="text-lg font-bold text-revenue-accent">
+              {formatCurrency(totalAno, { compact: true })}
+            </p>
+          </div>
         </div>
       </div>
-
-      <ResponsiveContainer width="100%" height={height}>
-        <AreaChart
-          data={chartData}
-          margin={CHART_CONFIG.defaults.margin}
-        >
-          <defs>
-            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={COLORS.revenue.chart.primary} stopOpacity={0.3} />
-              <stop offset="95%" stopColor={COLORS.revenue.chart.primary} stopOpacity={0} />
-            </linearGradient>
-            {compararComAnoAnterior && (
-              <linearGradient id="colorRevenueAnterior" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={COLORS.revenue.chart.primary} stopOpacity={0.15} />
-                <stop offset="95%" stopColor={COLORS.revenue.chart.primary} stopOpacity={0} />
-              </linearGradient>
-            )}
-          </defs>
-
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke={COLORS.border.default}
-            vertical={false}
-          />
-
-          <XAxis
-            dataKey="name"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: COLORS.text.muted, fontSize: 12 }}
-          />
-
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: COLORS.text.muted, fontSize: 12 }}
-            tickFormatter={(value) => formatCurrency(value, { compact: true, showSymbol: false })}
-          />
-
-          <Tooltip content={<CustomTooltip />} />
-
-          {compararComAnoAnterior && (
-            <Area
-              type="monotone"
-              dataKey="receitasAnterior"
-              stroke={COLORS.revenue.chart.primary}
-              strokeOpacity={0.3}
-              strokeDasharray="5 5"
-              fillOpacity={1}
-              fill="url(#colorRevenueAnterior)"
-              animationDuration={CHART_CONFIG.animation.duration}
-            />
-          )}
-
-          <Area
-            type="monotone"
-            dataKey="receitas"
-            stroke={COLORS.revenue.chart.primary}
-            strokeWidth={2}
-            fillOpacity={1}
-            fill="url(#colorRevenue)"
-            animationDuration={CHART_CONFIG.animation.duration}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-
-      {compararComAnoAnterior && (
+      {renderChart()}
+      {isCartesian && compararComAnoAnterior && (
         <div className="mt-3 flex items-center justify-center gap-6 text-xs text-dark-400">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-0.5 bg-revenue-accent"></div>
-            <span>{anoSelecionado}</span>
+            <div className="w-3 h-0.5 bg-revenue-accent" /><span>{anoSelecionado}</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-0.5 bg-revenue-default opacity-50" style={{ borderStyle: 'dashed' }}></div>
+            <div className="w-3 h-0.5 bg-revenue-default opacity-50" style={{ borderStyle: 'dashed' }} />
             <span>{anoAnterior}</span>
           </div>
         </div>

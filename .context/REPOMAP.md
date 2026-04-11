@@ -51,11 +51,15 @@ Snapshot: 2026-04-11
 - `app/dashboard/page.tsx`: página principal do dashboard
 - `app/dashboard/dashboard-client.tsx`: componente client do dashboard
 - `app/globals.css`: identidade visual (dark finance theme)
-- `components/charts/`: componentes de gráficos (Recharts/D3)
+- `components/charts/RevenueChart.tsx`: gráfico de receitas com seletor de tipo (bar/line/area/pie)
+- `components/charts/ExpenseChart.tsx`: gráfico de despesas com seletor de tipo (bar/line/area/pie)
+- `components/charts/CombinedOverviewChart.tsx`: gráfico combinado receitas x despesas com seletor de tipo
+- `components/charts/index.ts`: barrel de exports dos gráficos
 - `components/dashboard/`: componentes do dashboard
 - `components/kpi/`: cards de KPI
 - `components/layouts/`: layouts compartilhados
-- `components/ui/`: componentes base de UI
+- `components/ui/ChartTypeSelector.tsx`: seletor reutilizável de tipo de gráfico (bar/line/area/pie)
+- `components/ui/index.ts`: barrel de exports dos componentes UI
 - `components/Providers.tsx`: providers React (TanStack Query)
 - `hooks/useDashboardData.ts`: hook de dados do dashboard
 - `hooks/useFinanceData.ts`: hook genérico de dados financeiros

@@ -58,3 +58,54 @@ Documentação do padrão feature-first (organização por domínio dentro de ca
 - `.context/AI-GOVERNANCE.md` — seção Feature-first com regras, padrão backend e frontend
 - `.context/architecture.md` — tabela de features atuais e regra de adição de feature
 - `.context/REPOMAP.md` — inclusão da seção `scripts/`
+
+---
+
+## Reimportação das receitas 2022 (correção de PDF)
+
+O arquivo `receitas/2022.pdf` foi substituído pela versão correta. Os dados antigos tinham `valor_previsto = 0` para todos os meses, indicando PDF incorreto. A reextração com o novo PDF trouxe os valores corretos de previsto e arrecadado.
+
+### Alteração
+- Removidas 12 receitas antigas de 2022 do banco
+- Re-extraídos 12 registros do novo `receitas/2022.pdf`
+- Previsto anual 2022: R$ 55.429.000,00 (antes R$ 0,00)
+- Arrecadado total 2022: R$ 66.414.223,25 (antes R$ 17.152.774,95)
+
+### Arquivos afetados
+- `database/dashboard.db` — dados atualizados
+- `receitas/2022.pdf` — arquivo substituído pelo usuário
+
+### Classificação
+- `mudanca_mecanica` — reimportação de dados sem mudança de código
+
+---
+
+## Seletor de tipo de gráfico + Gráfico combinado (Receitas x Despesas)
+
+Implementação de seletor de tipo de gráfico reutilizável e gráfico combinado de receitas x despesas sobrepostos, com refatoração dos gráficos individuais existentes.
+
+### Classificação
+- `borda_externa` (UI) — novos componentes de interação visual
+- `mudanca_mecanica` — refatoração dos gráficos existentes para suportar o seletor
+
+### Arquivos criados
+- `frontend/components/ui/ChartTypeSelector.tsx` (84 linhas) — componente reutilizável de seletor de tipo de gráfico (bar, line, area, pie)
+- `frontend/components/charts/CombinedOverviewChart.tsx` (249 linhas) — gráfico combinado de receitas x despesas com seletor de tipo
+
+### Arquivos modificados
+- `frontend/components/charts/RevenueChart.tsx` — refatorado para suportar bar/line/area/pie via `ChartTypeSelector`
+- `frontend/components/charts/ExpenseChart.tsx` — refatorado para suportar bar/line/area/pie via `ChartTypeSelector`
+- `frontend/components/charts/index.ts` — adicionado export do `CombinedOverviewChart`
+- `frontend/components/ui/index.ts` — adicionado export do `ChartTypeSelector` e `ChartTypeOption`
+- `frontend/app/dashboard/dashboard-client.tsx` — adicionado `CombinedOverviewChart` ao layout do dashboard
+- `frontend/services/api.ts` — corrigido tipagem de retorno das funções de API (`receitasApi`, `despesasApi`, `kpisApi`) — débito técnico
+
+### Impacto para o usuário
+1. Todos os gráficos de receitas e despesas agora possuem seletor de tipo (Barras, Linha, Área, Pizza)
+2. Novo gráfico "Receitas x Despesas" mostra ambos os dados sobrepostos no mesmo gráfico
+3. O gráfico combinado aparece acima dos gráficos individuais no dashboard
+
+### Validação
+- `npx tsc --noEmit` ✅
+- `npm run build` ✅
+- Gates de governança: file length ✅, frontend boundaries ✅
