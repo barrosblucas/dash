@@ -53,7 +53,7 @@ export default function KPISection() {
   const { data: kpisAnterior } = useQuery({
     queryKey: [...QUERY_KEYS.dashboard.all, 'comparativo-kpi', anoAnterior],
     queryFn: async () => {
-      const response = await apiClient.get<KPIsResponse>(`/api/v1/kpis/anual/`, {
+      const response = await apiClient.get<KPIsResponse>(`/api/v1/kpis/anual`, {
         params: { ano_inicio: anoAnterior, ano_fim: anoAnterior },
       });
       return response;

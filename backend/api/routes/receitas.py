@@ -6,39 +6,34 @@ Endpoints para consulta de receitas municipais.
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Optional
 
 from backend.api.schemas import (
-    ReceitaResponse,
+    ReceitaDetalhamentoListResponse,
+    ReceitaDetalhamentoResponse,
     ReceitaListResponse,
-    ReceitaFilterParams,
-    ReceitaFilterParams as ReceitaFilter,
+    ReceitaResponse,
 )
+from backend.domain.entities.receita import TipoReceita
 from backend.infrastructure.database.connection import get_db
 from backend.infrastructure.repositories.sql_receita_repository import (
     SQLReceitaRepository,
 )
-from backend.domain.entities.receita import TipoReceita
 
 router = APIRouter(prefix="/receitas", tags=["receitas"])
 
 
 @router.get("", response_model=ReceitaListResponse, summary="Lista receitas")
 async def listar_receitas(
-    ano: Optional[int] = Query(None, ge=2013, le=2030, description="Filtrar por ano"),
-    mes: Optional[int] = Query(None, ge=1, le=12, description="Filtrar por mês"),
-    categoria: Optional[str] = Query(None, description="Filtrar por categoria"),
-    tipo: Optional[str] = Query(
+    ano: int | None = Query(None, ge=2013, le=2030, description="Filtrar por ano"),
+    mes: int | None = Query(None, ge=1, le=12, description="Filtrar por mês"),
+    categoria: str | None = Query(None, description="Filtrar por categoria"),
+    tipo: str | None = Query(
         None, description="Filtrar por tipo (CORRENTE ou CAPITAL)"
     ),
-    ano_inicio: Optional[int] = Query(
-        None, ge=2013, le=2030, description="Ano inicial"
-    ),
-    ano_fim: Optional[int] = Query(None, ge=2013, le=2030, description="Ano final"),
-    limit: Optional[int] = Query(
-        100, ge=1, le=1000, description="Limite de resultados"
-    ),
-    offset: Optional[int] = Query(0, ge=0, description="Offset para paginação"),
+    ano_inicio: int | None = Query(None, ge=2013, le=2030, description="Ano inicial"),
+    ano_fim: int | None = Query(None, ge=2013, le=2030, description="Ano final"),
+    limit: int | None = Query(100, ge=1, le=1000, description="Limite de resultados"),
+    offset: int | None = Query(0, ge=0, description="Offset para paginação"),
     db: Session = Depends(get_db),
 ):
     """
@@ -127,6 +122,66 @@ async def listar_receitas(
 
 
 @router.get(
+    "/detalhamento/{ano}",
+    response_model=ReceitaDetalhamentoListResponse,
+    summary="Detalhamento hierárquico de receitas por ano",
+)
+async def detalhamento_receitas(
+    ano: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Retorna o detalhamento hierárquico completo das receitas para um ano.
+
+    Os itens possuem campo 'nivel' indicando a profundidade na hierarquia
+    e 'ordem' indicando a posição original no PDF.
+
+    Args:
+        ano: Ano de referência (2013-2030).
+        db: Sessão do banco de dados injetada.
+
+    Returns:
+        Lista hierárquica de itens de receita com valores anuais.
+
+    Example:
+        GET /api/v1/receitas/detalhamento/2023
+    """
+    if ano < 2013 or ano > 2030:
+        raise HTTPException(status_code=400, detail="Ano deve estar entre 2013 e 2030")
+
+    from backend.infrastructure.database.models import ReceitaDetalhamentoModel
+
+    modelos = (
+        db.query(ReceitaDetalhamentoModel)
+        .filter(ReceitaDetalhamentoModel.ano == ano)
+        .order_by(ReceitaDetalhamentoModel.ordem)
+        .all()
+    )
+
+    itens = [
+        ReceitaDetalhamentoResponse(
+            id=m.id,
+            ano=m.ano,
+            detalhamento=m.detalhamento,
+            nivel=m.nivel,
+            ordem=m.ordem,
+            tipo=m.tipo,
+            valor_previsto=m.valor_previsto,
+            valor_arrecadado=m.valor_arrecadado,
+            valor_anulado=m.valor_anulado,
+            fonte=m.fonte,
+        )
+        for m in modelos
+    ]
+
+    return ReceitaDetalhamentoListResponse(
+        ano=ano,
+        itens=itens,
+        total_itens=len(itens),
+    )
+
+
+@router.get(
     "/{receita_id}", response_model=ReceitaResponse, summary="Busca receita por ID"
 )
 async def buscar_receita(
@@ -196,7 +251,7 @@ async def listar_categorias(db: Session = Depends(get_db)):
 )
 async def total_receitas_ano(
     ano: int,
-    tipo: Optional[str] = Query(None, description="Tipo: CORRENTE ou CAPITAL"),
+    tipo: str | None = Query(None, description="Tipo: CORRENTE ou CAPITAL"),
     db: Session = Depends(get_db),
 ):
     """
@@ -245,7 +300,7 @@ async def total_receitas_ano(
 async def total_receitas_mes(
     ano: int,
     mes: int,
-    tipo: Optional[str] = Query(None, description="Tipo: CORRENTE ou CAPITAL"),
+    tipo: str | None = Query(None, description="Tipo: CORRENTE ou CAPITAL"),
     db: Session = Depends(get_db),
 ):
     """

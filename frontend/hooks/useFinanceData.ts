@@ -6,6 +6,7 @@
 import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
 import { receitasApi, despesasApi, kpisApi } from '@/services/api';
 import { QUERY_KEYS } from '@/lib/constants';
+import type { ReceitaDetalhamentoListResponse } from '@/types/receita';
 
 // Tipos de resposta da API
 export interface ReceitaResponse {
@@ -166,6 +167,21 @@ export function useReceitasCategorias(
   return useQuery({
     queryKey: [...QUERY_KEYS.receitas.all, 'categorias'],
     queryFn: () => receitasApi.getCategories(),
+    ...options,
+  });
+}
+
+/**
+ * Hook para detalhamento hierárquico de receitas
+ */
+export function useReceitasDetalhamento(
+  ano: number,
+  options?: Omit<UseQueryOptions<ReceitaDetalhamentoListResponse>, 'queryKey' | 'queryFn'>
+): UseQueryResult<ReceitaDetalhamentoListResponse> {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.receitas.all, 'detalhamento', ano],
+    queryFn: () => receitasApi.getDetalhamento(ano),
+    enabled: !!ano,
     ...options,
   });
 }

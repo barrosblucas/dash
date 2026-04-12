@@ -28,7 +28,7 @@ interface TooltipPayload { dataKey: string; value: number; color: string; name?:
 // ── Fetch & constantes ────────────────────────────────────────
 
 const fetchMonthlyKPIs = (ano: number): Promise<KPIsResponse> =>
-  apiClient.get<KPIsResponse>(`${API_ENDPOINTS.dashboard.sazonalidade}${ano}`);
+  apiClient.get<KPIsResponse>(`${API_ENDPOINTS.dashboard.sazonalidade}/${ano}`);
 
 const AXIS_CFG = { axisLine: false, tickLine: false, tick: { fill: COLORS.text.muted, fontSize: 12 } };
 const FORMAT_Y = (v: number) => formatCurrency(v, { compact: true, showSymbol: false });

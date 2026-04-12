@@ -216,6 +216,41 @@ class ForecastResponse(BaseModel):
     previsoes: List[ForecastPoint] = Field(..., description="Lista de previsões")
 
 
+class ReceitaDetalhamentoResponse(BaseModel):
+    """Schema de resposta para detalhamento hierárquico de receita."""
+
+    id: int = Field(..., description="ID do registro")
+    ano: int = Field(..., description="Ano de referência")
+    detalhamento: str = Field(..., description="Nome da categoria detalhada")
+    nivel: int = Field(
+        ..., ge=1, description="Nível na hierarquia (1=raiz, 2=sub, etc.)"
+    )
+    ordem: int = Field(..., ge=0, description="Ordem de apresentação no PDF")
+    tipo: str = Field(..., description="Tipo: CORRENTE ou CAPITAL")
+    valor_previsto: Decimal = Field(..., description="Valor previsto anual")
+    valor_arrecadado: Decimal = Field(..., description="Valor arrecadado anual")
+    valor_anulado: Decimal = Field(
+        default=Decimal("0"), description="Valor anulado anual"
+    )
+    fonte: str = Field(default="PDF", description="Fonte dos dados")
+
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            Decimal: lambda v: float(v),
+        }
+
+
+class ReceitaDetalhamentoListResponse(BaseModel):
+    """Schema de resposta para lista de detalhamento de um ano."""
+
+    ano: int = Field(..., description="Ano de referência")
+    itens: List[ReceitaDetalhamentoResponse] = Field(
+        ..., description="Lista de itens do detalhamento"
+    )
+    total_itens: int = Field(..., description="Total de itens")
+
+
 class ETLStatusResponse(BaseModel):
     """Schema de resposta para status do ETL."""
 

@@ -161,3 +161,24 @@ export interface ReceitaComposicao {
   percentual: number;
   target?: string; // Para flow Sankey
 }
+
+// Detalhamento hierárquico de receita (extraído do PDF)
+export interface ReceitaDetalhamento {
+  id: number;
+  ano: number;
+  detalhamento: string;
+  nivel: number;
+  ordem: number;
+  tipo: 'CORRENTE' | 'CAPITAL';
+  valor_previsto: number;
+  valor_arrecadado: number;
+  valor_anulado: number;
+  fonte: string;
+}
+
+// Resposta da API de detalhamento
+export interface ReceitaDetalhamentoListResponse {
+  ano: number;
+  itens: ReceitaDetalhamento[];
+  total_itens: number;
+}

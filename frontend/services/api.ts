@@ -5,6 +5,7 @@
 
 import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import { API_ENDPOINTS } from '@/lib/constants';
+import type { ReceitaDetalhamentoListResponse } from '@/types/receita';
 
 // Tipos de erro da API
 export interface ApiErrorResponse {
@@ -172,6 +173,12 @@ export const receitasApi = {
   getCategories: async (): Promise<string[]> => {
     const url = `${API_ENDPOINTS.receitas.list}/categorias`;
     return apiClient.get<string[]>(url);
+  },
+
+  getDetalhamento: async (ano: number): Promise<ReceitaDetalhamentoListResponse> => {
+    return apiClient.get<ReceitaDetalhamentoListResponse>(
+      `/api/v1/receitas/detalhamento/${ano}`
+    );
   },
 };
 

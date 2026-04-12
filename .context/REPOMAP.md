@@ -13,7 +13,7 @@ Snapshot: 2026-04-11
 ## Backend (`backend/`)
 - `api/main.py`: aplicação FastAPI com prefixo `/api/v1`, lifespan, CORS e exception handler global
 - `api/schemas.py`: schemas Pydantic para receitas, despesas, KPIs, forecast, health check, erros e ETL
-- `api/routes/receitas.py`: endpoints de receitas (listagem, totais por ano/mês, categorias)
+- `api/routes/receitas.py`: endpoints de receitas (listagem, totais por ano/mês, categorias, detalhamento hierárquico)
 - `api/routes/despesas.py`: endpoints de despesas (listagem, totais por ano/mês)
 - `api/routes/kpis.py`: endpoints de KPIs financeiros (resumo, mensal, anual)
 - `api/routes/forecast.py`: endpoints de forecasting (receitas, despesas)
@@ -23,11 +23,11 @@ Snapshot: 2026-04-11
 - `domain/repositories/receita_repository.py`: interface de repositório para receitas
 - `domain/services/forecasting_service.py`: serviço de previsão financeira com Prophet e fallback linear
 - `infrastructure/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
-- `infrastructure/database/models.py`: modelos ORM (ReceitaModel, DespesaModel, ForecastModel, MetadataETLModel)
+- `infrastructure/database/models.py`: modelos ORM (ReceitaModel, DespesaModel, ForecastModel, MetadataETLModel, ReceitaDetalhamentoModel)
 - `infrastructure/database/migrations/`: migrations Alembic (preparado)
 - `infrastructure/repositories/sql_receita_repository.py`: implementação SQLAlchemy do repositório de receitas
 - `infrastructure/repositories/sql_despesa_repository.py`: implementação SQLAlchemy do repositório de despesas
-- `etl/extractors/pdf_extractor.py`: extrator de dados financeiros de PDFs com pdfplumber (receitas e despesas)
+- `etl/extractors/pdf_extractor.py`: extrator de dados financeiros de PDFs com pdfplumber (receitas, despesas e detalhamento hierárquico)
 - `etl/transformers/`: transformadores de dados (preparado para expansão)
 - `etl/loaders/`: carregadores de dados (preparado para expansão)
 - `ml/`: modelos de ML (preparado para Prophet/scikit-learn)
@@ -58,6 +58,8 @@ Snapshot: 2026-04-11
 - `components/dashboard/`: componentes do dashboard
 - `components/kpi/`: cards de KPI
 - `components/layouts/`: layouts compartilhados
+- `components/receitas/ReceitaDetalhamentoTable.tsx`: tabela hierárquica de detalhamento de receitas com expand/collapse
+- `components/ui/`: componentes base (shared)
 - `app/receitas/page.tsx`: página de receitas municipais
 - `app/receitas/receitas-client.tsx`: componente client da página de receitas
 - `app/despesas/page.tsx`: página de despesas municipais
@@ -107,6 +109,9 @@ Snapshot: 2026-04-11
 - `check_no_console.py`: gate de console.log/print em código de produção
 - `check_alembic_migration.py`: gate de migration quando models.py muda
 - `run_governance_gates.py`: runner unificado de todos os gates estruturais
+
+## Scripts Backend (`backend/scripts/`)
+- `reload_detalhamento.py`: script de (re)extração do detalhamento hierárquico de receitas dos PDFs
 
 ## .context/
 - `AI-GOVERNANCE.md`: regras obrigatórias de implementação

@@ -11,7 +11,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 ### Backend
 - [x] API FastAPI rodando na porta 8000 com prefixo `/api/v1`
 - [x] Health check (`GET /health`)
-- [x] Endpoints de receitas (listagem, totais por ano/mês, categorias)
+- [x] Endpoints de receitas (listagem, totais por ano/mês, categorias, detalhamento hierárquico)
 - [x] Endpoints de despesas (listagem, totais por ano/mês)
 - [x] Endpoints de KPIs (resumo, mensal, anual)
 - [x] Endpoints de forecast (receitas, despesas)
@@ -19,8 +19,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Schemas Pydantic para todas as bordas
 - [x] Entidades de domínio com validação (Receita, Despesa)
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
+- [x] Detalhamento hierárquico de receitas com extração por indentação de PDF
 - [x] Forecasting com Prophet + fallback para projeção linear
-- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl)
+- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl, receita_detalhamento)
 
 ### Frontend
 - [x] App Next.js rodando na porta 3000
@@ -35,6 +36,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Tipos TypeScript espelhando schemas da API
 - [x] Páginas dedicadas para Receitas, Despesas, Previsões, Comparativo e Relatórios
 - [x] Navegação lateral funcional com todas as rotas implementadas
+- [x] Visualização hierárquica de receitas (tabela escadinha com expand/collapse por nível)
 - [x] Remoção de links mortos (Configurações, Ajuda) do menu lateral
 - [x] CORS e redirect corrigidos (FastAPI `redirect_slashes=False`, trailing slashes removidas)
 - [x] Serialização de tipo de receita corrigida (`.value` → `.name` para enum Pydantic)
@@ -42,6 +44,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 
 ### Dados
 - [x] Receitas: ~160 registros (2013–2026) extraídos de PDFs
+- [x] Receitas detalhamento: 1.498 itens hierárquicos (2013–2026) extraídos de PDFs
 - [x] Despesas: ~250 registros (2013–2026) extraídos de PDFs
 - [x] Forecasts: pendente de geração
 - [x] Metadata ETL: controle de processamento
@@ -51,7 +54,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 ### Gates de governança (violadores)
 
 **File length (6 arquivos acima do limite):**
-- `backend/etl/extractors/pdf_extractor.py` — 655 linhas (limite: 400)
+- `backend/etl/extractors/pdf_extractor.py` — 844 linhas (limite: 400)
 - `frontend/components/dashboard/ForecastSection.tsx` — 347 linhas (limite: 300)
 - `frontend/hooks/useFinanceData.ts` — 345 linhas (limite: 300)
 - `frontend/lib/date.ts` — 413 linhas (limite: 300)

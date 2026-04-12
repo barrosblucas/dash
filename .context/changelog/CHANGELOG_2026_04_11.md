@@ -221,3 +221,94 @@ Correção de três bugs que impediam o acesso do frontend às APIs quando acess
 
 ### Classificação
 - `borda_externa` — correção de contratos de API e configuração de deploy
+
+---
+
+## fix: Gráfico principal "Receitas x Despesas" com erro ao carregar dados
+
+Correção de dois bugs de construção de URL que impediam o gráfico combinado "Receitas x Despesas" e a seção de KPIs de carregarem dados da API.
+
+### Problemas corrigidos
+
+1. **`CombinedOverviewChart.tsx`**: URL gerada como `/api/v1/kpis/mensal2024` (faltando `/` antes do ano). Corrigido para `/api/v1/kpis/mensal/2024`.
+2. **`KPISection.tsx`**: URL com barra final extra `/api/v1/kpis/anual/` retornando 404. Corrigido para `/api/v1/kpis/anual`.
+
+### Arquivos modificados
+- `frontend/components/charts/CombinedOverviewChart.tsx` — adicionado `/` antes de `${ano}` na URL do fetch
+- `frontend/components/dashboard/KPISection.tsx` — removida barra final de `/api/v1/kpis/anual/`
+
+### Classificação
+- `mudanca_mecanica` — correção de string de URL, sem mudança de comportamento
+
+### Validação
+- `npx tsc --noEmit` ✅
+- `npm run build` ✅
+
+---
+
+## feat: Detalhamento hierárquico de receitas
+
+Implementação do backend completo para suportar o detalhamento hierárquico de receitas com extração via ETL, persistência em nova tabela e endpoint de consulta.
+
+### Classificação
+- `borda_externa` — novo endpoint, schema Pydantic, model ORM, método ETL e script de carga
+
+### Arquivos criados
+- `backend/scripts/__init__.py` — init do pacote scripts
+- `backend/scripts/reload_detalhamento.py` (85 linhas) — script de (re)extração de detalhamento
+
+### Arquivos modificados
+- `backend/infrastructure/database/models.py` — adicionado `ReceitaDetalhamentoModel` com índices e unique constraint
+- `backend/etl/extractors/pdf_extractor.py` — adicionados: dataclass `ReceitaDetalhamento`, campo `detalhamentos` em `ResultadoExtracao`, método `extrair_detalhamento_pdf`, funções auxiliares `_detectar_nivel`, `_parse_detail_text_line`, `_detect_tipo_from_header`
+- `backend/api/routes/receitas.py` — adicionado endpoint `GET /detalhamento/{ano}` com validação de ano
+
+### Funcionalidades
+1. Extração hierárquica de PDFs com detecção de nível por indentação (5 níveis)
+2. Rastreamento de tipo (CORRENTE/CAPITAL) por contexto hierárquico
+3. Endpoint `GET /api/v1/receitas/detalhamento/{ano}` retorna lista ordenada
+4. Script de carga em lote para todos os PDFs disponíveis
+
+### Dados extraídos
+- 14 anos processados (2013–2026)
+- 1.498 itens de detalhamento no total
+- Distribuição: 1.290 CORRENTE, 208 CAPITAL
+- 5 níveis hierárquicos detectados
+
+### Validação
+- `ruff check` ✅ (sem erros novos; preexistentes I001/UP006/UP007 mantidos)
+- `ruff format --check` ✅
+- `mypy` ✅ (sem erros novos; preexistentes mantidos)
+- Extração executada com sucesso
+
+---
+
+## feat: Visualização hierárquica de receitas no frontend
+
+Implementação da tabela hierárquica (formato escadinha) com expand/collapse por nível na página `/receitas`, substituindo a tabela flat anterior.
+
+### Classificação
+- `borda_externa` (UI) — novo componente de visualização consumindo endpoint existente
+
+### Arquivos criados
+- `frontend/components/receitas/ReceitaDetalhamentoTable.tsx` (170 linhas) — tabela hierárquica com expand/collapse
+
+### Arquivos modificados
+- `frontend/services/api.ts` (259 linhas) — adicionado `receitasApi.getDetalhamento(ano)`
+- `frontend/hooks/useFinanceData.ts` (360 linhas) — adicionado hook `useReceitasDetalhamento`
+- `frontend/app/receitas/receitas-client.tsx` (184 linhas) — substituída tabela flat pela hierárquica
+
+### Funcionalidades
+1. Tabela expandível/recolhível por nível hierárquico (5 níveis)
+2. Indentação visual progressiva por nível (pl-3 → pl-[8.5rem])
+3. Ícones ▶/▼ para expand/collapse em linhas com filhos
+4. Detecção automática de deduções (prefixo "(-)") com cor vermelha
+5. Colunas: Detalhamento, Previsto, Arrecadado, Anulado, % Execução
+6. Cards resumo calculados sobre itens de nível 1
+7. Filtro de tipo (CORRENTE/CAPITAL/TODOS) aplicado sobre detalhamento
+8. Exportação CSV/JSON adaptada para dados do detalhamento
+9. Dark theme consistente com o restante do dashboard
+
+### Validação
+- `npx tsc --noEmit` ✅
+- `npm run build` ✅ (rota `/receitas` gerada com 3.5 kB)
+- ESLint (hooks + unused-vars) ✅

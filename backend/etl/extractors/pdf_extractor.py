@@ -26,6 +26,22 @@ class TipoDocumento(str, Enum):
 
 
 @dataclass
+class ReceitaDetalhamento:
+    """Item do detalhamento hierárquico de receita."""
+
+    ano: int
+    detalhamento: str
+    nivel: int
+    ordem: int
+    tipo: str  # "CORRENTE" ou "CAPITAL"
+    valor_previsto: Decimal
+    valor_arrecadado: Decimal
+    valor_anulado: Decimal = field(default=Decimal("0"))
+    fonte: str = "PDF"
+    id: Optional[int] = None
+
+
+@dataclass
 class ResultadoExtracao:
     """Resultado da extração de um PDF."""
 
@@ -35,6 +51,7 @@ class ResultadoExtracao:
     ano: int
     receitas: List[Receita] = field(default_factory=list)
     despesas: List[Despesa] = field(default_factory=list)
+    detalhamentos: List[ReceitaDetalhamento] = field(default_factory=list)
     erro: Optional[str] = None
     registros_processados: int = 0
 
@@ -404,6 +421,97 @@ class PDFExtractor:
         return despesas
 
     # ------------------------------------------------------------------
+    # DETALHAMENTO HIERÁRQUICO
+    # ------------------------------------------------------------------
+
+    def extrair_detalhamento_pdf(self, arquivo: Path) -> List[ReceitaDetalhamento]:
+        """
+        Extrai o detalhamento hierárquico completo de um PDF de receitas.
+
+        Usa extract_text(layout=True) para preservar indentação e detectar
+        os níveis hierárquicos das categorias de receita.
+
+        Args:
+            arquivo: Caminho para o PDF de receitas.
+
+        Returns:
+            Lista de itens do detalhamento hierárquico.
+        """
+        ano = extrair_ano_do_arquivo(arquivo)
+        itens: List[ReceitaDetalhamento] = []
+
+        with pdfplumber.open(arquivo) as pdf:
+            in_detail_section = False
+            ordem = 0
+            # Rastreia o tipo corrente para herança hierárquica
+            current_tipo = "CORRENTE"
+
+            for page in pdf.pages:
+                text = page.extract_text(layout=True)
+                if not text:
+                    continue
+
+                for line in text.split("\n"):
+                    stripped = line.strip()
+
+                    # Detectar início da seção de detalhamento
+                    if (
+                        stripped.upper().startswith("DETALHAMENTO")
+                        and "PREVISTO" in stripped.upper()
+                    ):
+                        in_detail_section = True
+                        continue
+
+                    if not in_detail_section:
+                        continue
+
+                    # Pular linhas vazias
+                    if not stripped:
+                        continue
+
+                    # Detectar fim da seção (TOTAL GERAL)
+                    if (
+                        stripped.upper().startswith("TOTAL")
+                        and "GERAL" in stripped.upper()
+                    ):
+                        break
+
+                    # Contar espaços à esquerda para detectar nível
+                    leading_spaces = len(line) - len(line.lstrip(" "))
+                    nivel = _detectar_nivel(leading_spaces)
+
+                    # Extrair nome e valores da linha
+                    nome, valores = _parse_detail_text_line(stripped)
+                    if nome is None:
+                        continue
+
+                    # Atualizar tipo corrente quando header de nível 1 muda
+                    if nivel == 1:
+                        current_tipo = _detect_tipo_from_header(nome)
+
+                    # Deduções (-) sempre são CORRENTE
+                    tipo = (
+                        "CORRENTE" if nome.upper().startswith("(-)") else current_tipo
+                    )
+
+                    ordem += 1
+                    itens.append(
+                        ReceitaDetalhamento(
+                            ano=ano,
+                            detalhamento=nome,
+                            nivel=nivel,
+                            ordem=ordem,
+                            tipo=tipo,
+                            valor_previsto=valores[0],
+                            valor_arrecadado=valores[1],
+                            valor_anulado=valores[2],
+                            fonte=f"PDF_{ano}",
+                        )
+                    )
+
+        return itens
+
+    # ------------------------------------------------------------------
     # Métodos de extração em lote
     # ------------------------------------------------------------------
 
@@ -653,3 +761,91 @@ def _parse_breakdown_row(
         if col_idx < len(linha):
             valor = parse_valor_monetario(str(linha[col_idx]))
             breakdown[(tipo_key, mes_num)] = valor
+
+
+# ======================================================================
+# Funções auxiliares para detalhamento hierárquico
+# ======================================================================
+
+
+def _detectar_nivel(leading_spaces: int) -> int:
+    """Mapeia espaços à esquerda para nível hierárquico.
+
+    Baseado na indentação real dos PDFs:
+      1 espaço  → Nv1 (RECEITAS CORRENTES)
+      2 espaços → Nv2 (IMPOSTOS, TAXAS...)
+      4 espaços → Nv3 (IMPOSTOS)
+      5 espaços → Nv4 (IMPOSTOS SOBRE O PATRIMÔNIO)
+      7 espaços → Nv5 (IMPOSTO SOBRE A PROPRIEDADE...)
+      9+ espaços → Nv6+
+    """
+    if leading_spaces <= 1:
+        return 1
+    elif leading_spaces <= 3:
+        return 2
+    elif leading_spaces <= 4:
+        return 3
+    elif leading_spaces <= 6:
+        return 4
+    elif leading_spaces <= 8:
+        return 5
+    else:
+        return 6
+
+
+def _parse_detail_text_line(
+    line: str,
+) -> Tuple[Optional[str], Tuple[Decimal, Decimal, Decimal]]:
+    """
+    Parseia uma linha de texto do detalhamento.
+
+    Formato: "NOME_CATEGORIA    R$ 1.234,56    R$ 789,00    R$ 0,00"
+
+    Args:
+        line: Linha de texto com nome e valores monetários.
+
+    Returns:
+        Tupla com nome (ou None) e tupla de valores (previsto, arrecadado, anulado).
+    """
+    valor_pattern = r"R\$\s*[\d.,-]+"
+
+    valores_match = list(re.finditer(valor_pattern, line))
+
+    if len(valores_match) < 2:
+        return None, (Decimal("0"), Decimal("0"), Decimal("0"))
+
+    # O nome é tudo antes do primeiro valor
+    first_val_start = valores_match[0].start()
+    nome = line[:first_val_start].strip()
+
+    if not nome or nome.upper() in SKIP_HEADERS:
+        return None, (Decimal("0"), Decimal("0"), Decimal("0"))
+
+    # Limpar newlines no nome
+    nome = nome.replace("\n", " ").strip()
+
+    previsto = parse_valor_monetario(valores_match[0].group())
+    arrecadado = parse_valor_monetario(valores_match[1].group())
+    anulado = (
+        parse_valor_monetario(valores_match[2].group())
+        if len(valores_match) > 2
+        else Decimal("0")
+    )
+
+    return nome, (previsto, arrecadado, anulado)
+
+
+def _detect_tipo_from_header(nome: str) -> str:
+    """
+    Detecta se o item de nível 1 é CORRENTE ou CAPITAL baseado no nome.
+
+    Args:
+        nome: Nome da categoria de nível 1.
+
+    Returns:
+        "CORRENTE" ou "CAPITAL".
+    """
+    nome_upper = nome.upper()
+    if "CAPITAL" in nome_upper:
+        return "CAPITAL"
+    return "CORRENTE"

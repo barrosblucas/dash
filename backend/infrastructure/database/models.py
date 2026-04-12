@@ -221,3 +221,60 @@ class MetadataETLModel(Base):
             f"<MetadataETLModel(id={self.id}, arquivo='{self.arquivo}', "
             f"status='{self.status}', registros={self.registros_processados})>"
         )
+
+
+class ReceitaDetalhamentoModel(Base):
+    """
+    Modelo SQLAlchemy para detalhamento hierárquico de receitas.
+
+    Armazena o detalhamento completo extraído dos PDFs com nível de hierarquia.
+
+    Attributes:
+        id: Chave primária
+        ano: Ano de referência
+        detalhamento: Nome da categoria (ex: "IMPOSTOS SOBRE O PATRIMÔNIO")
+        nivel: Nível na hierarquia (1=RECEITAS CORRENTES, 2=subcategoria, etc.)
+        ordem: Ordem de apresentação no PDF original
+        tipo: "CORRENTE" ou "CAPITAL"
+        valor_previsto: Valor previsto anual
+        valor_arrecadado: Valor arrecadado anual
+        valor_anulado: Valor anulado anual
+        fonte: Fonte dos dados
+        created_at: Data de criação
+        updated_at: Data de atualização
+    """
+
+    __tablename__ = "receita_detalhamento"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ano = Column(Integer, nullable=False, index=True)
+    detalhamento = Column(String(500), nullable=False)
+    nivel = Column(Integer, nullable=False, default=1)
+    ordem = Column(Integer, nullable=False, default=0)
+    tipo = Column(String(50), nullable=False, default="CORRENTE")
+    valor_previsto = Column(Numeric(18, 2), nullable=False, default=Decimal("0"))
+    valor_arrecadado = Column(Numeric(18, 2), nullable=False, default=Decimal("0"))
+    valor_anulado = Column(Numeric(18, 2), nullable=False, default=Decimal("0"))
+    fonte = Column(String(100), nullable=False, default="PDF")
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index("ix_detalhamento_ano_nivel", "ano", "nivel"),
+        Index("ix_detalhamento_ano_ordem", "ano", "ordem"),
+        UniqueConstraint(
+            "ano", "detalhamento", "ordem", name="uq_detalhamento_ano_cat_ordem"
+        ),
+    )
+
+    def __repr__(self) -> str:
+        """Representação para debug."""
+        return (
+            f"<ReceitaDetalhamentoModel(id={self.id}, ano={self.ano}, "
+            f"nivel={self.nivel}, detalhamento='{self.detalhamento[:30]}...')>"
+        )
