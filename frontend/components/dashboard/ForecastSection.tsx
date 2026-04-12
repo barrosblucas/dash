@@ -7,6 +7,7 @@ import { COLORS, CHART_CONFIG } from '@/lib/constants';
 import apiClient from '@/services/api';
 import { TrendingUp, AlertCircle } from 'lucide-react';
 import { useDashboardFilters } from '@/stores/filtersStore';
+import { useChartThemeColors } from '@/stores/themeStore';
 
 interface KPIAnual {
   ano: number;
@@ -74,6 +75,7 @@ export default function ForecastSection({
   className = '',
 }: ForecastSectionProps) {
   const { anoSelecionado, mostrarProjecao } = useDashboardFilters();
+  const chartColors = useChartThemeColors();
 
   // Buscar KPIs anuais históricos até o ano selecionado
   const { data: kpisResponse, isLoading, error } = useQuery({
@@ -243,7 +245,7 @@ export default function ForecastSection({
 
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={COLORS.border.default}
+            stroke={chartColors.borderDefault}
             vertical={false}
           />
 
@@ -251,13 +253,13 @@ export default function ForecastSection({
             dataKey="label"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: COLORS.text.muted, fontSize: 11 }}
+            tick={{ fill: chartColors.textMuted, fontSize: 11 }}
           />
 
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: COLORS.text.muted, fontSize: 11 }}
+            tick={{ fill: chartColors.textMuted, fontSize: 11 }}
             tickFormatter={(value) => formatCurrency(value, { compact: true, showSymbol: false })}
           />
 
@@ -267,7 +269,7 @@ export default function ForecastSection({
             x={`${lastYear + 1}*`}
             stroke={COLORS.border.accent}
             strokeDasharray="5 5"
-            label={{ value: 'Previsão', position: 'top', fill: COLORS.text.muted, fontSize: 11 }}
+            label={{ value: 'Previsão', position: 'top', fill: chartColors.textMuted, fontSize: 11 }}
           />
 
           {/* Receitas históricas */}

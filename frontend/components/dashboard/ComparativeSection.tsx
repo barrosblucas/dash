@@ -6,6 +6,7 @@ import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG, PERIODO_DADOS } from '@/lib/constants';
 import apiClient from '@/services/api';
 import { useDashboardFilters } from '@/stores/filtersStore';
+import { useChartThemeColors } from '@/stores/themeStore';
 
 interface KPIAnual {
   ano: number;
@@ -54,6 +55,7 @@ export default function ComparativeSection({
   className = '',
 }: ComparativeSectionProps) {
   const { periodoPersonalizado, anoInicio, anoFim, anoSelecionado } = useDashboardFilters();
+  const chartColors = useChartThemeColors();
 
   // Determinar período com base nos filtros do store
   const periodoInicio = periodoPersonalizado && anoInicio ? anoInicio : PERIODO_DADOS.ano_inicio;
@@ -156,7 +158,7 @@ export default function ComparativeSection({
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke={COLORS.border.default}
+            stroke={chartColors.borderDefault}
             vertical={false}
           />
 
@@ -164,13 +166,13 @@ export default function ComparativeSection({
             dataKey="ano"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: COLORS.text.muted, fontSize: 12 }}
+            tick={{ fill: chartColors.textMuted, fontSize: 12 }}
           />
 
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: COLORS.text.muted, fontSize: 12 }}
+            tick={{ fill: chartColors.textMuted, fontSize: 12 }}
             tickFormatter={(value) => formatCurrency(value, { compact: true, showSymbol: false })}
           />
 

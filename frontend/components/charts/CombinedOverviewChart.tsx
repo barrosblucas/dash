@@ -11,6 +11,7 @@ import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG, MESES_ABREV, API_ENDPOINTS } from '@/lib/constants';
 import apiClient from '@/services/api';
 import { useDashboardFilters } from '@/stores/filtersStore';
+import { useChartThemeColors } from '@/stores/themeStore';
 
 // ── Tipos ─────────────────────────────────────────────────────
 
@@ -30,9 +31,7 @@ interface TooltipPayload { dataKey: string; value: number; color: string; name?:
 const fetchMonthlyKPIs = (ano: number): Promise<KPIsResponse> =>
   apiClient.get<KPIsResponse>(`${API_ENDPOINTS.dashboard.sazonalidade}/${ano}`);
 
-const AXIS_CFG = { axisLine: false, tickLine: false, tick: { fill: COLORS.text.muted, fontSize: 12 } };
 const FORMAT_Y = (v: number) => formatCurrency(v, { compact: true, showSymbol: false });
-const LEGEND_CFG = { wrapperStyle: { fontSize: 12, color: COLORS.text.muted }, iconType: 'circle' as const, iconSize: 8 };
 const ANIM = CHART_CONFIG.animation.duration;
 const PREV_REV = '#86efac';
 const PREV_DESP = '#fdba74';
@@ -50,7 +49,12 @@ interface Props { height?: number; className?: string }
 export default function CombinedOverviewChart({ height = 300, className = '' }: Props) {
   const [chartType, setChartType] = useState<ChartTypeOption>('bar');
   const { anoSelecionado, compararComAnoAnterior } = useDashboardFilters();
+  const chartColors = useChartThemeColors();
   const isComparing = compararComAnoAnterior && anoSelecionado - 1 >= MIN_YEAR;
+
+  // Configs de eixo/legenda adaptáveis ao tema
+  const AXIS_CFG = { axisLine: false, tickLine: false, tick: { fill: chartColors.textMuted, fontSize: 12 } };
+  const LEGEND_CFG = { wrapperStyle: { fontSize: 12, color: chartColors.textMuted }, iconType: 'circle' as const, iconSize: 8 };
 
   // ── Queries ────────────────────────────────────────────────
   const { data: current, isLoading: loadingCur, error } = useQuery({
@@ -140,7 +144,7 @@ export default function CombinedOverviewChart({ height = 300, className = '' }: 
 
   // ── Eixos + Grid reutilizáveis ──────────────────────────────
   const chartBase = (<>
-    <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border.default} vertical={false} />
+    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.borderDefault} vertical={false} />
     <XAxis dataKey="name" {...AXIS_CFG} /><YAxis tickFormatter={FORMAT_Y} {...AXIS_CFG} />
     <Tooltip content={<CTT />} /><Legend {...LEGEND_CFG} />
   </>);

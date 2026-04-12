@@ -12,6 +12,7 @@ import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG } from '@/lib/constants';
 import apiClient from '@/services/api';
 import { useDashboardFilters } from '@/stores/filtersStore';
+import { useChartThemeColors } from '@/stores/themeStore';
 import ChartTypeSelector, { ChartTypeOption } from '@/components/ui/ChartTypeSelector';
 
 interface KPIsMensal {
@@ -37,6 +38,7 @@ interface RevenueChartProps { height?: number; className?: string }
 export default function RevenueChart({ height = 300, className = '' }: RevenueChartProps) {
   const { anoSelecionado, compararComAnoAnterior } = useDashboardFilters();
   const [chartType, setChartType] = useState<ChartTypeOption>('area');
+  const chartColors = useChartThemeColors();
   const anoAnterior = anoSelecionado - 1;
 
   const { data: kpisResponse, isLoading, error } = useQuery({
@@ -130,12 +132,12 @@ export default function RevenueChart({ height = 300, className = '' }: RevenueCh
   };
 
   // Eixos e grid reutilizáveis
-  const xAxis = <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: COLORS.text.muted, fontSize: 12 }} />;
+  const xAxis = <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: chartColors.textMuted, fontSize: 12 }} />;
   const yAxis = (
-    <YAxis axisLine={false} tickLine={false} tick={{ fill: COLORS.text.muted, fontSize: 12 }}
+    <YAxis axisLine={false} tickLine={false} tick={{ fill: chartColors.textMuted, fontSize: 12 }}
       tickFormatter={(v: number) => formatCurrency(v, { compact: true, showSymbol: false })} />
   );
-  const grid = <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border.default} vertical={false} />;
+  const grid = <CartesianGrid strokeDasharray="3 3" stroke={chartColors.borderDefault} vertical={false} />;
   const margin = CHART_CONFIG.defaults.margin;
   const dur = CHART_CONFIG.animation.duration;
   const primary = COLORS.revenue.chart.primary;
@@ -151,7 +153,7 @@ export default function RevenueChart({ height = 300, className = '' }: RevenueCh
     const x = cx + r * Math.cos(-midAngle * rad);
     const y = cy + r * Math.sin(-midAngle * rad);
     return (
-      <text x={x} y={y} fill="#94a3b8" textAnchor={x > cx ? 'start' : 'end'}
+      <text x={x} y={y} fill={chartColors.pieLabel} textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central" fontSize={11}>
         {`${name} (${(percent * 100).toFixed(0)}%)`}
       </text>

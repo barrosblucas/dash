@@ -22,6 +22,19 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-mono',
 });
 
+/** Script inline para prevenir flash de tema incorreto na primeira carga */
+const themeScript = `
+(function() {
+  try {
+    var stored = JSON.parse(localStorage.getItem('bandeirantes-theme') || '{}');
+    var theme = stored.state && stored.state.theme ? stored.state.theme : 'dark';
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  } catch(e) {
+    document.documentElement.classList.add('dark');
+  }
+})();
+`;
+
 // Metadados
 export const metadata: Metadata = {
   title: {
@@ -104,7 +117,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className="dark">
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body
         className={`${inter.variable} ${sora.variable} ${jetbrainsMono.variable} font-sans`}
       >

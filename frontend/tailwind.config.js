@@ -10,20 +10,20 @@ module.exports = {
     extend: {
       // Paleta de cores profissional para dashboard financeiro
       colors: {
-        // Base dark theme
+        // Base dark theme (CSS variables for light/dark theme switching)
         dark: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          850: '#172033',
-          900: '#0f172a',
-          950: '#020617',
+          50: 'rgb(var(--color-dark-50) / <alpha-value>)',
+          100: 'rgb(var(--color-dark-100) / <alpha-value>)',
+          200: 'rgb(var(--color-dark-200) / <alpha-value>)',
+          300: 'rgb(var(--color-dark-300) / <alpha-value>)',
+          400: 'rgb(var(--color-dark-400) / <alpha-value>)',
+          500: 'rgb(var(--color-dark-500) / <alpha-value>)',
+          600: 'rgb(var(--color-dark-600) / <alpha-value>)',
+          700: 'rgb(var(--color-dark-700) / <alpha-value>)',
+          800: 'rgb(var(--color-dark-800) / <alpha-value>)',
+          850: 'rgb(var(--color-dark-850) / <alpha-value>)',
+          900: 'rgb(var(--color-dark-900) / <alpha-value>)',
+          950: 'rgb(var(--color-dark-950) / <alpha-value>)',
         },
 
         // Receitas - Verde vibrante (crescimento, prosperidade)
@@ -172,8 +172,8 @@ module.exports = {
         'glow-green': '0 0 20px rgba(0, 255, 136, 0.3)',
         'glow-orange': '0 0 20px rgba(255, 107, 53, 0.3)',
         'glow-blue': '0 0 20px rgba(0, 212, 255, 0.3)',
-        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2)',
-        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3)',
+        'card': 'var(--shadow-card)',
+        'card-hover': 'var(--shadow-card-hover)',
       },
 
       // Gradientes

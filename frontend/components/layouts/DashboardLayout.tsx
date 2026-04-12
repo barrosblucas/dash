@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import { useState } from 'react';
+import { useThemeStore } from '@/stores/themeStore';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { theme } = useThemeStore();
 
   return (
     <div className="min-h-screen bg-dark-950">
@@ -34,7 +36,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="lg:hidden fixed inset-0 z-40 bg-dark-950/80 backdrop-blur-sm">
+        <div className={`lg:hidden fixed inset-0 z-40 backdrop-blur-sm ${theme === 'dark' ? 'bg-dark-950/80' : 'bg-dark-950/60'}`}>
           <div className="fixed inset-y-0 left-0 w-64 bg-dark-900 shadow-xl">
             <Sidebar onClose={() => setSidebarOpen(false)} />
           </div>

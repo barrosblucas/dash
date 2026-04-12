@@ -1,3 +1,54 @@
+/* ============================================
+   Theme CSS Variables
+   ============================================ */
+
+:root {
+  /* Light theme — inverted scale:
+     dark-950 = white (main bg), dark-100 = near-black (headings) */
+  --color-dark-50: 2 6 23;
+  --color-dark-100: 15 23 42;
+  --color-dark-200: 30 41 59;
+  --color-dark-300: 51 65 85;
+  --color-dark-400: 100 116 139;
+  --color-dark-500: 148 163 184;
+  --color-dark-600: 203 213 225;
+  --color-dark-700: 226 232 240;
+  --color-dark-800: 241 245 249;
+  --color-dark-850: 255 255 255;
+  --color-dark-900: 248 250 252;
+  --color-dark-950: 255 255 255;
+
+  /* Shadows — softer for light mode */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+
+  /* Chart grid */
+  --chart-grid-color: rgba(203, 213, 225, 0.5);
+}
+
+.dark {
+  /* Dark theme — original values, ZERO visual change */
+  --color-dark-50: 248 250 252;
+  --color-dark-100: 241 245 249;
+  --color-dark-200: 226 232 240;
+  --color-dark-300: 203 213 225;
+  --color-dark-400: 148 163 184;
+  --color-dark-500: 100 116 139;
+  --color-dark-600: 71 85 105;
+  --color-dark-700: 51 65 85;
+  --color-dark-800: 30 41 59;
+  --color-dark-850: 23 32 51;
+  --color-dark-900: 15 23 42;
+  --color-dark-950: 2 6 23;
+
+  /* Shadows — stronger for dark mode */
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+
+  /* Chart grid */
+  --chart-grid-color: rgba(51, 65, 85, 0.3);
+}
+
 /* App layout global */
 @tailwind base;
 @tailwind components;
@@ -25,7 +76,7 @@
 
   /* Selection */
   ::selection {
-    @apply bg-revenue-accent/30 text-white;
+    @apply bg-revenue-accent/30 text-dark-100;
   }
 
   /* Scrollbar */
@@ -97,12 +148,6 @@
   .shimmer::after {
     content: '';
     @apply absolute inset-0 -translate-x-full;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.05),
-      transparent
-    );
     animation: shimmer 2s infinite;
   }
 
@@ -110,6 +155,26 @@
     100% {
       transform: translateX(100%);
     }
+  }
+
+  /* Light mode shimmer uses dark sweep */
+  :root .shimmer::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(0, 0, 0, 0.03),
+      transparent
+    );
+  }
+
+  /* Dark mode shimmer uses light sweep */
+  .dark .shimmer::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent
+    );
   }
 
   /* KPI Card */
@@ -271,7 +336,7 @@
 
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: rgba(51, 65, 85, 0.3);
+  stroke: var(--chart-grid-color);
 }
 
 .recharts-tooltip-wrapper {

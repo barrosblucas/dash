@@ -1,16 +1,17 @@
 'use client';
 
-import { Menu, Bell, Search, Moon, Sun } from 'lucide-react';
-import { useState } from 'react';
+import { Menu, Bell, Moon, Sun } from 'lucide-react';
 import { MUNICIPIO } from '@/lib/constants';
 import FilterPanel from '@/components/ui/FilterPanel';
+import { useThemeStore } from '@/stores/themeStore';
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
-  const [isDark, setIsDark] = useState(true);
+  const { theme, toggleTheme } = useThemeStore();
+  const isDark = theme === 'dark';
 
   return (
     <header className="sticky top-0 z-30 bg-dark-900/80 backdrop-blur-md border-b border-dark-700">
@@ -37,7 +38,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <div className="flex items-center gap-2">
             {/* Theme toggle */}
             <button
-              onClick={() => setIsDark(!isDark)}
+              onClick={toggleTheme}
               className="p-2 text-dark-400 hover:text-dark-100 hover:bg-dark-800 rounded-lg transition-colors"
               aria-label={isDark ? 'Modo claro' : 'Modo escuro'}
             >

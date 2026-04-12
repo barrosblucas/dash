@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-11 (atualizado)
+Snapshot: 2026-04-12 (atualizado)
 
 ## Status geral
 
@@ -33,6 +33,8 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Seletor de tipo de gráfico reutilizável (bar/line/area/pie)
 - [x] Gráfico combinado de receitas x despesas sobrepostos
 - [x] Dark finance theme com Tailwind CSS
+- [x] Tema claro (light mode) com toggle Sun/Moon no header, CSS custom properties para adaptação automática
+- [x] Store de tema (Zustand) com persistência em localStorage
 - [x] Tipos TypeScript espelhando schemas da API
 - [x] Páginas dedicadas para Receitas, Despesas, Previsões, Comparativo e Relatórios
 - [x] Navegação lateral funcional com todas as rotas implementadas

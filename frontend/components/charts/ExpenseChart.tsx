@@ -11,6 +11,7 @@ import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG } from '@/lib/constants';
 import apiClient from '@/services/api';
 import { useDashboardFilters } from '@/stores/filtersStore';
+import { useChartThemeColors } from '@/stores/themeStore';
 import ChartTypeSelector, { ChartTypeOption } from '@/components/ui/ChartTypeSelector';
 
 interface KPIsMensal {
@@ -87,24 +88,11 @@ function PieCustomTooltip({ active, payload }: { active?: boolean; payload?: Arr
   );
 }
 
-// --- Label do PieChart ---
+// --- Tipos para PieLabel ---
 
 interface PieLabelProps {
   cx: number; cy: number; midAngle: number; innerRadius: number;
   outerRadius: number; percent: number; name: string;
-}
-
-function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: PieLabelProps) {
-  if (percent < 0.04) return null;
-  const RADIAN = Math.PI / 180;
-  const r = innerRadius + (outerRadius - innerRadius) * 1.4;
-  const x = cx + r * Math.cos(-midAngle * RADIAN);
-  const y = cy + r * Math.sin(-midAngle * RADIAN);
-  return (
-    <text x={x} y={y} fill="#94a3b8" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={11}>
-      {`${name} (${(percent * 100).toFixed(0)}%)`}
-    </text>
-  );
 }
 
 // --- Componente principal ---
@@ -112,7 +100,22 @@ function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent, n
 export default function ExpenseChart({ height = 300, className = '' }: ExpenseChartProps) {
   const { anoSelecionado, compararComAnoAnterior } = useDashboardFilters();
   const [chartType, setChartType] = useState<ChartTypeOption>('bar');
+  const chartColors = useChartThemeColors();
   const anoAnterior = anoSelecionado - 1;
+
+  // Label do PieChart (usa chartColors para tema adaptável)
+  const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: PieLabelProps) => {
+    if (percent < 0.04) return null;
+    const RADIAN = Math.PI / 180;
+    const r = innerRadius + (outerRadius - innerRadius) * 1.4;
+    const x = cx + r * Math.cos(-midAngle * RADIAN);
+    const y = cy + r * Math.sin(-midAngle * RADIAN);
+    return (
+      <text x={x} y={y} fill={chartColors.pieLabel} textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={11}>
+        {`${name} (${(percent * 100).toFixed(0)}%)`}
+      </text>
+    );
+  };
 
   const { data: kpisResponse, isLoading, error } = useQuery({
     queryKey: ['kpis', 'mensal', 'despesas', anoSelecionado],
@@ -177,12 +180,12 @@ export default function ExpenseChart({ height = 300, className = '' }: ExpenseCh
   }));
 
   // Eixos e grid compartilhados entre cartesianos
-  const sharedXAxis = <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: COLORS.text.muted, fontSize: 12 }} />;
+  const sharedXAxis = <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: chartColors.textMuted, fontSize: 12 }} />;
   const sharedYAxis = (
-    <YAxis axisLine={false} tickLine={false} tick={{ fill: COLORS.text.muted, fontSize: 12 }}
+    <YAxis axisLine={false} tickLine={false} tick={{ fill: chartColors.textMuted, fontSize: 12 }}
       tickFormatter={(v: number) => formatCurrency(v, { compact: true, showSymbol: false })} />
   );
-  const sharedGrid = <CartesianGrid strokeDasharray="3 3" stroke={COLORS.border.default} vertical={false} />;
+  const sharedGrid = <CartesianGrid strokeDasharray="3 3" stroke={chartColors.borderDefault} vertical={false} />;
   const sharedTooltip = (
     <Tooltip content={<CartesianCustomTooltip anoSelecionado={anoSelecionado} anoAnterior={anoAnterior} compararComAnoAnterior={compararComAnoAnterior} />} />
   );

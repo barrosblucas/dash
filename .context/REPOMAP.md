@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-04-11
+Snapshot: 2026-04-12
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -43,14 +43,14 @@ Snapshot: 2026-04-11
 - `package.json`: dependências e scripts (dev, build, lint, type-check, format)
 - `next.config.js`: configuração Next.js 14
 - `tsconfig.json`: TypeScript strict com path aliases (`@/*`)
-- `tailwind.config.js`: configuração Tailwind CSS
+- `tailwind.config.js`: configuração Tailwind CSS (dark palette via CSS variables para suporte light/dark)
 - `postcss.config.js`: PostCSS com autoprefixer
 - `.eslintrc.js`: ESLint com next/core-web-vitals, TanStack Query plugin, import order
 - `.prettierrc` / `.prettierignore`: Prettier config
-- `app/layout.tsx`: layout raiz
+- `app/layout.tsx`: layout raiz (theme-aware com script anti-FOIT)
 - `app/dashboard/page.tsx`: página principal do dashboard
 - `app/dashboard/dashboard-client.tsx`: componente client do dashboard
-- `app/globals.css`: identidade visual (dark finance theme)
+- `app/globals.css`: identidade visual (light + dark finance theme com CSS custom properties)
 - `components/charts/RevenueChart.tsx`: gráfico de receitas com seletor de tipo (bar/line/area/pie)
 - `components/charts/ExpenseChart.tsx`: gráfico de despesas com seletor de tipo (bar/line/area/pie)
 - `components/charts/CombinedOverviewChart.tsx`: gráfico combinado receitas x despesas com seletor de tipo
@@ -80,6 +80,7 @@ Snapshot: 2026-04-11
 - `hooks/index.ts`: barrel de exports
 - `services/api.ts`: API client Axios centralizado com interceptors
 - `stores/filtersStore.ts`: store Zustand de filtros
+- `stores/themeStore.ts`: store Zustand de tema (light/dark) com persistência + hook useChartThemeColors
 - `lib/constants.ts`: constantes globais (cores, endpoints, formatos, labels, meses)
 - `lib/utils.ts`: utilitários gerais
 - `lib/date.ts`: utilitários de data (date-fns)
