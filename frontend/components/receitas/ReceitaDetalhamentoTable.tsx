@@ -145,7 +145,7 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
                 </td>
 
                 {/* Arrecadado */}
-                <td className={`px-4 py-2.5 text-right font-medium ${deducao ? 'text-red-400' : 'text-dark-100'}`}>
+                <td className={`px-4 py-2.5 text-right font-medium ${item.valor_arrecadado < 0 || deducao ? 'text-red-400' : 'text-emerald-400'}`}>
                   {formatCurrency(item.valor_arrecadado)}
                 </td>
 
