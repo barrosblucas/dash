@@ -18,6 +18,7 @@ Snapshot: 2026-04-12
 - `api/routes/kpis.py`: endpoints de KPIs financeiros (resumo, mensal, anual)
 - `api/routes/forecast.py`: endpoints de forecasting (receitas, despesas)
 - `api/routes/export.py`: endpoints de exportação (PDF, Excel)
+- `api/routes/scraping.py`: endpoints de controle do scraping (status, trigger manual, histórico de execuções)
 - `domain/entities/receita.py`: entidade de domínio Receita com validação e cálculos derivados
 - `domain/entities/despesa.py`: entidade de domínio Despesa com validação e cálculos derivados
 - `domain/repositories/receita_repository.py`: interface de repositório para receitas
@@ -28,10 +29,14 @@ Snapshot: 2026-04-12
 - `infrastructure/repositories/sql_receita_repository.py`: implementação SQLAlchemy do repositório de receitas
 - `infrastructure/repositories/sql_despesa_repository.py`: implementação SQLAlchemy do repositório de despesas
 - `etl/extractors/pdf_extractor.py`: extrator de dados financeiros de PDFs com pdfplumber (receitas, despesas e detalhamento hierárquico)
+- `etl/scrapers/quality_api_client.py`: cliente HTTP assíncrono para API do portal QualitySistemas (receitas e despesas com retry)
+- `etl/scrapers/despesa_scraper.py`: parser de despesas QualitySistemas JSON → entidades Despesa (annual, natureza, merge com degradação graciosa)
 - `etl/transformers/`: transformadores de dados (preparado para expansão)
 - `etl/loaders/`: carregadores de dados (preparado para expansão)
 - `ml/`: modelos de ML (preparado para Prophet/scikit-learn)
-- `services/`: serviços de aplicação (preparado para expansão)
+- `services/`: serviços de aplicação
+- `services/scraping_service.py`: orquestração do scraping QualitySistemas com upsert (receitas, despesas, detalhamento)
+- `services/scraping_scheduler.py`: scheduler APScheduler para scraping periódico (10 min) com integração no lifespan FastAPI
 - `tests/test_api/`: testes de integração das rotas (preparado)
 - `tests/test_etl/`: testes do pipeline ETL (preparado)
 - `tests/test_ml/`: testes dos modelos de ML (preparado)

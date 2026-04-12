@@ -1,24 +1,32 @@
 """
 Aplicação principal FastAPI para o Dashboard Financeiro Municipal.
 
-API paraconsulta de dados financeiros da Prefeitura de Bandeirantes MS.
+API para consulta de dados financeiros da Prefeitura de Bandeirantes MS.
 """
 
+from __future__ import annotations
+
+import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
 
-from backend.api.schemas import HealthCheckResponse, ErrorResponse
-from backend.api.routes import receitas_router, despesas_router, kpis_router
-from backend.api.routes.forecast import router as forecast_router
+from backend.api.routes import (
+    despesas_router,
+    kpis_router,
+    receitas_router,
+    scraping_router,
+)
 from backend.api.routes.export import router as export_router
+from backend.api.routes.forecast import router as forecast_router
+from backend.api.schemas import HealthCheckResponse
 from backend.infrastructure.database.connection import db_manager, init_database
+
+logger = logging.getLogger(__name__)
 
 # Diretório base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -29,55 +37,57 @@ async def lifespan(app: FastAPI):
     """
     Gerenciador do ciclo de vida da aplicação.
 
-    Inicializa recursos na inicialização elimpa na finalização.
+    Inicializa recursos na inicialização e limpa na finalização.
     """
     # Inicialização
-    print("=" * 60)
-    print("Iniciando Dashboard Financeiro Municipal API")
-    print("=" * 60)
+    logger.info("Iniciando Dashboard Financeiro Municipal API")
 
     try:
-        # Inicializa o banco de dados
         init_database()
-        print("Banco de dados inicializado com sucesso!")
-    except Exception as e:
-        print(f"Erro ao inicializar banco de dados: {e}")
+        logger.info("Banco de dados inicializado com sucesso")
+    except Exception:
+        logger.exception("Erro ao inicializar banco de dados")
         raise
 
-    print("API pronta para receber requisições")
-    print("=" * 60)
+    # Inicia scheduler de scraping
+    scheduler = None
+    try:
+        from backend.services.scraping_scheduler import ScrapingScheduler
 
-    yield  # Aplicação em execução
+        scheduler = ScrapingScheduler()
+        scheduler.start()
+        app.state.scraping_scheduler = scheduler
+        logger.info("Scheduler de scraping integrado ao lifespan")
+    except Exception:
+        logger.exception("Falha ao iniciar scheduler de scraping — modo sem scheduler")
+
+    logger.info("API pronta para receber requisições")
+
+    yield
 
     # Finalização
-    print("")
-    print("=" * 60)
-    print("Encerrando Dashboard Financeiro Municipal API")
-    print("=" * 60)
+    if scheduler is not None:
+        scheduler.stop()
+    logger.info("Dashboard Financeiro Municipal API encerrada")
 
 
 # Cria a aplicação FastAPI
 app = FastAPI(
     title="Dashboard Financeiro Municipal",
-    description="""
-    API para consulta de dados financeiros municipais da Prefeitura de Bandeirantes MS.
-    
-    ## Funcionalidades
-    
-    - **Receitas**: Consulta de receitas arrecadadas com filtros por ano, mês, categoria e tipo
-    - **Despesas**: Consulta de despesas com valores empenhados, liquidados e pagos
-    - **KPIs**: Indicadores financeiros com totais anuais e mensais
-    - **ETL**: Pipeline de extração de dados de PDFs
-    
-    ## Dados
-    
-    Os dados são extraídos de PDFs oficiais da Prefeitura de Bandeirantes MS
-    contendo receitas e despesas municipais.
-    
-    ## Período
-    
-    Dados disponíveis de 2013 a 2026(forma prioritária: 2016-2026).
-    """,
+    description=(
+        "API para consulta de dados financeiros municipais da"
+        " Prefeitura de Bandeirantes MS.\n\n"
+        "## Funcionalidades\n\n"
+        "- **Receitas**: Consulta de receitas arrecadadas com filtros por ano, mês, categoria e tipo\n"
+        "- **Despesas**: Consulta de despesas com valores empenhados, liquidados e pagos\n"
+        "- **KPIs**: Indicadores financeiros com totais anuais e mensais\n"
+        "- **ETL**: Pipeline de extração de dados de PDFs\n\n"
+        "## Dados\n\n"
+        "Os dados são extraídos de PDFs oficiais da Prefeitura de Bandeirantes MS"
+        " contendo receitas e despesas municipais.\n\n"
+        "## Período\n\n"
+        "Dados disponíveis de 2013 a 2026 (forma prioritária: 2016-2026)."
+    ),
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -120,6 +130,7 @@ app.include_router(despesas_router, prefix="/api/v1")
 app.include_router(kpis_router, prefix="/api/v1")
 app.include_router(forecast_router, prefix="/api/v1")
 app.include_router(export_router, prefix="/api/v1")
+app.include_router(scraping_router, prefix="/api/v1")
 
 
 # Endpoint de health check
@@ -138,7 +149,7 @@ async def health_check():
     """
     # Verifica status do banco
     try:
-        stats = db_manager.get_db_stats()
+        db_manager.get_db_stats()
         db_status = "connected"
     except Exception as e:
         db_status = f"error: {str(e)}"

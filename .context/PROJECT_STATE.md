@@ -16,6 +16,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Endpoints de KPIs (resumo, mensal, anual)
 - [x] Endpoints de forecast (receitas, despesas)
 - [x] Endpoints de exportação (PDF, Excel)
+- [x] Endpoints de scraping (status do scheduler, trigger manual, histórico de execuções)
+- [x] Scheduler de scraping periódico (APScheduler, 10 min) integrado ao lifespan FastAPI
+- [x] Serviço de scraping QualitySistemas com upsert de receitas, despesas e detalhamento
 - [x] Schemas Pydantic para todas as bordas
 - [x] Entidades de domínio com validação (Receita, Despesa)
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
@@ -97,3 +100,4 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - Banco: `/home/thanos/dashboard/database/dashboard.db`
 - Scripts: `bash dev.sh` (menu) ou `bash start.sh` (inicialização rápida)
 - API URL no frontend: `NEXT_PUBLIC_API_URL=http://192.168.1.21:8000`
+- Endpoints de scraping: `GET /api/v1/scraping/status`, `POST /api/v1/scraping/trigger`, `GET /api/v1/scraping/history`

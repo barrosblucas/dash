@@ -4,7 +4,7 @@ Schemas Pydantic para validação e serialização da API.
 Define modelos de entrada e saída para todos os endpoints.
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
@@ -261,3 +261,60 @@ class ETLStatusResponse(BaseModel):
     registros_processados: int
     erro: Optional[str] = None
     processed_at: Optional[date] = None
+
+
+# --- Schemas de scraping ---
+
+
+class ScrapingStatusResponse(BaseModel):
+    """Status do scraper."""
+
+    last_run: Optional[datetime] = None
+    next_run: Optional[datetime] = None
+    receitas_status: str = "unknown"
+    despesas_status: str = "unknown"
+    receitas_records: int = 0
+    despesas_records: int = 0
+    errors: List[str] = []
+
+
+class ScrapingTriggerRequest(BaseModel):
+    """Request para disparar scraping manual."""
+
+    year: int = 2026
+    data_type: str = "all"  # "receitas", "despesas", "all"
+
+
+class ScrapingTriggerResponse(BaseModel):
+    """Resposta do trigger manual."""
+
+    status: str
+    message: str
+    receitas_processed: int = 0
+    despesas_processed: int = 0
+    errors: List[str] = []
+
+
+class ScrapingLogResponse(BaseModel):
+    """Log de execução do scraping."""
+
+    id: int
+    data_type: str  # "receita" or "despesa"
+    year: int
+    status: str  # "SUCCESS", "ERROR", "PARTIAL"
+    records_processed: int
+    records_inserted: int
+    records_updated: int
+    error_message: Optional[str] = None
+    started_at: Optional[datetime] = None
+    finished_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ScrapingHistoryResponse(BaseModel):
+    """Histórico de execuções do scraping."""
+
+    logs: List[ScrapingLogResponse]
+    total: int

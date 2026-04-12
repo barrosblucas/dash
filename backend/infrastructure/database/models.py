@@ -278,3 +278,45 @@ class ReceitaDetalhamentoModel(Base):
             f"<ReceitaDetalhamentoModel(id={self.id}, ano={self.ano}, "
             f"nivel={self.nivel}, detalhamento='{self.detalhamento[:30]}...')>"
         )
+
+
+class ScrapingLogModel(Base):
+    """Log de execuções do scraping QualitySistemas.
+
+    Attributes:
+        id: Chave primária auto-incremento
+        data_type: Tipo de dado scraping ("receita" ou "despesa")
+        year: Ano de referência
+        status: Status da execução ("SUCCESS", "ERROR", "PARTIAL")
+        records_processed: Total de registros processados
+        records_inserted: Registros inseridos no banco
+        records_updated: Registros atualizados no banco
+        error_message: Mensagem de erro, se houver
+        started_at: Início da execução
+        finished_at: Fim da execução
+    """
+
+    __tablename__ = "scraping_log"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    data_type = Column(String(50), nullable=False, index=True)
+    year = Column(Integer, nullable=False, index=True)
+    status = Column(String(20), nullable=False)
+    records_processed = Column(Integer, default=0)
+    records_inserted = Column(Integer, default=0)
+    records_updated = Column(Integer, default=0)
+    error_message = Column(Text, nullable=True)
+    started_at = Column(DateTime, nullable=False)
+    finished_at = Column(DateTime, nullable=True)
+
+    __table_args__ = (
+        Index("ix_scraping_log_type_year", "data_type", "year"),
+        Index("ix_scraping_log_started", "started_at"),
+    )
+
+    def __repr__(self) -> str:
+        """Representação para debug."""
+        return (
+            f"<ScrapingLogModel(id={self.id}, data_type='{self.data_type}', "
+            f"year={self.year}, status='{self.status}')>"
+        )
