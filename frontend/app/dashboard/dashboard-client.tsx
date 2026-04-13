@@ -1,11 +1,12 @@
 'use client';
 
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
+
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 // Lazy loading para componentes pesados
-import dynamic from 'next/dynamic';
 
 const KPISection = dynamic(
   () => import('@/components/dashboard/KPISection'),

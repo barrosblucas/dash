@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useReceitasDetalhamento } from '@/hooks/useFinanceData';

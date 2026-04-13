@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { TrendingUp, TrendingDown, DollarSign, BarChart3, Info, BookOpen } from 'lucide-react';
+
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ForecastSection from '@/components/dashboard/ForecastSection';
 import { useDashboardFilters } from '@/stores/filtersStore';
 import { COLORS } from '@/lib/constants';
 import apiClient from '@/services/api';
-import { useQuery } from '@tanstack/react-query';
 import { formatCurrency } from '@/lib/utils';
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Info, BookOpen } from 'lucide-react';
+
 
 interface KPIAnual {
   ano: number;

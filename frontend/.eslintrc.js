@@ -1,5 +1,6 @@
 module.exports = {
-  extends: ['next/core-web-vitals', '@tanstack/eslint-plugin-query'],
+  extends: ['next/core-web-vitals', 'plugin:@tanstack/query/recommended'],
+  plugins: ['@typescript-eslint'],
   rules: {
     // React hooks
     'react-hooks/exhaustive-deps': 'warn',
@@ -24,6 +25,6 @@ module.exports = {
     
     // Queries
     '@tanstack/query/exhaustive-deps': 'error',
-    '@tanstack/query/no-rest-deps': 'warn',
+    '@tanstack/query/no-rest-destructuring': 'warn',
   },
 };

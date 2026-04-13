@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ComposedChart, Bar, Area } from 'recharts';
+
 import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG, PERIODO_DADOS } from '@/lib/constants';
 import apiClient from '@/services/api';

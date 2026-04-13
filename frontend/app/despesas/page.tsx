@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+
 import DespesasClient from './despesas-client';
 
 export const metadata: Metadata = {

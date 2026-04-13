@@ -64,3 +64,36 @@ Adicionar um fluxo de desenvolvimento em Docker Compose com hot reload para back
 - `npm run lint` no frontend ❌ (configuração atual do ESLint não resolve o preset `@tanstack/eslint-plugin-query`)
 - `python3 -m compileall backend` ✅
 - `python3 -m pytest` não disponível no ambiente atual (`No module named pytest`)
+
+## fix: Build do frontend no Docker Compose
+
+### Objetivo
+Corrigir a falha de build do `frontend` no `docker compose` causada por inconsistência entre `package.json` e `package-lock.json` e por configuração inválida de regras no ESLint.
+
+### Abordagem técnica
+- Sincronizado o lockfile do frontend com `npm@10.8.2` (mesma major usada no build da imagem `node:20-slim`)
+- Ajustada a configuração do ESLint em `frontend/.eslintrc.js`:
+	- `extends` de `@tanstack/eslint-plugin-query` para `plugin:@tanstack/query/recommended`
+	- inclusão explícita de `plugins: ['@typescript-eslint']` para resolver regras `@typescript-eslint/*`
+	- regra `@tanstack/query/no-rest-deps` atualizada para `@tanstack/query/no-rest-destructuring`
+- Executado `npm run lint -- --fix` para corrigir automaticamente violações de `import/order` que quebravam o `next build` dentro do container
+
+### Arquivos alterados
+- `frontend/package-lock.json`
+- `frontend/.eslintrc.js`
+- múltiplos arquivos TS/TSX no frontend (somente ajustes automáticos de lint/import-order)
+
+### Classificação
+- Tipo: `mudanca_mecanica` (ajuste de build/lint sem alteração de regra de negócio)
+- Domínio: `frontend` e `infraestrutura`
+
+### Validação
+- `cd frontend && npx -y npm@10.8.2 ci` ✅
+- `cd frontend && npm run lint -- --fix && npm run lint` ✅ (sem errors; warnings remanescentes)
+- `cd frontend && npm run type-check` ✅
+- `cd frontend && npm run build` ✅
+- `docker compose build frontend --progress=plain` ✅
+- `docker compose build backend --progress=plain` ✅
+- `docker compose up -d` ❌ no ambiente atual por restrição externa do runtime Docker host:
+	- `OCI runtime create failed ... open sysctl net.ipv4.ip_unprivileged_port_start ... permission denied`
+	- reproduzido também com `docker run --rm hello-world`, indicando bloqueio do host e não da aplicação

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+
 import RelatoriosClient from './relatorios-client';
 
 export const metadata: Metadata = {

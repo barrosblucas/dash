@@ -2,10 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
+import { TrendingUp, AlertCircle } from 'lucide-react';
+
 import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG } from '@/lib/constants';
 import apiClient from '@/services/api';
-import { TrendingUp, AlertCircle } from 'lucide-react';
 import { useDashboardFilters } from '@/stores/filtersStore';
 import { useChartThemeColors } from '@/stores/themeStore';
 

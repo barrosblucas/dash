@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+
 import DashboardClient from './dashboard-client';
 
 export const metadata: Metadata = {

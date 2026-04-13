@@ -1,0 +1,54 @@
+--progress is a global compose flag, better use `docker compose --progress xx build ...
+ Image dashboard-frontend Building 
+ Image dashboard-backend Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.01kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 352B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/node:20-slim
+#3 DONE 0.2s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 231B done
+#4 DONE 0.0s
+
+#5 [1/6] FROM docker.io/library/node:20-slim@sha256:f93745c153377ee2fbbdd6e24efcd03cd2e86d6ab1d8aa9916a3790c40313a55
+#5 resolve docker.io/library/node:20-slim@sha256:f93745c153377ee2fbbdd6e24efcd03cd2e86d6ab1d8aa9916a3790c40313a55 0.0s done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 3.40kB done
+#6 DONE 0.0s
+
+#7 [2/6] WORKDIR /app
+#7 CACHED
+
+#8 [4/6] RUN npm ci
+#8 CACHED
+
+#9 [3/6] COPY package*.json ./
+#9 CACHED
+
+#10 [5/6] COPY . .
+#10 CACHED
+
+#11 [6/6] RUN npm run build
+#11 CACHED
+
+#12 exporting to image
+#12 exporting layers done
+#12 exporting manifest sha256:02dfcb98bac3fe65c7c257b4b83b3a5b88240ec8b780972ddb594b55821383c9 done
+#12 exporting config sha256:e66742b3074a33f3f0792671415515de719563f6e0ad60ce886a0e374e234d7c done
+#12 exporting attestation manifest sha256:d789a58a98d1fd0160d510de5e71539c1d23c5e7f10f92955fc3f902be2ec5b2 done
+#12 exporting manifest list sha256:de7d772eb506f8dd2e69638d7c668a7441f941c25a14ad1b737180ed451a3f00 done
+#12 naming to docker.io/library/dashboard-frontend:latest done
+#12 unpacking to docker.io/library/dashboard-frontend:latest done
+#12 DONE 0.0s
+
+#13 resolving provenance for metadata file
+#13 DONE 0.0s
+ Image dashboard-frontend Built 

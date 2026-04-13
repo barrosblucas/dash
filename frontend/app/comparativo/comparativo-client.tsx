@@ -1,15 +1,17 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { TrendingUp, TrendingDown, ArrowUpRight, BarChart3 } from 'lucide-react';
+
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import ComparativeSection from '@/components/dashboard/ComparativeSection';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
 import { PERIODO_DADOS } from '@/lib/constants';
 import apiClient from '@/services/api';
-import { useQuery } from '@tanstack/react-query';
 import { formatCurrency, calcVariation } from '@/lib/utils';
-import { TrendingUp, TrendingDown, ArrowUpRight, BarChart3 } from 'lucide-react';
+
 
 // --- Tipos ---
 

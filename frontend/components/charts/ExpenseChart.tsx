@@ -7,6 +7,7 @@ import {
   Bar, BarChart, Line, LineChart, Area, AreaChart,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
+
 import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG } from '@/lib/constants';
 import apiClient from '@/services/api';

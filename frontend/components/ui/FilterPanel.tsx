@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Layers
 } from 'lucide-react';
+
 import { useDashboardFilters, useAnosDisponiveis, useFiltrosAtivos } from '@/stores/filtersStore';
 import { PERIODO_DADOS } from '@/lib/constants';
 

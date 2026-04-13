@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import { COLORS } from '@/lib/constants';
 import type { KPICardData } from '@/types';

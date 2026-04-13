@@ -6,6 +6,7 @@ import {
   BarChart, Bar, LineChart, Line, AreaChart, Area,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
+
 import ChartTypeSelector, { type ChartTypeOption } from '@/components/ui/ChartTypeSelector';
 import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG, MESES_ABREV, API_ENDPOINTS } from '@/lib/constants';

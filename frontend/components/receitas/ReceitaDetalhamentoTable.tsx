@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
+
 import type { ReceitaDetalhamento } from '@/types/receita';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 

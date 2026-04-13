@@ -1,11 +1,6 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import DashboardLayout from '@/components/layouts/DashboardLayout';
-import useExport from '@/hooks/useExport';
-import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
-import { useReceitas, useDespesas, useKPIs } from '@/hooks/useFinanceData';
-import { formatCurrency } from '@/lib/utils';
 import {
   TrendingUp,
   TrendingDown,
@@ -17,6 +12,12 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+import useExport from '@/hooks/useExport';
+import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
+import { useReceitas, useDespesas, useKPIs } from '@/hooks/useFinanceData';
+import { formatCurrency } from '@/lib/utils';
 
 type ExportFormat = 'csv' | 'json';
 type ExportStatus = 'idle' | 'loading' | 'success' | 'error';

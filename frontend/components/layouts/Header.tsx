@@ -1,6 +1,7 @@
 'use client';
 
 import { Menu, Bell, Moon, Sun } from 'lucide-react';
+
 import { MUNICIPIO } from '@/lib/constants';
 import FilterPanel from '@/components/ui/FilterPanel';
 import { useThemeStore } from '@/stores/themeStore';

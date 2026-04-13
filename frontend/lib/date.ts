@@ -26,7 +26,6 @@ import {
   min,
   max,
 } from 'date-fns';
-
 import { ptBR } from 'date-fns/locale';
 
 // Custom functions for semester (date-fns doesn't have these)

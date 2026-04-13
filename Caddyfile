@@ -1,0 +1,132 @@
+# Bloco de opções globais
+
+{
+    debug
+    email gerenciamento.dti@bandeirantes.ms.gov.br
+    servers {
+        protocols h1 h2
+    }
+}
+
+# --- SNIPPETS ---
+(cert) {
+    tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+}
+
+(proxy_headers) {
+    header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
+    header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+    header_up X-Forwarded-Proto {scheme}
+    header_up Host {host}
+}
+
+# --- PROXY HOSTS ---
+
+# Host: oraculo.bandeirantesms.app.br
+oraculo.bandeirantesms.app.br {
+    import cert
+    encode gzip
+    
+    reverse_proxy 192.168.1.12:4444 {
+        transport http {
+            tls_insecure_skip_verify
+        }
+        import proxy_headers
+        header_up Connection {>Connection}
+        header_up Upgrade {>Upgrade}
+        trusted_proxies 10.0.0.0/8 172.16.0.0/16 192.168.0.0/16 fc00::/7 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22
+    }
+}
+
+# Host: atendimento.bandeirantesms.app.br
+atendimento.bandeirantesms.app.br {
+    import cert
+    encode gzip
+    reverse_proxy 192.168.1.25:3000 {
+        import proxy_headers
+    }
+}
+
+# Host: n8n.bandeirantesms.app.br
+n8n.bandeirantesms.app.br {
+    import cert
+    encode gzip
+    reverse_proxy 192.168.1.11:5678 {
+        import proxy_headers
+    }
+}
+
+# Host: portainer.bandeirantesms.app.br
+portainer.bandeirantesms.app.br {
+    import cert
+    encode gzip
+    reverse_proxy 192.168.1.11:9000 {
+        import proxy_headers
+    }
+}
+
+# Host: matriculas.bandeirantesms.app.br
+matriculas.bandeirantesms.app.br {
+    import cert
+    encode gzip
+
+    log {
+        output stdout
+        format console
+        level DEBUG
+    }
+
+    handle /api/* {
+        reverse_proxy 192.168.1.32:3175 {
+            transport http {
+                versions 1.1
+            }
+            import proxy_headers
+        }
+    }
+
+    handle {
+        reverse_proxy 192.168.1.32:4174 {
+            transport http {
+                versions 1.1
+            }
+            import proxy_headers
+        }
+    }
+}
+
+# Host: dashboard.bandeirantesms.app.br
+dashboard.bandeirantesms.app.br {
+    import cert
+    encode gzip
+
+    log {
+        output stdout
+        format console
+        level DEBUG
+    }
+
+    handle /api/* {
+        reverse_proxy 192.168.1.11:8000 {
+            import proxy_headers
+        }
+    }
+
+    handle {
+        reverse_proxy 192.168.1.11:3000 {
+            import proxy_headers
+        }
+    }
+}
+
+# --- REDIRECIONAMENTOS ---
+
+www.bandeirantesms.app.br {
+    redir https://bandeirantesms.app.br{uri} permanent
+}
+
+bandeirantesms.app.br {
+    abort
+}

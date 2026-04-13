@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+
 import ComparativoClient from './comparativo-client';
 
 export const metadata: Metadata = {

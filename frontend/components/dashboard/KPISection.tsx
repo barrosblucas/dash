@@ -1,12 +1,14 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import KPICard from './KPICard';
+
 import { QUERY_KEYS } from '@/lib/constants';
 import type { KPICardData } from '@/types';
 import apiClient from '@/services/api';
 import { formatCurrency } from '@/lib/utils';
 import { useDashboardFilters } from '@/stores/filtersStore';
+
+import KPICard from './KPICard';
 
 // Tipos de resposta da API
 interface KPIsResponse {
