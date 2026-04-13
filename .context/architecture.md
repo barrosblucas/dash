@@ -166,3 +166,4 @@ Projeto em bootstrap com arquitetura limpa preparada para evolução:
 - Forecasting com Prophet (com fallback para projeção linear)
 - Frontend com dashboard interativo e API client centralizado
 - SQLite como banco de desenvolvimento (preparado para migração para PostgreSQL se necessário)
+- Entrega local padronizada via Docker Compose com backend FastAPI, frontend Next.js, SQLite persistido em volume nomeado e PDFs montados como leitura

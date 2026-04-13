@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-12 (atualizado)
+Snapshot: 2026-04-13 (atualizado)
 
 ## Status geral
 
@@ -46,6 +46,8 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] CORS e redirect corrigidos (FastAPI `redirect_slashes=False`, trailing slashes removidas)
 - [x] Serialização de tipo de receita corrigida (`.value` → `.name` para enum Pydantic)
 - [x] Backend e frontend bindados em `0.0.0.0` para acesso na rede local
+- [x] Empacotamento em Docker Compose com backend, frontend, SQLite persistido e PDFs montados como leitura
+- [x] Override de desenvolvimento com hot reload para backend (`uvicorn --reload`) e frontend (`next dev`)
 
 ### Dados
 - [x] Receitas: ~160 registros (2013–2026) extraídos de PDFs
@@ -95,9 +97,11 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 
 ## Ambiente
 
-- Backend: `http://0.0.0.0:8000` (acessível na rede local) | Docs: `http://localhost:8000/docs`
-- Frontend: `http://0.0.0.0:3000` (acessível na rede local)
-- Banco: `/home/thanos/dashboard/database/dashboard.db`
+- Docker Compose: `docker compose up --build`
+- Docker Compose dev: `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
+- Backend: `http://localhost:8000` | Docs: `http://localhost:8000/docs`
+- Frontend: `http://localhost:3000`
+- Banco: volume nomeado `dashboard-db` apontando para `/app/database` no container
 - Scripts: `bash dev.sh` (menu) ou `bash start.sh` (inicialização rápida)
-- API URL no frontend: `NEXT_PUBLIC_API_URL=http://192.168.1.21:8000`
+- API URL no frontend: `NEXT_PUBLIC_API_URL=http://localhost:8000`
 - Endpoints de scraping: `GET /api/v1/scraping/status`, `POST /api/v1/scraping/trigger`, `GET /api/v1/scraping/history`

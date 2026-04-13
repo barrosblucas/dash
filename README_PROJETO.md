@@ -42,11 +42,27 @@
 bash /home/thanos/dashboard/start.sh
 ```
 
+### Iniciar com Docker Compose
+
+```bash
+docker compose up --build
+```
+
+### Iniciar com Docker Compose em dev com hot reload
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
 ### Acessos
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
+
+O SQLite fica persistido no volume nomeado `dashboard-db`. Os diretórios `receitas/` e `despesas/` entram no backend em modo somente leitura.
+
+No modo dev, o backend usa `uvicorn --reload` e o frontend usa `next dev` com polling habilitado para refletir mudanças de código automaticamente.
 
 ### Parar osServicos
 

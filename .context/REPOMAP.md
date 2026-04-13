@@ -1,10 +1,13 @@
 # REPOMAP
 
-Snapshot: 2026-04-12
+Snapshot: 2026-04-13
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
 - `.context/`: documentação viva canônica
+- `docker-compose.yml`: orquestra backend e frontend com persistência do SQLite
+- `docker-compose.dev.yml`: override de desenvolvimento com hot reload
+- `.dockerignore`: reduz o contexto de build do Docker
 - `dev.sh`: script de desenvolvimento com menu interativo
 - `start.sh`: script de inicialização rápida
 - `README_PROJETO.md`: visão geral do projeto e stack
@@ -28,6 +31,7 @@ Snapshot: 2026-04-12
 - `infrastructure/database/migrations/`: migrations Alembic (preparado)
 - `infrastructure/repositories/sql_receita_repository.py`: implementação SQLAlchemy do repositório de receitas
 - `infrastructure/repositories/sql_despesa_repository.py`: implementação SQLAlchemy do repositório de despesas
+- `backend/Dockerfile`: imagem Python para execução da API FastAPI via uvicorn
 - `etl/extractors/pdf_extractor.py`: extrator de dados financeiros de PDFs com pdfplumber (receitas, despesas e detalhamento hierárquico)
 - `etl/scrapers/quality_api_client.py`: cliente HTTP assíncrono para API do portal QualitySistemas (receitas e despesas com retry)
 - `etl/scrapers/despesa_scraper.py`: parser de despesas QualitySistemas JSON → entidades Despesa (annual, natureza, merge com degradação graciosa)
@@ -46,6 +50,9 @@ Snapshot: 2026-04-12
 
 ## Frontend (`frontend/`)
 - `package.json`: dependências e scripts (dev, build, lint, type-check, format)
+- `Dockerfile`: imagem Node para build e execução do Next.js em container
+- `Dockerfile.dev`: imagem Node para execução do Next.js em modo dev com hot reload
+- `.dockerignore`: exclusões específicas do build do frontend
 - `next.config.js`: configuração Next.js 14
 - `tsconfig.json`: TypeScript strict com path aliases (`@/*`)
 - `tailwind.config.js`: configuração Tailwind CSS (dark palette via CSS variables para suporte light/dark)
