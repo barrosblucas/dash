@@ -24,8 +24,8 @@ function getIndent(nivel: number): string {
 
 // --- Cor do % de execução ---
 function getExecColor(pct: number): string {
-  if (pct >= 90) return 'text-emerald-400';
-  if (pct >= 70) return 'text-yellow-400';
+  if (pct >= 90) return 'text-emerald-500';
+  if (pct >= 70) return 'text-yellow-500';
   return 'text-red-400';
 }
 
@@ -145,7 +145,7 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
                 </td>
 
                 {/* Arrecadado */}
-                <td className={`px-4 py-2.5 text-right font-medium ${item.valor_arrecadado < 0 || deducao ? 'text-red-400' : 'text-emerald-400'}`}>
+                <td className={`px-4 py-2.5 text-right font-medium ${item.valor_arrecadado < 0 || deducao ? 'text-red-400' : 'text-emerald-500'}`}>
                   {formatCurrency(item.valor_arrecadado)}
                 </td>
 

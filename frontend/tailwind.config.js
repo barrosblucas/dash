@@ -38,8 +38,8 @@ module.exports = {
           700: '#15803d',
           800: '#166534',
           900: '#14532d',
-          accent: '#00ff88',
-          glow: '#00ff8850',
+          accent: '#059669',
+          glow: '#05966950',
         },
 
         // Despesas - Laranja/Vermelho vibrante (alerta, atenção)
@@ -70,8 +70,8 @@ module.exports = {
           700: '#0e7490',
           800: '#155e75',
           900: '#164e63',
-          accent: '#00d4ff',
-          glow: '#00d4ff50',
+          accent: '#0891b2',
+          glow: '#0891b250',
         },
 
         // Accent secundário - Roxo (especial, highlight)
@@ -90,20 +90,20 @@ module.exports = {
 
         // Status colors
         success: {
-          DEFAULT: '#00ff88',
-          muted: '#00ff8850',
+          DEFAULT: '#059669',
+          muted: '#05966950',
         },
         warning: {
-          DEFAULT: '#fbbf24',
-          muted: '#fbbf2450',
+          DEFAULT: '#f59e0b',
+          muted: '#f59e0b50',
         },
         danger: {
           DEFAULT: '#ff6b35',
           muted: '#ff6b3550',
         },
         info: {
-          DEFAULT: '#00d4ff',
-          muted: '#00d4ff50',
+          DEFAULT: '#0891b2',
+          muted: '#0891b250',
         },
       },
 
@@ -154,8 +154,8 @@ module.exports = {
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         glow: {
-          '0%': { boxShadow: '0 0 5px rgba(0, 255, 136, 0.2)' },
-          '100%': { boxShadow: '0 0 20px rgba(0, 255, 136, 0.4)' },
+          '0%': { boxShadow: '0 0 5px rgba(5, 150, 105, 0.2)' },
+          '100%': { boxShadow: '0 0 20px rgba(5, 150, 105, 0.4)' },
         },
         shimmer: {
           '0%': { backgroundPosition: '-200% 0' },
@@ -169,9 +169,9 @@ module.exports = {
 
       // Sombras customizadas
       boxShadow: {
-        'glow-green': '0 0 20px rgba(0, 255, 136, 0.3)',
+        'glow-green': '0 0 20px rgba(5, 150, 105, 0.3)',
         'glow-orange': '0 0 20px rgba(255, 107, 53, 0.3)',
-        'glow-blue': '0 0 20px rgba(0, 212, 255, 0.3)',
+        'glow-blue': '0 0 20px rgba(8, 145, 178, 0.3)',
         'card': 'var(--shadow-card)',
         'card-hover': 'var(--shadow-card-hover)',
       },

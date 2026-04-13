@@ -52,7 +52,7 @@ export const COLORS = {
     default: '#334155',
     hover: '#475569',
     focus: '#64748b',
-    accent: '#00ff88',
+    accent: '#059669',
   },
 
   // Receitas - Verde vibrante (crescimento, prosperidade)
@@ -60,11 +60,11 @@ export const COLORS = {
     light: '#bbf7d0',
     DEFAULT: '#22c55e',
     dark: '#16a34a',
-    accent: '#00ff88',
-    glow: 'rgba(0, 255, 136, 0.3)',
+    accent: '#059669',
+    glow: 'rgba(5, 150, 105, 0.3)',
     chart: {
       primary: '#22c55e',
-      gradient: ['#22c55e', '#00ff88'],
+      gradient: ['#22c55e', '#059669'],
       area: 'rgba(34, 197, 94, 0.2)',
     },
   },
@@ -88,11 +88,11 @@ export const COLORS = {
     light: '#a5f3fc',
     DEFAULT: '#06b6d4',
     dark: '#0891b2',
-    accent: '#00d4ff',
-    glow: 'rgba(0, 212, 255, 0.3)',
+    accent: '#0891b2',
+    glow: 'rgba(8, 145, 178, 0.3)',
     chart: {
       primary: '#06b6d4',
-      gradient: ['#06b6d4', '#00d4ff'],
+      gradient: ['#06b6d4', '#0891b2'],
       area: 'rgba(6, 182, 212, 0.2)',
       confidence: 'rgba(6, 182, 212, 0.1)',
     },
@@ -108,10 +108,10 @@ export const COLORS = {
 
   // Status colors
   status: {
-    success: '#00ff88',
-    warning: '#fbbf24',
+    success: '#059669',
+    warning: '#f59e0b',
     danger: '#ff6b35',
-    info: '#00d4ff',
+    info: '#0891b2',
     neutral: '#94a3b8',
   },
 
