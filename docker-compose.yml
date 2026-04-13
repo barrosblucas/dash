@@ -10,6 +10,9 @@ services:
       - dashboard-db:/app/database
       - ./receitas:/app/receitas:ro
       - ./despesas:/app/despesas:ro
+    networks:
+      - default
+      - caddy-proxy
     restart: unless-stopped
 
   frontend:
@@ -23,7 +26,15 @@ services:
       - backend
     ports:
       - "3100:3100"
+    networks:
+      - default
+      - caddy-proxy
     restart: unless-stopped
 
 volumes:
   dashboard-db:
+
+networks:
+  caddy-proxy:
+    external: true
+    name: caddy-proxy

@@ -1,5 +1,29 @@
 # Changelog — 2026-04-13
 
+## fix: Conexão da stack do dashboard na rede do Caddy
+
+### Objetivo
+Permitir que os containers do dashboard também participem da rede externa usada pelo Caddy (`caddy-proxy`), mantendo a rede padrão do projeto.
+
+### Abordagem técnica
+- Adicionada a rede `caddy-proxy` nos serviços `backend` e `frontend` em `docker-compose.yml`
+- Mantida a rede `default` para preservar o isolamento interno do stack
+- Declarada a rede `caddy-proxy` como externa, com nome explícito `caddy-proxy`
+- Diagnóstico de DNS executado para o host `dashboard.bandeirantesms.app.br`, confirmando ausência de resolução (`NXDOMAIN`) no momento da verificação
+
+### Arquivos alterados
+- `docker-compose.yml`
+- `.context/changelog/CHANGELOG_2026_04_13.md`
+
+### Classificação
+- Tipo: `mudanca_mecanica` (ajuste de infraestrutura/rede sem alteração de regra de negócio)
+- Domínio: `infraestrutura`
+
+### Validação
+- `docker compose -f docker-compose.yml config` ✅
+- `nslookup dashboard.bandeirantesms.app.br` ❌ (`NXDOMAIN`)
+- `nslookup dashboard.bandeirantesms.app,br` ❌ (domínio inválido por uso de vírgula)
+
 ## feat: Docker Compose para backend e frontend
 
 ### Objetivo

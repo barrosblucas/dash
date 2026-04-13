@@ -109,13 +109,13 @@ dashboard.bandeirantesms.app.br {
     }
 
     handle /api/* {
-        reverse_proxy 192.168.1.11:8000 {
+        reverse_proxy 192.168.1.11:8100 {
             import proxy_headers
         }
     }
 
     handle {
-        reverse_proxy 192.168.1.11:3000 {
+        reverse_proxy 192.168.1.11:3100 {
             import proxy_headers
         }
     }
