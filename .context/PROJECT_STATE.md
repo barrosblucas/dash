@@ -99,9 +99,12 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 
 - Docker Compose: `docker compose up --build`
 - Docker Compose dev: `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build`
-- Backend: `http://localhost:8000` | Docs: `http://localhost:8000/docs`
-- Frontend: `http://localhost:3000`
+- Frontend no Docker Compose: `http://localhost:3100`
+- Backend no Docker Compose: `http://localhost:8100`
+- Backend local/dev: `http://localhost:8000` | Docs: `http://localhost:8000/docs`
+- Frontend local/dev: `http://localhost:3000`
 - Banco: volume nomeado `dashboard-db` apontando para `/app/database` no container
 - Scripts: `bash dev.sh` (menu) ou `bash start.sh` (inicialização rápida)
-- API URL no frontend: `NEXT_PUBLIC_API_URL=http://localhost:8000`
+- API URL no frontend local/dev: `NEXT_PUBLIC_API_URL=http://localhost:8000`
+- API URL no frontend de produção: `https://dashboard.bandeirantesms.app.br`
 - Endpoints de scraping: `GET /api/v1/scraping/status`, `POST /api/v1/scraping/trigger`, `GET /api/v1/scraping/history`

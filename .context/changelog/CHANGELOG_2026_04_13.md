@@ -1,5 +1,30 @@
 # Changelog — 2026-04-13
 
+## fix: Alinhamento das portas do Docker Compose com o runtime real
+
+### Objetivo
+Eliminar a divergência entre as portas publicadas no Docker Compose e as portas efetivamente usadas pelos containers do backend e do frontend, que estava quebrando o proxy do Caddy e gerando erro 520 no domínio público.
+
+### Abordagem técnica
+- Ajustado o backend para escutar em `8000` dentro do container e publicar `8100 -> 8000`
+- Ajustado o frontend para escutar em `3000` dentro do container e publicar `3100 -> 3000`
+- Corrigido o build arg do frontend de produção para apontar para o domínio público `https://dashboard.bandeirantesms.app.br`, evitando embutir `localhost` no bundle
+- Atualizado o README do projeto com a distinção entre portas do Docker Compose e do fluxo local de desenvolvimento
+
+### Arquivos alterados
+- `backend/Dockerfile`
+- `frontend/Dockerfile`
+- `docker-compose.yml`
+- `README_PROJETO.md`
+- `.context/changelog/CHANGELOG_2026_04_13.md`
+
+### Classificação
+- Tipo: `mudanca_mecanica`
+- Domínio: `infraestrutura`
+
+### Validação
+- `docker compose config` ✅
+
 ## fix: Conexão da stack do dashboard na rede do Caddy
 
 ### Objetivo

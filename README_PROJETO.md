@@ -56,9 +56,14 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 ### Acessos
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+- **Frontend (Docker Compose)**: http://localhost:3100
+- **Backend API (Docker Compose)**: http://localhost:8100
+- **API Docs (Docker Compose)**: http://localhost:8100/docs
+
+No fluxo local direto, continue usando as portas padrão do desenvolvimento:
+
+- **Frontend (dev)**: http://localhost:3000
+- **Backend API (dev)**: http://localhost:8000
 
 O SQLite fica persistido no volume nomeado `dashboard-db`. Os diretórios `receitas/` e `despesas/` entram no backend em modo somente leitura.
 
