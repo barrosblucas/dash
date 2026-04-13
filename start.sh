@@ -18,14 +18,14 @@ sleep 2
 echo "Iniciando Backend API..."
 cd /home/thanos/dashboard
 source venv/bin/activate
-venv/bin/uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --app-dir . > /tmp/backend_api.log 2>&1 &
+venv/bin/uvicorn backend.api.main:app --host 0.0.0.0 --port 9000 --app-dir . > /tmp/backend_api.log 2>&1 &
 BACKEND_PID=$!
 echo "Backend PID: $BACKEND_PID"
 sleep 3
 
 # Verificar se Backend está rodando
-if curl -s http://localhost:8000/health > /dev/null 2>&1; then
-    echo "Backend: OK (http://localhost:8000)"
+if curl -s http://localhost:9000/health > /dev/null 2>&1; then
+    echo "Backend: OK (http://localhost:9000)"
 else
     echo "Backend: ERRO - Verifique /tmp/backend_api.log"
     tail -20 /tmp/backend_api.log
@@ -35,19 +35,19 @@ fi
 # Iniciar Frontend (Next.js)
 echo "Iniciando Frontend Next.js..."
 cd /home/thanos/dashboard/frontend
-npx next dev --port 3000 --hostname 0.0.0.0 > /tmp/frontend_next.log 2>&1 &
+npx next dev --port 4000 --hostname 0.0.0.0 > /tmp/frontend_next.log 2>&1 &
 FRONTEND_PID=$!
 echo "Frontend PID: $FRONTEND_PID"
 sleep 10
 
 # Verificar se Frontend está rodando
-if curl -s http://localhost:3000 > /dev/null 2>&1; then
-    echo "Frontend: OK (http://localhost:3000)"
+if curl -s http://localhost:4000 > /dev/null 2>&1; then
+    echo "Frontend: OK (http://localhost:4000)"
 else
     echo "Frontend: VERIFICANDO..."
     sleep 5
-    if curl -s http://localhost:3000 > /dev/null 2>&1; then
-        echo "Frontend: OK (http://localhost:3000)"
+    if curl -s http://localhost:4000 > /dev/null 2>&1; then
+        echo "Frontend: OK (http://localhost:4000)"
     else
         echo "Frontend: ERRO - Verifique /tmp/frontend_next.log"
         tail -30 /tmp/frontend_next.log
@@ -60,9 +60,9 @@ echo "============================================================"
 echo "Dashboard iniciado com sucesso!"
 echo "============================================================"
 echo ""
-echo "Backend API: http://localhost:8000"
-echo "Backend Docs: http://localhost:8000/docs"
-echo "Frontend: http://localhost:3000"
+echo "Backend API: http://localhost:9000"
+echo "Backend Docs: http://localhost:9000/docs"
+echo "Frontend: http://localhost:4000"
 echo ""
 echo "Logs:"
 echo "  Backend: /tmp/backend_api.log"
