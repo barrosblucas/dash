@@ -1,0 +1,254 @@
+"""Testes do serviço de scraping com foco no fallback de despesas."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import datetime
+from decimal import Decimal
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+
+import pytest
+
+from backend.domain.entities.despesa import Despesa, TipoDespesa
+from backend.services.scraping_service import ScrapingService
+
+
+@contextmanager
+def _fake_session_context() -> Iterator[object]:
+    """Fornece sessão fake para evitar I/O real de banco nos testes."""
+    yield object()
+
+
+def _build_despesa(fonte: str = "PDF_2026") -> Despesa:
+    """Factory de despesa válida para cenários de teste."""
+    return Despesa(
+        ano=2026,
+        mes=1,
+        valor_empenhado=Decimal("100.00"),
+        valor_liquidado=Decimal("90.00"),
+        valor_pago=Decimal("80.00"),
+        tipo=TipoDespesa.CORRENTE,
+        fonte=fonte,
+    )
+
+
+@pytest.mark.asyncio
+async def test_scrape_despesas_usa_fallback_pdf_quando_api_vazia(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = ScrapingService()
+
+    async def fake_fetch_despesas_annual(year: int) -> dict[str, Any]:
+        return {}
+
+    async def fake_fetch_despesas_natureza(year: int) -> dict[str, Any]:
+        return {}
+
+    fallback_despesa = _build_despesa()
+    fallback_called: list[int] = []
+
+    def fake_load_despesas_from_pdf(year: int) -> list[Despesa]:
+        fallback_called.append(year)
+        return [fallback_despesa]
+
+    captured: dict[str, Any] = {}
+
+    def fake_upsert_despesas(
+        session: object, despesas: list[Despesa], year: int
+    ) -> tuple[int, int]:
+        captured["despesas"] = despesas
+        return len(despesas), 0
+
+    def fake_create_log(data_type: str, year: int) -> Any:
+        return SimpleNamespace(started_at=datetime.now())
+
+    def fake_finalize_log(
+        session: object,
+        log: Any,
+        status: str,
+        processed: int,
+        inserted: int,
+        updated: int,
+    ) -> None:
+        captured["status"] = status
+        captured["processed"] = processed
+        captured["inserted"] = inserted
+        captured["updated"] = updated
+
+    monkeypatch.setattr(
+        service._api, "fetch_despesas_annual", fake_fetch_despesas_annual
+    )
+    monkeypatch.setattr(
+        service._api,
+        "fetch_despesas_natureza",
+        fake_fetch_despesas_natureza,
+    )
+    monkeypatch.setattr(service, "_load_despesas_from_pdf", fake_load_despesas_from_pdf)
+    monkeypatch.setattr(
+        ScrapingService,
+        "_upsert_despesas",
+        staticmethod(fake_upsert_despesas),
+    )
+    monkeypatch.setattr(
+        ScrapingService,
+        "_create_log",
+        staticmethod(fake_create_log),
+    )
+    monkeypatch.setattr(
+        ScrapingService,
+        "_finalize_log",
+        staticmethod(fake_finalize_log),
+    )
+    monkeypatch.setattr(
+        "backend.services.scraping_service.db_manager.get_session",
+        _fake_session_context,
+    )
+
+    result = await service.scrape_despesas(2026)
+
+    assert result.success is True
+    assert result.records_processed == 1
+    assert result.records_inserted == 1
+    assert result.records_updated == 0
+    assert fallback_called == [2026]
+    assert captured["despesas"] == [fallback_despesa]
+    assert captured["status"] == "SUCCESS"
+
+
+@pytest.mark.asyncio
+async def test_scrape_despesas_nao_usa_fallback_quando_api_tem_dados(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = ScrapingService()
+
+    async def fake_fetch_despesas_annual(year: int) -> dict[str, Any]:
+        return {
+            "quantidadeRegistro": 1,
+            "0": {
+                "mes": "JANEIRO",
+                "empenhado": "100,00",
+                "liquidado": "90,00",
+                "pago": "80,00",
+            },
+        }
+
+    async def fake_fetch_despesas_natureza(year: int) -> dict[str, Any]:
+        return {}
+
+    fallback_called = False
+
+    def fake_load_despesas_from_pdf(year: int) -> list[Despesa]:
+        nonlocal fallback_called
+        fallback_called = True
+        return [_build_despesa()]
+
+    captured: dict[str, Any] = {}
+
+    def fake_upsert_despesas(
+        session: object, despesas: list[Despesa], year: int
+    ) -> tuple[int, int]:
+        captured["despesas"] = despesas
+        return len(despesas), 0
+
+    def fake_create_log(data_type: str, year: int) -> Any:
+        return SimpleNamespace(started_at=datetime.now())
+
+    def fake_finalize_log(
+        session: object,
+        log: Any,
+        status: str,
+        processed: int,
+        inserted: int,
+        updated: int,
+    ) -> None:
+        captured["status"] = status
+
+    monkeypatch.setattr(
+        service._api, "fetch_despesas_annual", fake_fetch_despesas_annual
+    )
+    monkeypatch.setattr(
+        service._api,
+        "fetch_despesas_natureza",
+        fake_fetch_despesas_natureza,
+    )
+    monkeypatch.setattr(service, "_load_despesas_from_pdf", fake_load_despesas_from_pdf)
+    monkeypatch.setattr(
+        ScrapingService,
+        "_upsert_despesas",
+        staticmethod(fake_upsert_despesas),
+    )
+    monkeypatch.setattr(
+        ScrapingService,
+        "_create_log",
+        staticmethod(fake_create_log),
+    )
+    monkeypatch.setattr(
+        ScrapingService,
+        "_finalize_log",
+        staticmethod(fake_finalize_log),
+    )
+    monkeypatch.setattr(
+        "backend.services.scraping_service.db_manager.get_session",
+        _fake_session_context,
+    )
+
+    result = await service.scrape_despesas(2026)
+
+    assert result.success is True
+    assert result.records_processed == 1
+    assert fallback_called is False
+    assert len(captured["despesas"]) == 1
+    assert captured["despesas"][0].fonte == "SCRAPING_2026"
+    assert captured["status"] == "SUCCESS"
+
+
+def test_load_despesas_from_pdf_retorna_dados_do_extractor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = ScrapingService()
+
+    fallback_despesa = _build_despesa()
+
+    class FakeResult:
+        def __init__(self) -> None:
+            self.despesas = [fallback_despesa]
+            self.erro: str | None = None
+
+    class FakeExtractor:
+        def __init__(self, dados_dir: Path) -> None:
+            self.dados_dir = dados_dir
+
+        def extract_despesas(
+            self,
+            ano: int | None = None,
+            anos: list[int] | None = None,
+        ) -> FakeResult:
+            return FakeResult()
+
+    monkeypatch.setattr("backend.services.scraping_service.PDFExtractor", FakeExtractor)
+
+    despesas = service._load_despesas_from_pdf(2026)
+
+    assert despesas == [fallback_despesa]
+
+
+def test_load_despesas_from_pdf_retorna_vazio_em_excecao(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = ScrapingService()
+
+    class BrokenExtractor:
+        def __init__(self, dados_dir: Path) -> None:
+            raise RuntimeError("falha")
+
+    monkeypatch.setattr(
+        "backend.services.scraping_service.PDFExtractor",
+        BrokenExtractor,
+    )
+
+    despesas = service._load_despesas_from_pdf(2026)
+
+    assert despesas == []

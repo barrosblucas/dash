@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import and_, delete
@@ -17,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from backend.domain.entities.despesa import Despesa
 from backend.domain.entities.receita import Receita
-from backend.etl.extractors.pdf_extractor import ReceitaDetalhamento
+from backend.etl.extractors.pdf_extractor import PDFExtractor, ReceitaDetalhamento
 from backend.etl.scrapers.despesa_scraper import DespesaScraper
 from backend.etl.scrapers.quality_api_client import QualityAPIClient
 from backend.etl.scrapers.receita_scraper import ReceitaScraper
@@ -148,10 +149,14 @@ class ScrapingService:
             natureza = self._despesa_parser.parse_despesas_natureza(raw_natureza, year)
             merged = self._despesa_parser.merge_despesas(annual, natureza)
 
-            if not merged and not raw_annual and not raw_natureza:
-                logger.warning(
-                    "API de despesas retornou vazio para %d (possível erro 500)", year
-                )
+            if not merged:
+                if not raw_annual and not raw_natureza:
+                    logger.warning(
+                        "API de despesas retornou vazio para %d (possível erro 500)",
+                        year,
+                    )
+                logger.warning("Tentando fallback de despesas via PDF para %d", year)
+                merged = self._load_despesas_from_pdf(year)
 
             with db_manager.get_session() as session:
                 ins, upd = self._upsert_despesas(session, merged, year)
@@ -164,6 +169,41 @@ class ScrapingService:
             logger.error(msg, exc_info=True)
             self._try_log_error("despesas", year, msg, log.started_at)
             return ScrapingResult(False, "despesas", year, 0, 0, 0, [msg])
+
+    def _load_despesas_from_pdf(self, year: int) -> list[Despesa]:
+        """Carrega despesas do PDF do ano como fallback quando a API falha."""
+        dados_dir = Path(__file__).resolve().parent.parent.parent
+
+        try:
+            extractor = PDFExtractor(dados_dir)
+            resultado = extractor.extract_despesas(ano=year)
+        except Exception as exc:
+            logger.error(
+                "Falha ao executar fallback de despesas via PDF para %d: %s",
+                year,
+                exc,
+            )
+            return []
+
+        if resultado.erro:
+            logger.warning(
+                "Fallback PDF de despesas para %d concluiu com avisos: %s",
+                year,
+                resultado.erro,
+            )
+
+        if resultado.despesas:
+            logger.info(
+                "Fallback PDF de despesas para %d retornou %d registros",
+                year,
+                len(resultado.despesas),
+            )
+        else:
+            logger.warning(
+                "Fallback PDF de despesas para %d não retornou registros", year
+            )
+
+        return resultado.despesas
 
     # ------------------------------------------------------------------
     # Upsert helpers

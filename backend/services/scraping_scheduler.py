@@ -1,7 +1,7 @@
 """
 Scheduler de scraping baseado em APScheduler.
 
-Executa o pipeline de scraping periodicamente (a cada 10 minutos)
+Executa o pipeline de scraping periodicamente (a cada 30 minutos)
 e integra com o ciclo de vida da aplicação FastAPI.
 """
 
@@ -14,18 +14,23 @@ from typing import Any
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
+from backend.services.expense_pdf_sync_service import (
+    ExpensePDFSyncResult,
+    ExpensePDFSyncService,
+)
+
 logger = logging.getLogger(__name__)
 
 # Constantes de configuração
 _DEFAULT_YEAR: int = 2026
-_SCRAPE_INTERVAL_MINUTES: int = 10
+_SCRAPE_INTERVAL_MINUTES: int = 30
 _MISFIRE_GRACE_SECONDS: int = 60
 
 
 class ScrapingScheduler:
     """Scheduler periódico para o pipeline de scraping.
 
-    Gerencia a execução automática do scraping a cada 10 minutos,
+    Gerencia a execução automática do scraping a cada 30 minutos,
     permitindo também disparos manuais via API.
 
     Usage:
@@ -44,6 +49,7 @@ class ScrapingScheduler:
             },
         )
         self._last_run_result: dict[str, Any] | None = None
+        self._expense_pdf_sync_service = ExpensePDFSyncService()
 
     def start(self) -> None:
         """Inicia o scheduler com job recorrente de scraping."""
@@ -73,8 +79,14 @@ class ScrapingScheduler:
         e armazena o resultado. Exceções nunca propagam para o scheduler.
         """
         try:
+            pdf_sync_result = await self._sync_expenses_pdf(_DEFAULT_YEAR)
             scraping_service = self._create_scraping_service()
             result = await scraping_service.run_scraping(year=_DEFAULT_YEAR)
+            result["despesas_pdf_sync"] = pdf_sync_result.to_dict()
+
+            if not pdf_sync_result.success:
+                result.setdefault("errors", []).append(pdf_sync_result.message)
+
             self._last_run_result = result
             logger.info(
                 "Scraping concluído — ano=%d resultado=%s",
@@ -101,8 +113,18 @@ class ScrapingScheduler:
             Dict com o resultado do scraping.
         """
         try:
+            pdf_sync_result: ExpensePDFSyncResult | None = None
+            if data_type in ("all", "despesas"):
+                pdf_sync_result = await self._sync_expenses_pdf(year)
+
             scraping_service = self._create_scraping_service()
             result = await scraping_service.run_scraping(year=year, data_type=data_type)
+
+            if pdf_sync_result is not None:
+                result["despesas_pdf_sync"] = pdf_sync_result.to_dict()
+                if not pdf_sync_result.success:
+                    result.setdefault("errors", []).append(pdf_sync_result.message)
+
             self._last_run_result = result
             logger.info(
                 "Scraping manual concluído — ano=%d data_type=%s",
@@ -147,6 +169,25 @@ class ScrapingScheduler:
         from backend.services.scraping_service import ScrapingService
 
         return ScrapingService()
+
+    async def _sync_expenses_pdf(self, year: int) -> ExpensePDFSyncResult:
+        """Baixa e valida o PDF de despesas antes da rodada de scraping."""
+        result = await self._expense_pdf_sync_service.sync_year_pdf(year)
+
+        if result.success:
+            logger.info(
+                "Sincronização do PDF de despesas concluída — ano=%d bytes=%d",
+                year,
+                result.bytes_downloaded,
+            )
+        else:
+            logger.warning(
+                "Sincronização do PDF de despesas falhou — ano=%d motivo=%s",
+                year,
+                result.message,
+            )
+
+        return result
 
 
 def _summarize_result(result: dict[str, Any]) -> str:
