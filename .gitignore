@@ -21,14 +21,6 @@ out/
 build/
 dist/
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-database/*.db
-database/*.sqlite
-database/*.db-wal
-database/*.db-shm
 
 # IDEs
 .vscode/
