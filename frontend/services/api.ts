@@ -141,6 +141,14 @@ interface DespesaResponse {
   valor_empenhado: number; valor_liquidado: number; valor_pago: number; fonte: string;
 }
 
+interface DespesaTotalAnoResponse {
+  ano: number;
+  tipo: string | null;
+  total_empenhado: number;
+  total_liquidado: number;
+  total_pago: number;
+}
+
 // Serviços específicos da API
 export const receitasApi = {
   list: async (params?: {
@@ -200,9 +208,9 @@ export const despesasApi = {
     return apiClient.get<DespesaResponse>(`${API_ENDPOINTS.despesas.list}/${id}`);
   },
 
-  totalByYear: async (ano: number, tipo?: string): Promise<{ ano: number; tipo: string | null; total_pago: number }> => {
+  totalByYear: async (ano: number, tipo?: string): Promise<DespesaTotalAnoResponse> => {
     const url = API_ENDPOINTS.despesas.list.replace('/api/v1/despesas', `/api/v1/despesas/total/ano/${ano}`);
-    return apiClient.get(url, { params: { tipo } });
+    return apiClient.get<DespesaTotalAnoResponse>(url, { params: { tipo } });
   },
 
   totalByMonth: async (ano: number, mes: number, tipo?: string) => {

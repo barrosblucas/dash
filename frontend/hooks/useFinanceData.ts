@@ -51,6 +51,14 @@ export interface DespesaListResponse {
   has_next: boolean;
 }
 
+export interface DespesaTotalAnoResponse {
+  ano: number;
+  tipo: string | null;
+  total_empenhado: number;
+  total_liquidado: number;
+  total_pago: number;
+}
+
 export interface KPIMensal {
   mes: number;
   ano: number;
@@ -234,8 +242,8 @@ export function useDespesa(
 export function useDespesasTotalAno(
   ano: number,
   tipo?: string,
-  options?: Omit<UseQueryOptions<{ ano: number; tipo: string | null; total_pago: number }>, 'queryKey' | 'queryFn'>
-): UseQueryResult<{ ano: number; tipo: string | null; total_pago: number }> {
+  options?: Omit<UseQueryOptions<DespesaTotalAnoResponse>, 'queryKey' | 'queryFn'>
+): UseQueryResult<DespesaTotalAnoResponse> {
   return useQuery({
     queryKey: [...QUERY_KEYS.despesas.all, 'total', 'ano', ano, tipo],
     queryFn: () => despesasApi.totalByYear(ano, tipo),

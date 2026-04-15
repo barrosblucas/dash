@@ -5,9 +5,36 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from apscheduler.triggers.interval import IntervalTrigger
 
 from backend.services.expense_pdf_sync_service import ExpensePDFSyncResult
 from backend.services.scraping_scheduler import ScrapingScheduler
+
+
+def test_start_configura_intervalo_de_um_minuto_e_execucao_imediata(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scheduler = ScrapingScheduler()
+    captured: dict[str, Any] = {}
+
+    def fake_add_job(func: Any, trigger: IntervalTrigger, **kwargs: Any) -> None:
+        captured["func"] = func
+        captured["trigger"] = trigger
+        captured["kwargs"] = kwargs
+
+    def fake_start() -> None:
+        captured["started"] = True
+
+    monkeypatch.setattr(scheduler._scheduler, "add_job", fake_add_job)
+    monkeypatch.setattr(scheduler._scheduler, "start", fake_start)
+
+    scheduler.start()
+
+    assert captured["started"] is True
+    assert isinstance(captured["trigger"], IntervalTrigger)
+    assert captured["trigger"].interval.total_seconds() == 60
+    assert captured["kwargs"]["id"] == "scrape_recurring"
+    assert captured["kwargs"]["next_run_time"] is not None
 
 
 @pytest.mark.asyncio

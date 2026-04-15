@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { useReceitasDetalhamento } from '@/hooks/useFinanceData';
+import { useReceitasDetalhamento, useReceitasTotalAno } from '@/hooks/useFinanceData';
 import type { ReceitaDetalhamento } from '@/types/receita';
 import useExport from '@/hooks/useExport';
 import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
@@ -23,9 +23,11 @@ export default function ReceitasClient() {
   const { anoSelecionado, setAnoSelecionado, tipoReceita, setTipoReceita } = useDashboardFilters();
   const anos = useAnosDisponiveis();
   const { exportData, isExporting } = useExport();
+  const tipoParaTotalAnual = tipoReceita === 'TODOS' ? undefined : tipoReceita;
 
   const { data: detalhamentoData, isLoading: isLoadingDetalhamento } =
     useReceitasDetalhamento(anoSelecionado);
+  const { data: totalAnoData } = useReceitasTotalAno(anoSelecionado, tipoParaTotalAnual);
 
   const itens = useMemo(() => {
     if (!detalhamentoData?.itens) return [];
@@ -34,15 +36,27 @@ export default function ReceitasClient() {
   }, [detalhamentoData, tipoReceita]);
 
   const summary = useMemo(() => {
-    if (itens.length === 0) return { arrecadado: 0, previsto: 0, execucao: 0 };
-    // Usa apenas itens de nível 1 (totais) para o resumo
-    const topLevel = itens.filter((i) => i.nivel === 1);
-    const source = topLevel.length > 0 ? topLevel : itens;
-    const arrecadado = source.reduce((s, r) => s + r.valor_arrecadado, 0);
-    const previsto = source.reduce((s, r) => s + r.valor_previsto, 0);
+    const topLevelItens = (detalhamentoData?.itens ?? []).filter((item) => item.nivel === 1);
+
+    const previstoCorrentePrincipal = topLevelItens
+      .filter((item) => item.tipo === 'CORRENTE' && !isDeducao(item.detalhamento))
+      .reduce((sum, item) => sum + item.valor_previsto, 0);
+
+    const previstoCapital = topLevelItens
+      .filter((item) => item.tipo === 'CAPITAL')
+      .reduce((sum, item) => sum + item.valor_previsto, 0);
+
+    const arrecadadoAno = totalAnoData?.total_arrecadado ?? 0;
+    const arrecadadoCapital = topLevelItens
+      .filter((item) => item.tipo === 'CAPITAL')
+      .reduce((sum, item) => sum + (item.valor_arrecadado - item.valor_anulado), 0);
+
+    const arrecadado = tipoReceita === 'CAPITAL' ? arrecadadoCapital : arrecadadoAno;
+    const previsto = tipoReceita === 'CAPITAL' ? previstoCapital : previstoCorrentePrincipal;
     const execucao = previsto > 0 ? (arrecadado / previsto) * 100 : 0;
+
     return { arrecadado, previsto, execucao };
-  }, [itens]);
+  }, [detalhamentoData, tipoReceita, totalAnoData]);
 
   const handleExport = async (format: 'csv' | 'json') => {
     const exportRows = itens.map((r: ReceitaDetalhamento) => ({
@@ -183,4 +197,9 @@ function SummaryCard({ label, value, accent }: SummaryCardProps) {
       <p className="mt-1 text-xl font-bold" style={{ color: accent }}>{value}</p>
     </div>
   );
+}
+
+function isDeducao(detalhamento: string): boolean {
+  const normalized = detalhamento.trim().toUpperCase();
+  return normalized.startsWith('(-)') || normalized.includes('DEDU');
 }

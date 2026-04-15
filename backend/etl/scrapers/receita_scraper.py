@@ -69,7 +69,7 @@ def _safe_decimal(value: Any) -> Decimal:
     if value is None:
         return Decimal("0")
 
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return Decimal(str(value))
 
     if isinstance(value, str):
@@ -136,7 +136,7 @@ class ReceitaScraper:
         """Converte resposta do endpoint Revenue em entidades Receita.
 
         Cada item do array contém ``mes`` (texto) e ``valorArrecadado``.
-        Itens com valor inválido ou mês desconhecido são ignorados.
+        Itens com mês desconhecido são ignorados.
 
         Args:
             data: Lista de dicts do endpoint Revenue.
@@ -155,12 +155,6 @@ class ReceitaScraper:
                 continue
 
             valor_arrecadado = _safe_decimal(entry.get("valorArrecadado"))
-            if valor_arrecadado == Decimal("0"):
-                logger.debug(
-                    "Mês %s com valor arrecadado zero/inválido — pulando",
-                    mes_nome,
-                )
-                continue
 
             receitas.append(
                 Receita(

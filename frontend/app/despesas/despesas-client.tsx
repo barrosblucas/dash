@@ -5,7 +5,7 @@ import { useState, useMemo, useCallback } from 'react';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import ExpenseChart from '@/components/charts/ExpenseChart';
-import { useDespesas } from '@/hooks/useFinanceData';
+import { useDespesas, useDespesasTotalAno } from '@/hooks/useFinanceData';
 import type { DespesaResponse } from '@/hooks/useFinanceData';
 import useExport from '@/hooks/useExport';
 import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
@@ -26,22 +26,17 @@ export default function DespesasClient() {
     limit: PAGE_SIZE,
     offset: page * PAGE_SIZE,
   });
+  const { data: totalAnoData } = useDespesasTotalAno(anoSelecionado);
 
   const { exportData, isExporting } = useExport();
 
   const totals = useMemo(() => {
-    if (!data?.despesas) {
-      return { empenhado: 0, liquidado: 0, pago: 0 };
-    }
-    return data.despesas.reduce(
-      (acc, d) => ({
-        empenhado: acc.empenhado + d.valor_empenhado,
-        liquidado: acc.liquidado + d.valor_liquidado,
-        pago: acc.pago + d.valor_pago,
-      }),
-      { empenhado: 0, liquidado: 0, pago: 0 },
-    );
-  }, [data?.despesas]);
+    return {
+      empenhado: totalAnoData?.total_empenhado ?? 0,
+      liquidado: totalAnoData?.total_liquidado ?? 0,
+      pago: totalAnoData?.total_pago ?? 0,
+    };
+  }, [totalAnoData]);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE)),

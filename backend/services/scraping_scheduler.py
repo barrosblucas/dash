@@ -1,7 +1,7 @@
 """
 Scheduler de scraping baseado em APScheduler.
 
-Executa o pipeline de scraping periodicamente (a cada 30 minutos)
+Executa o pipeline de scraping periodicamente (a cada 1 minuto)
 e integra com o ciclo de vida da aplicação FastAPI.
 """
 
@@ -23,14 +23,14 @@ logger = logging.getLogger(__name__)
 
 # Constantes de configuração
 _DEFAULT_YEAR: int = 2026
-_SCRAPE_INTERVAL_MINUTES: int = 30
+_SCRAPE_INTERVAL_MINUTES: int = 1
 _MISFIRE_GRACE_SECONDS: int = 60
 
 
 class ScrapingScheduler:
     """Scheduler periódico para o pipeline de scraping.
 
-    Gerencia a execução automática do scraping a cada 30 minutos,
+    Gerencia a execução automática do scraping a cada 1 minuto,
     permitindo também disparos manuais via API.
 
     Usage:
@@ -56,6 +56,7 @@ class ScrapingScheduler:
         self._scheduler.add_job(
             self.scrape_job,
             trigger=IntervalTrigger(minutes=_SCRAPE_INTERVAL_MINUTES),
+            next_run_time=datetime.now(),
             id="scrape_recurring",
             name="scraping_periodico",
             replace_existing=True,

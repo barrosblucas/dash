@@ -114,11 +114,13 @@ Ao adicionar uma nova feature, criar os arquivos em cada camada relevante:
 ## Fluxo principal (alto nível)
 
 1. Pipeline ETL extrai dados de PDFs financeiros (receitas/despesas)
-2. Dados são transformados e carregados no SQLite via SQLAlchemy
-3. API FastAPI serve endpoints para receitas, despesas, KPIs e forecast
-4. Frontend Next.js consome a API e renderiza dashboard interativo
-5. Serviço de forecasting gera previsões com Prophet ou projeção linear
-6. Exportação gera relatórios em PDF (reportlab) e Excel (openpyxl)
+2. Na inicialização da API, bootstrap idempotente preenche anos ausentes no SQLite com base nos PDFs disponíveis
+3. Dados são transformados e carregados no SQLite via SQLAlchemy
+4. Para 2026, sincronização recorrente via API Quality roda continuamente e sobrescreve snapshot do ano no banco
+5. API FastAPI serve endpoints para receitas, despesas, KPIs e forecast
+6. Frontend Next.js consome a API e renderiza dashboard interativo
+7. Serviço de forecasting gera previsões com Prophet ou projeção linear
+8. Exportação gera relatórios em PDF (reportlab) e Excel (openpyxl)
 
 ## Camadas do backend
 

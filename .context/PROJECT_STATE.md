@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-13 (atualizado)
+Snapshot: 2026-04-14 (atualizado)
 
 ## Status geral
 
@@ -17,8 +17,10 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Endpoints de forecast (receitas, despesas)
 - [x] Endpoints de exportação (PDF, Excel)
 - [x] Endpoints de scraping (status do scheduler, trigger manual, histórico de execuções)
-- [x] Scheduler de scraping periódico (APScheduler, 10 min) integrado ao lifespan FastAPI
+- [x] Scheduler de scraping periódico (APScheduler, 1 min) com primeira execução imediata no startup
 - [x] Serviço de scraping QualitySistemas com upsert de receitas, despesas e detalhamento
+- [x] Bootstrap histórico idempotente no startup da API para preencher anos ausentes do banco com base nos PDFs locais
+- [x] Sincronização do ano 2026 com prioridade de API (replace por ano para evitar valores antigos persistidos)
 - [x] Schemas Pydantic para todas as bordas
 - [x] Entidades de domínio com validação (Receita, Despesa)
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)

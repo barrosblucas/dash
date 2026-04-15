@@ -25,6 +25,9 @@ from backend.api.routes.export import router as export_router
 from backend.api.routes.forecast import router as forecast_router
 from backend.api.schemas import HealthCheckResponse
 from backend.infrastructure.database.connection import db_manager, init_database
+from backend.services.historical_data_bootstrap_service import (
+    HistoricalDataBootstrapService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +51,28 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.exception("Erro ao inicializar banco de dados")
         raise
+
+    try:
+        bootstrap_result = (
+            HistoricalDataBootstrapService().bootstrap_missing_years()
+        )
+        if bootstrap_result.executed:
+            logger.info(
+                "Bootstrap histórico executado. "
+                "Anos faltantes: receitas=%s despesas=%s detalhamento=%s",
+                bootstrap_result.receitas_missing_years,
+                bootstrap_result.despesas_missing_years,
+                bootstrap_result.detalhamento_missing_years,
+            )
+            if bootstrap_result.warnings:
+                logger.warning(
+                    "Bootstrap histórico finalizado com avisos: %s",
+                    bootstrap_result.warnings,
+                )
+        else:
+            logger.info("Bootstrap histórico não necessário")
+    except Exception:
+        logger.exception("Falha no bootstrap histórico de dados")
 
     # Inicia scheduler de scraping
     scheduler = None

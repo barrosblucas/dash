@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-04-13
+Snapshot: 2026-04-14
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -40,9 +40,12 @@ Snapshot: 2026-04-13
 - `ml/`: modelos de ML (preparado para Prophet/scikit-learn)
 - `services/`: serviços de aplicação
 - `services/scraping_service.py`: orquestração do scraping QualitySistemas com upsert (receitas, despesas, detalhamento)
-- `services/scraping_scheduler.py`: scheduler APScheduler para scraping periódico (10 min) com integração no lifespan FastAPI
+- `services/scraping_scheduler.py`: scheduler APScheduler para scraping periódico (1 min) com disparo imediato no startup
+- `services/historical_data_bootstrap_service.py`: bootstrap idempotente de anos históricos ausentes a partir dos PDFs no startup da API
 - `tests/test_api/`: testes de integração das rotas (preparado)
 - `tests/test_etl/`: testes do pipeline ETL (preparado)
+- `tests/test_etl/test_historical_data_bootstrap_service.py`: testes unitários do bootstrap histórico (lacunas, execução, utilitários)
+- `tests/test_etl/test_receita_scraper.py`: testes unitários do parser de receitas (meses com zero e mês inválido)
 - `tests/test_ml/`: testes dos modelos de ML (preparado)
 - `pyproject.toml`: configuração de qualidade (ruff, black, mypy, pytest, coverage)
 - `requirements.txt`: dependências Python (FastAPI, SQLAlchemy, Pydantic, Prophet, etc.)

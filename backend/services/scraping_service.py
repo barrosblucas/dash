@@ -32,6 +32,8 @@ from backend.infrastructure.database.models import (
 
 logger = logging.getLogger(__name__)
 
+_REALTIME_API_YEAR = 2026
+
 
 @dataclass
 class ScrapingResult:
@@ -116,8 +118,16 @@ class ScrapingService:
             receitas = self._receita_parser.parse_revenue_monthly(raw_monthly, year)
             detalhes = self._receita_parser.parse_revenue_detailing(raw_detail, year)
 
+            if not receitas or not detalhes:
+                raise RuntimeError(
+                    "API de receitas retornou dados incompletos para persistência"
+                )
+
             with db_manager.get_session() as session:
-                ins, upd = self._upsert_receitas(session, receitas, year)
+                if year == _REALTIME_API_YEAR:
+                    ins, upd = self._replace_receitas_for_year(session, receitas, year)
+                else:
+                    ins, upd = self._upsert_receitas(session, receitas, year)
                 det_cnt = self._replace_detalhamento(session, detalhes, year)
                 self._finalize_log(
                     session, log, "SUCCESS", len(receitas) + det_cnt, ins + det_cnt, upd
@@ -159,7 +169,10 @@ class ScrapingService:
                 merged = self._load_despesas_from_pdf(year)
 
             with db_manager.get_session() as session:
-                ins, upd = self._upsert_despesas(session, merged, year)
+                if year == _REALTIME_API_YEAR:
+                    ins, upd = self._replace_despesas_for_year(session, merged, year)
+                else:
+                    ins, upd = self._upsert_despesas(session, merged, year)
                 self._finalize_log(session, log, "SUCCESS", len(merged), ins, upd)
 
             logger.info("Scraping despesas %d: %d ins, %d upd", year, ins, upd)
@@ -319,6 +332,24 @@ class ScrapingService:
             )
         session.flush()
         return len(detalhes)
+
+    @staticmethod
+    def _replace_receitas_for_year(
+        session: Session, receitas: list[Receita], year: int
+    ) -> tuple[int, int]:
+        """Substitui todas as receitas do ano e reinsere a visão atual da fonte."""
+        session.execute(delete(ReceitaModel).where(ReceitaModel.ano == year))
+        session.flush()
+        return ScrapingService._upsert_receitas(session, receitas, year)
+
+    @staticmethod
+    def _replace_despesas_for_year(
+        session: Session, despesas: list[Despesa], year: int
+    ) -> tuple[int, int]:
+        """Substitui todas as despesas do ano e reinsere a visão atual da fonte."""
+        session.execute(delete(DespesaModel).where(DespesaModel.ano == year))
+        session.flush()
+        return ScrapingService._upsert_despesas(session, despesas, year)
 
     # ------------------------------------------------------------------
     # Logging helpers
