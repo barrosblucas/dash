@@ -168,6 +168,16 @@ class ScrapingService:
                 logger.warning("Tentando fallback de despesas via PDF para %d", year)
                 merged = self._load_despesas_from_pdf(year)
 
+            if not merged:
+                message = (
+                    f"Nenhum dado de despesas disponível para {year}; "
+                    "mantendo snapshot anterior no banco"
+                )
+                logger.warning(message)
+                with db_manager.get_session() as session:
+                    self._finalize_log(session, log, "NO_DATA", 0, 0, 0)
+                return ScrapingResult(False, "despesas", year, 0, 0, 0, [message])
+
             with db_manager.get_session() as session:
                 if year == _REALTIME_API_YEAR:
                     ins, upd = self._replace_despesas_for_year(session, merged, year)

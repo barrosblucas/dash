@@ -1,11 +1,11 @@
 # REPOMAP
 
-Snapshot: 2026-04-14
+Snapshot: 2026-04-16
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
 - `.context/`: documentação viva canônica
-- `docker-compose.yml`: orquestra backend e frontend com persistência do SQLite
+- `docker-compose.yml`: orquestra backend e frontend com persistência do SQLite, `receitas/` em leitura e `despesas/` com escrita para sincronização de PDF
 - `docker-compose.dev.yml`: override de desenvolvimento com hot reload
 - `.dockerignore`: reduz o contexto de build do Docker
 - `dev.sh`: script de desenvolvimento com menu interativo
@@ -33,19 +33,23 @@ Snapshot: 2026-04-14
 - `infrastructure/repositories/sql_despesa_repository.py`: implementação SQLAlchemy do repositório de despesas
 - `backend/Dockerfile`: imagem Python para execução da API FastAPI via uvicorn
 - `etl/extractors/pdf_extractor.py`: extrator de dados financeiros de PDFs com pdfplumber (receitas, despesas e detalhamento hierárquico)
-- `etl/scrapers/quality_api_client.py`: cliente HTTP assíncrono para API do portal QualitySistemas (receitas e despesas com retry)
+- `etl/scrapers/quality_api_client.py`: cliente HTTP assíncrono para API do portal QualitySistemas (receitas e despesas com retry; despesas via rota com barra dupla)
 - `etl/scrapers/despesa_scraper.py`: parser de despesas QualitySistemas JSON → entidades Despesa (annual, natureza, merge com degradação graciosa)
 - `etl/transformers/`: transformadores de dados (preparado para expansão)
 - `etl/loaders/`: carregadores de dados (preparado para expansão)
 - `ml/`: modelos de ML (preparado para Prophet/scikit-learn)
 - `services/`: serviços de aplicação
 - `services/scraping_service.py`: orquestração do scraping QualitySistemas com upsert (receitas, despesas, detalhamento)
-- `services/scraping_scheduler.py`: scheduler APScheduler para scraping periódico (1 min) com disparo imediato no startup
+- `services/scraping_scheduler.py`: scheduler APScheduler para scraping periódico (10 min) com disparo imediato no startup
+- `services/expense_pdf_sync_service.py`: sincronização do PDF de despesas em duas etapas (geração de path via `RelatorioPdf` + download do binário)
 - `services/historical_data_bootstrap_service.py`: bootstrap idempotente de anos históricos ausentes a partir dos PDFs no startup da API
 - `tests/test_api/`: testes de integração das rotas (preparado)
 - `tests/test_etl/`: testes do pipeline ETL (preparado)
 - `tests/test_etl/test_historical_data_bootstrap_service.py`: testes unitários do bootstrap histórico (lacunas, execução, utilitários)
 - `tests/test_etl/test_receita_scraper.py`: testes unitários do parser de receitas (meses com zero e mês inválido)
+- `tests/test_etl/test_scraping_scheduler.py`: testes unitários do scheduler de scraping e sincronização de PDF
+- `tests/test_etl/test_expense_pdf_sync_service.py`: testes unitários da sincronização de PDF de despesas
+- `tests/test_etl/test_quality_api_client.py`: testes unitários do contrato de URL do cliente Quality para despesas
 - `tests/test_ml/`: testes dos modelos de ML (preparado)
 - `pyproject.toml`: configuração de qualidade (ruff, black, mypy, pytest, coverage)
 - `requirements.txt`: dependências Python (FastAPI, SQLAlchemy, Pydantic, Prophet, etc.)

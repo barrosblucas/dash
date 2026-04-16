@@ -15,17 +15,28 @@ _ENTITY_SLUG = "prefeitura_municipal_de_bandeirantes"
 _UNIDADE_GESTORA = "CONSOLIDADO"
 _TIPO_RELATORIO = "naturezaDespesa"
 
-_PDF_DOWNLOAD_URL = "https://web.qualitysistemas.com.br/despesas/RelatorioPdf"
+_PDF_GENERATION_URL = "https://web.qualitysistemas.com.br/despesas//RelatorioPdf"
+_PDF_FILE_BASE_URL = "https://web.qualitysistemas.com.br/despesas/"
 _REQUEST_TIMEOUT_SECONDS = 45.0
 _MIN_PDF_BYTES = 1024
 
-_HEADERS = {
+_HEADERS_BASE = {
     "User-Agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/120.0.0.0 Safari/537.36"
     ),
     "Referer": f"https://web.qualitysistemas.com.br/despesas/{_ENTITY_SLUG}",
+}
+
+_HEADERS_GENERATION_REQUEST = {
+    **_HEADERS_BASE,
+    "X-Requested-With": "XMLHttpRequest",
+    "Accept": "application/json, text/javascript, */*; q=0.01",
+}
+
+_HEADERS_PDF_DOWNLOAD = {
+    **_HEADERS_BASE,
     "Accept": "application/pdf,application/octet-stream;q=0.9,*/*;q=0.8",
 }
 
@@ -62,7 +73,12 @@ class ExpensePDFSyncService:
         self._timeout = httpx.Timeout(_REQUEST_TIMEOUT_SECONDS)
 
     async def sync_year_pdf(self, year: int) -> ExpensePDFSyncResult:
-        """Sincroniza o PDF do ano e substitui o arquivo local se válido."""
+        """Sincroniza o PDF do ano e substitui o arquivo local se válido.
+
+        O portal de despesas gera o arquivo em duas etapas:
+        1) ``RelatorioPdf`` retorna JSON com o caminho do arquivo gerado.
+        2) O PDF real é baixado pelo ``path`` retornado.
+        """
         self._despesas_dir.mkdir(parents=True, exist_ok=True)
 
         target_path = self._despesas_dir / f"{year}.pdf"
@@ -78,10 +94,58 @@ class ExpensePDFSyncService:
         try:
             async with httpx.AsyncClient(
                 timeout=self._timeout,
-                headers=_HEADERS,
                 follow_redirects=True,
             ) as client:
-                response = await client.get(_PDF_DOWNLOAD_URL, params=params)
+                generation_response = await client.get(
+                    _PDF_GENERATION_URL,
+                    params=params,
+                    headers=_HEADERS_GENERATION_REQUEST,
+                )
+
+                if generation_response.status_code != httpx.codes.OK:
+                    return ExpensePDFSyncResult(
+                        success=False,
+                        year=year,
+                        file_path=str(target_path),
+                        bytes_downloaded=0,
+                        status_code=generation_response.status_code,
+                        message=(
+                            "Geração do PDF de despesas retornou "
+                            f"HTTP {generation_response.status_code}"
+                        ),
+                    )
+
+                try:
+                    generation_payload = generation_response.json()
+                except ValueError:
+                    return ExpensePDFSyncResult(
+                        success=False,
+                        year=year,
+                        file_path=str(target_path),
+                        bytes_downloaded=len(generation_response.content),
+                        status_code=generation_response.status_code,
+                        message="Resposta inválida ao gerar PDF de despesas",
+                    )
+
+                generated_path = generation_payload.get("path")
+                if not isinstance(generated_path, str) or not generated_path.strip():
+                    return ExpensePDFSyncResult(
+                        success=False,
+                        year=year,
+                        file_path=str(target_path),
+                        bytes_downloaded=len(generation_response.content),
+                        status_code=generation_response.status_code,
+                        message="Resposta sem caminho de PDF gerado",
+                    )
+
+                download_url = generated_path.strip()
+                if not download_url.startswith(("http://", "https://")):
+                    download_url = f"{_PDF_FILE_BASE_URL}{download_url.lstrip('/')}"
+
+                response = await client.get(
+                    download_url,
+                    headers=_HEADERS_PDF_DOWNLOAD,
+                )
         except httpx.RequestError as exc:
             logger.error("Falha HTTP na sincronização de PDF %d: %s", year, exc)
             return ExpensePDFSyncResult(
@@ -107,8 +171,9 @@ class ExpensePDFSyncService:
 
         content_type = response.headers.get("content-type", "").lower()
         pdf_bytes = response.content
+        starts_with_pdf_magic = pdf_bytes.startswith(b"%PDF")
 
-        if "pdf" not in content_type:
+        if "pdf" not in content_type and not starts_with_pdf_magic:
             return ExpensePDFSyncResult(
                 success=False,
                 year=year,
@@ -121,7 +186,7 @@ class ExpensePDFSyncService:
                 ),
             )
 
-        if len(pdf_bytes) < _MIN_PDF_BYTES or not pdf_bytes.startswith(b"%PDF"):
+        if len(pdf_bytes) < _MIN_PDF_BYTES or not starts_with_pdf_magic:
             return ExpensePDFSyncResult(
                 success=False,
                 year=year,

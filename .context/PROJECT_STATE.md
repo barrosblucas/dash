@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-14 (atualizado)
+Snapshot: 2026-04-16 (atualizado)
 
 ## Status geral
 
@@ -17,8 +17,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Endpoints de forecast (receitas, despesas)
 - [x] Endpoints de exportação (PDF, Excel)
 - [x] Endpoints de scraping (status do scheduler, trigger manual, histórico de execuções)
-- [x] Scheduler de scraping periódico (APScheduler, 1 min) com primeira execução imediata no startup
+- [x] Scheduler de scraping periódico (APScheduler, 10 min) com primeira execução imediata no startup
 - [x] Serviço de scraping QualitySistemas com upsert de receitas, despesas e detalhamento
+- [x] Sincronização de PDF de despesas com contrato real do portal (RelatorioPdf retorna path + download subsequente do binário)
 - [x] Bootstrap histórico idempotente no startup da API para preencher anos ausentes do banco com base nos PDFs locais
 - [x] Sincronização do ano 2026 com prioridade de API (replace por ano para evitar valores antigos persistidos)
 - [x] Schemas Pydantic para todas as bordas
@@ -48,7 +49,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] CORS e redirect corrigidos (FastAPI `redirect_slashes=False`, trailing slashes removidas)
 - [x] Serialização de tipo de receita corrigida (`.value` → `.name` para enum Pydantic)
 - [x] Backend e frontend bindados em `0.0.0.0` para acesso na rede local
-- [x] Empacotamento em Docker Compose com backend, frontend, SQLite persistido e PDFs montados como leitura
+- [x] Empacotamento em Docker Compose com backend, frontend, SQLite persistido, `receitas/` em leitura e `despesas/` em escrita para atualização automática
 - [x] Override de desenvolvimento com hot reload para backend (`uvicorn --reload`) e frontend (`next dev`)
 
 ### Dados
@@ -77,7 +78,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 
 ### Arquitetura
 
-- Testes `test_api/`, `test_etl/`, `test_ml/` ainda vazios — sem cobertura automatizada
+- Testes `test_api/` e `test_ml/` ainda vazios; `test_etl/` parcialmente coberto — cobertura automatizada ainda insuficiente
 - `domain/usecases/` vazio — lógica ainda acoplada nas rotas
 - `etl/transformers/` e `etl/loaders/` vazios — extração direta sem camada de transformação dedicada
 - `backend/ml/` vazio — forecasting service importa modelos diretamente

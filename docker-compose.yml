@@ -9,7 +9,7 @@ services:
     volumes:
       - dashboard-db:/app/database
       - ./receitas:/app/receitas:ro
-      - ./despesas:/app/despesas:ro
+      - ./despesas:/app/despesas
     networks:
       - default
       - caddy-proxy

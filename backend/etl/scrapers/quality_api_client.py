@@ -18,7 +18,8 @@ logger = logging.getLogger(__name__)
 
 # --- Constantes de configuração ---
 _BASE_RECEITAS_URL = "https://web.qualitysistemas.com.br/receitas"
-_BASE_DESPESAS_URL = "https://web.qualitysistemas.com.br/despesas"
+# O portal de despesas exige rota com barra dupla ("/despesas//Endpoint").
+_BASE_DESPESAS_URL = "https://web.qualitysistemas.com.br/despesas/"
 _ENTITY_SLUG = "prefeitura_municipal_de_bandeirantes"
 _ENTITY_ID = 255
 
@@ -111,13 +112,13 @@ class QualityAPIClient:
         return []
 
     async def fetch_despesas_annual(
-        self, year: int, unidade_gestora: int = -1
+        self, year: int, unidade_gestora: int = 0
     ) -> dict[str, Any]:
         """Busca despesas anuais (empenhado, liquidado, pago por mês).
 
         Args:
             year: Ano de referência.
-            unidade_gestora: Código da unidade gestora (default -1 = todas).
+            unidade_gestora: Código da unidade gestora (default 0).
 
         Returns:
             Dict com ``quantidadeRegistro``, ``total`` e registros mensais.
@@ -137,13 +138,13 @@ class QualityAPIClient:
         return {}
 
     async def fetch_despesas_natureza(
-        self, year: int, unidade_gestora: int = -1
+        self, year: int, unidade_gestora: int = 0
     ) -> dict[str, Any]:
         """Busca despesas por natureza (valores mensais por categoria).
 
         Args:
             year: Ano de referência.
-            unidade_gestora: Código da unidade gestora (default -1 = todas).
+            unidade_gestora: Código da unidade gestora (default 0).
 
         Returns:
             Dict com ``quantidade``, ``total`` e registros por natureza.

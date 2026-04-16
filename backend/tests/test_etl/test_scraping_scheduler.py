@@ -1,5 +1,7 @@
 """Testes do scheduler de scraping com sincronização de PDF."""
 
+# mypy: disable-error-code=import-untyped
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,7 +13,7 @@ from backend.services.expense_pdf_sync_service import ExpensePDFSyncResult
 from backend.services.scraping_scheduler import ScrapingScheduler
 
 
-def test_start_configura_intervalo_de_um_minuto_e_execucao_imediata(
+def test_start_configura_intervalo_de_dez_minutos_e_execucao_imediata(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     scheduler = ScrapingScheduler()
@@ -32,7 +34,7 @@ def test_start_configura_intervalo_de_um_minuto_e_execucao_imediata(
 
     assert captured["started"] is True
     assert isinstance(captured["trigger"], IntervalTrigger)
-    assert captured["trigger"].interval.total_seconds() == 60
+    assert captured["trigger"].interval.total_seconds() == 600
     assert captured["kwargs"]["id"] == "scrape_recurring"
     assert captured["kwargs"]["next_run_time"] is not None
 

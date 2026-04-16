@@ -122,6 +122,87 @@ async def test_scrape_despesas_usa_fallback_pdf_quando_api_vazia(
 
 
 @pytest.mark.asyncio
+async def test_scrape_despesas_retorna_no_data_e_nao_replace_quando_sem_fonte(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = ScrapingService()
+
+    async def fake_fetch_despesas_annual(year: int) -> dict[str, Any]:
+        return {}
+
+    async def fake_fetch_despesas_natureza(year: int) -> dict[str, Any]:
+        return {}
+
+    def fake_load_despesas_from_pdf(year: int) -> list[Despesa]:
+        return []
+
+    def fail_if_replace_called(
+        session: object, despesas: list[Despesa], year: int
+    ) -> tuple[int, int]:
+        raise AssertionError("Nao deveria substituir despesas quando nao ha dados")
+
+    captured: dict[str, Any] = {}
+
+    def fake_create_log(data_type: str, year: int) -> Any:
+        return SimpleNamespace(started_at=datetime.now())
+
+    def fake_finalize_log(
+        session: object,
+        log: Any,
+        status: str,
+        processed: int,
+        inserted: int,
+        updated: int,
+    ) -> None:
+        captured["status"] = status
+        captured["processed"] = processed
+        captured["inserted"] = inserted
+        captured["updated"] = updated
+
+    monkeypatch.setattr(
+        service._api, "fetch_despesas_annual", fake_fetch_despesas_annual
+    )
+    monkeypatch.setattr(
+        service._api,
+        "fetch_despesas_natureza",
+        fake_fetch_despesas_natureza,
+    )
+    monkeypatch.setattr(service, "_load_despesas_from_pdf", fake_load_despesas_from_pdf)
+    monkeypatch.setattr(
+        ScrapingService,
+        "_replace_despesas_for_year",
+        staticmethod(fail_if_replace_called),
+    )
+    monkeypatch.setattr(
+        ScrapingService,
+        "_create_log",
+        staticmethod(fake_create_log),
+    )
+    monkeypatch.setattr(
+        ScrapingService,
+        "_finalize_log",
+        staticmethod(fake_finalize_log),
+    )
+    monkeypatch.setattr(
+        "backend.services.scraping_service.db_manager.get_session",
+        _fake_session_context,
+    )
+
+    result = await service.scrape_despesas(2026)
+
+    assert result.success is False
+    assert result.records_processed == 0
+    assert result.records_inserted == 0
+    assert result.records_updated == 0
+    assert result.errors
+    assert "Nenhum dado de despesas disponível" in result.errors[0]
+    assert captured["status"] == "NO_DATA"
+    assert captured["processed"] == 0
+    assert captured["inserted"] == 0
+    assert captured["updated"] == 0
+
+
+@pytest.mark.asyncio
 async def test_scrape_despesas_nao_usa_fallback_quando_api_tem_dados(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -21,16 +22,19 @@ class _FakeResponse:
         self.headers = headers
         self.content = content
 
+    def json(self) -> Any:
+        return json.loads(self.content.decode("utf-8"))
+
 
 class _FakeAsyncClient:
     def __init__(
         self,
         *args: Any,
-        response: _FakeResponse,
-        request_collector: dict[str, Any] | None = None,
+        responses: list[_FakeResponse],
+        request_collector: list[dict[str, Any]] | None = None,
         **kwargs: Any,
     ) -> None:
-        self._response = response
+        self._responses = responses
         self._request_collector = request_collector
 
     async def __aenter__(self) -> _FakeAsyncClient:
@@ -39,11 +43,25 @@ class _FakeAsyncClient:
     async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
         return None
 
-    async def get(self, url: str, params: dict[str, str]) -> _FakeResponse:
+    async def get(
+        self,
+        url: str,
+        params: dict[str, str] | None = None,
+        headers: dict[str, str] | None = None,
+    ) -> _FakeResponse:
         if self._request_collector is not None:
-            self._request_collector["url"] = url
-            self._request_collector["params"] = params
-        return self._response
+            self._request_collector.append(
+                {
+                    "url": url,
+                    "params": params,
+                    "headers": headers,
+                }
+            )
+
+        if not self._responses:
+            raise AssertionError("Resposta fake não configurada para chamada HTTP")
+
+        return self._responses.pop(0)
 
 
 @pytest.mark.asyncio
@@ -52,16 +70,25 @@ async def test_sync_year_pdf_salva_arquivo_quando_resposta_valida(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     service = ExpensePDFSyncService(data_root=tmp_path)
-    request_data: dict[str, Any] = {}
+    request_data: list[dict[str, Any]] = []
     payload = b"%PDF-1.7\n" + (b"x" * 2048)
 
     def fake_async_client_factory(*args: Any, **kwargs: Any) -> _FakeAsyncClient:
         return _FakeAsyncClient(
-            response=_FakeResponse(
-                status_code=200,
-                headers={"content-type": "application/pdf"},
-                content=payload,
-            ),
+            responses=[
+                _FakeResponse(
+                    status_code=200,
+                    headers={"content-type": "text/html; charset=utf-8"},
+                    content=(
+                        b'{"path":"file/255/abc123/NaturezaDespesa.pdf"}'
+                    ),
+                ),
+                _FakeResponse(
+                    status_code=200,
+                    headers={"content-type": "application/pdf"},
+                    content=payload,
+                ),
+            ],
             request_collector=request_data,
         )
 
@@ -79,8 +106,13 @@ async def test_sync_year_pdf_salva_arquivo_quando_resposta_valida(
     assert result.bytes_downloaded == len(payload)
     assert target.exists()
     assert target.read_bytes() == payload
-    assert request_data["params"]["ano"] == "2026"
-    assert request_data["params"]["unidadeGestora"] == "CONSOLIDADO"
+
+    assert len(request_data) == 2
+    assert request_data[0]["url"].endswith("/despesas//RelatorioPdf")
+    assert request_data[0]["params"]["ano"] == "2026"
+    assert request_data[0]["params"]["unidadeGestora"] == "CONSOLIDADO"
+    assert request_data[0]["params"]["tipo"] == "naturezaDespesa"
+    assert request_data[1]["url"].endswith("file/255/abc123/NaturezaDespesa.pdf")
 
 
 @pytest.mark.asyncio
@@ -96,11 +128,20 @@ async def test_sync_year_pdf_nao_substitui_arquivo_em_conteudo_invalido(
 
     def fake_async_client_factory(*args: Any, **kwargs: Any) -> _FakeAsyncClient:
         return _FakeAsyncClient(
-            response=_FakeResponse(
-                status_code=200,
-                headers={"content-type": "text/html"},
-                content=b"<html>erro</html>",
-            )
+            responses=[
+                _FakeResponse(
+                    status_code=200,
+                    headers={"content-type": "text/html; charset=utf-8"},
+                    content=(
+                        b'{"path":"file/255/abc123/NaturezaDespesa.pdf"}'
+                    ),
+                ),
+                _FakeResponse(
+                    status_code=200,
+                    headers={"content-type": "text/html"},
+                    content=b"<html>erro</html>",
+                ),
+            ]
         )
 
     monkeypatch.setattr(
@@ -124,11 +165,13 @@ async def test_sync_year_pdf_retorna_falha_em_http_500(
 
     def fake_async_client_factory(*args: Any, **kwargs: Any) -> _FakeAsyncClient:
         return _FakeAsyncClient(
-            response=_FakeResponse(
-                status_code=500,
-                headers={"content-type": "text/plain"},
-                content=b"",
-            )
+            responses=[
+                _FakeResponse(
+                    status_code=500,
+                    headers={"content-type": "text/plain"},
+                    content=b"",
+                )
+            ]
         )
 
     monkeypatch.setattr(
@@ -152,11 +195,20 @@ async def test_sync_year_pdf_reprova_pdf_muito_pequeno(
 
     def fake_async_client_factory(*args: Any, **kwargs: Any) -> _FakeAsyncClient:
         return _FakeAsyncClient(
-            response=_FakeResponse(
-                status_code=200,
-                headers={"content-type": "application/pdf"},
-                content=b"%PDF-1.7\nshort",
-            )
+            responses=[
+                _FakeResponse(
+                    status_code=200,
+                    headers={"content-type": "text/html; charset=utf-8"},
+                    content=(
+                        b'{"path":"file/255/abc123/NaturezaDespesa.pdf"}'
+                    ),
+                ),
+                _FakeResponse(
+                    status_code=200,
+                    headers={"content-type": "application/pdf"},
+                    content=b"%PDF-1.7\nshort",
+                ),
+            ]
         )
 
     monkeypatch.setattr(

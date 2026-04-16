@@ -1,15 +1,17 @@
 """
 Scheduler de scraping baseado em APScheduler.
 
-Executa o pipeline de scraping periodicamente (a cada 1 minuto)
+Executa o pipeline de scraping periodicamente (a cada 10 minutos)
 e integra com o ciclo de vida da aplicação FastAPI.
 """
+
+# mypy: disable-error-code=import-untyped
 
 from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -23,14 +25,14 @@ logger = logging.getLogger(__name__)
 
 # Constantes de configuração
 _DEFAULT_YEAR: int = 2026
-_SCRAPE_INTERVAL_MINUTES: int = 1
+_SCRAPE_INTERVAL_MINUTES: int = 10
 _MISFIRE_GRACE_SECONDS: int = 60
 
 
 class ScrapingScheduler:
     """Scheduler periódico para o pipeline de scraping.
 
-    Gerencia a execução automática do scraping a cada 1 minuto,
+    Gerencia a execução automática do scraping a cada 10 minutos,
     permitindo também disparos manuais via API.
 
     Usage:
@@ -119,7 +121,10 @@ class ScrapingScheduler:
                 pdf_sync_result = await self._sync_expenses_pdf(year)
 
             scraping_service = self._create_scraping_service()
-            result = await scraping_service.run_scraping(year=year, data_type=data_type)
+            result = cast(
+                dict[str, Any],
+                await scraping_service.run_scraping(year=year, data_type=data_type),
+            )
 
             if pdf_sync_result is not None:
                 result["despesas_pdf_sync"] = pdf_sync_result.to_dict()
