@@ -157,7 +157,16 @@ class ScrapingService:
             raw_natureza = await self._api.fetch_despesas_natureza(year)
             annual = self._despesa_parser.parse_despesas_annual(raw_annual, year)
             natureza = self._despesa_parser.parse_despesas_natureza(raw_natureza, year)
-            merged = self._despesa_parser.merge_despesas(annual, natureza)
+
+            merged: list[Despesa] = []
+            if annual:
+                merged = self._despesa_parser.merge_despesas(annual, natureza)
+            elif natureza:
+                logger.warning(
+                    "Dados por natureza disponíveis sem consolidado anual para %d; "
+                    "ignorando natureza para evitar distorção de liquidado/pago",
+                    year,
+                )
 
             if not merged:
                 if not raw_annual and not raw_natureza:

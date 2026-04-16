@@ -22,6 +22,8 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Sincronização de PDF de despesas com contrato real do portal (RelatorioPdf retorna path + download subsequente do binário)
 - [x] Bootstrap histórico idempotente no startup da API para preencher anos ausentes do banco com base nos PDFs locais
 - [x] Sincronização do ano 2026 com prioridade de API (replace por ano para evitar valores antigos persistidos)
+- [x] Estratégia de despesas 2026 ajustada para priorizar `BuscaDadosAnual` (fonte canônica de empenhado/liquidado/pago) e usar PDF como fallback quando o anual indisponível
+- [x] Validação estrutural do fallback PDF de despesas (não substitui arquivo local quando o download vier sem páginas válidas)
 - [x] Schemas Pydantic para todas as bordas
 - [x] Entidades de domínio com validação (Receita, Despesa)
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)

@@ -96,6 +96,11 @@ async def test_sync_year_pdf_salva_arquivo_quando_resposta_valida(
         "backend.services.expense_pdf_sync_service.httpx.AsyncClient",
         fake_async_client_factory,
     )
+    monkeypatch.setattr(
+        ExpensePDFSyncService,
+        "_has_pdf_pages",
+        lambda self, pdf_bytes: True,
+    )
 
     result = await service.sync_year_pdf(2026)
 
@@ -220,3 +225,51 @@ async def test_sync_year_pdf_reprova_pdf_muito_pequeno(
 
     assert result.success is False
     assert "inválido" in result.message
+
+
+@pytest.mark.asyncio
+async def test_sync_year_pdf_reprova_pdf_sem_paginas_e_preserva_anterior(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = ExpensePDFSyncService(data_root=tmp_path)
+    target = tmp_path / "despesas" / "2026.pdf"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    old_payload = b"%PDF-1.7\nold"
+    target.write_bytes(old_payload)
+
+    payload = b"%PDF-1.7\n" + (b"x" * 2048)
+
+    def fake_async_client_factory(*args: Any, **kwargs: Any) -> _FakeAsyncClient:
+        return _FakeAsyncClient(
+            responses=[
+                _FakeResponse(
+                    status_code=200,
+                    headers={"content-type": "text/html; charset=utf-8"},
+                    content=(
+                        b'{"path":"file/255/abc123/NaturezaDespesa.pdf"}'
+                    ),
+                ),
+                _FakeResponse(
+                    status_code=200,
+                    headers={"content-type": "application/pdf"},
+                    content=payload,
+                ),
+            ]
+        )
+
+    monkeypatch.setattr(
+        "backend.services.expense_pdf_sync_service.httpx.AsyncClient",
+        fake_async_client_factory,
+    )
+    monkeypatch.setattr(
+        ExpensePDFSyncService,
+        "_has_pdf_pages",
+        lambda self, pdf_bytes: False,
+    )
+
+    result = await service.sync_year_pdf(2026)
+
+    assert result.success is False
+    assert "sem páginas válidas" in result.message
+    assert target.read_bytes() == old_payload

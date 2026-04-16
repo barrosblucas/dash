@@ -415,7 +415,7 @@ class TestParseDespesasNatureza:
 class TestMergeDespesas:
     """Testes da estratégia de merge com degradação graciosa."""
 
-    def test_prefere_natureza(self, scraper: DespesaScraper) -> None:
+    def test_prefere_annual(self, scraper: DespesaScraper) -> None:
         annual = [
             Despesa(
                 ano=2025,
@@ -437,7 +437,7 @@ class TestMergeDespesas:
 
         result = scraper.merge_despesas(annual, natureza)
         assert len(result) == 1
-        assert result[0].valor_empenhado == Decimal("200")
+        assert result[0].valor_empenhado == Decimal("100")
 
     def test_fallback_para_annual(self, scraper: DespesaScraper) -> None:
         annual = [
@@ -453,6 +453,23 @@ class TestMergeDespesas:
         result = scraper.merge_despesas(annual, [])
         assert len(result) == 1
         assert result[0].valor_empenhado == Decimal("100")
+
+    def test_fallback_para_natureza_quando_annual_vazio(
+        self, scraper: DespesaScraper
+    ) -> None:
+        natureza = [
+            Despesa(
+                ano=2025,
+                mes=1,
+                valor_empenhado=Decimal("200"),
+                valor_liquidado=Decimal("200"),
+                valor_pago=Decimal("200"),
+            )
+        ]
+
+        result = scraper.merge_despesas([], natureza)
+        assert len(result) == 1
+        assert result[0].valor_empenhado == Decimal("200")
 
     def test_ambos_vazios(self, scraper: DespesaScraper) -> None:
         result = scraper.merge_despesas([], [])
@@ -473,10 +490,10 @@ class TestMergeDespesas:
         result = scraper.merge_despesas(annual, [])
         assert len(result) == 1
 
-    def test_merge_preserva_lista_natureza_inteira(
+    def test_merge_preserva_lista_annual_quando_ambas_fontes(
         self, scraper: DespesaScraper
     ) -> None:
-        """Quando natureza tem dados, a lista completa é retornada."""
+        """Quando annual e natureza existem, annual é priorizado."""
         natureza = [
             Despesa(
                 ano=2025,
@@ -498,4 +515,5 @@ class TestMergeDespesas:
         ]
 
         result = scraper.merge_despesas(annual, natureza)
-        assert len(result) == 12
+        assert len(result) == 1
+        assert result[0].valor_empenhado == Decimal("100")

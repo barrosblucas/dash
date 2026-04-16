@@ -82,3 +82,42 @@ Restaurar o comparativo receitas x despesas no dashboard quando a fonte de despe
   - trigger manual `POST /api/v1/scraping/trigger` com `{"year": 2026, "data_type": "despesas"}` retornou `despesas_processed=8`.
   - `GET /api/v1/despesas?ano=2026` retornou registros da fonte `SCRAPING_2026`.
   - `GET /api/v1/kpis/mensal/2026` retornou `despesas_total=35760480.69` (não zero), restaurando o comparativo no dashboard.
+
+---
+
+## fix: página de despesas com liquidado/pago espelhando empenhado
+
+### Objetivo
+Corrigir os cards e séries de despesas 2026 para refletir os três indicadores reais (empenhado, liquidado e pago), mantendo atualização robusta por API e fallback por PDF.
+
+### Diagnóstico
+- O endpoint `NaturezaDespesa` não fornece a decomposição real de `liquidado` e `pago`; ele traz somente valores por natureza.
+- O parser de natureza replica o mesmo valor em `empenhado/liquidado/pago` por limitação de fonte.
+- A estratégia anterior de merge priorizava natureza quando presente, fazendo os três totais convergirem no banco e no frontend.
+
+### Abordagem técnica
+- Alterada a estratégia de merge em despesas para priorizar sempre o consolidado anual (`BuscaDadosAnual`), que contém os três campos corretos por mês.
+- Quando há natureza sem anual, o fluxo agora ignora natureza para persistência e aciona fallback PDF, evitando distorção de `liquidado/pago`.
+- Mantida proteção `NO_DATA` para não apagar snapshot do ano quando API e PDF falham.
+- Endurecida a sincronização de PDF: arquivos sem páginas válidas não substituem o PDF local anterior (protege fallback contra artefatos vazios do portal).
+
+### Arquivos alterados
+- `backend/etl/scrapers/despesa_scraper.py`
+- `backend/services/scraping_service.py`
+- `backend/services/expense_pdf_sync_service.py`
+- `backend/tests/test_etl/test_despesa_scraper.py`
+- `backend/tests/test_etl/test_scraping_service.py`
+- `backend/tests/test_etl/test_expense_pdf_sync_service.py`
+
+### Validação
+- Testes focados:
+  - `pytest -q backend/tests/test_etl/test_expense_pdf_sync_service.py backend/tests/test_etl/test_despesa_scraper.py backend/tests/test_etl/test_scraping_service.py` (52 passed)
+- Lint focado:
+  - `ruff check services/expense_pdf_sync_service.py etl/scrapers/despesa_scraper.py services/scraping_service.py tests/test_etl/test_expense_pdf_sync_service.py tests/test_etl/test_despesa_scraper.py tests/test_etl/test_scraping_service.py` (ok)
+- Verificação funcional em produção após trigger manual:
+  - `GET /api/v1/despesas/total/ano/2026` passou a retornar valores distintos:
+    - `total_empenhado=35916260.12`
+    - `total_liquidado=20124446.08`
+    - `total_pago=19502568.93`
+  - `GET /api/v1/kpis/mensal/2026` passou a retornar `despesas_total=19502568.93` com distribuição mensal coerente por `valor_pago`.
+

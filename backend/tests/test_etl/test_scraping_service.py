@@ -290,6 +290,120 @@ async def test_scrape_despesas_nao_usa_fallback_quando_api_tem_dados(
     assert captured["status"] == "SUCCESS"
 
 
+@pytest.mark.asyncio
+async def test_scrape_despesas_ignora_natureza_sem_annual_e_usa_pdf(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = ScrapingService()
+
+    async def fake_fetch_despesas_annual(year: int) -> dict[str, Any]:
+        return {}
+
+    async def fake_fetch_despesas_natureza(year: int) -> dict[str, Any]:
+        return {"quantidade": 1}
+
+    natureza_despesa = _build_despesa(fonte="SCRAPING_2026")
+    fallback_despesa = _build_despesa(fonte="PDF_2026")
+    fallback_called = False
+    captured: dict[str, Any] = {}
+
+    def fake_parse_despesas_annual(data: dict[str, Any], year: int) -> list[Despesa]:
+        return []
+
+    def fake_parse_despesas_natureza(
+        data: dict[str, Any], year: int
+    ) -> list[Despesa]:
+        return [natureza_despesa]
+
+    def fail_if_merge_called(
+        annual: list[Despesa], natureza: list[Despesa]
+    ) -> list[Despesa]:
+        raise AssertionError("Merge nao deve ser usado sem dados anuais")
+
+    def fake_load_despesas_from_pdf(year: int) -> list[Despesa]:
+        nonlocal fallback_called
+        fallback_called = True
+        return [fallback_despesa]
+
+    def fake_replace_despesas_for_year(
+        session: object, despesas: list[Despesa], year: int
+    ) -> tuple[int, int]:
+        captured["despesas"] = despesas
+        assert year == 2026
+        return len(despesas), 0
+
+    def fake_create_log(data_type: str, year: int) -> Any:
+        return SimpleNamespace(started_at=datetime.now())
+
+    def fake_finalize_log(
+        session: object,
+        log: Any,
+        status: str,
+        processed: int,
+        inserted: int,
+        updated: int,
+    ) -> None:
+        captured["status"] = status
+
+    monkeypatch.setattr(
+        service._api,
+        "fetch_despesas_annual",
+        fake_fetch_despesas_annual,
+    )
+    monkeypatch.setattr(
+        service._api,
+        "fetch_despesas_natureza",
+        fake_fetch_despesas_natureza,
+    )
+    monkeypatch.setattr(
+        service._despesa_parser,
+        "parse_despesas_annual",
+        fake_parse_despesas_annual,
+    )
+    monkeypatch.setattr(
+        service._despesa_parser,
+        "parse_despesas_natureza",
+        fake_parse_despesas_natureza,
+    )
+    monkeypatch.setattr(
+        service._despesa_parser,
+        "merge_despesas",
+        fail_if_merge_called,
+    )
+    monkeypatch.setattr(
+        service,
+        "_load_despesas_from_pdf",
+        fake_load_despesas_from_pdf,
+    )
+    monkeypatch.setattr(
+        ScrapingService,
+        "_replace_despesas_for_year",
+        staticmethod(fake_replace_despesas_for_year),
+    )
+    monkeypatch.setattr(
+        ScrapingService,
+        "_create_log",
+        staticmethod(fake_create_log),
+    )
+    monkeypatch.setattr(
+        ScrapingService,
+        "_finalize_log",
+        staticmethod(fake_finalize_log),
+    )
+    monkeypatch.setattr(
+        "backend.services.scraping_service.db_manager.get_session",
+        _fake_session_context,
+    )
+
+    result = await service.scrape_despesas(2026)
+
+    assert result.success is True
+    assert fallback_called is True
+    assert captured["despesas"] == [fallback_despesa]
+    assert captured["despesas"] != [natureza_despesa]
+    assert captured["status"] == "SUCCESS"
+
+
 def test_load_despesas_from_pdf_retorna_dados_do_extractor(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

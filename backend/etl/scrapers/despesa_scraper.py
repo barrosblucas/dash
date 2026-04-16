@@ -145,8 +145,8 @@ class DespesaScraper:
         """Combina dados anuais e por natureza com degradação graciosa.
 
         Estratégia:
-            - Se ``natureza`` tem dados → usá-la (tem breakdown por tipo)
-            - Senão se ``annual`` tem dados → usá-la (consolidado, sem tipo)
+            - Se ``annual`` tem dados → usá-la (fonte canônica de empenhado/liquidado/pago)
+            - Senão se ``natureza`` tem dados → usá-la como fallback degradado
             - Senão → lista vazia
 
         Args:
@@ -154,15 +154,17 @@ class DespesaScraper:
             natureza: Despesas do endpoint NaturezaDespesa.
 
         Returns:
-            Lista de Despesa preferindo natureza, com fallback para annual.
+            Lista de Despesa preferindo annual, com fallback para natureza.
         """
-        if natureza:
-            logger.info("Usando dados de natureza (breakdown por tipo disponível)")
-            return natureza
-
         if annual:
-            logger.info("Usando dados anuais consolidados (natureza indisponível)")
+            logger.info("Usando dados anuais consolidados de despesas")
             return annual
+
+        if natureza:
+            logger.warning(
+                "Dados anuais indisponíveis; usando natureza de despesas como fallback degradado"
+            )
+            return natureza
 
         logger.warning("Nenhuma fonte de despesas disponível — retornando lista vazia")
         return []

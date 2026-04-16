@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import io
 import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import httpx
+import pdfplumber
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +198,16 @@ class ExpensePDFSyncService:
                 message="Arquivo PDF de despesas inválido ou incompleto",
             )
 
+        if not self._has_pdf_pages(pdf_bytes):
+            return ExpensePDFSyncResult(
+                success=False,
+                year=year,
+                file_path=str(target_path),
+                bytes_downloaded=len(pdf_bytes),
+                status_code=response.status_code,
+                message="Arquivo PDF de despesas sem páginas válidas",
+            )
+
         try:
             temp_path.write_bytes(pdf_bytes)
             temp_path.replace(target_path)
@@ -226,3 +238,12 @@ class ExpensePDFSyncService:
             status_code=response.status_code,
             message="PDF de despesas atualizado com sucesso",
         )
+
+    def _has_pdf_pages(self, pdf_bytes: bytes) -> bool:
+        """Valida se o binário PDF possui ao menos uma página legível."""
+        try:
+            with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+                return len(pdf.pages) > 0
+        except Exception as exc:
+            logger.warning("Falha ao validar estrutura do PDF de despesas: %s", exc)
+            return False
