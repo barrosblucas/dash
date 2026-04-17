@@ -5,16 +5,20 @@ Dashboard Financeiro - Bandeirantes MS
 Prevê receitas e despesas futuras baseado em dados históricos.
 """
 
-from datetime import datetime, date
-from typing import List, Optional, Dict, Any
+import logging
+from datetime import date, datetime
 from decimal import Decimal
-import pandas as pd
-import numpy as np
-from prophet import Prophet
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from typing import Any
 
-from backend.infrastructure.database.models import ReceitaModel, DespesaModel
+import numpy as np
+import pandas as pd
+from prophet import Prophet
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from backend.infrastructure.database.models import DespesaModel, ReceitaModel
+
+logger = logging.getLogger(__name__)
 
 
 class ForecastResult:
@@ -34,7 +38,7 @@ class ForecastResult:
         self.intervalo_superior = intervalo_superior
         self.tendencia = tendencia
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "data": self.data.isoformat(),
             "valor_previsto": float(self.valor_previsto),
@@ -55,11 +59,29 @@ class ForecastingService:
     def __init__(self, db: Session):
         self.db = db
 
+    @staticmethod
+    def _remove_partial_current_month(
+        dados_historicos: list[tuple[datetime, float]],
+    ) -> list[tuple[datetime, float]]:
+        """Remove o mês corrente para evitar viés por dados parciais."""
+        if not dados_historicos:
+            return []
+
+        now = datetime.now()
+        filtrados = [
+            (data, valor)
+            for data, valor in dados_historicos
+            if not (data.year == now.year and data.month == now.month)
+        ]
+
+        # Em cenários extremos, mantém histórico original para evitar série vazia.
+        return filtrados or dados_historicos
+
     def forecast_receitas(
         self,
         horizonte_meses: int = 12,
         nivel_confianca: float = 0.95,
-    ) -> List[ForecastResult]:
+    ) -> list[ForecastResult]:
         """
         Prevê receitas para os próximos N meses.
 
@@ -73,69 +95,77 @@ class ForecastingService:
         # Buscar dados históricos
         dados_historicos = self._get_receitas_mensais()
 
+        dados_historicos = self._remove_partial_current_month(dados_historicos)
+
         if len(dados_historicos) < 24:
             # Se não houver dados suficientes, usar projeção linear
             return self._projecao_linear(dados_historicos, horizonte_meses)
 
-        # Preparar dados para Prophet
-        df = pd.DataFrame(dados_historicos, columns=["ds", "y"])
+        try:
+            # Preparar dados para Prophet
+            df = pd.DataFrame(dados_historicos, columns=["ds", "y"])
 
-        # Criar e treinar modelo
-        modelo = Prophet(
-            yearly_seasonality=True,
-            weekly_seasonality=False,
-            daily_seasonality=False,
-            interval_width=nivel_confianca,
-            changepoint_prior_scale=0.05,
-        )
-
-        # Adicionar sazonalidade mensal
-        modelo.add_seasonality(name="monthly", period=30.5, fourier_order=5)
-
-        # Treinar
-        modelo.fit(df)
-
-        # Gerar datas futuras
-        futuro = modelo.make_future_dataframe(periods=horizonte_meses, freq="M")
-
-        # Prever
-        previsao = modelo.predict(futuro)
-
-        # Filtrar apenas previsões futuras
-        ultima_data = df["ds"].max()
-        previsoes_futuras = previsao[previsao["ds"] > ultima_data]
-
-        # Converter para resultado
-        resultados = []
-        for _, row in previsoes_futuras.iterrows():
-            valor = max(0, row["yhat"])  # Receitas não podem ser negativas
-            tendencia = (
-                "alta"
-                if row["trend"] > 0
-                else "baixa"
-                if row["trend"] < 0
-                else "estavel"
+            # Criar e treinar modelo
+            modelo = Prophet(
+                yearly_seasonality=True,
+                weekly_seasonality=False,
+                daily_seasonality=False,
+                interval_width=nivel_confianca,
+                changepoint_prior_scale=0.05,
             )
 
-            resultados.append(
-                FcastResult(
-                    data=row["ds"].date(),
-                    valor_previsto=Decimal(str(round(valor, 2))),
-                    intervalo_inferior=Decimal(
-                        str(round(max(0, row["yhat_lower"]), 2))
-                    ),
-                    intervalo_superior=Decimal(str(round(row["yhat_upper"], 2))),
-                    tendencia=tendencia,
+            # Adicionar sazonalidade mensal
+            modelo.add_seasonality(name="monthly", period=30.5, fourier_order=5)
+
+            # Treinar
+            modelo.fit(df)
+
+            # Gerar datas futuras
+            futuro = modelo.make_future_dataframe(periods=horizonte_meses, freq="MS")
+
+            # Prever
+            previsao = modelo.predict(futuro)
+
+            # Filtrar apenas previsões futuras
+            ultima_data = df["ds"].max()
+            previsoes_futuras = previsao[previsao["ds"] > ultima_data]
+
+            # Converter para resultado
+            resultados = []
+            for _, row in previsoes_futuras.iterrows():
+                valor = max(0, row["yhat"])  # Receitas não podem ser negativas
+                tendencia = (
+                    "alta"
+                    if row["trend"] > 0
+                    else "baixa"
+                    if row["trend"] < 0
+                    else "estavel"
                 )
-            )
 
-        return resultados
+                resultados.append(
+                    ForecastResult(
+                        data=row["ds"].date(),
+                        valor_previsto=Decimal(str(round(valor, 2))),
+                        intervalo_inferior=Decimal(
+                            str(round(max(0, row["yhat_lower"]), 2))
+                        ),
+                        intervalo_superior=Decimal(str(round(row["yhat_upper"], 2))),
+                        tendencia=tendencia,
+                    )
+                )
+
+            return resultados
+        except Exception:
+            logger.exception(
+                "Falha ao gerar forecast de receitas com Prophet; aplicando fallback linear"
+            )
+            return self._projecao_linear(dados_historicos, horizonte_meses)
 
     def forecast_despesas(
         self,
         horizonte_meses: int = 12,
         nivel_confianca: float = 0.95,
-    ) -> List[ForecastResult]:
+    ) -> list[ForecastResult]:
         """
         Prevê despesas para os próximos N meses.
 
@@ -149,65 +179,73 @@ class ForecastingService:
         # Buscar dados históricos
         dados_historicos = self._get_despesas_mensais()
 
+        dados_historicos = self._remove_partial_current_month(dados_historicos)
+
         if len(dados_historicos) < 24:
             # Se não houver dados suficientes, usar projeção linear
             return self._projecao_linear(dados_historicos, horizonte_meses)
 
-        # Preparar dados para Prophet
-        df = pd.DataFrame(dados_historicos, columns=["ds", "y"])
+        try:
+            # Preparar dados para Prophet
+            df = pd.DataFrame(dados_historicos, columns=["ds", "y"])
 
-        # Criar e treinar modelo
-        modelo = Prophet(
-            yearly_seasonality=True,
-            weekly_seasonality=False,
-            daily_seasonality=False,
-            interval_width=nivel_confianca,
-            changepoint_prior_scale=0.05,
-        )
-
-        # Adicionar sazonalidade mensal
-        modelo.add_seasonality(name="monthly", period=30.5, fourier_order=5)
-
-        # Treinar
-        modelo.fit(df)
-
-        # Gerar datas futuras
-        futuro = modelo.make_future_dataframe(periods=horizonte_meses, freq="M")
-
-        # Prever
-        previsao = modelo.predict(futuro)
-
-        # Filtrar apenas previsões futuras
-        ultima_data = df["ds"].max()
-        previsoes_futuras = previsao[previsao["ds"] > ultima_data]
-
-        # Converter para resultado
-        resultados = []
-        for _, row in previsoes_futuras.iterrows():
-            valor = max(0, row["yhat"])  # Despesas não podem ser negativas
-            tendencia = (
-                "alta"
-                if row["trend"] > 0
-                else "baixa"
-                if row["trend"] < 0
-                else "estavel"
+            # Criar e treinar modelo
+            modelo = Prophet(
+                yearly_seasonality=True,
+                weekly_seasonality=False,
+                daily_seasonality=False,
+                interval_width=nivel_confianca,
+                changepoint_prior_scale=0.05,
             )
 
-            resultados.append(
-                ForecastResult(
-                    data=row["ds"].date(),
-                    valor_previsto=Decimal(str(round(valor, 2))),
-                    intervalo_inferior=Decimal(
-                        str(round(max(0, row["yhat_lower"]), 2))
-                    ),
-                    intervalo_superior=Decimal(str(round(row["yhat_upper"], 2))),
-                    tendencia=tendencia,
+            # Adicionar sazonalidade mensal
+            modelo.add_seasonality(name="monthly", period=30.5, fourier_order=5)
+
+            # Treinar
+            modelo.fit(df)
+
+            # Gerar datas futuras
+            futuro = modelo.make_future_dataframe(periods=horizonte_meses, freq="MS")
+
+            # Prever
+            previsao = modelo.predict(futuro)
+
+            # Filtrar apenas previsões futuras
+            ultima_data = df["ds"].max()
+            previsoes_futuras = previsao[previsao["ds"] > ultima_data]
+
+            # Converter para resultado
+            resultados = []
+            for _, row in previsoes_futuras.iterrows():
+                valor = max(0, row["yhat"])  # Despesas não podem ser negativas
+                tendencia = (
+                    "alta"
+                    if row["trend"] > 0
+                    else "baixa"
+                    if row["trend"] < 0
+                    else "estavel"
                 )
+
+                resultados.append(
+                    ForecastResult(
+                        data=row["ds"].date(),
+                        valor_previsto=Decimal(str(round(valor, 2))),
+                        intervalo_inferior=Decimal(
+                            str(round(max(0, row["yhat_lower"]), 2))
+                        ),
+                        intervalo_superior=Decimal(str(round(row["yhat_upper"], 2))),
+                        tendencia=tendencia,
+                    )
+                )
+
+            return resultados
+        except Exception:
+            logger.exception(
+                "Falha ao gerar forecast de despesas com Prophet; aplicando fallback linear"
             )
+            return self._projecao_linear(dados_historicos, horizonte_meses)
 
-        return resultados
-
-    def _get_receitas_mensais(self) -> List[tuple]:
+    def _get_receitas_mensais(self) -> list[tuple[datetime, float]]:
         """
         Busca receitas mensais históricas do banco de dados.
 
@@ -216,33 +254,29 @@ class ForecastingService:
         """
         resultados = (
             self.db.query(
-                func.strftime(
-                    "%Y-%m-01",
-                    func.strftime("%d", ReceitaModel.ano)
-                    + "-"
-                    + func.strftime("%m", ReceitaModel.mes)
-                    + "-01",
-                ).label("data"),
+                ReceitaModel.ano.label("ano"),
+                ReceitaModel.mes.label("mes"),
                 func.sum(ReceitaModel.valor_arrecadado).label("valor"),
             )
-            .group_by("data")
-            .order_by("data")
+            .filter(ReceitaModel.mes >= 1, ReceitaModel.mes <= 12)
+            .group_by(ReceitaModel.ano, ReceitaModel.mes)
+            .order_by(ReceitaModel.ano, ReceitaModel.mes)
             .all()
         )
 
         # Converter para lista de tuplas (datetime, float)
-        dados = []
+        dados: list[tuple[datetime, float]] = []
         for r in resultados:
-            if r.data and r.valor:
-                ano = int(r.data[:4])
-                mes = int(r.data[5:7])
+            if r.ano and r.mes and r.valor is not None:
+                ano = int(r.ano)
+                mes = int(r.mes)
                 data = datetime(ano, mes, 1)
                 valor = float(r.valor)
                 dados.append((data, valor))
 
         return dados
 
-    def _get_despesas_mensais(self) -> List[tuple]:
+    def _get_despesas_mensais(self) -> list[tuple[datetime, float]]:
         """
         Busca despesas mensais históricas do banco de dados.
 
@@ -251,26 +285,22 @@ class ForecastingService:
         """
         resultados = (
             self.db.query(
-                func.strftime(
-                    "%Y-%m-01",
-                    func.strftime("%d", DespesaModel.ano)
-                    + "-"
-                    + func.strftime("%m", DespesaModel.mes)
-                    + "-01",
-                ).label("data"),
+                DespesaModel.ano.label("ano"),
+                DespesaModel.mes.label("mes"),
                 func.sum(DespesaModel.valor_pago).label("valor"),
             )
-            .group_by("data")
-            .order_by("data")
+            .filter(DespesaModel.mes >= 1, DespesaModel.mes <= 12)
+            .group_by(DespesaModel.ano, DespesaModel.mes)
+            .order_by(DespesaModel.ano, DespesaModel.mes)
             .all()
         )
 
         # Converter para lista de tuplas (datetime, float)
-        dados = []
+        dados: list[tuple[datetime, float]] = []
         for r in resultados:
-            if r.data and r.valor:
-                ano = int(r.data[:4])
-                mes = int(r.data[5:7])
+            if r.ano and r.mes and r.valor is not None:
+                ano = int(r.ano)
+                mes = int(r.mes)
                 data = datetime(ano, mes, 1)
                 valor = float(r.valor)
                 dados.append((data, valor))
@@ -278,8 +308,10 @@ class ForecastingService:
         return dados
 
     def _projecao_linear(
-        self, dados_historicos: List[tuple], horizonte_meses: int
-    ) -> List[ForecastResult]:
+        self,
+        dados_historicos: list[tuple[datetime, float]],
+        horizonte_meses: int,
+    ) -> list[ForecastResult]:
         """
         Faz projeção linear simples quando não há dados suficientes para Prophet.
 

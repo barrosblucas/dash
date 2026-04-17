@@ -35,6 +35,8 @@ interface TrendMetrics {
   projectedSaldo: number;
 }
 
+type ProjectionMode = 'annual' | 'monthly';
+
 // Projeção linear para o próximo valor (mesma lógica do ForecastSection)
 function projectNextValue(data: number[]): number {
   if (data.length < 2) return data[0] || 0;
@@ -66,6 +68,9 @@ const YEARS_OPTIONS = [1, 2, 3, 4, 5] as const;
 export default function ForecastClient() {
   const { anoSelecionado, mostrarProjecao, toggleMostrarProjecao, setAnoSelecionado } = useDashboardFilters();
   const [yearsToProject, setYearsToProject] = useState(2);
+  const [projectionMode, setProjectionMode] = useState<ProjectionMode>('annual');
+  const currentYear = new Date().getFullYear();
+  const trendEndYear = Math.min(anoSelecionado, currentYear - 1);
 
   // Projeções ativadas por padrão nesta página
   useEffect(() => {
@@ -74,14 +79,14 @@ export default function ForecastClient() {
 
   // KPIs anuais para os cards de tendência
   const { data: kpisResponse, isLoading: kpisLoading } = useQuery({
-    queryKey: ['kpis', 'anual', 'forecast-page', anoSelecionado],
-    queryFn: () => apiClient.get<KPIsResponse>(`/api/v1/kpis/anual?ano_inicio=2016&ano_fim=${anoSelecionado}`),
+    queryKey: ['kpis', 'anual', 'forecast-page', trendEndYear],
+    queryFn: () => apiClient.get<KPIsResponse>(`/api/v1/kpis/anual?ano_inicio=2016&ano_fim=${trendEndYear}`),
+    enabled: trendEndYear >= 2016,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
 
   const trendMetrics = kpisResponse?.kpis_anuais ? computeTrendMetrics(kpisResponse.kpis_anuais) : null;
-  const currentYear = new Date().getFullYear();
   const availableYears = Array.from({ length: currentYear - 2016 + 1 }, (_, i) => currentYear - i);
 
   return (
@@ -98,6 +103,18 @@ export default function ForecastClient() {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
+              <label htmlFor="projection-mode" className="text-xs text-dark-400 whitespace-nowrap">Visualização:</label>
+              <select
+                id="projection-mode"
+                value={projectionMode}
+                onChange={(e) => setProjectionMode(e.target.value as ProjectionMode)}
+                className="bg-dark-800 border border-dark-700 text-dark-100 text-sm rounded-lg px-3 py-1.5 focus:border-forecast-accent focus:outline-none"
+              >
+                <option value="annual">Anual (ano a ano)</option>
+                <option value="monthly">Mensal (meses seguintes)</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
               <label htmlFor="base-year" className="text-xs text-dark-400 whitespace-nowrap">Ano base:</label>
               <select
                 id="base-year"
@@ -108,23 +125,29 @@ export default function ForecastClient() {
                 {availableYears.map((ano) => <option key={ano} value={ano}>{ano}</option>)}
               </select>
             </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="years-project" className="text-xs text-dark-400 whitespace-nowrap">Projetar:</label>
-              <select
-                id="years-project"
-                value={yearsToProject}
-                onChange={(e) => setYearsToProject(Number(e.target.value))}
-                className="bg-dark-800 border border-dark-700 text-dark-100 text-sm rounded-lg px-3 py-1.5 focus:border-forecast-accent focus:outline-none"
-              >
-                {YEARS_OPTIONS.map((n) => <option key={n} value={n}>{n} ano{n > 1 ? 's' : ''}</option>)}
-              </select>
-            </div>
+            {projectionMode === 'annual' ? (
+              <div className="flex items-center gap-2">
+                <label htmlFor="years-project" className="text-xs text-dark-400 whitespace-nowrap">Projetar:</label>
+                <select
+                  id="years-project"
+                  value={yearsToProject}
+                  onChange={(e) => setYearsToProject(Number(e.target.value))}
+                  className="bg-dark-800 border border-dark-700 text-dark-100 text-sm rounded-lg px-3 py-1.5 focus:border-forecast-accent focus:outline-none"
+                >
+                  {YEARS_OPTIONS.map((n) => <option key={n} value={n}>{n} ano{n > 1 ? 's' : ''}</option>)}
+                </select>
+              </div>
+            ) : null}
           </div>
         </div>
 
         {/* Main Forecast Chart */}
         <Suspense fallback={<LoadingSpinner />}>
-          <ForecastSection height={500} yearsToProject={yearsToProject} />
+          <ForecastSection
+            height={500}
+            yearsToProject={yearsToProject}
+            projectionMode={projectionMode}
+          />
         </Suspense>
 
         {/* Methodology + Trend Analysis */}
@@ -138,22 +161,22 @@ export default function ForecastClient() {
             <div className="space-y-3 text-sm text-dark-300">
               <p>
                 A projeção utiliza{' '}
-                <span className="text-forecast-accent font-medium">regressão linear simples</span>{' '}
-                sobre os dados históricos de receitas e despesas municipais.
+                <span className="text-forecast-accent font-medium">modelo de forecast com sazonalidade</span>{' '}
+                sobre o histórico municipal consolidado de receitas e despesas.
               </p>
               <div className="glass-card p-3 space-y-2">
                 <p className="text-xs text-dark-400 font-medium uppercase tracking-wide">Parâmetros</p>
                 <ul className="space-y-1 text-xs text-dark-400">
-                  <li>&bull; Taxa de crescimento média anual</li>
-                  <li>&bull; Limite conservador: &plusmn;50%</li>
-                  <li>&bull; Mínimo de 2 anos de histórico</li>
+                  <li>&bull; Histórico municipal completo (base anual e mensal)</li>
+                  <li>&bull; Ajuste para mês corrente parcial no treino</li>
+                  <li>&bull; Agregação anual da projeção mensal para o ano corrente</li>
                 </ul>
               </div>
               <div className="flex items-start gap-2 p-3 bg-forecast-500/10 border border-forecast-500/20 rounded-lg">
                 <Info className="w-4 h-4 text-forecast-accent mt-0.5 shrink-0" />
                 <p className="text-xs text-dark-400">
-                  Integração com <span className="text-forecast-accent">Prophet</span> (Meta)
-                  está planejada para projeções com sazonalidade e intervalos de confiança.
+                  O operador pode alternar entre visão <span className="text-forecast-accent">mensal</span>
+                  para os meses seguintes do ano corrente e visão <span className="text-forecast-accent">anual</span>.
                 </p>
               </div>
             </div>
@@ -236,7 +259,7 @@ export default function ForecastClient() {
         {/* Disclaimer */}
         <div className="border-t border-dark-800 pt-4">
           <p className="text-xs text-dark-500 text-center leading-relaxed">
-            As projeções apresentadas são estimativas baseadas em tendências históricas lineares e não constituem
+            As projeções apresentadas são estimativas baseadas em dados históricos financeiros do município e não constituem
             garantia de resultados futuros. Fatores econômicos, mudanças na legislação e eventos imprevisíveis podem
             afetar significativamente os valores reais. Utilize como referência para planejamento.
           </p>

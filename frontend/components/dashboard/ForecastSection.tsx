@@ -1,7 +1,16 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
+import {
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { TrendingUp, AlertCircle } from 'lucide-react';
 
 import { formatCurrency } from '@/lib/utils';
@@ -10,7 +19,28 @@ import apiClient from '@/services/api';
 import { useDashboardFilters } from '@/stores/filtersStore';
 import { useChartThemeColors } from '@/stores/themeStore';
 
+type ProjectionMode = 'annual' | 'monthly';
+
+const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+interface ChartRow {
+  label: string;
+  receitas: number | null;
+  despesas: number | null;
+  receitasPrevistas: number | null;
+  despesasPrevistas: number | null;
+  tipo: 'histórico' | 'projeção';
+}
+
 interface KPIAnual {
+  ano: number;
+  total_receitas: number;
+  total_despesas: number;
+  saldo: number;
+}
+
+interface KPIMensal {
+  mes: number;
   ano: number;
   total_receitas: number;
   total_despesas: number;
@@ -22,7 +52,20 @@ interface KPIsResponse {
   receitas_total: number;
   despesas_total: number;
   saldo: number;
+  kpis_mensais: KPIMensal[] | null;
   kpis_anuais: KPIAnual[] | null;
+}
+
+interface ForecastPoint {
+  data: string;
+  valor_previsto: number;
+}
+
+interface ForecastResponse {
+  tipo: string;
+  horizonte_meses: number;
+  nivel_confianca: number;
+  previsoes: ForecastPoint[];
 }
 
 async function fetchYearlyKPIs(anoInicio?: number, anoFim?: number): Promise<KPIsResponse> {
@@ -34,57 +77,77 @@ async function fetchYearlyKPIs(anoInicio?: number, anoFim?: number): Promise<KPI
   return response;
 }
 
-// Função simples de projeção linear
-function projectTrend(historicalData: number[], yearsToProject: number = 2): number[] {
-  if (historicalData.length < 2) return [];
-  
-  // Calcular taxa de crescimento média anual
-  const growthRates: number[] = [];
-  for (let i = 1; i < historicalData.length; i++) {
-    if (historicalData[i - 1] > 0) {
-      growthRates.push((historicalData[i] - historicalData[i - 1]) / historicalData[i - 1]);
-    }
-  }
-  
-  if (growthRates.length === 0) return [];
-  
-  const avgGrowthRate = growthRates.reduce((sum, rate) => sum + rate, 0) / growthRates.length;
-  
-  // Projetar próximos anos
-  const projections: number[] = [];
-  let lastValue = historicalData[historicalData.length - 1];
-  
-  for (let i = 0; i < yearsToProject; i++) {
-    // Limitar crescimento a ±50% para ser mais conservador
-    const constrainedGrowth = Math.max(-0.5, Math.min(0.5, avgGrowthRate));
-    lastValue = lastValue * (1 + constrainedGrowth);
-    projections.push(lastValue);
-  }
-  
-  return projections;
+async function fetchMonthlyKPIs(ano: number): Promise<KPIsResponse> {
+  return apiClient.get<KPIsResponse>(`/api/v1/kpis/mensal/${ano}`);
+}
+
+async function fetchForecast(tipo: 'receitas' | 'despesas', horizonte: number): Promise<ForecastResponse> {
+  return apiClient.get<ForecastResponse>(`/api/v1/forecast/${tipo}?horizonte=${horizonte}&confianca=0.95`);
 }
 
 interface ForecastSectionProps {
   height?: number;
   yearsToProject?: number;
+  projectionMode?: ProjectionMode;
   className?: string;
 }
 
 export default function ForecastSection({
   height = 300,
   yearsToProject = 2,
+  projectionMode = 'annual',
   className = '',
 }: ForecastSectionProps) {
   const { anoSelecionado, mostrarProjecao } = useDashboardFilters();
   const chartColors = useChartThemeColors();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const shouldFetchMonthly = projectionMode === 'monthly' || anoSelecionado === currentYear;
+  const forecastHorizonMonths = Math.max(24, (yearsToProject + 1) * 12);
 
   // Buscar KPIs anuais históricos até o ano selecionado
-  const { data: kpisResponse, isLoading, error } = useQuery({
+  const { data: kpisAnuaisResponse, isLoading: isLoadingYearly, error: yearlyError } = useQuery({
     queryKey: ['kpis', 'anual', 'forecast', anoSelecionado],
     queryFn: () => fetchYearlyKPIs(2016, anoSelecionado),
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
+
+  const { data: kpisMensaisResponse, isLoading: isLoadingMonthly } = useQuery({
+    queryKey: ['kpis', 'mensal', 'forecast', anoSelecionado],
+    queryFn: () => fetchMonthlyKPIs(anoSelecionado),
+    enabled: shouldFetchMonthly,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  const { data: forecastReceitas, isLoading: isLoadingForecastReceitas, error: forecastReceitasError } = useQuery({
+    queryKey: ['forecast', 'receitas', anoSelecionado, forecastHorizonMonths],
+    queryFn: () => fetchForecast('receitas', forecastHorizonMonths),
+    enabled: mostrarProjecao,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  const { data: forecastDespesas, isLoading: isLoadingForecastDespesas, error: forecastDespesasError } = useQuery({
+    queryKey: ['forecast', 'despesas', anoSelecionado, forecastHorizonMonths],
+    queryFn: () => fetchForecast('despesas', forecastHorizonMonths),
+    enabled: mostrarProjecao,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  const isLoading =
+    isLoadingYearly ||
+    (shouldFetchMonthly && isLoadingMonthly) ||
+    (mostrarProjecao && (isLoadingForecastReceitas || isLoadingForecastDespesas));
+
+  const hasError =
+    Boolean(yearlyError) ||
+    Boolean(forecastReceitasError) ||
+    Boolean(forecastDespesasError) ||
+    !kpisAnuaisResponse?.kpis_anuais;
 
   if (isLoading) {
     return (
@@ -100,7 +163,7 @@ export default function ForecastSection({
     );
   }
 
-  if (error || !kpisResponse?.kpis_anuais) {
+  if (hasError) {
     return (
       <div className={`chart-container ${className}`}>
         <div className="mb-4">
@@ -111,41 +174,165 @@ export default function ForecastSection({
     );
   }
 
-  // Dados históricos
-  const historicalYears = kpisResponse.kpis_anuais.map(k => k.ano);
-  const historicalReceitas = kpisResponse.kpis_anuais.map(k => Number(k.total_receitas));
-  const historicalDespesas = kpisResponse.kpis_anuais.map(k => Number(k.total_despesas));
-  
-  // Calcular projeções apenas se habilitado pelo filtro
-  const projectedReceitas = mostrarProjecao ? projectTrend(historicalReceitas, yearsToProject) : [];
-  const projectedDespesas = mostrarProjecao ? projectTrend(historicalDespesas, yearsToProject) : [];
-  
-  const lastYear = Math.max(...historicalYears);
-  const projectedYears = Array.from({ length: yearsToProject }, (_, i) => lastYear + i + 1);
+  const forecastReceitasByMonth = new Map<string, number>();
+  const forecastDespesasByMonth = new Map<string, number>();
+  const forecastReceitasByYear = new Map<number, number>();
+  const forecastDespesasByYear = new Map<number, number>();
 
-  // Montar dados do gráfico
-  const chartData = [
-    // Dados históricos
-    ...kpisResponse.kpis_anuais.map((kpi, index) => ({
-      ano: kpi.ano,
-      receitas: Number(kpi.total_receitas),
-      despesas: Number(kpi.total_despesas),
-      receitasPrevistas: null,
-      despesasPrevistas: null,
-      tipo: 'histórico',
-      label: kpi.ano.toString(),
-    })),
-    // Dados projetados
-    ...projectedYears.map((ano, index) => ({
-      ano,
-      receitas: null,
-      despesas: null,
-      receitasPrevistas: projectedReceitas[index],
-      despesasPrevistas: projectedDespesas[index],
-      tipo: 'projeção',
-      label: `${ano}*`,
-    })),
-  ];
+  for (const point of forecastReceitas?.previsoes ?? []) {
+    const [yearToken, monthToken] = point.data.split('-');
+    const year = Number(yearToken);
+    const month = Number(monthToken);
+    if (!Number.isFinite(year) || !Number.isFinite(month)) continue;
+    const key = `${year}-${month}`;
+    const value = Number(point.valor_previsto);
+    forecastReceitasByMonth.set(key, value);
+    forecastReceitasByYear.set(year, (forecastReceitasByYear.get(year) ?? 0) + value);
+  }
+
+  for (const point of forecastDespesas?.previsoes ?? []) {
+    const [yearToken, monthToken] = point.data.split('-');
+    const year = Number(yearToken);
+    const month = Number(monthToken);
+    if (!Number.isFinite(year) || !Number.isFinite(month)) continue;
+    const key = `${year}-${month}`;
+    const value = Number(point.valor_previsto);
+    forecastDespesasByMonth.set(key, value);
+    forecastDespesasByYear.set(year, (forecastDespesasByYear.get(year) ?? 0) + value);
+  }
+
+  const monthlyActualByMonth = new Map<number, { receitas: number; despesas: number }>();
+  for (const item of kpisMensaisResponse?.kpis_mensais ?? []) {
+    monthlyActualByMonth.set(item.mes, {
+      receitas: Number(item.total_receitas),
+      despesas: Number(item.total_despesas),
+    });
+  }
+
+  let chartData: ChartRow[] = [];
+  let chartSubtitle = '';
+  let projectionTag = '';
+  let projectionMarker: string | null = null;
+
+  if (projectionMode === 'monthly') {
+    chartData = MONTH_LABELS.map((label, index) => {
+      const month = index + 1;
+      const key = `${anoSelecionado}-${month}`;
+      const actual = monthlyActualByMonth.get(month);
+      const canUseActual = anoSelecionado !== currentYear || month < currentMonth;
+      const canProjectMonth =
+        mostrarProjecao &&
+        anoSelecionado === currentYear &&
+        month > currentMonth;
+
+      return {
+        label,
+        receitas: canUseActual ? (actual?.receitas ?? null) : null,
+        despesas: canUseActual ? (actual?.despesas ?? null) : null,
+        receitasPrevistas: canProjectMonth
+          ? (forecastReceitasByMonth.get(key) ?? null)
+          : null,
+        despesasPrevistas: canProjectMonth
+          ? (forecastDespesasByMonth.get(key) ?? null)
+          : null,
+        tipo: canProjectMonth ? 'projeção' : 'histórico',
+      };
+    });
+
+    chartSubtitle =
+      anoSelecionado === currentYear
+        ? `Ano ${anoSelecionado}: histórico fechado + projeção dos meses seguintes`
+        : `Ano ${anoSelecionado}: histórico mensal consolidado`;
+    projectionTag = 'Projeção mensal';
+
+    if (mostrarProjecao && anoSelecionado === currentYear && currentMonth < 12) {
+      projectionMarker = MONTH_LABELS[currentMonth];
+    }
+  } else {
+    const annualHistory = (kpisAnuaisResponse?.kpis_anuais ?? [])
+      .filter((kpi) => kpi.ano <= anoSelecionado)
+      .map((kpi) => ({
+        ano: kpi.ano,
+        receitas: Number(kpi.total_receitas),
+        despesas: Number(kpi.total_despesas),
+      }));
+
+    if (!annualHistory.length) {
+      return (
+        <div className={`chart-container ${className}`}>
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-dark-100">Previsão</h3>
+            <p className="text-sm text-dark-400">Sem dados suficientes para projeção anual.</p>
+          </div>
+        </div>
+      );
+    }
+
+    let projectedCurrentYearReceitas: number | null = null;
+    let projectedCurrentYearDespesas: number | null = null;
+
+    if (mostrarProjecao && anoSelecionado === currentYear) {
+      let receitasTotal = 0;
+      let despesasTotal = 0;
+
+      for (let month = 1; month <= 12; month++) {
+        const key = `${anoSelecionado}-${month}`;
+        const actual = monthlyActualByMonth.get(month);
+
+        if (month < currentMonth) {
+          receitasTotal += actual?.receitas ?? 0;
+          despesasTotal += actual?.despesas ?? 0;
+        } else {
+          receitasTotal += forecastReceitasByMonth.get(key) ?? (actual?.receitas ?? 0);
+          despesasTotal += forecastDespesasByMonth.get(key) ?? (actual?.despesas ?? 0);
+        }
+      }
+
+      projectedCurrentYearReceitas = receitasTotal;
+      projectedCurrentYearDespesas = despesasTotal;
+    }
+
+    chartData = annualHistory.map((item) => {
+      const isProjectedCurrentYear =
+        mostrarProjecao &&
+        anoSelecionado === currentYear &&
+        item.ano === currentYear;
+
+      return {
+        label: item.ano.toString(),
+        receitas: isProjectedCurrentYear ? null : item.receitas,
+        despesas: isProjectedCurrentYear ? null : item.despesas,
+        receitasPrevistas: isProjectedCurrentYear ? projectedCurrentYearReceitas : null,
+        despesasPrevistas: isProjectedCurrentYear ? projectedCurrentYearDespesas : null,
+        tipo: isProjectedCurrentYear ? 'projeção' : 'histórico',
+      };
+    });
+
+    const lastYear = annualHistory[annualHistory.length - 1].ano;
+
+    if (mostrarProjecao) {
+      const projectedYears = Array.from({ length: yearsToProject }, (_, index) => lastYear + index + 1);
+
+      chartData.push(
+        ...projectedYears.map((year) => ({
+          label: `${year}*`,
+          receitas: null,
+          despesas: null,
+          receitasPrevistas: forecastReceitasByYear.get(year) ?? null,
+          despesasPrevistas: forecastDespesasByYear.get(year) ?? null,
+          tipo: 'projeção' as const,
+        })),
+      );
+
+      projectionMarker = `${lastYear + 1}*`;
+    }
+
+    chartSubtitle =
+      anoSelecionado === currentYear
+        ? `Ano ${anoSelecionado}: anual projetado com meses remanescentes`
+        : `Projeção anual para ${yearsToProject} ano(s)`;
+    projectionTag = 'Projeção anual';
+  }
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload || !payload.length) return null;
@@ -201,11 +388,20 @@ export default function ForecastSection({
     );
   };
 
-  // Último valor real e primeira projeção para cálculo de tendência
-  const lastHistoricalReceita = historicalReceitas[historicalReceitas.length - 1];
-  const firstProjectedReceita = projectedReceitas[0];
-  const receitaGrowth = lastHistoricalReceita > 0 
-    ? ((firstProjectedReceita - lastHistoricalReceita) / lastHistoricalReceita) * 100 
+  const firstProjectedPoint = chartData.find((item) => item.receitasPrevistas !== null);
+  const lastHistoricalPoint = [...chartData].reverse().find((item) => item.receitas !== null);
+  const nextProjectedRevenue = firstProjectedPoint?.receitasPrevistas ?? lastHistoricalPoint?.receitas ?? 0;
+  const projectedRevenueValue = firstProjectedPoint?.receitasPrevistas;
+  const historicalRevenueValue = lastHistoricalPoint?.receitas;
+  const hasComparableGrowth =
+    projectedRevenueValue !== null &&
+    projectedRevenueValue !== undefined &&
+    historicalRevenueValue !== null &&
+    historicalRevenueValue !== undefined &&
+    historicalRevenueValue > 0;
+  const receitaGrowth =
+    hasComparableGrowth
+      ? ((projectedRevenueValue - historicalRevenueValue) / historicalRevenueValue) * 100
     : 0;
 
   return (
@@ -215,15 +411,15 @@ export default function ForecastSection({
           <div>
             <h3 className="text-lg font-semibold text-dark-100 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-forecast-accent" />
-              Previsão
+              {projectionMode === 'monthly' ? 'Previsão Mensal' : 'Previsão Anual'}
             </h3>
             <p className="text-sm text-dark-400">
-              Projeção para {yearsToProject} ano(s)
+              {chartSubtitle}
             </p>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-dark-400 bg-dark-800/50 px-2 py-1 rounded">
             <AlertCircle className="w-3.5 h-3.5" />
-            <span>Estimativa simples</span>
+            <span>{projectionTag}</span>
           </div>
         </div>
       </div>
@@ -266,12 +462,14 @@ export default function ForecastSection({
 
           <Tooltip content={<CustomTooltip />} />
 
-          <ReferenceLine
-            x={`${lastYear + 1}*`}
-            stroke={COLORS.border.accent}
-            strokeDasharray="5 5"
-            label={{ value: 'Previsão', position: 'top', fill: chartColors.textMuted, fontSize: 11 }}
-          />
+          {projectionMarker ? (
+            <ReferenceLine
+              x={projectionMarker}
+              stroke={COLORS.border.accent}
+              strokeDasharray="5 5"
+              label={{ value: 'Projeção', position: 'top', fill: chartColors.textMuted, fontSize: 11 }}
+            />
+          ) : null}
 
           {/* Receitas históricas */}
           <Line
@@ -334,16 +532,18 @@ export default function ForecastSection({
         </div>
         <div className="glass-card p-3">
           <p className="text-xs text-dark-400 mb-1">
-            Próximo Ano (est.)
+            {projectionMode === 'monthly' ? 'Próximo Mês (est.)' : 'Próximo Ano (est.)'}
           </p>
           <p className="text-lg font-bold text-forecast-accent">
-            {formatCurrency(projectedReceitas[0], { compact: true })}
+            {formatCurrency(nextProjectedRevenue, { compact: true })}
           </p>
         </div>
       </div>
 
       <p className="mt-3 text-xs text-dark-500 text-center">
-        * Projeção baseada em tendência histórica linear. Implementação com Prophet será disponibilizada em breve.
+        {projectionMode === 'monthly'
+          ? '* Meses futuros são projetados com modelo de forecast a partir do histórico municipal consolidado.'
+          : '* Projeção anual combina histórico consolidado e agregação das previsões mensais dos períodos seguintes.'}
       </p>
     </div>
   );
