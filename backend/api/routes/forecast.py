@@ -21,7 +21,7 @@ router = APIRouter(prefix="/forecast", tags=["forecast"])
 )
 async def forecast_receitas(
     horizonte: Optional[int] = Query(
-        12, ge=1, le=60, description="Número de meses a prever (1-60)"
+        12, ge=1, le=72, description="Número de meses a prever (1-72)"
     ),
     confianca: Optional[float] = Query(
         0.95, ge=0.80, le=0.99, description="Nível de confiança (0.80-0.99)"
@@ -73,7 +73,7 @@ async def forecast_receitas(
 )
 async def forecast_despesas(
     horizonte: Optional[int] = Query(
-        12, ge=1, le=60, description="Número de meses a prever (1-60)"
+        12, ge=1, le=72, description="Número de meses a prever (1-72)"
     ),
     confianca: Optional[float] = Query(
         0.95, ge=0.80, le=0.99, description="Nível de confiança (0.80-0.99)"

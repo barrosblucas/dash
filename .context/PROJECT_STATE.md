@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-16 (atualizado)
+Snapshot: 2026-04-18 (atualizado)
 
 ## Status geral
 
@@ -46,6 +46,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Tipos TypeScript espelhando schemas da API
 - [x] Páginas dedicadas para Receitas, Despesas, Previsões, Comparativo e Relatórios
 - [x] Navegação lateral funcional com todas as rotas implementadas
+- [x] Forecast anual recompõe 2026 com meses fechados + projeção dos meses remanescentes e suporta seleção de até 5 anos no controle `Projetar:`
 - [x] Visualização hierárquica de receitas (tabela escadinha com expand/collapse por nível)
 - [x] Remoção de links mortos (Configurações, Ajuda) do menu lateral
 - [x] CORS e redirect corrigidos (FastAPI `redirect_slashes=False`, trailing slashes removidas)

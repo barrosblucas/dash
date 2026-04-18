@@ -66,7 +66,7 @@ function computeTrendMetrics(anuais: KPIAnual[]): TrendMetrics | null {
 const YEARS_OPTIONS = [1, 2, 3, 4, 5] as const;
 
 export default function ForecastClient() {
-  const { anoSelecionado, mostrarProjecao, toggleMostrarProjecao, setAnoSelecionado } = useDashboardFilters();
+  const { anoSelecionado, mostrarProjecao, setMostrarProjecao, setAnoSelecionado } = useDashboardFilters();
   const [yearsToProject, setYearsToProject] = useState(2);
   const [projectionMode, setProjectionMode] = useState<ProjectionMode>('annual');
   const currentYear = new Date().getFullYear();
@@ -74,8 +74,8 @@ export default function ForecastClient() {
 
   // Projeções ativadas por padrão nesta página
   useEffect(() => {
-    if (!mostrarProjecao) toggleMostrarProjecao();
-  }, [mostrarProjecao, toggleMostrarProjecao]);
+    setMostrarProjecao(true);
+  }, [setMostrarProjecao]);
 
   // KPIs anuais para os cards de tendência
   const { data: kpisResponse, isLoading: kpisLoading } = useQuery({
@@ -88,6 +88,7 @@ export default function ForecastClient() {
 
   const trendMetrics = kpisResponse?.kpis_anuais ? computeTrendMetrics(kpisResponse.kpis_anuais) : null;
   const availableYears = Array.from({ length: currentYear - 2016 + 1 }, (_, i) => currentYear - i);
+  const forecastViewKey = `${projectionMode}-${anoSelecionado}-${yearsToProject}-${mostrarProjecao}`;
 
   return (
     <DashboardLayout>
@@ -144,6 +145,7 @@ export default function ForecastClient() {
         {/* Main Forecast Chart */}
         <Suspense fallback={<LoadingSpinner />}>
           <ForecastSection
+            key={forecastViewKey}
             height={500}
             yearsToProject={yearsToProject}
             projectionMode={projectionMode}

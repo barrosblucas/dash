@@ -46,6 +46,7 @@ interface DashboardFiltersActions {
   setCategoriaDespesa: (categoria: string | null) => void;
   toggleCompararAnoAnterior: () => void;
   toggleMostrarProjecao: () => void;
+  setMostrarProjecao: (mostrar: boolean) => void;
   setModoVisualizacao: (modo: 'mes' | 'trimestre' | 'semestre' | 'ano') => void;
   resetFilters: () => void;
 }
@@ -101,6 +102,8 @@ export const useDashboardFilters = create<FiltrosDashboard & DashboardFiltersAct
 
       toggleMostrarProjecao: () => 
         set((state) => ({ mostrarProjecao: !state.mostrarProjecao })),
+
+      setMostrarProjecao: (mostrar) => set({ mostrarProjecao: mostrar }),
 
       setModoVisualizacao: (modo) => set({ modoVisualizacao: modo }),
 
