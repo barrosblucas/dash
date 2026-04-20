@@ -39,11 +39,11 @@ const themeScript = `
 // Metadados
 export const metadata: Metadata = {
   title: {
-    default: 'Dashboard Financeiro | Bandeirantes MS',
+    default: 'Portal da Transparência | Bandeirantes MS',
     template: '%s | Bandeirantes MS',
   },
   description:
-    'Dashboard Financeiro Municipal - Prefeitura de Bandeirantes MS. Visualize receitas, despesas e previsões orçamentárias de 2016 a 2026.',
+    'Portal da Transparência - Prefeitura Municipal de Bandeirantes MS. Acesse informações sobre receitas, despesas, licitações, obras e gestão pública.',
   keywords: [
     'dashboard financeiro',
     'prefeitura',
@@ -71,25 +71,25 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://bandeirantes-ms.gov.br/dashboard',
-    siteName: 'Dashboard Financeiro Bandeirantes',
-    title: 'Dashboard Financeiro | Bandeirantes MS',
+    url: 'https://bandeirantes-ms.gov.br',
+    siteName: 'Portal da Transparência Bandeirantes',
+    title: 'Portal da Transparência | Bandeirantes MS',
     description:
-      'Visualize receitas, despesas e previsões orçamentárias do município de Bandeirantes MS.',
+      'Portal da Transparência - Prefeitura Municipal de Bandeirantes MS. Acesse informações sobre receitas, despesas, licitações, obras e gestão pública.',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Dashboard Financeiro Bandeirantes MS',
+        alt: 'Portal da Transparência Bandeirantes MS',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dashboard Financeiro | Bandeirantes MS',
+    title: 'Portal da Transparência | Bandeirantes MS',
     description:
-      'Visualize receitas, despesas e previsões orçamentárias do município de Bandeirantes MS.',
+      'Portal da Transparência - Prefeitura Municipal de Bandeirantes MS. Acesse informações sobre receitas, despesas, licitações, obras e gestão pública.',
     images: ['/og-image.png'],
   },
   manifest: '/manifest.json',

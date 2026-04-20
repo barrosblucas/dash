@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-04-16
+Snapshot: 2026-04-20
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -22,6 +22,7 @@ Snapshot: 2026-04-16
 - `api/routes/forecast.py`: endpoints de forecasting (receitas, despesas)
 - `api/routes/export.py`: endpoints de exportação (PDF, Excel)
 - `api/routes/scraping.py`: endpoints de controle do scraping (status, trigger manual, histórico de execuções)
+- `api/routes/movimento_extra.py`: proxy para API Quality de movimento extra orçamentário (ano, mês, tipo=R/D/AMBOS, agrupamento por fundo)
 - `domain/entities/receita.py`: entidade de domínio Receita com validação e cálculos derivados
 - `domain/entities/despesa.py`: entidade de domínio Despesa com validação e cálculos derivados
 - `domain/repositories/receita_repository.py`: interface de repositório para receitas
@@ -60,16 +61,19 @@ Snapshot: 2026-04-16
 - `Dockerfile`: imagem Node para build e execução do Next.js em container
 - `Dockerfile.dev`: imagem Node para execução do Next.js em modo dev com hot reload
 - `.dockerignore`: exclusões específicas do build do frontend
-- `next.config.js`: configuração Next.js 14
+- `next.config.js`: configuração Next.js 14 (sem redirect `/ → /dashboard`, rota raiz é o portal público)
 - `tsconfig.json`: TypeScript strict com path aliases (`@/*`)
 - `tailwind.config.js`: configuração Tailwind CSS (dark palette via CSS variables para suporte light/dark)
 - `postcss.config.js`: PostCSS com autoprefixer
 - `.eslintrc.js`: ESLint com next/core-web-vitals, TanStack Query plugin, import order
 - `.prettierrc` / `.prettierignore`: Prettier config
 - `app/layout.tsx`: layout raiz (theme-aware com script anti-FOIT)
-- `app/dashboard/page.tsx`: página principal do dashboard
+- `app/page.tsx`: portal público da transparência (página inicial)
+- `app/portal-client.tsx`: componente client do portal com hero, grid de cards e footer
+- `app/dashboard/page.tsx`: página do dashboard financeiro
 - `app/dashboard/dashboard-client.tsx`: componente client do dashboard
 - `app/globals.css`: identidade visual (light + dark finance theme com CSS custom properties)
+- `components/portal/PlaceholderPage.tsx`: página placeholder reutilizável para seções "Em breve"
 - `components/charts/RevenueChart.tsx`: gráfico de receitas com seletor de tipo (bar/line/area/pie)
 - `components/charts/ExpenseChart.tsx`: gráfico de despesas com seletor de tipo (bar/line/area/pie)
 - `components/charts/CombinedOverviewChart.tsx`: gráfico combinado receitas x despesas com seletor de tipo
@@ -89,12 +93,20 @@ Snapshot: 2026-04-16
 - `app/comparativo/comparativo-client.tsx`: componente client do comparativo
 - `app/relatorios/page.tsx`: página de relatórios e exportação
 - `app/relatorios/relatorios-client.tsx`: componente client de relatórios
+- `app/movimento-extra/page.tsx`: página de movimento extra orçamentário
+- `app/movimento-extra/movimento-extra-client.tsx`: componente client com glossário interativo, insights, cards por fundo, filtros e busca
+- `app/obras/page.tsx`: placeholder — Acompanhamento de Obras
+- `app/contratos/page.tsx`: placeholder — Gestão de Contratos
+- `app/diarias/page.tsx`: placeholder — Diárias e Passagens
+- `app/licitacoes/page.tsx`: placeholder — Licitações
+- `app/avisos-licitacoes/page.tsx`: placeholder — Aviso de Licitações
 - `components/ui/ChartTypeSelector.tsx`: seletor reutilizável de tipo de gráfico (bar/line/area/pie)
 - `components/ui/index.ts`: barrel de exports dos componentes UI
 - `components/Providers.tsx`: providers React (TanStack Query)
 - `hooks/useDashboardData.ts`: hook de dados do dashboard
 - `hooks/useFinanceData.ts`: hook genérico de dados financeiros
 - `hooks/useRevenueData.ts`: hook de dados de receitas
+- `hooks/useMovimentoExtra.ts`: hook React Query para consulta de movimento extra
 - `hooks/useExport.ts`: hook de exportação
 - `hooks/index.ts`: barrel de exports
 - `services/api.ts`: API client Axios centralizado com interceptors
@@ -107,6 +119,7 @@ Snapshot: 2026-04-16
 - `types/api.ts`: tipos de resposta da API
 - `types/receita.ts`: tipos de receita
 - `types/despesa.py`: tipos de despesa
+- `types/movimento-extra.ts`: tipos e glossário de fundos municipais (FUNDEB, FMAS, FMIS, etc.)
 - `types/charts.ts`: tipos de gráficos
 - `types/index.ts`: barrel de exports
 - `public/`: assets estáticos

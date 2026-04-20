@@ -265,4 +265,24 @@ export const kpisApi = {
   },
 };
 
+export const movimentoExtraApi = {
+  busca: async (params: {
+    ano: number;
+    mes: number;
+    tipo: 'R' | 'D' | 'AMBOS';
+  }): Promise<import('@/types/movimento-extra').MovimentoExtraResponse> => {
+    return apiClient.get<import('@/types/movimento-extra').MovimentoExtraResponse>(
+      API_ENDPOINTS.movimentoExtra.busca,
+      { params }
+    );
+  },
+
+  anual: async (ano: number): Promise<import('@/types/movimento-extra').MovimentoExtraAnualResponse> => {
+    return apiClient.get<import('@/types/movimento-extra').MovimentoExtraAnualResponse>(
+      API_ENDPOINTS.movimentoExtra.anual,
+      { params: { ano } }
+    );
+  },
+};
+
 export default apiClient;

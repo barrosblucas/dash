@@ -408,6 +408,11 @@ export const API_ENDPOINTS = {
   websocket: {
     real_time: '/ws/realtime',
   },
+
+  movimentoExtra: {
+    busca: '/api/v1/movimento-extra/busca',
+    anual: '/api/v1/movimento-extra/anual',
+  },
 } as const;
 
 // ============================================
@@ -443,6 +448,13 @@ export const QUERY_KEYS = {
     all: ['dashboard'] as const,
     summary: () => [...QUERY_KEYS.dashboard.all, 'summary'] as const,
     comparativo: (years: number[]) => [...QUERY_KEYS.dashboard.all, 'comparativo', years] as const,
+  },
+
+  movimentoExtra: {
+    all: ['movimento-extra'] as const,
+    busca: (ano: number, mes: number, tipo: string) =>
+      [...QUERY_KEYS.movimentoExtra.all, 'busca', ano, mes, tipo] as const,
+    anual: (ano: number) => [...QUERY_KEYS.movimentoExtra.all, 'anual', ano] as const,
   },
 } as const;
 

@@ -28,8 +28,6 @@ Não duplique essas regras aqui. Em caso de conflito, siga o documento canônico
 
 ## Skills e especialistas
 - Use as skills apenas quando agregarem valor real à tarefa
-- Use `clean-code` ao escrever, editar ou revisar código
-- Use `clean-architecture` somente para trabalho estrutural, revisão estrutural, modelagem de domínio, limites de dependência ou refatorações sensíveis à arquitetura
 - Use skills e perspectivas especializadas de forma mínima e sob demanda
 - Trabalhe por padrão em single-thread
 - Utilize os `agents` de forma restrita e intencional

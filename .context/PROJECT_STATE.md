@@ -1,10 +1,10 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-18 (atualizado)
+Snapshot: 2026-04-20 (atualizado)
 
 ## Status geral
 
-Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard interativo.
+Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard interativo e portal público da transparência.
 
 ## Funcionalidade implementada
 
@@ -54,6 +54,14 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional e dashboard inte
 - [x] Backend e frontend bindados em `0.0.0.0` para acesso na rede local
 - [x] Empacotamento em Docker Compose com backend, frontend, SQLite persistido, `receitas/` em leitura e `despesas/` em escrita para atualização automática
 - [x] Override de desenvolvimento com hot reload para backend (`uvicorn --reload`) e frontend (`next dev`)
+- [x] Portal público da transparência na rota `/` com grid de cards para navegação entre seções
+- [x] Cards do portal: Dashboard Financeiro, Receitas, Despesas (disponíveis) + Movimento Extra, Obras, Contratos, Diárias, Licitações, Aviso de Licitações (em breve)
+- [x] Páginas placeholder para 6 seções futuras (Movimento Extra, Obras, Contratos, Diárias, Licitações, Aviso de Licitações)
+- [x] Link "Portal" na sidebar para retorno ao portal público
+- [x] Metadados atualizados: título "Portal da Transparência | Bandeirantes MS"
+- [x] Página de Movimento Extra Orçamentário com glossário interativo, insights automáticos e visualização por fundos
+- [x] Proxy backend para API Quality de movimento extra orçamentário (requisição direta ao portal)
+- [x] Glossário de fundos municipais com explicação do impacto para o cidadão
 
 ### Dados
 - [x] Receitas: ~160 registros (2013–2026) extraídos de PDFs

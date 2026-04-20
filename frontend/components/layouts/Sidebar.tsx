@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  Home,
   LayoutDashboard,
   TrendingUp,
   TrendingDown,
@@ -19,6 +20,7 @@ interface SidebarProps {
 }
 
 const navigation = [
+  { name: 'Portal', href: '/', icon: Home },
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Receitas', href: '/receitas', icon: TrendingUp },
   { name: 'Despesas', href: '/despesas', icon: TrendingDown },

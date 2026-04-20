@@ -36,16 +36,7 @@ const nextConfig = {
     ];
   },
 
-  // Redirecionamentos
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/dashboard',
-        permanent: true,
-      },
-    ];
-  },
+  // Redirecionamentos (removido redirect / → /dashboard, agora / é o portal público)
 
   // Otimizações experimentais
   experimental: {
