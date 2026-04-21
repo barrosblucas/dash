@@ -124,5 +124,54 @@
   - Exibe campos extras da Quality (`disputa`, `criterio`, `tipo`) quando disponíveis.
   - Refatorada a renderização condicional do órgão para usar `item.orgaoNome` diretamente.
   - Exibe seção "Informações do Processo" com pregoeiro, legislação, fase, disputa e modo de disputa (ComprasBR).
-  - Exibe seção "Datas de Envio de Propostas" com início e fim (ComprasBR).
-  - Exibe lista de documentos anexados com links diretos de download (ComprasBR).
+   - Exibe seção "Datas de Envio de Propostas" com início e fim (ComprasBR).
+   - Exibe lista de documentos anexados com links diretos de download (ComprasBR).
+
+## Refatoração Fase 3 — Split de frontend/app/avisos-licitacoes/avisos-licitacoes-client.tsx
+
+### Movido
+- **`frontend/app/avisos-licitacoes/avisos-licitacoes-client.tsx`** (1318 → 383 linhas): dividido em 11 arquivos por responsabilidade, sem barrel files:
+  - `constants.ts` (28 linhas) — `ViewMode`, `FonteFilter`, `StatusFilter`, `COMPRASBR_URL`, `QUALITY_URL`, `FONTES`, `STATUSES`, `DIAS_SEMANA`
+  - `parsers.ts` (119 linhas) — `parseComprasBR`, `parseDispensas`, `extrairTituloSucinto`
+  - `feriados.ts` (55 linhas) — `getFeriados` com algoritmo Meeus/Jones/Butcher + feriados fixos
+  - `filters.ts` (36 linhas) — `matchFonte`, `matchStatus`, `fmtIsoDate`
+  - `status-badge.tsx` (26 linhas) — componente `StatusBadge`
+  - `fonte-badge.tsx` (20 linhas) — componente `FonteBadge`
+  - `licitacao-modal.tsx` (251 linhas) — componente `LicitacaoModal` com detalhes ComprasBR, documentos e download de edital
+  - `month-view.tsx` (196 linhas) — componente `MonthView` com grid mensal, navegação e itens do dia
+  - `week-view.tsx` (175 linhas) — componente `WeekView` com grid semanal e itens do dia
+  - `list-view.tsx` (196 linhas) — componente `ListView` com tabela desktop, cards mobile e paginação
+
+### Atualizado
+- Imports do componente principal apontam diretamente para os novos módulos (sem `index.ts`).
+- `page.tsx` inalterado — continua exportando `AvisosLicitacoesClient` como `export default`.
+
+### Validação
+- `npm run lint`: passando (sem erros nos arquivos da feature; warnings pré-existentes em outras features mantidos).
+- `npm run type-check`: passando sem erros.
+- `npm run build`: passando — todas as páginas geradas com sucesso (`/avisos-licitacoes` 23 kB).
+
+## Refatoração Fase 4 — Split de frontend/app/movimento-extra/movimento-extra-client.tsx
+
+### Movido
+- **`frontend/app/movimento-extra/movimento-extra-client.tsx`** (1050 → 285 linhas): dividido em 10 arquivos por responsabilidade, sem barrel files:
+  - `constants.ts` (2 linhas) — `CURRENT_YEAR`, `YEARS`
+  - `glossario.ts` (15 linhas) — `getGlossaryKey`, `getGlossary`
+  - `tipo-pill.tsx` (28 linhas) — componente `TipoPill`
+  - `kpi-card.tsx` (34 linhas) — componente `KpiCard`
+  - `tipo-badge.tsx` (14 linhas) — componente `TipoBadge`
+  - `fundo-card.tsx` (126 linhas) — componente `FundoCard` com tooltip de glossário
+  - `item-row.tsx` (95 linhas) — componentes `ItemRow` (mobile) e `ItemTableRow` (desktop)
+  - `insight-card.tsx` (68 linhas) — componente `InsightCard` com barra de percentual
+  - `monthly-bar.tsx` (28 linhas) — componente `MonthlyEvolutionBar`
+  - `mensal-view.tsx` (342 linhas) — view completa do modo mensal (KPIs, insights, fundos, itens, glossário)
+  - `anual-view.tsx` (134 linhas) — view completa do modo anual (KPIs, evolução mensal, destaques)
+
+### Atualizado
+- Imports do componente principal apontam diretamente para os novos módulos (sem `index.ts`).
+- `page.tsx` inalterado — continua exportando `MovimentoExtraClient` como `export default`.
+
+### Validação
+- `npm run lint`: passando (sem erros nos arquivos da feature; warnings pré-existentes em outras features mantidos).
+- `npm run type-check`: passando sem erros.
+- `npm run build`: passando — todas as páginas geradas com sucesso.

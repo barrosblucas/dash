@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-04-20
+Snapshot: 2026-04-21
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -106,13 +106,34 @@ Snapshot: 2026-04-20
 - `app/relatorios/page.tsx`: página de relatórios e exportação
 - `app/relatorios/relatorios-client.tsx`: componente client de relatórios
 - `app/movimento-extra/page.tsx`: página de movimento extra orçamentário
-- `app/movimento-extra/movimento-extra-client.tsx`: componente client com glossário interativo, insights, cards por fundo, filtros e busca
+- `app/movimento-extra/movimento-extra-client.tsx`: componente principal (285 linhas) com filtros, estado e seleção de view mensal/anual
+- `app/movimento-extra/constants.ts`: `CURRENT_YEAR`, `YEARS`
+- `app/movimento-extra/glossario.ts`: `getGlossaryKey`, `getGlossary`
+- `app/movimento-extra/tipo-pill.tsx`: botão pill de filtro (`TipoPill`)
+- `app/movimento-extra/kpi-card.tsx`: card de KPI (`KpiCard`)
+- `app/movimento-extra/tipo-badge.tsx`: badge de tipo R/D (`TipoBadge`)
+- `app/movimento-extra/fundo-card.tsx`: card de fundo com tooltip de glossário (`FundoCard`)
+- `app/movimento-extra/item-row.tsx`: linha de item mobile (`ItemRow`) e desktop (`ItemTableRow`)
+- `app/movimento-extra/insight-card.tsx`: card de insight com barra de percentual (`InsightCard`)
+- `app/movimento-extra/monthly-bar.tsx`: barra de evolução mensal (`MonthlyEvolutionBar`)
+- `app/movimento-extra/mensal-view.tsx`: view completa do modo mensal (KPIs, insights, fundos, itens, glossário)
+- `app/movimento-extra/anual-view.tsx`: view completa do modo anual (KPIs, evolução mensal, destaques)
 - `app/obras/page.tsx`: placeholder — Acompanhamento de Obras
 - `app/contratos/page.tsx`: placeholder — Gestão de Contratos
 - `app/diarias/page.tsx`: placeholder — Diárias e Passagens
 - `app/licitacoes/page.tsx`: placeholder — Licitações
 - `app/avisos-licitacoes/page.tsx`: página de avisos de licitações
-- `app/avisos-licitacoes/avisos-licitacoes-client.tsx`: página completa com calendário mensal/semanal, lista, filtros e modal
+- `app/avisos-licitacoes/avisos-licitacoes-client.tsx`: componente principal (≤400 linhas) com calendário mensal/semanal, lista, filtros e modal
+- `app/avisos-licitacoes/constants.ts`: constantes e tipos locais (`ViewMode`, `FonteFilter`, `StatusFilter`, URLs, arrays de filtros)
+- `app/avisos-licitacoes/parsers.ts`: parsers `parseComprasBR`, `parseDispensas` e `extrairTituloSucinto`
+- `app/avisos-licitacoes/feriados.ts`: cálculo de feriados via algoritmo de Meeus/Jones/Butcher + fixos
+- `app/avisos-licitacoes/filters.ts`: funções de filtro (`matchFonte`, `matchStatus`) e formatação (`fmtIsoDate`)
+- `app/avisos-licitacoes/status-badge.tsx`: componente `StatusBadge`
+- `app/avisos-licitacoes/fonte-badge.tsx`: componente `FonteBadge`
+- `app/avisos-licitacoes/licitacao-modal.tsx`: modal de detalhes da licitação com integração ComprasBR
+- `app/avisos-licitacoes/month-view.tsx`: visualização mensal do calendário com navegação e itens do dia
+- `app/avisos-licitacoes/week-view.tsx`: visualização semanal do calendário com grid de 7 dias
+- `app/avisos-licitacoes/list-view.tsx`: visualização em lista com tabela desktop, cards mobile e paginação
 - `components/ui/ChartTypeSelector.tsx`: seletor reutilizável de tipo de gráfico (bar/line/area/pie)
 - `components/ui/index.ts`: barrel de exports dos componentes UI
 - `components/Providers.tsx`: providers React (TanStack Query)
