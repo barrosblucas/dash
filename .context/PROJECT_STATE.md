@@ -65,6 +65,10 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Glossário de fundos municipais com explicação do impacto para o cidadão
 - [x] Página de Aviso de Licitações com calendário mensal/semanal, lista paginada, filtros, busca textual, modal de detalhes e KPIs
 - [x] Dados unificados de ComprasBR (pregões/concorrências) e Quality (dispensas de licitação)
+- [x] Detalhes ComprasBR enriquecidos: datas de propostas, pregoeiro, legislação, disputa, documentos anexados
+- [x] Download direto de edital ComprasBR via `arquivoUri`
+- [x] Feriados nacionais, estaduais (MS) e móveis exibidos no calendário
+- [x] Títulos sucintos de licitações no calendário e lista
 
 ### Dados
 - [x] Receitas: ~160 registros (2013–2026) extraídos de PDFs
@@ -92,7 +96,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 
 ### Arquitetura
 
-- Testes `test_api/` e `test_ml/` ainda vazios; `test_etl/` parcialmente coberto — cobertura automatizada ainda insuficiente
+- Testes `test_ml/` ainda vazio; `test_api/` parcialmente iniciado com `test_licitacoes.py`; `test_etl/` parcialmente coberto — cobertura automatizada ainda insuficiente
 - `domain/usecases/` vazio — lógica ainda acoplada nas rotas
 - `etl/transformers/` e `etl/loaders/` vazios — extração direta sem camada de transformação dedicada
 - `backend/ml/` vazio — forecasting service importa modelos diretamente

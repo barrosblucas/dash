@@ -450,6 +450,7 @@ class LicitacaoComprasBRItem(BaseModel):
     modalidade: str
     orgaoNome: str
     dataAbertura: str
+    urlProcesso: str = ""
 
 
 class LicitacaoComprasBRResponse(BaseModel):
@@ -460,6 +461,37 @@ class LicitacaoComprasBRResponse(BaseModel):
     totalElements: int
     page: int
     size: int
+
+
+class LicitacaoComprasBRDocumento(BaseModel):
+    """Documento anexado a uma licitação ComprasBR."""
+
+    id: int
+    tipo: str
+    arquivoNome: str
+    arquivoUri: str
+
+
+class LicitacaoComprasBRDetailItem(BaseModel):
+    """Item detalhado de licitação retornado pela API ComprasBR."""
+
+    id: int
+    numeroEdital: str
+    numProcesso: str
+    objeto: str
+    status: str
+    modalidade: str
+    fase: str
+    orgaoNome: str
+    dataAbertura: str
+    dataIniEnvioProposta: Optional[str] = None
+    dataFimEnvioProposta: Optional[str] = None
+    tipoDisputa: str = ""
+    modoDisputa: str = ""
+    pregoeiro: str = ""
+    legislacao: str = ""
+    urlProcesso: str = ""
+    documentos: list[LicitacaoComprasBRDocumento] = []
 
 
 # --- Dispensas de Licitação (Quality) ---
@@ -477,6 +509,8 @@ class DispensaLicitaçãoItem(BaseModel):
     dataJulgamento: str
     status: str
     objeto: str
+    urlProcesso: str = ""
+    modalidade: str = ""
 
 
 class DispensasLicitacaoResponse(BaseModel):

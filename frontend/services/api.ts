@@ -296,6 +296,12 @@ export const licitacoesApi = {
     );
   },
 
+  comprasbrDetail: async (id: number): Promise<import('@/types/licitacao').LicitacaoComprasBRDetail> => {
+    return apiClient.get<import('@/types/licitacao').LicitacaoComprasBRDetail>(
+      API_ENDPOINTS.licitacoes.comprasbrDetail(id)
+    );
+  },
+
   dispensas: async (): Promise<import('@/types/licitacao').DispensasLicitacaoResponse> => {
     return apiClient.get<import('@/types/licitacao').DispensasLicitacaoResponse>(
       API_ENDPOINTS.licitacoes.dispensas

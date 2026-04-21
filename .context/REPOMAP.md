@@ -23,7 +23,7 @@ Snapshot: 2026-04-20
 - `api/routes/export.py`: endpoints de exportação (PDF, Excel)
 - `api/routes/scraping.py`: endpoints de controle do scraping (status, trigger manual, histórico de execuções)
 - `api/routes/movimento_extra.py`: proxy para API Quality de movimento extra orçamentário (ano, mês, tipo=R/D/AMBOS, agrupamento por fundo)
-- `api/routes/licitacoes.py`: proxy para licitações — ComprasBR (JSON paginado) e Quality (scraping HTML de dispensas)
+- `api/routes/licitacoes.py`: proxy para licitações — ComprasBR (JSON paginado + detalhes por ID) e Quality (scraping HTML de dispensas)
 - `domain/entities/receita.py`: entidade de domínio Receita com validação e cálculos derivados
 - `domain/entities/despesa.py`: entidade de domínio Despesa com validação e cálculos derivados
 - `domain/repositories/receita_repository.py`: interface de repositório para receitas
@@ -45,7 +45,8 @@ Snapshot: 2026-04-20
 - `services/scraping_scheduler.py`: scheduler APScheduler para scraping periódico (10 min) com disparo imediato no startup
 - `services/expense_pdf_sync_service.py`: sincronização do PDF de despesas em duas etapas (geração de path via `RelatorioPdf` + download do binário)
 - `services/historical_data_bootstrap_service.py`: bootstrap idempotente de anos históricos ausentes a partir dos PDFs no startup da API
-- `tests/test_api/`: testes de integração das rotas (preparado)
+- `tests/test_api/`: testes de integração das rotas
+- `tests/test_api/test_licitacoes.py`: testes unitários do parser HTML de licitações Quality e do proxy ComprasBR
 - `tests/test_etl/`: testes do pipeline ETL (preparado)
 - `tests/test_etl/test_historical_data_bootstrap_service.py`: testes unitários do bootstrap histórico (lacunas, execução, utilitários)
 - `tests/test_etl/test_receita_scraper.py`: testes unitários do parser de receitas (meses com zero e mês inválido)
@@ -109,7 +110,7 @@ Snapshot: 2026-04-20
 - `hooks/useFinanceData.ts`: hook genérico de dados financeiros
 - `hooks/useRevenueData.ts`: hook de dados de receitas
 - `hooks/useMovimentoExtra.ts`: hook React Query para consulta de movimento extra
-- `hooks/useLicitacoes.ts`: hooks React Query para licitações (ComprasBR + dispensas)
+- `hooks/useLicitacoes.ts`: hooks React Query para licitações (ComprasBR lista + detalhe + dispensas)
 - `hooks/useExport.ts`: hook de exportação
 - `hooks/index.ts`: barrel de exports
 - `services/api.ts`: API client Axios centralizado com interceptors

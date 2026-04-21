@@ -416,6 +416,7 @@ export const API_ENDPOINTS = {
 
   licitacoes: {
     comprasbr: '/api/v1/licitacoes/comprasbr',
+    comprasbrDetail: (id: number) => `/api/v1/licitacoes/comprasbr/${id}`,
     dispensas: '/api/v1/licitacoes/dispensas',
   },
 } as const;
@@ -466,6 +467,8 @@ export const QUERY_KEYS = {
     all: ['licitacoes'] as const,
     comprasbr: (page: number, size: number) =>
       [...QUERY_KEYS.licitacoes.all, 'comprasbr', page, size] as const,
+    comprasbrDetail: (id: number) =>
+      [...QUERY_KEYS.licitacoes.all, 'comprasbr-detail', id] as const,
     dispensas: () =>
       [...QUERY_KEYS.licitacoes.all, 'dispensas'] as const,
   },

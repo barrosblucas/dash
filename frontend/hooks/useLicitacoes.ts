@@ -7,7 +7,7 @@ import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query
 
 import { licitacoesApi } from '@/services/api';
 import { QUERY_KEYS } from '@/lib/constants';
-import type { LicitacaoComprasBRResponse, DispensasLicitacaoResponse } from '@/types/licitacao';
+import type { LicitacaoComprasBRResponse, LicitacaoComprasBRDetail, DispensasLicitacaoResponse } from '@/types/licitacao';
 
 export function useLicitacoesComprasBR(
   page: number = 1,
@@ -18,6 +18,19 @@ export function useLicitacoesComprasBR(
     queryKey: QUERY_KEYS.licitacoes.comprasbr(page, size),
     queryFn: () => licitacoesApi.comprasbr({ page, size }),
     staleTime: 10 * 60 * 1000, // 10 minutos
+    ...options,
+  });
+}
+
+export function useLicitacaoComprasBRDetail(
+  id: number | null,
+  options?: Omit<UseQueryOptions<LicitacaoComprasBRDetail>, 'queryKey' | 'queryFn'>
+): UseQueryResult<LicitacaoComprasBRDetail> {
+  return useQuery({
+    queryKey: QUERY_KEYS.licitacoes.comprasbrDetail(id ?? 0),
+    queryFn: () => licitacoesApi.comprasbrDetail(id!),
+    staleTime: 10 * 60 * 1000,
+    enabled: id !== null && id !== undefined,
     ...options,
   });
 }

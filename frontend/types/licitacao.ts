@@ -16,6 +16,7 @@ export interface LicitacaoComprasBR {
   modalidade: ModalidadeLicitacao;
   orgaoNome: string;
   dataAbertura: string; // ISO 8601
+  urlProcesso: string;
 }
 
 export interface LicitacaoComprasBRResponse {
@@ -24,6 +25,33 @@ export interface LicitacaoComprasBRResponse {
   totalElements: number;
   page: number;
   size: number;
+}
+
+export interface LicitacaoComprasBRDocumento {
+  id: number;
+  tipo: string;
+  arquivoNome: string;
+  arquivoUri: string;
+}
+
+export interface LicitacaoComprasBRDetail {
+  id: number;
+  numeroEdital: string;
+  numProcesso: string;
+  objeto: string;
+  status: string;
+  modalidade: string;
+  fase: string;
+  orgaoNome: string;
+  dataAbertura: string;
+  dataIniEnvioProposta?: string;
+  dataFimEnvioProposta?: string;
+  tipoDisputa: string;
+  modoDisputa: string;
+  pregoeiro: string;
+  legislacao: string;
+  urlProcesso: string;
+  documentos: LicitacaoComprasBRDocumento[];
 }
 
 // --- Dispensas de Licitação (Quality) ---
@@ -40,6 +68,8 @@ export interface DispensaLicitacao {
   dataJulgamento: string; // dd/MM/yyyy
   status: StatusDispensa;
   objeto: string;
+  urlProcesso: string;
+  modalidade: string;
 }
 
 export interface DispensasLicitacaoResponse {
@@ -62,8 +92,14 @@ export interface LicitacaoUnified {
   dataJulgamento?: Date;
   /** URL externa para ver detalhes no portal de origem */
   urlExterna: string;
+  /** URL direta para a página do processo */
+  urlProcesso?: string;
   /** ID na fonte original (para download de edital) */
   idOriginal: number | string;
   /** Nome do órgão responsável (quando disponível) */
   orgaoNome?: string;
+  /** Campos extras da Quality */
+  disputa?: string;
+  criterio?: string;
+  tipo?: string;
 }

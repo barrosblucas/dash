@@ -25,6 +25,7 @@ import {
   isSameDay,
   isSameMonth,
   isToday,
+  isValid,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -45,7 +46,7 @@ import {
 
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { useLicitacoesComprasBR, useLicitacoesDispensas } from '@/hooks/useLicitacoes';
+import { useLicitacoesComprasBR, useLicitacoesDispensas, useLicitacaoComprasBRDetail } from '@/hooks/useLicitacoes';
 import type {
   LicitacaoUnified,
   LicitacaoComprasBR,
@@ -86,14 +87,20 @@ function parseComprasBR(raw: LicitacaoComprasBR[]): LicitacaoUnified[] {
   return raw
     .filter((item) => item?.dataAbertura)
     .map((item) => ({
+      ...item,
+      _parsedDate: parseISO(item.dataAbertura),
+    }))
+    .filter((item) => isValid(item._parsedDate))
+    .map(({ _parsedDate, ...item }) => ({
       id: `comprasbr-${item.id}`,
       numero: item.numeroEdital || '',
       objeto: item.objeto || '',
       fonte: 'comprasbr' as FonteLicitacao,
       modalidade: item.modalidade || '',
       status: item.status || '',
-      dataAbertura: parseISO(item.dataAbertura),
+      dataAbertura: _parsedDate,
       urlExterna: COMPRASBR_URL,
+      urlProcesso: item.urlProcesso || COMPRASBR_URL,
       idOriginal: item.id,
       orgaoNome: item.orgaoNome || '',
     }));
@@ -103,19 +110,133 @@ function parseDispensas(raw: DispensaLicitacao[]): LicitacaoUnified[] {
   return raw
     .filter((item) => item?.dataAbertura)
     .map((item) => ({
+      ...item,
+      _parsedDate: parse(item.dataAbertura, 'dd/MM/yyyy', new Date()),
+      _parsedJulgamento: item.dataJulgamento
+        ? parse(item.dataJulgamento, 'dd/MM/yyyy', new Date())
+        : undefined,
+    }))
+    .filter((item) => isValid(item._parsedDate))
+    .map(({ _parsedDate, _parsedJulgamento, ...item }) => ({
       id: `dispensa-${item.codigo}`,
       numero: item.processo || item.codigo,
       objeto: item.objeto || '',
       fonte: 'dispensa' as FonteLicitacao,
-      modalidade: 'DISPENSA',
+      modalidade: item.modalidade || 'DISPENSA',
       status: item.status || '',
-      dataAbertura: parse(item.dataAbertura, 'dd/MM/yyyy', new Date()),
-      dataJulgamento: item.dataJulgamento
-        ? parse(item.dataJulgamento, 'dd/MM/yyyy', new Date())
+      dataAbertura: _parsedDate,
+      dataJulgamento: _parsedJulgamento && isValid(_parsedJulgamento)
+        ? _parsedJulgamento
         : undefined,
       urlExterna: QUALITY_URL,
+      urlProcesso: item.urlProcesso || QUALITY_URL,
       idOriginal: item.codigo,
+      disputa: item.disputa,
+      criterio: item.criterio,
+      tipo: item.tipo,
     }));
+}
+
+/** Extrai um título sucinto do objeto longo da licitação */
+function extrairTituloSucinto(objeto: string): string {
+  if (!objeto) return '';
+  let limpo = objeto.trim();
+
+  // Remove prefixo "Objeto" se existir
+  if (limpo.toLowerCase().startsWith('objeto')) {
+    limpo = limpo.slice(6).trim();
+  }
+
+  // Remove prefixos comuns
+  const prefixos = [
+    /registro\s+de\s+pre[çc]o\s+para\s+contrata[çc][ãa]o\s+de\s+empresa\s+especializada\s+(para\s+o|para)\s+/i,
+    /contrata[çc][ãa]o\s+de\s+empresa\s+especializada\s+(para\s+o|para)\s+/i,
+    /contrata[çc][ãa]o\s+de\s+empresa\s+especializada\s+/i,
+  ];
+  for (const prefixo of prefixos) {
+    limpo = limpo.replace(prefixo, '');
+  }
+
+  // Remove sufixos comuns
+  const sufixos = [
+    /,\s*para\s+atender\s+[àa]s?\s*necessidades\s+do\s+Munic[íi]pio\s+de\s+Bandeirantes\/MS\.?/i,
+    /,\s*incluindo\s+m[ãa]o\s+de\s+obra,\s+material\s+e\s+equipamentos/i,
+    /\s+com\s+recursos\s+da\s+Proposta\s+n[º°]\s+\d+\s+do\s+Fundo\s+Nacional\s+de\s+Sa[úu]de[^.]*/i,
+  ];
+  for (const sufixo of sufixos) {
+    limpo = limpo.replace(sufixo, '');
+  }
+
+  limpo = limpo.trim();
+
+  // Tenta capturar frase em maiúsculas (até 10 palavras)
+  const matchMaiusculas = limpo.match(/\b[A-ZÀ-Ü][A-ZÀ-Ü\s]{3,60}[A-ZÀ-Ü]\b/);
+  if (matchMaiusculas) {
+    const candidato = matchMaiusculas[0].trim();
+    const palavras = candidato.split(/\s+/);
+    if (palavras.length >= 2 && palavras.length <= 10) {
+      return candidato;
+    }
+  }
+
+  // Fallback: primeiras palavras do texto limpo (incluindo preposições)
+  const palavras = limpo.split(/\s+/);
+  const slice = palavras.slice(0, 10).join(' ');
+  if (slice.length > 60) {
+    return slice.slice(0, 60) + '…';
+  }
+  return slice;
+}
+
+/** Retorna Map<yyyy-MM-dd, nomeFeriado> para o ano dado */
+function getFeriados(ano: number): Map<string, string> {
+  const map = new Map<string, string>();
+  const fixos: [number, number, string][] = [
+    [1, 1, 'Confraternização Universal'],
+    [4, 21, 'Tiradentes'],
+    [5, 1, 'Dia do Trabalho'],
+    [9, 7, 'Independência do Brasil'],
+    [10, 11, 'Aniversário de MS'],
+    [10, 12, 'Nossa Senhora Aparecida'],
+    [11, 2, 'Finados'],
+    [11, 15, 'Proclamação da República'],
+    [12, 25, 'Natal'],
+  ];
+  for (const [mes, dia, nome] of fixos) {
+    const key = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+    map.set(key, nome);
+  }
+
+  // Algoritmo de Meeus/Jones/Butcher para Páscoa
+  const a = ano % 19;
+  const b = Math.floor(ano / 100);
+  const c = ano % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mesPascoa = Math.floor((h + l - 7 * m + 114) / 31);
+  const diaPascoa = ((h + l - 7 * m + 114) % 31) + 1;
+
+  const dataPascoa = new Date(ano, mesPascoa - 1, diaPascoa);
+  const sextaSanta = new Date(dataPascoa);
+  sextaSanta.setDate(dataPascoa.getDate() - 2);
+  const corpusChristi = new Date(dataPascoa);
+  corpusChristi.setDate(dataPascoa.getDate() + 60);
+
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  map.set(fmt(sextaSanta), 'Sexta-feira Santa');
+  map.set(fmt(dataPascoa), 'Páscoa');
+  map.set(fmt(corpusChristi), 'Corpus Christi');
+
+  return map;
 }
 
 /** Mapeia fonte/modalidade para filtro de fonte */
@@ -178,6 +299,14 @@ function FonteBadge({ fonte }: { fonte: FonteLicitacao }) {
   );
 }
 
+/** Formata data ISO para exibição amigável */
+function fmtIsoDate(iso: string | undefined): string {
+  if (!iso) return '-';
+  const d = parseISO(iso);
+  if (!isValid(d)) return iso;
+  return format(d, "dd/MM/yyyy HH:mm", { locale: ptBR });
+}
+
 /** Modal de detalhes da licitação */
 function LicitacaoModal({
   item,
@@ -186,6 +315,16 @@ function LicitacaoModal({
   item: LicitacaoUnified;
   onClose: () => void;
 }) {
+  const isComprasBR = item.fonte === 'comprasbr';
+  const comprasbrId = isComprasBR ? Number(item.idOriginal) : null;
+  const { data: detail, isLoading: loadingDetail } = useLicitacaoComprasBRDetail(comprasbrId);
+
+  // Documento edital para download
+  const editalDoc = detail?.documentos?.find((d) => d.tipo === 'EDITAL');
+  const editalUrl = editalDoc
+    ? `https://app.comprasbr.com.br/licitacao/hal/public/arquivos?uri=${encodeURIComponent(editalDoc.arquivoUri)}&thumbnail=false`
+    : null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Overlay */}
@@ -195,7 +334,7 @@ function LicitacaoModal({
       />
 
       {/* Conteúdo */}
-      <div className="relative w-full max-w-lg rounded-xl border border-dark-700/50 bg-dark-800/95 backdrop-blur-sm shadow-xl animate-fade-in-up">
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-dark-700/50 bg-dark-800/95 backdrop-blur-sm shadow-xl animate-fade-in-up">
         {/* Header */}
         <div className="flex items-start justify-between p-5 border-b border-dark-700/50">
           <div className="flex items-center gap-3 min-w-0">
@@ -238,10 +377,10 @@ function LicitacaoModal({
                 {format(item.dataAbertura, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </p>
             </div>
-            {'orgaoNome' in (item as object) && String((item as unknown as Record<string, unknown>).orgaoNome) && (
+            {item.orgaoNome && (
               <div className="col-span-2">
                 <p className="text-xs font-medium text-dark-500 uppercase tracking-wider mb-1">Órgão</p>
-                <p className="text-sm text-dark-200">{String((item as unknown as Record<string, unknown>).orgaoNome)}</p>
+                <p className="text-sm text-dark-200">{item.orgaoNome}</p>
               </div>
             )}
             {item.dataJulgamento && (
@@ -252,30 +391,153 @@ function LicitacaoModal({
                 </p>
               </div>
             )}
+            {item.disputa && (
+              <div>
+                <p className="text-xs font-medium text-dark-500 uppercase tracking-wider mb-1">Disputa</p>
+                <p className="text-sm text-dark-200">{item.disputa}</p>
+              </div>
+            )}
+            {item.criterio && (
+              <div>
+                <p className="text-xs font-medium text-dark-500 uppercase tracking-wider mb-1">Critério</p>
+                <p className="text-sm text-dark-200">{item.criterio}</p>
+              </div>
+            )}
+            {item.tipo && (
+              <div>
+                <p className="text-xs font-medium text-dark-500 uppercase tracking-wider mb-1">Tipo</p>
+                <p className="text-sm text-dark-200">{item.tipo}</p>
+              </div>
+            )}
           </div>
+
+          {/* ─── Detalhes ComprasBR ─── */}
+          {isComprasBR && loadingDetail && (
+            <div className="py-2">
+              <LoadingSpinner size="sm" message="Carregando detalhes..." />
+            </div>
+          )}
+
+          {isComprasBR && detail && (
+            <div className="space-y-4">
+              <div className="border-t border-dark-700/30 pt-4">
+                <p className="text-xs font-medium text-dark-500 uppercase tracking-wider mb-2">Informações do Processo</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {detail.numProcesso && (
+                    <div>
+                      <p className="text-xs text-dark-500 mb-0.5">Processo</p>
+                      <p className="text-sm text-dark-200">{detail.numProcesso}</p>
+                    </div>
+                  )}
+                  {detail.fase && (
+                    <div>
+                      <p className="text-xs text-dark-500 mb-0.5">Fase</p>
+                      <p className="text-sm text-dark-200">{detail.fase}</p>
+                    </div>
+                  )}
+                  {detail.tipoDisputa && (
+                    <div>
+                      <p className="text-xs text-dark-500 mb-0.5">Disputa</p>
+                      <p className="text-sm text-dark-200">{detail.tipoDisputa.replace(/_/g, ' ')}</p>
+                    </div>
+                  )}
+                  {detail.modoDisputa && (
+                    <div>
+                      <p className="text-xs text-dark-500 mb-0.5">Modo de Disputa</p>
+                      <p className="text-sm text-dark-200">{detail.modoDisputa}</p>
+                    </div>
+                  )}
+                  {detail.pregoeiro && (
+                    <div>
+                      <p className="text-xs text-dark-500 mb-0.5">Pregoeiro</p>
+                      <p className="text-sm text-dark-200">{detail.pregoeiro}</p>
+                    </div>
+                  )}
+                  {detail.legislacao && (
+                    <div>
+                      <p className="text-xs text-dark-500 mb-0.5">Legislação</p>
+                      <p className="text-sm text-dark-200">{detail.legislacao}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {(detail.dataIniEnvioProposta || detail.dataFimEnvioProposta) && (
+                <div className="border-t border-dark-700/30 pt-4">
+                  <p className="text-xs font-medium text-dark-500 uppercase tracking-wider mb-2">Datas de Envio de Propostas</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {detail.dataIniEnvioProposta && (
+                      <div>
+                        <p className="text-xs text-dark-500 mb-0.5">Início</p>
+                        <p className="text-sm text-dark-200">{fmtIsoDate(detail.dataIniEnvioProposta)}</p>
+                      </div>
+                    )}
+                    {detail.dataFimEnvioProposta && (
+                      <div>
+                        <p className="text-xs text-dark-500 mb-0.5">Fim</p>
+                        <p className="text-sm text-dark-200">{fmtIsoDate(detail.dataFimEnvioProposta)}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Documentos */}
+              {detail.documentos && detail.documentos.length > 0 && (
+                <div className="border-t border-dark-700/30 pt-4">
+                  <p className="text-xs font-medium text-dark-500 uppercase tracking-wider mb-2">Documentos</p>
+                  <div className="space-y-2">
+                    {detail.documentos.map((doc) => (
+                      <a
+                        key={doc.id}
+                        href={`https://app.comprasbr.com.br/licitacao/hal/public/arquivos?uri=${encodeURIComponent(doc.arquivoUri)}&thumbnail=false`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-dark-700/30 hover:bg-dark-700/50 transition-colors"
+                      >
+                        <Download className="w-4 h-4 text-forecast-400 flex-shrink-0" />
+                        <span className="text-sm text-dark-200 truncate">{doc.arquivoNome || doc.tipo}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center gap-3 p-5 border-t border-dark-700/50">
           <a
-            href={item.urlExterna}
+            href={item.urlProcesso || item.urlExterna}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-forecast-500/15 text-forecast-400 text-sm font-medium hover:bg-forecast-500/25 transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
-            Ver no portal
+            Ver processo na íntegra
           </a>
-          <button
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-dark-700/60 text-dark-300 text-sm font-medium hover:bg-dark-700 transition-colors"
-            onClick={() => {
-              /* Edital download placeholder — backend does not expose file yet */
-              window.open(item.urlExterna, '_blank');
-            }}
-          >
-            <Download className="w-4 h-4" />
-            Download Edital
-          </button>
+          {editalUrl ? (
+            <a
+              href={editalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-green-500/15 text-green-400 text-sm font-medium hover:bg-green-500/25 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Download Edital
+            </a>
+          ) : (
+            <button
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-dark-700/60 text-dark-300 text-sm font-medium hover:bg-dark-700 transition-colors"
+              onClick={() => {
+                window.open(item.urlProcesso || item.urlExterna, '_blank');
+              }}
+            >
+              <Download className="w-4 h-4" />
+              Download Edital
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -348,6 +610,11 @@ export default function AvisosLicitacoesClient() {
     if (!selectedDay) return [];
     return filteredItems.filter((i) => isSameDay(i.dataAbertura, selectedDay));
   }, [filteredItems, selectedDay]);
+
+  // ─── Feriados ─────────────────────────────────────
+
+  const currentYear = currentDate.getFullYear();
+  const feriados = useMemo(() => getFeriados(currentYear), [currentYear]);
 
   // ─── Calendário mensal ────────────────────────────
 
@@ -467,6 +734,7 @@ export default function AvisosLicitacoesClient() {
     const hasItems = dayIndicators.has(key);
     const isSelected = selectedDay ? isSameDay(day, selectedDay) : false;
     const today = isToday(day);
+    const feriado = feriados.get(key);
 
     return (
       <button
@@ -483,6 +751,11 @@ export default function AvisosLicitacoesClient() {
         <span className={`${today ? 'w-6 h-6 flex items-center justify-center rounded-full bg-forecast-500/20' : ''}`}>
           {format(day, 'd')}
         </span>
+        {feriado && (
+          <span className="text-[9px] text-red-400 font-medium leading-tight text-center px-0.5 mt-0.5 line-clamp-2">
+            {feriado}
+          </span>
+        )}
         {renderDayDots(day)}
       </button>
     );
@@ -723,7 +996,9 @@ export default function AvisosLicitacoesClient() {
                               <FonteBadge fonte={item.fonte} />
                               <StatusBadge status={item.status} />
                             </div>
-                            <p className="text-xs text-dark-400 line-clamp-2">{item.objeto}</p>
+                            <p className="text-xs text-dark-400 line-clamp-2">
+                              {extrairTituloSucinto(item.objeto) || item.objeto}
+                            </p>
                           </div>
                           <ExternalLink className="w-4 h-4 text-dark-500 flex-shrink-0 mt-0.5" />
                         </div>
@@ -774,12 +1049,13 @@ export default function AvisosLicitacoesClient() {
                 const items = filteredItems.filter((i) => isSameDay(i.dataAbertura, day));
                 const isSelected = selectedDay ? isSameDay(day, selectedDay) : false;
                 const today = isToday(day);
+                const feriado = feriados.get(key);
 
                 return (
                   <button
                     key={key}
                     onClick={() => setSelectedDay(day)}
-                    className={`rounded-xl border p-3 text-left transition-all min-h-[120px] flex flex-col ${
+                    className={`rounded-xl border p-3 text-left transition-all min-h-[140px] flex flex-col ${
                       isSelected
                         ? 'border-accent-500/40 bg-accent-500/10'
                         : today
@@ -787,7 +1063,7 @@ export default function AvisosLicitacoesClient() {
                         : 'border-dark-700/50 bg-dark-800/50 hover:bg-dark-800/70'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-1">
                       <span
                         className={`text-xs font-semibold uppercase tracking-wider ${
                           today ? 'text-forecast-400' : 'text-dark-500'
@@ -804,6 +1080,12 @@ export default function AvisosLicitacoesClient() {
                       </span>
                     </div>
 
+                    {feriado && (
+                      <span className="text-[9px] text-red-400 font-medium mb-1 truncate">
+                        {feriado}
+                      </span>
+                    )}
+
                     <div className="flex-1 space-y-1 overflow-hidden">
                       {items.slice(0, 3).map((item) => (
                         <div
@@ -812,13 +1094,14 @@ export default function AvisosLicitacoesClient() {
                             e.stopPropagation();
                             setModalItem(item);
                           }}
+                          title={item.numero}
                           className={`text-[10px] leading-tight px-1.5 py-1 rounded truncate cursor-pointer ${
                             item.fonte === 'dispensa'
                               ? 'bg-accent-500/20 text-accent-300'
                               : 'bg-forecast-500/20 text-forecast-300'
                           }`}
                         >
-                          {item.numero}
+                          {extrairTituloSucinto(item.objeto) || item.numero}
                         </div>
                       ))}
                       {items.length > 3 && (
@@ -851,7 +1134,9 @@ export default function AvisosLicitacoesClient() {
                             <FonteBadge fonte={item.fonte} />
                             <StatusBadge status={item.status} />
                           </div>
-                          <p className="text-xs text-dark-400 line-clamp-2">{item.objeto}</p>
+                          <p className="text-xs text-dark-400 line-clamp-2">
+                            {extrairTituloSucinto(item.objeto) || item.objeto}
+                          </p>
                         </div>
                         <ExternalLink className="w-4 h-4 text-dark-500 flex-shrink-0 mt-0.5" />
                       </div>
@@ -918,14 +1203,14 @@ export default function AvisosLicitacoesClient() {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <a
-                            href={item.urlExterna}
+                            href={item.urlProcesso || item.urlExterna}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
                             className="inline-flex items-center gap-1 text-xs text-forecast-400 hover:text-forecast-300 transition-colors"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
-                            Portal
+                            Ver processo
                           </a>
                         </td>
                       </tr>
@@ -957,7 +1242,9 @@ export default function AvisosLicitacoesClient() {
                       <FonteBadge fonte={item.fonte} />
                       <StatusBadge status={item.status} />
                     </div>
-                    <p className="text-xs text-dark-400 line-clamp-2 mb-2">{item.objeto}</p>
+                    <p className="text-xs text-dark-400 line-clamp-2 mb-2">
+                      {extrairTituloSucinto(item.objeto) || item.objeto}
+                    </p>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-dark-500">
                         {format(item.dataAbertura, "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
