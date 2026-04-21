@@ -413,6 +413,11 @@ export const API_ENDPOINTS = {
     busca: '/api/v1/movimento-extra/busca',
     anual: '/api/v1/movimento-extra/anual',
   },
+
+  licitacoes: {
+    comprasbr: '/api/v1/licitacoes/comprasbr',
+    dispensas: '/api/v1/licitacoes/dispensas',
+  },
 } as const;
 
 // ============================================
@@ -455,6 +460,14 @@ export const QUERY_KEYS = {
     busca: (ano: number, mes: number, tipo: string) =>
       [...QUERY_KEYS.movimentoExtra.all, 'busca', ano, mes, tipo] as const,
     anual: (ano: number) => [...QUERY_KEYS.movimentoExtra.all, 'anual', ano] as const,
+  },
+
+  licitacoes: {
+    all: ['licitacoes'] as const,
+    comprasbr: (page: number, size: number) =>
+      [...QUERY_KEYS.licitacoes.all, 'comprasbr', page, size] as const,
+    dispensas: () =>
+      [...QUERY_KEYS.licitacoes.all, 'dispensas'] as const,
   },
 } as const;
 

@@ -435,3 +435,52 @@ class MovimentoExtraAnualResponse(BaseModel):
     evolucao_mensal: list[ResumoMensalItem] = Field(
         ..., description="Evolução mês a mês"
     )
+
+
+# --- Licitações ComprasBR ---
+
+
+class LicitacaoComprasBRItem(BaseModel):
+    """Item de licitação retornado pela API ComprasBR."""
+
+    id: int
+    numeroEdital: str
+    objeto: str
+    status: str
+    modalidade: str
+    orgaoNome: str
+    dataAbertura: str
+
+
+class LicitacaoComprasBRResponse(BaseModel):
+    """Resposta paginada da API ComprasBR."""
+
+    items: list[LicitacaoComprasBRItem]
+    totalPages: int
+    totalElements: int
+    page: int
+    size: int
+
+
+# --- Dispensas de Licitação (Quality) ---
+
+
+class DispensaLicitaçãoItem(BaseModel):
+    """Item de dispensa de licitação extraído do portal Quality."""
+
+    codigo: str
+    processo: str
+    disputa: str
+    criterio: str
+    tipo: str
+    dataAbertura: str
+    dataJulgamento: str
+    status: str
+    objeto: str
+
+
+class DispensasLicitacaoResponse(BaseModel):
+    """Resposta com lista de dispensas de licitação."""
+
+    items: list[DispensaLicitaçãoItem]
+    quantidade: int

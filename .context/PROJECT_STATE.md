@@ -25,6 +25,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Estratégia de despesas 2026 ajustada para priorizar `BuscaDadosAnual` (fonte canônica de empenhado/liquidado/pago) e usar PDF como fallback quando o anual indisponível
 - [x] Validação estrutural do fallback PDF de despesas (não substitui arquivo local quando o download vier sem páginas válidas)
 - [x] Schemas Pydantic para todas as bordas
+- [x] Proxy routes para licitações: ComprasBR (JSON paginado) e Quality (scraping HTML de dispensas)
 - [x] Entidades de domínio com validação (Receita, Despesa)
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
 - [x] Detalhamento hierárquico de receitas com extração por indentação de PDF
@@ -55,13 +56,15 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Empacotamento em Docker Compose com backend, frontend, SQLite persistido, `receitas/` em leitura e `despesas/` em escrita para atualização automática
 - [x] Override de desenvolvimento com hot reload para backend (`uvicorn --reload`) e frontend (`next dev`)
 - [x] Portal público da transparência na rota `/` com grid de cards para navegação entre seções
-- [x] Cards do portal: Dashboard Financeiro, Receitas, Despesas (disponíveis) + Movimento Extra, Obras, Contratos, Diárias, Licitações, Aviso de Licitações (em breve)
+- [x] Cards do portal: Dashboard Financeiro, Receitas, Despesas, Movimento Extra, Aviso de Licitações (disponíveis) + Obras, Contratos, Diárias, Licitações (em breve)
 - [x] Páginas placeholder para 6 seções futuras (Movimento Extra, Obras, Contratos, Diárias, Licitações, Aviso de Licitações)
 - [x] Link "Portal" na sidebar para retorno ao portal público
 - [x] Metadados atualizados: título "Portal da Transparência | Bandeirantes MS"
 - [x] Página de Movimento Extra Orçamentário com glossário interativo, insights automáticos e visualização por fundos
 - [x] Proxy backend para API Quality de movimento extra orçamentário (requisição direta ao portal)
 - [x] Glossário de fundos municipais com explicação do impacto para o cidadão
+- [x] Página de Aviso de Licitações com calendário mensal/semanal, lista paginada, filtros, busca textual, modal de detalhes e KPIs
+- [x] Dados unificados de ComprasBR (pregões/concorrências) e Quality (dispensas de licitação)
 
 ### Dados
 - [x] Receitas: ~160 registros (2013–2026) extraídos de PDFs

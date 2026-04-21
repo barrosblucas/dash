@@ -15,7 +15,7 @@ Snapshot: 2026-04-20
 
 ## Backend (`backend/`)
 - `api/main.py`: aplicação FastAPI com prefixo `/api/v1`, lifespan, CORS e exception handler global
-- `api/schemas.py`: schemas Pydantic para receitas, despesas, KPIs, forecast, health check, erros e ETL
+- `api/schemas.py`: schemas Pydantic para receitas, despesas, KPIs, forecast, health check, erros, ETL, movimento extra e licitações
 - `api/routes/receitas.py`: endpoints de receitas (listagem, totais por ano/mês, categorias, detalhamento hierárquico)
 - `api/routes/despesas.py`: endpoints de despesas (listagem, totais por ano/mês)
 - `api/routes/kpis.py`: endpoints de KPIs financeiros (resumo, mensal, anual)
@@ -23,6 +23,7 @@ Snapshot: 2026-04-20
 - `api/routes/export.py`: endpoints de exportação (PDF, Excel)
 - `api/routes/scraping.py`: endpoints de controle do scraping (status, trigger manual, histórico de execuções)
 - `api/routes/movimento_extra.py`: proxy para API Quality de movimento extra orçamentário (ano, mês, tipo=R/D/AMBOS, agrupamento por fundo)
+- `api/routes/licitacoes.py`: proxy para licitações — ComprasBR (JSON paginado) e Quality (scraping HTML de dispensas)
 - `domain/entities/receita.py`: entidade de domínio Receita com validação e cálculos derivados
 - `domain/entities/despesa.py`: entidade de domínio Despesa com validação e cálculos derivados
 - `domain/repositories/receita_repository.py`: interface de repositório para receitas
@@ -99,7 +100,8 @@ Snapshot: 2026-04-20
 - `app/contratos/page.tsx`: placeholder — Gestão de Contratos
 - `app/diarias/page.tsx`: placeholder — Diárias e Passagens
 - `app/licitacoes/page.tsx`: placeholder — Licitações
-- `app/avisos-licitacoes/page.tsx`: placeholder — Aviso de Licitações
+- `app/avisos-licitacoes/page.tsx`: página de avisos de licitações
+- `app/avisos-licitacoes/avisos-licitacoes-client.tsx`: página completa com calendário mensal/semanal, lista, filtros e modal
 - `components/ui/ChartTypeSelector.tsx`: seletor reutilizável de tipo de gráfico (bar/line/area/pie)
 - `components/ui/index.ts`: barrel de exports dos componentes UI
 - `components/Providers.tsx`: providers React (TanStack Query)
@@ -107,6 +109,7 @@ Snapshot: 2026-04-20
 - `hooks/useFinanceData.ts`: hook genérico de dados financeiros
 - `hooks/useRevenueData.ts`: hook de dados de receitas
 - `hooks/useMovimentoExtra.ts`: hook React Query para consulta de movimento extra
+- `hooks/useLicitacoes.ts`: hooks React Query para licitações (ComprasBR + dispensas)
 - `hooks/useExport.ts`: hook de exportação
 - `hooks/index.ts`: barrel de exports
 - `services/api.ts`: API client Axios centralizado com interceptors
@@ -120,6 +123,7 @@ Snapshot: 2026-04-20
 - `types/receita.ts`: tipos de receita
 - `types/despesa.py`: tipos de despesa
 - `types/movimento-extra.ts`: tipos e glossário de fundos municipais (FUNDEB, FMAS, FMIS, etc.)
+- `types/licitacao.ts`: tipos para licitações (ComprasBR, dispensas Quality, unified)
 - `types/charts.ts`: tipos de gráficos
 - `types/index.ts`: barrel de exports
 - `public/`: assets estáticos

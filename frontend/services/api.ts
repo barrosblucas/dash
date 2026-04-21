@@ -285,4 +285,22 @@ export const movimentoExtraApi = {
   },
 };
 
+export const licitacoesApi = {
+  comprasbr: async (params?: {
+    page?: number;
+    size?: number;
+  }): Promise<import('@/types/licitacao').LicitacaoComprasBRResponse> => {
+    return apiClient.get<import('@/types/licitacao').LicitacaoComprasBRResponse>(
+      API_ENDPOINTS.licitacoes.comprasbr,
+      { params: { page: params?.page ?? 1, size: params?.size ?? 100 } }
+    );
+  },
+
+  dispensas: async (): Promise<import('@/types/licitacao').DispensasLicitacaoResponse> => {
+    return apiClient.get<import('@/types/licitacao').DispensasLicitacaoResponse>(
+      API_ENDPOINTS.licitacoes.dispensas
+    );
+  },
+};
+
 export default apiClient;

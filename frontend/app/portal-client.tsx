@@ -112,7 +112,7 @@ const cards: PortalCard[] = [
     icon: BellRing,
     accent: 'accent',
     description: 'Avisos e editais de processos licitatórios em andamento',
-    available: false,
+    available: true,
   },
 ];
 

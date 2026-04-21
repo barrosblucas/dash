@@ -74,3 +74,39 @@
 ### Validação
 - Backend: ruff check ✅ (0 erros nos arquivos modificados)
 - Frontend: lint ✅, type-check ✅, build ✅ (`/movimento-extra` 9.08 kB)
+
+---
+
+### feat: rotas proxy para licitações (ComprasBR e Quality)
+
+- **[backend]** Criado `backend/api/routes/licitacoes.py` com dois endpoints:
+  - `GET /api/v1/licitacoes/comprasbr`: proxy para API ComprasBR (processos de licitação de MS/Bandeirantes)
+  - `GET /api/v1/licitacoes/dispensas`: scraping do portal Quality para dispensas de licitação
+- **[backend]** Adicionados schemas Pydantic em `backend/api/schemas.py`:
+  - `LicitacaoComprasBRItem`, `LicitacaoComprasBRResponse`
+  - `DispensaLicitaçãoItem`, `DispensasLicitacaoResponse`
+- **[backend]** Router registrado em `backend/api/main.py` e exportado em `backend/api/routes/__init__.py`
+- **[backend]** Adicionada dependência `selectolax==0.4.7` em `requirements.txt` para parsing HTML
+- Validação: ruff OK, py_compile OK, 71 testes passando
+
+---
+
+## Aviso de Licitações — Feature completa
+
+### Frontend
+- **Novo**: Página completa de Aviso de Licitações em `/avisos-licitacoes`
+- **Novo**: Calendário mensal com navegação (prev/next mês) e indicadores visuais (dots coloridos) por status e fonte
+- **Novo**: Calendário semanal com visão de 7 dias e cards de licitação inline
+- **Novo**: Lista tabular com paginação (desktop: tabela, mobile: cards)
+- **Novo**: Filtros por fonte (Todas / Pregão Eletrônico / Dispensa / Concorrência) e status (Todas / Aguardando / Encerrado / Suspenso)
+- **Novo**: Busca textual por objeto, número ou modalidade
+- **Novo**: Modal de detalhes com objeto, modalidade, data de abertura, órgão, julgamento, link externo e botão de download
+- **Novo**: Merge de dados ComprasBR + Quality Dispensas em lista unificada (`LicitacaoUnified`)
+- **Novo**: KPIs de contagem (Total, Aguardando, Encerrado, Suspenso)
+- **Novo**: Hook `useLicitacoesComprasBR` e `useLicitacoesDispensas` com cache de 10 minutos
+- **Novo**: Métodos `licitacoesApi.comprasbr()` e `licitacoesApi.dispensas()` no API client
+- **Modificado**: Card "Aviso de Licitações" no portal marcado como disponível (`available: true`)
+- **Modificado**: `page.tsx` trocou placeholder por componente client real
+
+### Validação
+- Frontend: lint ✅ (0 erros nos novos arquivos), type-check ✅, build ✅

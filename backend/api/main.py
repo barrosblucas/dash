@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from backend.api.routes import (
     despesas_router,
     kpis_router,
+    licitacoes_router,
     movimento_extra_router,
     receitas_router,
     scraping_router,
@@ -158,6 +159,7 @@ app.include_router(forecast_router, prefix="/api/v1")
 app.include_router(export_router, prefix="/api/v1")
 app.include_router(scraping_router, prefix="/api/v1")
 app.include_router(movimento_extra_router, prefix="/api/v1")
+app.include_router(licitacoes_router, prefix="/api/v1")
 
 
 # Endpoint de health check

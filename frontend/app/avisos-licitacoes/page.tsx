@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import PlaceholderPage from '@/components/portal/PlaceholderPage';
+import AvisosLicitacoesClient from './avisos-licitacoes-client';
 
 export const metadata: Metadata = {
   title: 'Aviso de Licitações',
@@ -8,11 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function AvisosLicitacoesPage() {
-  return (
-    <PlaceholderPage
-      title="Aviso de Licitações"
-      description="Esta seção permitirá consultar avisos e editais de processos licitatórios em andamento. Está em desenvolvimento e estará disponível em breve."
-      iconName="BellRing"
-    />
-  );
+  return <AvisosLicitacoesClient />;
 }
