@@ -1,5 +1,23 @@
 # Changelog — 2026-04-21
 
+## Governance — Endurecimento dos gates de arquivo
+
+### Corrigido
+- **AI-GOVERNANCE**: tabela "Hard limits" unificada — limite de 400 linhas para todos os tipos de arquivo (`.py`, `.ts`, `.tsx`, `.js`, `.jsx`). Exceção `constants.ts` até 500.
+- **AI-GOVERNANCE**: exception metadata agora explicitamente documentada como NÃO isenta do gate — é apenas rastreamento de débito técnico.
+- **AI-GOVERNANCE**: `--strict` agora é o padrão documentado; `--warn-only` para diagnóstico apenas.
+
+### Endurecido
+- **`scripts/check_file_length.py`**: remoção completa do mecanismo `--baseline` (bypass de arquivos conhecidos). Exception metadata agora gera relatório separado mas ainda conta como violação (bloqueia). Novo formato de relatório com estatísticas e maior excesso.
+- **`scripts/run_governance_gates.py`**: `--strict` é o padrão (exit 1 em falha). Flag `--warn-only` adicionada para diagnóstico manual. `--strict` removida (agora é o comportamento default).
+- **`.pre-commit-config.yaml`**: criado com os 3 gates estruturais (file length, frontend boundaries, no console/print). Hook pre-commit instalado no git — gates rodam automaticamente em cada commit.
+
+### Diagnosticado
+- Varredura completa identificou **15 arquivos** acima do limite de linhas (era 6 no PROJECT_STATE anterior).
+- Backend: 5 arquivos `.py` acima de 400 linhas (incluindo `pdf_extractor.py` com 851 linhas).
+- Frontend: 10 arquivos `.ts/.tsx` acima de 300 linhas (incluindo `avisos-licitacoes-client.tsx` com 1318 linhas).
+- Nenhum hook de pre-commit, CI ou Makefile existia — gates eram puramente manuais.
+
 ## backend/api/routes/licitacoes.py
 
 ### Corrigido

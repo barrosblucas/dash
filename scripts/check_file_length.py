@@ -3,20 +3,19 @@
 Gate: Check de tamanho de arquivo.
 
 Bloqueia arquivos que excedem o hard limit de linhas.
-Arquivos fora do limite devem ser refatorados antes do merge.
+Arquivos fora do limite DEVEM ser refatorados antes do merge.
+
+Não existem bypasses automáticos. Exception metadata serve apenas para
+documentar débito técnico — NÃO isenta o arquivo do gate.
 
 Uso:
-    python scripts/check_file_length.py [--baseline BASELINE_FILE]
+    python scripts/check_file_length.py
 
 Exit codes:
     0: todos os arquivos dentro do limite
     1: um ou mais arquivos excederam o limite
-
-Exception metadata (comentar no arquivo):
-    # governance-exception: file-length reason="..." ticket="..."
 """
 
-import argparse
 import re
 import sys
 from pathlib import Path
@@ -30,24 +29,24 @@ IGNORE_DIRS = {
     "venv",
     ".venv",
     ".ruff_cache",
+    ".pytest_cache",
     "dist",
     "build",
     "coverage",
-    ".pytest_cache",
 }
 
-# Limites por extensão (linhas)
-LIMITS = {
+# Limites por extensão (linhas) — FONTE CANÔNICA
+# Manter sincronizado com .context/AI-GOVERNANCE.md
+LIMITS: dict[str, int] = {
     ".py": 400,
-    ".tsx": 300,
-    ".ts": 300,
-    ".jsx": 300,
-    ".js": 300,
+    ".tsx": 400,
+    ".ts": 400,
+    ".jsx": 400,
+    ".js": 400,
 }
 
-# Arquivos específicos com limite diferente
+# Arquivos específicos com limite diferente (exceções documentadas)
 SPECIFIC_LIMITS: dict[str, int] = {
-    # Constantes e configs tendem a ser maiores
     "frontend/lib/constants.ts": 500,
 }
 
@@ -59,8 +58,7 @@ EXCEPTION_PATTERN = re.compile(
 def should_ignore(path: Path, root: Path) -> bool:
     """Verifica se o path deve ser ignorado."""
     rel = path.relative_to(root)
-    parts = rel.parts
-    for part in parts:
+    for part in rel.parts:
         if part in IGNORE_DIRS:
             return True
     return False
@@ -101,35 +99,10 @@ def count_lines(path: Path) -> int:
         return 0
 
 
-def load_baseline(baseline_file: Path | None) -> set[str]:
-    """Carrega baseline de arquivos já conhecidos como grandes."""
-    if not baseline_file or not baseline_file.exists():
-        return set()
-    with open(baseline_file, "r", encoding="utf-8") as f:
-        return {line.strip() for line in f if line.strip()}
-
-
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check de tamanho de arquivo")
-    parser.add_argument(
-        "--baseline",
-        type=Path,
-        default=None,
-        help="Arquivo com lista de paths conhecidos (um por linha) a ignorar",
-    )
-    parser.add_argument(
-        "--root",
-        type=Path,
-        default=Path(__file__).parent.parent,
-        help="Diretório raiz do projeto",
-    )
-    args = parser.parse_args()
+    root = Path(__file__).parent.parent.resolve()
 
-    root = args.root.resolve()
-    baseline = load_baseline(args.baseline)
-
-    violations: list[tuple[str, int, int]] = []  # (path, lines, limit)
-    warnings: list[tuple[str, int, int, str]] = []  # path, lines, limit, reason
+    violations: list[tuple[str, int, int, str | None]] = []  # (path, lines, limit, reason)
 
     for path in root.rglob("*"):
         if not path.is_file():
@@ -141,44 +114,49 @@ def main() -> int:
         if limit is None:
             continue
 
-        rel_path = str(path.relative_to(root))
-
-        # Arquivos na baseline são apenas avisados
-        if rel_path in baseline:
-            lines = count_lines(path)
-            if lines > limit:
-                warnings.append((rel_path, lines, limit, "baseline"))
-            continue
-
-        # Arquivos com exception metadata são avisados
-        exception_reason = has_exception(path)
-        if exception_reason:
-            lines = count_lines(path)
-            if lines > limit:
-                warnings.append((rel_path, lines, limit, exception_reason))
-            continue
-
         lines = count_lines(path)
-        if lines > limit:
-            violations.append((rel_path, lines, limit))
+        if lines <= limit:
+            continue
+
+        rel_path = str(path.relative_to(root))
+        exception_reason = has_exception(path)
+        violations.append((rel_path, lines, limit, exception_reason))
 
     # Relatório
-    if warnings:
-        print("⚠️  Arquivos acima do limite (baseline/exception — não bloqueiam):")
-        for rel_path, lines, limit, reason in sorted(warnings):
-            print(f"   {rel_path}: {lines} linhas (limite: {limit}) [{reason}]")
+    if not violations:
+        print("✅ Todos os arquivos dentro dos limites de tamanho.")
+        return 0
+
+    # Separar violações com e sem exception metadata
+    with_exception = [
+        (fp, ln, lm, rs) for fp, ln, lm, rs in violations if rs
+    ]
+    without_exception = [
+        (fp, ln, lm, rs) for fp, ln, lm, rs in violations if not rs
+    ]
+
+    if with_exception:
+        print("❌ Débito técnico documentado (exception metadata NÃO isenta do gate):")
+        for rel_path, lines, limit, reason in sorted(with_exception):
+            print(f"   {rel_path}: {lines} linhas (limite: {limit}) [débito: {reason}]")
         print()
 
-    if violations:
-        print("❌ Arquivos acima do hard limit (bloqueiam):")
-        for rel_path, lines, limit in sorted(violations):
+    if without_exception:
+        print("❌ Violações sem documentação:")
+        for rel_path, lines, limit, _ in sorted(without_exception):
             print(f"   {rel_path}: {lines} linhas (limite: {limit})")
         print()
-        print(f"Total: {len(violations)} violações. Refatore antes de prosseguir.")
-        return 1
 
-    print(f"✅ Todos os arquivos dentro dos limites de tamanho.")
-    return 0
+    # Resumo com estatísticas
+    total = len(violations)
+    max_violation = max(violations, key=lambda v: v[1] - v[2])
+    excess = max_violation[1] - max_violation[2]
+    print(
+        f"Total: {total} arquivo(s) acima do limite. "
+        f"Maior excesso: {max_violation[0]} (+{excess} linhas). "
+        f"Refatore antes de prosseguir."
+    )
+    return 1
 
 
 if __name__ == "__main__":

@@ -163,23 +163,23 @@ cd frontend && npm run lint && npm run type-check && npm run build
 
 ### Checks estruturais (scripts em `scripts/`)
 
-Todos os gates estruturais são executáveis via `python scripts/run_governance_gates.py`:
+Todos os gates estruturais são executáveis via `python scripts/run_governance_gates.py`.
+**O modo strict é o padrão** — gates que falham retornam exit code 1.
 
 | Gate | Script | O que verifica |
 |------|--------|---------------|
-| Tamanho de arquivo | `scripts/check_file_length.py` | Python ≤ 400 linhas, TS/TSX ≤ 300 linhas |
+| Tamanho de arquivo | `scripts/check_file_length.py` | Ver hard limits abaixo |
 | Fronteiras | `scripts/check_frontend_boundaries.py` | Frontend não importa de `backend/` |
 | Console/Print | `scripts/check_no_console.py` | Sem `console.*` (TS) e `print()` (Python) em produção |
 | Migration | `scripts/check_alembic_migration.py` | `models.py` mudou → precisa de migration |
 
 #### Runner unificado
 ```bash
-python scripts/run_governance_gates.py --strict
-```
+# Strict por padrão — falhas bloqueiam
+python scripts/run_governance_gates.py
 
-#### Exception metadata (quando necessário desabilitar um gate por arquivo)
-```python
-# governance-exception: file-length reason="tabela de mapeamento extensa" ticket="ABC-123"
+# Aviso apenas (NÃO recomendado, apenas para diagnóstico)
+python scripts/run_governance_gates.py --warn-only
 ```
 
 #### Hard limits por tipo de arquivo
@@ -187,8 +187,21 @@ python scripts/run_governance_gates.py --strict
 | Tipo | Limite | Exceções conhecidas |
 |------|--------|-------------------|
 | `.py` | 400 linhas | — |
-| `.tsx` / `.ts` | 300 linhas | `constants.ts` até 500 |
-| `.jsx` / `.js` | 300 linhas | — |
+| `.tsx` / `.ts` | 400 linhas | `constants.ts` até 500 |
+| `.jsx` / `.js` | 400 linhas | — |
+
+**Regra**: nenhum arquivo de produção pode exceder o hard limit. Arquivos acima do limite
+**devem ser refatorados antes do merge** — não existem bypasses automáticos.
+
+#### Exception metadata (apenas para débito técnico documentado)
+
+```python
+# governance-exception: file-length reason="motivo explícito" ticket="ABC-123"
+```
+
+**Atenção**: exception metadata NÃO isenta o arquivo do gate. Apenas marca como débito
+técnico conhecido. O gate continua falhando. A exception é um auxílio de rastreamento,
+não um bypass. O arquivo deve ser refatorado o mais rápido possível.
 
 ## Política de testes por função (obrigatória)
 

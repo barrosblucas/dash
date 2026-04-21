@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROJECT_DIR="/home/thanos/dashboard"
+PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV_DIR="$PROJECT_DIR/venv"
 FRONTEND_DIR="$PROJECT_DIR/frontend"
 BACKEND_LOG="/tmp/dashboard_backend.log"
@@ -40,36 +40,74 @@ stop_apps() {
 start_apps() {
     stop_apps 2>/dev/null
 
-    if [ ! -d "$VENV_DIR" ]; then
-        echo "Erro: venv não encontrado em $VENV_DIR"
-        echo "Execute: python -m venv $VENV_DIR && source $VENV_DIR/bin/activate && pip install -r $PROJECT_DIR/backend/requirements.txt"
-        exit 1
+    # Verifica se pode rodar localmente (venv + node_modules)
+    if [ -d "$VENV_DIR" ] && [ -d "$FRONTEND_DIR/node_modules" ]; then
+        echo ""
+        echo "============================================================"
+        echo "  Dashboard Financeiro Municipal - Modo Desenvolvimento"
+        echo "============================================================"
+        echo ""
+
+        source "$VENV_DIR/bin/activate"
+        cd "$PROJECT_DIR"
+
+        echo "[$(date '+%H:%M:%S')] Iniciando Backend (FastAPI)..."
+        uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload --log-level info > "$BACKEND_LOG" 2>&1 &
+        BACKEND_PID=$!
+        echo "  -> PID: $BACKEND_PID | Porta: 8000 | Log: $BACKEND_LOG"
+
+        echo "[$(date '+%H:%M:%S')] Iniciando Frontend (Next.js)..."
+        cd "$FRONTEND_DIR"
+        npx next dev --port 3000 --hostname 0.0.0.0 > "$FRONTEND_LOG" 2>&1 &
+        FRONTEND_PID=$!
+        echo "  -> PID: $FRONTEND_PID | Porta: 3000 | Log: $FRONTEND_LOG"
+
+        echo "BACKEND_PID=$BACKEND_PID" > "$PIDFILE"
+        echo "FRONTEND_PID=$FRONTEND_PID" >> "$PIDFILE"
+
+        trap cleanup SIGINT SIGTERM
+
+        sleep 2
+
+        echo ""
+        echo "============================================================"
+        echo "  Backend:  http://localhost:8000"
+        echo "  Docs:     http://localhost:8000/docs"
+        echo "  Frontend: http://localhost:3000"
+        echo "============================================================"
+        echo ""
+        echo "  Ctrl+C para encerrar"
+        echo ""
+
+        tail -f "$BACKEND_LOG" "$FRONTEND_LOG"
+    else
+        # Fallback: usa Docker Compose
+        if ! command -v docker &>/dev/null; then
+            echo "Erro: nem venv local nem Docker encontrados."
+            echo ""
+            echo "Para rodar localmente:"
+            echo "  sudo apt install python3.12-venv"
+            echo "  python3 -m venv $VENV_DIR"
+            echo "  source $VENV_DIR/bin/activate"
+            echo "  pip install -r $PROJECT_DIR/backend/requirements.txt"
+            echo "  cd $FRONTEND_DIR && npm install"
+            return
+        fi
+
+        echo ""
+        echo "============================================================"
+        echo "  Dashboard Financeiro Municipal - Docker Compose Dev"
+        echo "============================================================"
+        echo ""
+
+        if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
+            echo "Instalando dependências do frontend..."
+            cd "$FRONTEND_DIR" && npm install && cd "$PROJECT_DIR"
+        fi
+
+        echo "[$(date '+%H:%M:%S')] Iniciando containers..."
+        docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
     fi
-
-    if [ ! -d "$FRONTEND_DIR/node_modules" ]; then
-        echo "Instalando dependências do frontend..."
-        cd "$FRONTEND_DIR" && npm install
-    fi
-
-    echo ""
-    echo "============================================================"
-    echo "  Dashboard Financeiro Municipal - Modo Desenvolvimento"
-    echo "============================================================"
-    echo ""
-
-    source "$VENV_DIR/bin/activate"
-    cd "$PROJECT_DIR"
-
-    echo "[$(date '+%H:%M:%S')] Iniciando Backend (FastAPI)..."
-    uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload --log-level info > "$BACKEND_LOG" 2>&1 &
-    BACKEND_PID=$!
-    echo "  -> PID: $BACKEND_PID | Porta: 8000 | Log: $BACKEND_LOG"
-
-    echo "[$(date '+%H:%M:%S')] Iniciando Frontend (Next.js)..."
-    cd "$FRONTEND_DIR"
-    npx next dev --port 3000 --hostname 0.0.0.0 > "$FRONTEND_LOG" 2>&1 &
-    FRONTEND_PID=$!
-    echo "  -> PID: $FRONTEND_PID | Porta: 3000 | Log: $FRONTEND_LOG"
 
     echo "BACKEND_PID=$BACKEND_PID" > "$PIDFILE"
     echo "FRONTEND_PID=$FRONTEND_PID" >> "$PIDFILE"

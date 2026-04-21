@@ -1,0 +1,36 @@
+# Governance gates — executados automaticamente em cada commit.
+# Estes gates são obrigatórios e não podem ser bypassed.
+#
+# Instalação:
+#   pip install pre-commit
+#   pre-commit install
+#
+# Run manual:
+#   pre-commit run --all-files
+
+repos:
+  - repo: local
+    hooks:
+      - id: check-file-length
+        name: "gate: file length limits"
+        entry: python3 scripts/check_file_length.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+      - id: check-frontend-boundaries
+        name: "gate: frontend boundaries"
+        entry: python3 scripts/check_frontend_boundaries.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+
+      - id: check-no-console
+        name: "gate: no console/print in production"
+        entry: python3 scripts/check_no_console.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

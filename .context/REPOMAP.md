@@ -142,11 +142,14 @@ Snapshot: 2026-04-20
 - `notebooks/`: Jupyter notebooks (preparado para análise exploratória)
 
 ## Scripts (`scripts/`)
-- `check_file_length.py`: gate de tamanho de arquivo (Python ≤ 400, TSX/TS ≤ 300)
+- `check_file_length.py`: gate de tamanho de arquivo (strict, sem bypass — Python ≤ 400, TS/TSX/JS ≤ 400)
 - `check_frontend_boundaries.py`: gate de fronteiras (frontend não importa de backend)
 - `check_no_console.py`: gate de console.log/print em código de produção
 - `check_alembic_migration.py`: gate de migration quando models.py muda
-- `run_governance_gates.py`: runner unificado de todos os gates estruturais
+- `run_governance_gates.py`: runner unificado (strict por padrão, exit 1 em falha)
+
+## Pre-commit
+- `.pre-commit-config.yaml`: gates estruturais rodando automaticamente em cada `git commit`
 
 ## Scripts Backend (`backend/scripts/`)
 - `reload_detalhamento.py`: script de (re)extração do detalhamento hierárquico de receitas dos PDFs

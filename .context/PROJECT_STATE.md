@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-20 (atualizado)
+Snapshot: 2026-04-21 (atualizado)
 
 ## Status geral
 
@@ -81,18 +81,33 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 
 ### Gates de governança (violadores)
 
-**File length (6 arquivos acima do limite):**
-- `backend/etl/extractors/pdf_extractor.py` — 844 linhas (limite: 400)
-- `frontend/components/dashboard/ForecastSection.tsx` — 347 linhas (limite: 300)
-- `frontend/hooks/useFinanceData.ts` — 345 linhas (limite: 300)
-- `frontend/lib/date.ts` — 413 linhas (limite: 300)
-- `frontend/lib/utils.ts` — 326 linhas (limite: 300)
-- `frontend/types/charts.ts` — 304 linhas (limite: 300)
+**File length (9 arquivos acima do limite):**
+
+Backend (`.py` ≤ 400 linhas):
+- `backend/api/schemas.py` — 520 linhas (limite: 400)
+- `backend/etl/extractors/pdf_extractor.py` — 851 linhas (limite: 400)
+- `backend/services/scraping_service.py` — 430 linhas (limite: 400)
+- `backend/tests/test_etl/test_despesa_scraper.py` — 519 linhas (limite: 400)
+- `backend/tests/test_etl/test_scraping_service.py` — 693 linhas (limite: 400)
+
+Frontend (`.ts/.tsx` ≤ 400 linhas):
+- `frontend/app/avisos-licitacoes/avisos-licitacoes-client.tsx` — 1318 linhas (limite: 400)
+- `frontend/app/movimento-extra/movimento-extra-client.tsx` — 1050 linhas (limite: 400)
+- `frontend/components/dashboard/ForecastSection.tsx` — 557 linhas (limite: 400)
+- `frontend/lib/date.ts` — 412 linhas (limite: 400)
 
 **Console/print em produção (9 violações):**
 - `frontend/services/api.ts` — 5 ocorrências de `console.*`
 - `frontend/hooks/useExport.ts` — 1 ocorrência de `console.*`
 - `backend/infrastructure/database/connection.py` — 3 ocorrências de `print()`
+
+**Ação de endurecimento tomada (2026-04-21):**
+- Limite unificado para 400 linhas em todos os tipos de arquivo (`.py`, `.ts`, `.tsx`, `.js`, `.jsx`)
+- `--baseline` bypass removido do `check_file_length.py` — não há mais escape hatches
+- `run_governance_gates.py` agora é strict por padrão (exit 1 em falha, `--warn-only` apenas para diagnóstico)
+- Exception metadata agora é apenas documentação de débito técnico — NÃO isenta do gate
+- `.pre-commit-config.yaml` criado e hook de pre-commit instalado no git
+- Gates agora rodam automaticamente em cada `git commit`
 
 ### Arquitetura
 

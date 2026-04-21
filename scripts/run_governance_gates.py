@@ -2,19 +2,19 @@
 """
 Executor de todos os gates de governança.
 
-Roda todos os checks estruturais em sequução e reporta resultado final.
+Roda todos os checks estruturais em sequência e reporta resultado final.
 Os gates de lint/typecheck/test/build devem ser rodados separadamente
 (pelos comandos canônicos do AGENTS.md).
 
 Uso:
-    python scripts/run_governance_gates.py [--strict]
+    python scripts/run_governance_gates.py
 
-Flags:
-    --strict  Retorna erro se qualquer gate falhar (default: warning only)
+O modo strict é o PADRÃO. Gates que falham retornam exit code 1.
+Use --warn-only para diagnóstico (não recomendado para CI ou pre-commit).
 
 Exit codes:
     0: todos os gates passaram
-    1: um ou mais gates falharam (apenas com --strict)
+    1: um ou mais gates falharam
 """
 
 import subprocess
@@ -53,7 +53,7 @@ def run_gate(name: str, script: str, root: Path) -> tuple[bool, str]:
 
 def main() -> int:
     root = Path(__file__).parent.parent.resolve()
-    strict = "--strict" in sys.argv
+    warn_only = "--warn-only" in sys.argv
 
     print("=" * 60)
     print("GOVERNANCE GATES")
@@ -90,11 +90,18 @@ def main() -> int:
     print(f"Total: {passed_count} passaram, {failed_count} falharam")
 
     if failed_count > 0:
-        if strict:
-            return 1
-        else:
-            print("\n⚠️  Gates falharam mas --strict não foi passado (warning only).")
+        if warn_only:
+            print(
+                "\n⚠️  Gates falharam (modo --warn-only). "
+                "Sem --warn-only, estas falhas bloqueariam o commit."
+            )
             return 0
+
+        print(
+            f"\n❌ {failed_count} gate(s) falharam. "
+            "Corrija antes de fazer commit."
+        )
+        return 1
 
     print("\n✅ Todos os gates de governança passaram.")
     return 0
