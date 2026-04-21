@@ -81,14 +81,11 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 
 ### Gates de governança (violadores)
 
-**File length (9 arquivos acima do limite):**
+**File length (6 arquivos acima do limite):**
 
 Backend (`.py` ≤ 400 linhas):
-- `backend/api/schemas.py` — 520 linhas (limite: 400)
-- `backend/etl/extractors/pdf_extractor.py` — 851 linhas (limite: 400)
-- `backend/services/scraping_service.py` — 430 linhas (limite: 400)
 - `backend/tests/test_etl/test_despesa_scraper.py` — 519 linhas (limite: 400)
-- `backend/tests/test_etl/test_scraping_service.py` — 693 linhas (limite: 400)
+- `backend/tests/test_etl/test_scraping_service.py` — 672 linhas (limite: 400)
 
 Frontend (`.ts/.tsx` ≤ 400 linhas):
 - `frontend/app/avisos-licitacoes/avisos-licitacoes-client.tsx` — 1318 linhas (limite: 400)

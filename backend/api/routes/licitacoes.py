@@ -11,7 +11,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Query
 from selectolax.lexbor import LexborHTMLParser
 
-from backend.api.schemas import (
+from backend.api.schemas_licitacao import (
     DispensaLicitaçãoItem,
     DispensasLicitacaoResponse,
     LicitacaoComprasBRDetailItem,

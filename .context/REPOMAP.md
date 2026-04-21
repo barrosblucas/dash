@@ -15,7 +15,14 @@ Snapshot: 2026-04-20
 
 ## Backend (`backend/`)
 - `api/main.py`: aplicação FastAPI com prefixo `/api/v1`, lifespan, CORS e exception handler global
-- `api/schemas.py`: schemas Pydantic para receitas, despesas, KPIs, forecast, health check, erros, ETL, movimento extra e licitações
+- `api/schemas.py`: schemas Pydantic base (`HealthCheckResponse`, `ErrorResponse`)
+- `api/schemas_receita.py`: schemas Pydantic para receitas e detalhamento
+- `api/schemas_despesa.py`: schemas Pydantic para despesas
+- `api/schemas_kpi.py`: schemas Pydantic para KPIs
+- `api/schemas_forecast.py`: schemas Pydantic para forecasting
+- `api/schemas_scraping.py`: schemas Pydantic para scraping
+- `api/schemas_licitacao.py`: schemas Pydantic para licitações
+- `api/schemas_movimento.py`: schemas Pydantic para movimento extra orçamentário
 - `api/routes/receitas.py`: endpoints de receitas (listagem, totais por ano/mês, categorias, detalhamento hierárquico)
 - `api/routes/despesas.py`: endpoints de despesas (listagem, totais por ano/mês)
 - `api/routes/kpis.py`: endpoints de KPIs financeiros (resumo, mensal, anual)
@@ -34,14 +41,17 @@ Snapshot: 2026-04-20
 - `infrastructure/repositories/sql_receita_repository.py`: implementação SQLAlchemy do repositório de receitas
 - `infrastructure/repositories/sql_despesa_repository.py`: implementação SQLAlchemy do repositório de despesas
 - `backend/Dockerfile`: imagem Python para execução da API FastAPI via uvicorn
-- `etl/extractors/pdf_extractor.py`: extrator de dados financeiros de PDFs com pdfplumber (receitas, despesas e detalhamento hierárquico)
+- `etl/extractors/pdf_entities.py`: entidades e utilitários para extração de PDFs (`TipoDocumento`, `ReceitaDetalhamento`, `ResultadoExtracao`, `parse_valor_monetario`, constantes)
+- `etl/extractors/pdf_parsers.py`: funções helper de parsing de tabelas e texto de PDFs
+- `etl/extractors/pdf_extractor.py`: classe `PDFExtractor` — orquestração da extração de receitas, despesas e detalhamento hierárquico
 - `etl/scrapers/quality_api_client.py`: cliente HTTP assíncrono para API do portal QualitySistemas (receitas e despesas com retry; despesas via rota com barra dupla)
 - `etl/scrapers/despesa_scraper.py`: parser de despesas QualitySistemas JSON → entidades Despesa (annual, natureza, merge com degradação graciosa)
 - `etl/transformers/`: transformadores de dados (preparado para expansão)
 - `etl/loaders/`: carregadores de dados (preparado para expansão)
 - `ml/`: modelos de ML (preparado para Prophet/scikit-learn)
 - `services/`: serviços de aplicação
-- `services/scraping_service.py`: orquestração do scraping QualitySistemas com upsert (receitas, despesas, detalhamento)
+- `services/scraping_service.py`: orquestração do scraping QualitySistemas (receitas, despesas, detalhamento)
+- `services/scraping_helpers.py`: helpers de persistência e logging para scraping (`ScrapingResult`, upserts, replace, logs)
 - `services/scraping_scheduler.py`: scheduler APScheduler para scraping periódico (10 min) com disparo imediato no startup
 - `services/expense_pdf_sync_service.py`: sincronização do PDF de despesas em duas etapas (geração de path via `RelatorioPdf` + download do binário)
 - `services/historical_data_bootstrap_service.py`: bootstrap idempotente de anos históricos ausentes a partir dos PDFs no startup da API

@@ -51,6 +51,36 @@
 - `urlProcesso?: string` em `LicitacaoUnified`.
 - Campos opcionais `disputa`, `criterio`, `tipo` em `LicitacaoUnified`.
 
+## Refatoração Fase 1 — Split de arquivos backend > 400 linhas
+
+### Movido
+- **`backend/api/schemas.py`** (520 → 27 linhas): schemas extraídos por domínio em arquivos dedicados sem reexport barrels:
+  - `schemas_receita.py` — `TipoReceitaEnum`, `ReceitaResponse`, `ReceitaListResponse`, `ReceitaFilterParams`, `ReceitaDetalhamentoResponse`, `ReceitaDetalhamentoListResponse`, `ETLStatusResponse`
+  - `schemas_despesa.py` — `TipoDespesaEnum`, `DespesaResponse`, `DespesaListResponse`, `DespesaFilterParams`
+  - `schemas_kpi.py` — `KPIMensal`, `KPIAnual`, `KPIsResponse`
+  - `schemas_forecast.py` — `ForecastPoint`, `ForecastResponse`
+  - `schemas_scraping.py` — `ScrapingStatusResponse`, `ScrapingTriggerRequest/Response`, `ScrapingLogResponse`, `ScrapingHistoryResponse`
+  - `schemas_licitacao.py` — `LicitacaoComprasBRItem/Response/Documento/DetailItem`, `DispensaLicitaçãoItem`, `DispensasLicitacaoResponse`
+  - `schemas_movimento.py` — `MovimentoExtraItem`, `FundoResumo`, `MovimentoExtraResponse/AnualResponse`, `InsightItem`, `ResumoMensalItem`
+  - `schemas.py` mantém apenas `HealthCheckResponse` e `ErrorResponse`
+- **`backend/etl/extractors/pdf_extractor.py`** (851 → 355 linhas): dividido em 3 arquivos por responsabilidade:
+  - `pdf_entities.py` — `TipoDocumento`, `ReceitaDetalhamento`, `ResultadoExtracao`, `parse_valor_monetario`, `extrair_ano_do_arquivo`, constantes `MESES_MAP`, `MESES_ABREV_MAP`, `SKIP_HEADERS`
+  - `pdf_parsers.py` — todas as funções helper de parsing (`_is_*_table`, `_parse_*_row`, `_detectar_nivel`, `_parse_detail_text_line`, `_detect_tipo_from_header`)
+  - `pdf_extractor.py` — classe `PDFExtractor` com métodos de extração (importa de `pdf_entities` e `pdf_parsers`)
+- **`backend/services/scraping_service.py`** (430 → 223 linhas): extraído helper de persistência:
+  - `scraping_helpers.py` — `ScrapingResult`, `_upsert_receitas`, `_upsert_despesas`, `_replace_detalhamento`, `_replace_receitas_for_year`, `_replace_despesas_for_year`, `_create_log`, `_finalize_log`, `_try_log_error`
+  - `scraping_service.py` — `ScrapingService` com orquestração (importa de `scraping_helpers`)
+
+### Atualizado
+- Imports em todas as routes (`receitas`, `despesas`, `kpis`, `forecast`, `scraping`, `movimento_extra`, `licitacoes`) apontando direto para os novos módulos de schema.
+- Imports em `receita_scraper.py`, `scraping_service.py`, `historical_data_bootstrap_service.py`, `test_scraping_service.py` ajustados para `pdf_entities` e `scraping_helpers`.
+- `historical_data_bootstrap_service.py`: chamadas a `ScrapingService._upsert_*` migradas para `_upsert_*` de `scraping_helpers`.
+- `test_scraping_service.py`: 21 monkeypatches de métodos estáticos de `ScrapingService` migrados para `monkeypatch.setattr("backend.services.scraping_service._METHOD_NAME", fake_fn)`.
+
+### Validação
+- `python3 scripts/run_governance_gates.py`: 3 arquivos da Fase 1 removidos da lista de violações; restam apenas arquivos das Fases 2–4.
+- `pytest backend/tests/`: 100% passando (76 testes).
+
 ## frontend/app/avisos-licitacoes/avisos-licitacoes-client.tsx
 
 ### Adicionado

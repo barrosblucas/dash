@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 from typing import Optional, List
 
-from backend.api.schemas import (
+from backend.api.schemas_despesa import (
     DespesaResponse,
     DespesaListResponse,
     DespesaFilterParams,

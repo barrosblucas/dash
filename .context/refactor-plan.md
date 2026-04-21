@@ -19,6 +19,7 @@
 3. Rodar testes relevantes após cada refatoração.
 4. Atualizar `PROJECT_STATE.md` e `CHANGELOG` após cada lote.
 5. Se um gate falhar, corrigir antes de prosseguir.
+6. Seguir as regras do repositorio e suas documntações.
 
 ---
 

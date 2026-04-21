@@ -14,7 +14,7 @@ import pytest
 
 from backend.domain.entities.despesa import Despesa, TipoDespesa
 from backend.domain.entities.receita import Receita, TipoReceita
-from backend.etl.extractors.pdf_extractor import ReceitaDetalhamento
+from backend.etl.extractors.pdf_entities import ReceitaDetalhamento
 from backend.services.scraping_service import ScrapingService
 
 
@@ -91,19 +91,16 @@ async def test_scrape_despesas_usa_fallback_pdf_quando_api_vazia(
     )
     monkeypatch.setattr(service, "_load_despesas_from_pdf", fake_load_despesas_from_pdf)
     monkeypatch.setattr(
-        ScrapingService,
-        "_replace_despesas_for_year",
-        staticmethod(fake_replace_despesas_for_year),
+        "backend.services.scraping_service._replace_despesas_for_year",
+        fake_replace_despesas_for_year,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_create_log",
-        staticmethod(fake_create_log),
+        "backend.services.scraping_service._create_log",
+        fake_create_log,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_finalize_log",
-        staticmethod(fake_finalize_log),
+        "backend.services.scraping_service._finalize_log",
+        fake_finalize_log,
     )
     monkeypatch.setattr(
         "backend.services.scraping_service.db_manager.get_session",
@@ -169,19 +166,16 @@ async def test_scrape_despesas_retorna_no_data_e_nao_replace_quando_sem_fonte(
     )
     monkeypatch.setattr(service, "_load_despesas_from_pdf", fake_load_despesas_from_pdf)
     monkeypatch.setattr(
-        ScrapingService,
-        "_replace_despesas_for_year",
-        staticmethod(fail_if_replace_called),
+        "backend.services.scraping_service._replace_despesas_for_year",
+        fail_if_replace_called,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_create_log",
-        staticmethod(fake_create_log),
+        "backend.services.scraping_service._create_log",
+        fake_create_log,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_finalize_log",
-        staticmethod(fake_finalize_log),
+        "backend.services.scraping_service._finalize_log",
+        fake_finalize_log,
     )
     monkeypatch.setattr(
         "backend.services.scraping_service.db_manager.get_session",
@@ -261,19 +255,16 @@ async def test_scrape_despesas_nao_usa_fallback_quando_api_tem_dados(
     )
     monkeypatch.setattr(service, "_load_despesas_from_pdf", fake_load_despesas_from_pdf)
     monkeypatch.setattr(
-        ScrapingService,
-        "_replace_despesas_for_year",
-        staticmethod(fake_replace_despesas_for_year),
+        "backend.services.scraping_service._replace_despesas_for_year",
+        fake_replace_despesas_for_year,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_create_log",
-        staticmethod(fake_create_log),
+        "backend.services.scraping_service._create_log",
+        fake_create_log,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_finalize_log",
-        staticmethod(fake_finalize_log),
+        "backend.services.scraping_service._finalize_log",
+        fake_finalize_log,
     )
     monkeypatch.setattr(
         "backend.services.scraping_service.db_manager.get_session",
@@ -376,19 +367,16 @@ async def test_scrape_despesas_ignora_natureza_sem_annual_e_usa_pdf(
         fake_load_despesas_from_pdf,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_replace_despesas_for_year",
-        staticmethod(fake_replace_despesas_for_year),
+        "backend.services.scraping_service._replace_despesas_for_year",
+        fake_replace_despesas_for_year,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_create_log",
-        staticmethod(fake_create_log),
+        "backend.services.scraping_service._create_log",
+        fake_create_log,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_finalize_log",
-        staticmethod(fake_finalize_log),
+        "backend.services.scraping_service._finalize_log",
+        fake_finalize_log,
     )
     monkeypatch.setattr(
         "backend.services.scraping_service.db_manager.get_session",
@@ -553,29 +541,24 @@ async def test_scrape_receitas_2026_usa_replace_por_ano(
         lambda data, year: detalhes,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_replace_receitas_for_year",
-        staticmethod(fake_replace_receitas_for_year),
+        "backend.services.scraping_service._replace_receitas_for_year",
+        fake_replace_receitas_for_year,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_upsert_receitas",
-        staticmethod(fake_upsert_receitas),
+        "backend.services.scraping_service._upsert_receitas",
+        fake_upsert_receitas,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_replace_detalhamento",
-        staticmethod(fake_replace_detalhamento),
+        "backend.services.scraping_service._replace_detalhamento",
+        fake_replace_detalhamento,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_create_log",
-        staticmethod(fake_create_log),
+        "backend.services.scraping_service._create_log",
+        fake_create_log,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_finalize_log",
-        staticmethod(fake_finalize_log),
+        "backend.services.scraping_service._finalize_log",
+        fake_finalize_log,
     )
     monkeypatch.setattr(
         "backend.services.scraping_service.db_manager.get_session",
@@ -661,24 +644,20 @@ async def test_scrape_despesas_2026_usa_replace_por_ano(
         lambda annual, natureza: despesas,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_replace_despesas_for_year",
-        staticmethod(fake_replace_despesas_for_year),
+        "backend.services.scraping_service._replace_despesas_for_year",
+        fake_replace_despesas_for_year,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_upsert_despesas",
-        staticmethod(fake_upsert_despesas),
+        "backend.services.scraping_service._upsert_despesas",
+        fake_upsert_despesas,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_create_log",
-        staticmethod(fake_create_log),
+        "backend.services.scraping_service._create_log",
+        fake_create_log,
     )
     monkeypatch.setattr(
-        ScrapingService,
-        "_finalize_log",
-        staticmethod(fake_finalize_log),
+        "backend.services.scraping_service._finalize_log",
+        fake_finalize_log,
     )
     monkeypatch.setattr(
         "backend.services.scraping_service.db_manager.get_session",

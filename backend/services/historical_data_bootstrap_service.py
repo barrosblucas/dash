@@ -10,14 +10,19 @@ from sqlalchemy.orm import Session
 
 from backend.domain.entities.despesa import Despesa
 from backend.domain.entities.receita import Receita
-from backend.etl.extractors.pdf_extractor import PDFExtractor, ReceitaDetalhamento
+from backend.etl.extractors.pdf_extractor import PDFExtractor
+from backend.etl.extractors.pdf_entities import ReceitaDetalhamento
 from backend.infrastructure.database.connection import db_manager
 from backend.infrastructure.database.models import (
     DespesaModel,
     ReceitaDetalhamentoModel,
     ReceitaModel,
 )
-from backend.services.scraping_service import ScrapingService
+from backend.services.scraping_helpers import (
+    _replace_detalhamento,
+    _upsert_despesas,
+    _upsert_receitas,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -210,21 +215,21 @@ class HistoricalDataBootstrapService:
 
         with db_manager.get_session() as session:
             if payload.receitas:
-                receitas_inserted, receitas_updated = ScrapingService._upsert_receitas(
+                receitas_inserted, receitas_updated = _upsert_receitas(
                     session,
                     payload.receitas,
                     0,
                 )
 
             if payload.despesas:
-                despesas_inserted, despesas_updated = ScrapingService._upsert_despesas(
+                despesas_inserted, despesas_updated = _upsert_despesas(
                     session,
                     payload.despesas,
                     0,
                 )
 
             for year in sorted(payload.detalhamento_por_ano):
-                detalhamento_replaced += ScrapingService._replace_detalhamento(
+                detalhamento_replaced += _replace_detalhamento(
                     session,
                     payload.detalhamento_por_ano[year],
                     year,

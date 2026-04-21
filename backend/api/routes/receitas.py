@@ -7,7 +7,7 @@ Endpoints para consulta de receitas municipais.
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from backend.api.schemas import (
+from backend.api.schemas_receita import (
     ReceitaDetalhamentoListResponse,
     ReceitaDetalhamentoResponse,
     ReceitaListResponse,

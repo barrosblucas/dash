@@ -10,7 +10,7 @@ from sqlalchemy import func, and_
 from typing import Optional, List
 from decimal import Decimal
 
-from backend.api.schemas import KPIsResponse, KPIMensal, KPIAnual
+from backend.api.schemas_kpi import KPIsResponse, KPIMensal, KPIAnual
 from backend.infrastructure.database.connection import get_db
 from backend.infrastructure.database.models import ReceitaModel, DespesaModel
 

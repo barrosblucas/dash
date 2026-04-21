@@ -14,7 +14,7 @@ from decimal import Decimal
 from typing import Any
 
 from backend.domain.entities.receita import Receita, TipoReceita
-from backend.etl.extractors.pdf_extractor import ReceitaDetalhamento
+from backend.etl.extractors.pdf_entities import ReceitaDetalhamento
 
 logger = logging.getLogger(__name__)
 

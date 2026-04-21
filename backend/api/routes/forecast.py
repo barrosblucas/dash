@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
-from backend.api.schemas import ForecastResponse, ForecastPoint
+from backend.api.schemas_forecast import ForecastResponse, ForecastPoint
 from backend.infrastructure.database.connection import get_db
 from backend.domain.services.forecasting_service import ForecastingService
 

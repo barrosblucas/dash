@@ -13,7 +13,7 @@ from typing import Literal, TypedDict
 import httpx
 from fastapi import APIRouter, HTTPException, Query
 
-from backend.api.schemas import (
+from backend.api.schemas_movimento import (
     FundoResumo,
     InsightItem,
     MovimentoExtraAnualResponse,

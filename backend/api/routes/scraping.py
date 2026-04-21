@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import APIRouter, Query, Request
 from sqlalchemy import func as sa_func
 
-from backend.api.schemas import (
+from backend.api.schemas_scraping import (
     ScrapingHistoryResponse,
     ScrapingLogResponse,
     ScrapingStatusResponse,
