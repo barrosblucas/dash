@@ -32,14 +32,8 @@ class ApiClient {
 
     // Interceptor para logs de Requisição
     this.client.interceptors.request.use(
-      (config) => {
-        console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
-        return config;
-      },
-      (error) => {
-        console.error('[API] Request Error:', error);
-        return Promise.reject(error);
-      }
+      (config) => config,
+      (error) => Promise.reject(error)
     );
 
     // Interceptor para tratamento de erros
@@ -51,8 +45,6 @@ class ApiClient {
           const status = error.response.status;
           const message = error.response.data?.error || error.message;
           const detail = error.response.data?.detail;
-          
-          console.error(`[API] Error ${status}:`, message, detail);
           
           if (status === 404) {
             throw new Error(`Recurso não encontrado: ${message}`);
@@ -67,11 +59,9 @@ class ApiClient {
           }
         } else if (error.request) {
           // Não houve resposta do servidor
-          console.error('[API] No response received:', error.message);
           throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão.');
         } else {
           // Erro na configuração da requisição
-          console.error('[API] Request setup error:', error.message);
           throw new Error(`Erro na requisição: ${error.message}`);
         }
         

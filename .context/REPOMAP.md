@@ -90,7 +90,8 @@ Snapshot: 2026-04-21
 - `components/charts/ExpenseChart.tsx`: gráfico de despesas com seletor de tipo (bar/line/area/pie)
 - `components/charts/CombinedOverviewChart.tsx`: gráfico combinado receitas x despesas com seletor de tipo
 - `components/charts/index.ts`: barrel de exports dos gráficos
-- `components/dashboard/`: componentes do dashboard
+- `components/dashboard/ForecastSection.tsx`: componente de previsão (≤400 linhas) com gráfico ComposedChart de receitas/despesas históricas e projetadas
+- `components/dashboard/forecast-helpers.ts`: fetchers e transformação de dados para ForecastSection
 - `components/kpi/`: cards de KPI
 - `components/layouts/`: layouts compartilhados
 - `components/receitas/ReceitaDetalhamentoTable.tsx`: tabela hierárquica de detalhamento de receitas com expand/collapse
@@ -149,11 +150,11 @@ Snapshot: 2026-04-21
 - `stores/themeStore.ts`: store Zustand de tema (light/dark) com persistência + hook useChartThemeColors
 - `lib/constants.ts`: constantes globais (cores, endpoints, formatos, labels, meses)
 - `lib/utils.ts`: utilitários gerais
-- `lib/date.ts`: utilitários de data (date-fns)
 - `lib/index.ts`: barrel de exports
 - `types/api.ts`: tipos de resposta da API
 - `types/receita.ts`: tipos de receita
 - `types/despesa.py`: tipos de despesa
+- `types/forecast.ts`: tipos de forecast (ProjectionMode, ChartRow, KPIsResponse, ForecastResponse, etc.)
 - `types/movimento-extra.ts`: tipos e glossário de fundos municipais (FUNDEB, FMAS, FMIS, etc.)
 - `types/licitacao.ts`: tipos para licitações (ComprasBR, dispensas Quality, unified)
 - `types/charts.ts`: tipos de gráficos

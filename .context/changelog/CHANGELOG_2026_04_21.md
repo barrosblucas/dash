@@ -175,3 +175,20 @@
 - `npm run lint`: passando (sem erros nos arquivos da feature; warnings pré-existentes em outras features mantidos).
 - `npm run type-check`: passando sem erros.
 - `npm run build`: passando — todas as páginas geradas com sucesso.
+
+## Refatoração Fase 4 — Split de frontend menores > 400 linhas
+
+### Movido
+- **`frontend/components/dashboard/ForecastSection.tsx`** (557 → 349 linhas): extraídos tipos e helpers de transformação de dados:
+  - `frontend/types/forecast.ts` (53 linhas) — `ProjectionMode`, `ChartRow`, `KPIAnual`, `KPIMensal`, `KPIsResponse`, `ForecastPoint`, `ForecastResponse`, `ForecastSectionProps`
+  - `frontend/components/dashboard/forecast-helpers.ts` (251 linhas) — `fetchYearlyKPIs`, `fetchMonthlyKPIs`, `fetchForecast`, `buildForecastMaps`, `buildMonthlyActualMap`, `buildChartData`, `calculateGrowthMetrics`
+- **`frontend/lib/date.ts`** (412 → removido): dead code — nenhuma função era importada por nenhum consumidor do frontend. Barrel `frontend/lib/index.ts` atualizado para remover `export * from './date'`.
+
+### Atualizado
+- `frontend/types/index.ts` — adicionado `export * from './forecast'`.
+
+### Validação
+- `python3 scripts/run_governance_gates.py`: `check_file_length` passou — zero violações de tamanho de arquivo restantes.
+- `npm run lint`: passando (sem erros nos arquivos modificados; warnings pré-existentes mantidos).
+- `npm run type-check`: passando sem erros.
+- `npm run build`: passando — todas as páginas geradas com sucesso.

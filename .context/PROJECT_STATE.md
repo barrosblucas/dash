@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-21 (atualizado pós-Fase 3)
+Snapshot: 2026-04-21 (atualizado pós-Fase 4)
 
 ## Status geral
 
@@ -81,11 +81,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 
 ### Gates de governança (violadores)
 
-**File length (2 arquivos acima do limite):**
+**File length (0 arquivos acima do limite):**
 
-Frontend (`.ts/.tsx` ≤ 400 linhas):
-- `frontend/components/dashboard/ForecastSection.tsx` — 557 linhas (limite: 400) — Fase 4
-- `frontend/lib/date.ts` — 412 linhas (limite: 400) — Fase 4
+- Todos os arquivos de produção e teste estão dentro do limite de 400 linhas.
 
 **Console/print em produção (9 violações):**
 - `frontend/services/api.ts` — 5 ocorrências de `console.*`

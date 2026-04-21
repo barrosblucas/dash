@@ -29,7 +29,6 @@ export default function useExport() {
           throw new Error(`Formato ${options.format} não implementado`);
       }
     } catch (error) {
-      console.error('Erro ao exportar:', error);
       throw error;
     } finally {
       setIsExporting(false);

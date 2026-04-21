@@ -4,6 +4,7 @@ Gerenciamento de conexão com o banco de dados SQLite.
 Fornece uma fábrica de sessões e utilitários para gerenciamento do banco.
 """
 
+import logging
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Generator, Optional
@@ -13,6 +14,8 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from .models import Base
+
+logger = logging.getLogger(__name__)
 
 # Diretório padrão para o banco de dados
 DEFAULT_DB_DIR = Path(__file__).parent.parent.parent.parent / "database"
@@ -222,9 +225,9 @@ def get_db() -> Generator[Session, None, None]:
 
 def init_database() -> None:
     """Inicializa o banco de dados criando as tabelas."""
-    print(f"Inicializando banco de dados em: {db_manager.db_path}")
+    logger.info("Inicializando banco de dados em: %s", db_manager.db_path)
     db_manager.create_tables()
-    print("Tabelas criadas com sucesso!")
+    logger.info("Tabelas criadas com sucesso!")
 
     stats = db_manager.get_db_stats()
-    print(f"Status do banco: {stats}")
+    logger.info("Status do banco: %s", stats)
