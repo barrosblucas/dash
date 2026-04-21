@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from backend.api.routes.licitacoes import _parse_dispensas_from_html
+from backend.features.licitacao.licitacao_adapter import parse_dispensas_from_html
 
 HTML_VAZIO = """
 <html>
@@ -127,15 +127,15 @@ class TestParseDispensasFromHtml:
     """Testes para o parser de HTML do portal Quality."""
 
     def test_html_vazio_retorna_lista_vazia(self) -> None:
-        result = _parse_dispensas_from_html(HTML_VAZIO)
+        result = parse_dispensas_from_html(HTML_VAZIO)
         assert result == []
 
     def test_html_sem_tbody_retorna_lista_vazia(self) -> None:
-        result = _parse_dispensas_from_html(HTML_SEM_TBODY)
+        result = parse_dispensas_from_html(HTML_SEM_TBODY)
         assert result == []
 
     def test_uma_licitacao_extrai_todos_os_campos(self) -> None:
-        result = _parse_dispensas_from_html(HTML_UMA_LICITACAO)
+        result = parse_dispensas_from_html(HTML_UMA_LICITACAO)
         assert len(result) == 1
         item = result[0]
         assert item.codigo == "123"
@@ -154,7 +154,7 @@ class TestParseDispensasFromHtml:
         )
 
     def test_multiplas_licitacoes_extraidas(self) -> None:
-        result = _parse_dispensas_from_html(HTML_MULTIPLAS_LICITACOES)
+        result = parse_dispensas_from_html(HTML_MULTIPLAS_LICITACOES)
         assert len(result) == 2
 
         first = result[0]
@@ -168,7 +168,7 @@ class TestParseDispensasFromHtml:
         assert second.objeto == "Objeto: Pavimentação asfáltica"
 
     def test_objeto_nao_encontrado_deixa_campo_vazio(self) -> None:
-        result = _parse_dispensas_from_html(HTML_OBJETO_NAO_ENCONTRADO)
+        result = parse_dispensas_from_html(HTML_OBJETO_NAO_ENCONTRADO)
         assert len(result) == 1
         assert result[0].objeto == ""
         assert result[0].modalidade == "Concorrência"

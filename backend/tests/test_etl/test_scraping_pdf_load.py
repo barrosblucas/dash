@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from backend.services.scraping_service import ScrapingService
+from backend.features.scraping.scraping_orchestrator import ScrapingService
 from backend.tests.test_etl.conftest import _build_despesa
 
 
@@ -33,7 +33,7 @@ def test_load_despesas_from_pdf_retorna_dados_do_extractor(
             return FakeResult()
 
     monkeypatch.setattr(
-        "backend.services.scraping_service.PDFExtractor", FakeExtractor
+        "backend.features.scraping.scraping_orchestrator.PDFExtractor", FakeExtractor
     )
 
     despesas = service._load_despesas_from_pdf(2026)
@@ -51,7 +51,7 @@ def test_load_despesas_from_pdf_retorna_vazio_em_excecao(
             raise RuntimeError("falha")
 
     monkeypatch.setattr(
-        "backend.services.scraping_service.PDFExtractor",
+        "backend.features.scraping.scraping_orchestrator.PDFExtractor",
         BrokenExtractor,
     )
 

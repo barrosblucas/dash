@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from backend.domain.entities.despesa import TipoDespesa
-from backend.etl.scrapers.despesa_scraper import DespesaScraper
+from backend.features.despesa.despesa_scraper import DespesaScraper
+from backend.features.despesa.despesa_types import TipoDespesa
 
 
 class TestParseDespesasNatureza:

@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from backend.etl.scrapers.quality_api_client import QualityAPIClient
+from backend.shared.quality_api_client import QualityAPIClient
 
 
 @pytest.mark.asyncio

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from backend.services.historical_data_bootstrap_service import (
+from backend.features.scraping.historical_data_bootstrap_service import (
     BootstrapPayload,
     HistoricalDataBootstrapService,
     PersistedCounts,
@@ -128,7 +128,7 @@ def test_collect_year_gaps_calcula_anos_ausentes(
         staticmethod(fake_existing_detalhamento_years),
     )
     monkeypatch.setattr(
-        "backend.services.historical_data_bootstrap_service.db_manager.get_session",
+        "backend.features.scraping.historical_data_bootstrap_service.db_manager.get_session",
         _fake_session_context,
     )
 
@@ -187,7 +187,7 @@ def test_collect_year_gaps_exclui_ano_2026_do_bootstrap(
         staticmethod(fake_existing_detalhamento_years),
     )
     monkeypatch.setattr(
-        "backend.services.historical_data_bootstrap_service.db_manager.get_session",
+        "backend.features.scraping.historical_data_bootstrap_service.db_manager.get_session",
         _fake_session_context,
     )
 

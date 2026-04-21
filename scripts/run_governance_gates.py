@@ -26,6 +26,7 @@ GATES = [
     ("check_frontend_boundaries", "scripts/check_frontend_boundaries.py"),
     ("check_no_console", "scripts/check_no_console.py"),
     ("check_alembic_migration", "scripts/check_alembic_migration.py"),
+    ("check_cross_feature_imports", "scripts/check_cross_feature_imports.py"),
 ]
 
 

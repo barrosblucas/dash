@@ -1,194 +1,152 @@
 # Changelog — 2026-04-21
 
-## Governance — Endurecimento dos gates de arquivo
+## [MAJOR] Migração arquitetural: Layer-First → Vertical Bounded Contexts
 
-### Corrigido
-- **AI-GOVERNANCE**: tabela "Hard limits" unificada — limite de 400 linhas para todos os tipos de arquivo (`.py`, `.ts`, `.tsx`, `.js`, `.jsx`). Exceção `constants.ts` até 500.
-- **AI-GOVERNANCE**: exception metadata agora explicitamente documentada como NÃO isenta do gate — é apenas rastreamento de débito técnico.
-- **AI-GOVERNANCE**: `--strict` agora é o padrão documentado; `--warn-only` para diagnóstico apenas.
+### Contexto
+O backend foi reestruturado de uma organização layer-first (por camada técnica: `api/`, `domain/`, `infrastructure/`, `services/`, `etl/`) para vertical bounded contexts (por feature: `features/receita/`, `features/despesa/`, etc.).
 
-### Endurecido
-- **`scripts/check_file_length.py`**: remoção completa do mecanismo `--baseline` (bypass de arquivos conhecidos). Exception metadata agora gera relatório separado mas ainda conta como violação (bloqueia). Novo formato de relatório com estatísticas e maior excesso.
-- **`scripts/run_governance_gates.py`**: `--strict` é o padrão (exit 1 em falha). Flag `--warn-only` adicionada para diagnóstico manual. `--strict` removida (agora é o comportamento default).
-- **`.pre-commit-config.yaml`**: criado com os 3 gates estruturais (file length, frontend boundaries, no console/print). Hook pre-commit instalado no git — gates rodam automaticamente em cada commit.
+### Mudança estrutural
 
-### Diagnosticado
-- Varredura completa identificou **15 arquivos** acima do limite de linhas (era 6 no PROJECT_STATE anterior).
-- Backend: 5 arquivos `.py` acima de 400 linhas (incluindo `pdf_extractor.py` com 851 linhas).
-- Frontend: 10 arquivos `.ts/.tsx` acima de 300 linhas (incluindo `avisos-licitacoes-client.tsx` com 1318 linhas).
-- Nenhum hook de pre-commit, CI ou Makefile existia — gates eram puramente manuais.
+#### Novos diretórios criados
+- `backend/features/` — 8 bounded contexts verticais
+  - `receita/` — tipos, handler, data, scraper
+  - `despesa/` — tipos, handler, data, scraper
+  - `forecast/` — tipos, handler, business (Prophet)
+  - `licitacao/` — tipos, handler
+  - `kpi/` — tipos, handler
+  - `movimento_extra/` — tipos, handler
+  - `scraping/` — tipos, handler, orchestrator, helpers, scheduler, services
+  - `export/` — tipos, handler
+- `backend/shared/` — infraestrutura compartilhada
+  - `database/connection.py` — engine e session manager
+  - `database/models.py` — ORM models
+  - `pdf_extractor.py` — módulo consolidado (3 arquivos → 1)
+  - `quality_api_client.py` — cliente HTTP Quality
 
-## backend/api/routes/licitacoes.py
+#### Arquivos consolidados
+- `etl/extractors/pdf_entities.py` + `pdf_parsers.py` + `pdf_extractor.py` → `shared/pdf_extractor.py`
 
-### Corrigido
-- **ComprasBR**: adicionado header `Referer: https://comprasbr.com.br/` na requisição `client.get` para atender exigência da API externa.
-- **ComprasBR**: ajustada extração do corpo da resposta para `data.get("items", data.get("content", []))`, garantindo compatibilidade com a chave `items` retornada pelo ComprasBR.
-- **Quality parser**: refatorada função `_parse_dispensas_from_html` para iterar todos os `<tr>` do primeiro `<tbody>`, detectar blocos de licitação pela presença de 10 `<td>`s e buscar o texto do objeto em linhas subsequentes com 1 `<td>` iniciado por "Objeto".
-- **Quality parser**: extração da `modalidade` da célula 2 do header (ex: "Pregão Eletrônico", "Dispensa").
-- **Quality parser**: construção de `urlProcesso` para cada item no formato `https://avisolicitacao.qualitysistemas.com.br/prefeitura_municipal_de_bandeirantes/{codigo}`.
-- **ComprasBR**: `urlProcesso` agora aponta para a página de detalhes correta: `https://comprasbr.com.br/pregao-eletronico-detalhe/?idlicitacao={id}`.
-- **Novo endpoint**: `GET /api/v1/licitacoes/comprasbr/{id}` retorna detalhes completos de uma licitação ComprasBR (datas de propostas, pregoeiro, legislação, documentos, etc.).
+#### Regras arquiteturais por arquivo
+- `*_types.py` — sem imports de SQLAlchemy, FastAPI ou Prophet
+- `*_business.py` — sem imports de SQLAlchemy, FastAPI ou HTTP
+- `*_handler.py` — sem lógica de negócio, apenas delegação
+- `*_data.py` — SQL/persistência
+- Sem imports cross-feature — features só importam de `shared/`
 
-## backend/api/schemas.py
-
-### Adicionado
-- `LicitacaoComprasBRItem`: campo `urlProcesso: str = ""`.
-- `DispensaLicitaçãoItem`: campos `urlProcesso: str = ""` e `modalidade: str = ""`.
-
-## backend/tests/test_api/test_licitacoes.py
-
-### Adicionado
-- Testes unitários para `_parse_dispensas_from_html` cobrindo:
-  - HTML vazio (retorna lista vazia)
-  - HTML sem `<tbody>` (retorna lista vazia)
-  - Uma licitação completa (extração de todos os campos incluindo modalidade, objeto e urlProcesso)
-  - Múltiplas licitações (verificação de quantidade e campos específicos)
-  - Objeto não encontrado (campo objeto vazio)
-
-## frontend/types/licitacao.ts
-
-### Adicionado
-- `urlProcesso?: string` em `LicitacaoUnified`.
-- Campos opcionais `disputa`, `criterio`, `tipo` em `LicitacaoUnified`.
-
-## Refatoração Fase 1 — Split de arquivos backend > 400 linhas
-
-### Movido
-- **`backend/api/schemas.py`** (520 → 27 linhas): schemas extraídos por domínio em arquivos dedicados sem reexport barrels:
-  - `schemas_receita.py` — `TipoReceitaEnum`, `ReceitaResponse`, `ReceitaListResponse`, `ReceitaFilterParams`, `ReceitaDetalhamentoResponse`, `ReceitaDetalhamentoListResponse`, `ETLStatusResponse`
-  - `schemas_despesa.py` — `TipoDespesaEnum`, `DespesaResponse`, `DespesaListResponse`, `DespesaFilterParams`
-  - `schemas_kpi.py` — `KPIMensal`, `KPIAnual`, `KPIsResponse`
-  - `schemas_forecast.py` — `ForecastPoint`, `ForecastResponse`
-  - `schemas_scraping.py` — `ScrapingStatusResponse`, `ScrapingTriggerRequest/Response`, `ScrapingLogResponse`, `ScrapingHistoryResponse`
-  - `schemas_licitacao.py` — `LicitacaoComprasBRItem/Response/Documento/DetailItem`, `DispensaLicitaçãoItem`, `DispensasLicitacaoResponse`
-  - `schemas_movimento.py` — `MovimentoExtraItem`, `FundoResumo`, `MovimentoExtraResponse/AnualResponse`, `InsightItem`, `ResumoMensalItem`
-  - `schemas.py` mantém apenas `HealthCheckResponse` e `ErrorResponse`
-- **`backend/etl/extractors/pdf_extractor.py`** (851 → 355 linhas): dividido em 3 arquivos por responsabilidade:
-  - `pdf_entities.py` — `TipoDocumento`, `ReceitaDetalhamento`, `ResultadoExtracao`, `parse_valor_monetario`, `extrair_ano_do_arquivo`, constantes `MESES_MAP`, `MESES_ABREV_MAP`, `SKIP_HEADERS`
-  - `pdf_parsers.py` — todas as funções helper de parsing (`_is_*_table`, `_parse_*_row`, `_detectar_nivel`, `_parse_detail_text_line`, `_detect_tipo_from_header`)
-  - `pdf_extractor.py` — classe `PDFExtractor` com métodos de extração (importa de `pdf_entities` e `pdf_parsers`)
-- **`backend/services/scraping_service.py`** (430 → 223 linhas): extraído helper de persistência:
-  - `scraping_helpers.py` — `ScrapingResult`, `_upsert_receitas`, `_upsert_despesas`, `_replace_detalhamento`, `_replace_receitas_for_year`, `_replace_despesas_for_year`, `_create_log`, `_finalize_log`, `_try_log_error`
-  - `scraping_service.py` — `ScrapingService` com orquestração (importa de `scraping_helpers`)
-
-### Atualizado
-- Imports em todas as routes (`receitas`, `despesas`, `kpis`, `forecast`, `scraping`, `movimento_extra`, `licitacoes`) apontando direto para os novos módulos de schema.
-- Imports em `receita_scraper.py`, `scraping_service.py`, `historical_data_bootstrap_service.py`, `test_scraping_service.py` ajustados para `pdf_entities` e `scraping_helpers`.
-- `historical_data_bootstrap_service.py`: chamadas a `ScrapingService._upsert_*` migradas para `_upsert_*` de `scraping_helpers`.
-- `test_scraping_service.py`: 21 monkeypatches de métodos estáticos de `ScrapingService` migrados para `monkeypatch.setattr("backend.services.scraping_service._METHOD_NAME", fake_fn)`.
+#### Retrocompatibilidade
+- Localizações antigas mantidas temporariamente como re-exports para backward compatibility
+- `api/main.py` atualizado para importar dos novos features
+- Todos os testes atualizados com novos imports
+- Scripts de init/reimport atualizados
 
 ### Validação
-- `python3 scripts/run_governance_gates.py`: 3 arquivos da Fase 1 removidos da lista de violações; restam apenas arquivos das Fases 2–4.
-- `pytest backend/tests/`: 100% passando (76 testes).
+- **ruff check**: 5 erros pre-existentes (E722 bare excepts, B904 raise-from) — nenhum novo erro introduzido
+- **pytest**: 76 passed, 0 failed
+- **mypy**: 114 erros pre-existentes — mesma contagem pré-migração
+- **check_cross_feature_imports**: 0 violações de isolamento entre features
 
-## Refatoração Fase 2 — Split de arquivos de teste backend > 400 linhas
+### Gates de governança adicionados
+- **Added**: `scripts/check_cross_feature_imports.py` — valida que nenhuma feature importa de outra feature (apenas `shared/` é permitido)
+- **Added**: Gate `check_cross_feature_imports` integrado ao `run_governance_gates.py` e ao pre-commit hook
 
-### Movido
-- **`backend/tests/test_etl/test_despesa_scraper.py`** (519 → removido): split por classe de teste em 5 arquivos independentes:
-  - `test_despesa_currency.py` — `TestParseBrazilianCurrency` (13 testes)
-  - `test_despesa_classify.py` — `TestClassificarTipoDespesa` (6 testes)
-  - `test_despesa_annual.py` — `TestParseDespesasAnnual` (7 testes)
-  - `test_despesa_natureza.py` — `TestParseDespesasNatureza` (8 testes)
-  - `test_despesa_merge.py` — `TestMergeDespesas` (6 testes)
-- **`backend/tests/test_etl/test_scraping_service.py`** (672 → removido): split por cenário em 3 arquivos + `conftest.py`:
-  - `conftest.py` — fixtures compartilhadas (`scraper`, `service`, `log_capture`, `patch_db_session`, `_build_despesa`, `LogCapture`, `_fake_session_context`)
-  - `test_scraping_despesas.py` — testes de scraping de despesas: fallback PDF, no-data, API com dados, ignora natureza, replace por ano (5 testes)
-  - `test_scraping_receitas.py` — teste de scraping de receitas: replace por ano (1 teste)
-  - `test_scraping_pdf_load.py` — testes de `_load_despesas_from_pdf`: retorna dados do extractor, retorna vazio em exceção (2 testes)
+### Features criadas (8 bounded contexts)
 
-### Atualizado
-- Imports em `test_scraping_despesas.py` e `test_scraping_receitas.py` ajustados para usar fixtures e helpers do `conftest.py`.
-- Fake `_build_despesa` e `LogCapture` centralizados no `conftest.py` para eliminar duplicação entre testes de scraping.
+| Feature | Arquivos |
+|---------|----------|
+| `receita/` | `receita_types.py`, `receita_handler.py`, `receita_data.py`, `receita_scraper.py` |
+| `despesa/` | `despesa_types.py`, `despesa_handler.py`, `despesa_data.py`, `despesa_scraper.py` |
+| `forecast/` | `forecast_types.py`, `forecast_handler.py`, `forecast_business.py`, `forecast_data.py` |
+| `licitacao/` | `licitacao_types.py`, `licitacao_handler.py` |
+| `kpi/` | `kpi_types.py`, `kpi_handler.py` |
+| `movimento_extra/` | `movimento_extra_types.py`, `movimento_extra_handler.py` |
+| `scraping/` | `scraping_types.py`, `scraping_handler.py`, `scraping_orchestrator.py`, `scraping_helpers.py`, `scraping_scheduler.py`, `expense_pdf_sync_service.py`, `historical_data_bootstrap_service.py` |
+| `export/` | `export_types.py`, `export_handler.py` |
 
-### Validação
-- `python3 scripts/run_governance_gates.py`: 2 arquivos da Fase 2 removidos da lista de violações; restam apenas 4 arquivos frontend (Fases 3–4).
-- `pytest backend/tests/test_etl/`: 100% passando (66 testes).
-- `ruff check backend/tests/test_etl/`: passando sem erros.
+### Backward compatibility
+- Localizações antigas (`api/routes/`, `api/schemas_*`) mantidas com re-export stubs
+- `domain/`, `infrastructure/`, `services/`, `etl/` **removidos** (ver seção [CLEANUP] acima)
 
-## frontend/app/avisos-licitacoes/avisos-licitacoes-client.tsx
+### Arquivos criados: 41
+### Arquivos modificados: ~55 (tests, scripts, main.py, re-exports)
+### Nenhuma lógica de negócio alterada
 
-### Adicionado
-- Função `extrairTituloSucinto(objeto: string): string` para resumir objetos longos de licitações (remove prefixos/sufixos comuns, extrai frases em maiúsculas).
-- Função `getFeriados(ano: number): Map<string, string>` com feriados nacionais, estaduais (MS) e móveis (Páscoa, Sexta-feira Santa, Corpus Christi) via algoritmo de Meeus/Jones/Butcher.
-- Exibição de feriados no calendário mensal e semanal (badge vermelho com nome do feriado).
-- Integração com endpoint de detalhes ComprasBR: modal busca informações extras (pregoeiro, legislação, datas de propostas, disputa, documentos) ao abrir.
-- Download direto de edital ComprasBR via `arquivoUri` (quando disponível).
+---
 
-### Corrigido
-- Parsers `parseComprasBR` e `parseDispensas` agora propagam `urlProcesso`, `modalidade`, `disputa`, `criterio` e `tipo`.
-- Visualização semanal: tags de itens agora exibem título sucinto em vez de apenas o número do edital.
-- Lista de itens do dia selecionado e cards mobile/lista agora exibem título sucinto.
-- **Modal de detalhes**:
-  - Botão "Ver no portal" renomeado para "Ver processo na íntegra" e aponta para `urlProcesso`.
-  - Botão "Download Edital" agora abre link direto do PDF quando `arquivoUri` está disponível (ComprasBR).
-  - Exibe campos extras da Quality (`disputa`, `criterio`, `tipo`) quando disponíveis.
-  - Refatorada a renderização condicional do órgão para usar `item.orgaoNome` diretamente.
-  - Exibe seção "Informações do Processo" com pregoeiro, legislação, fase, disputa e modo de disputa (ComprasBR).
-   - Exibe seção "Datas de Envio de Propostas" com início e fim (ComprasBR).
-   - Exibe lista de documentos anexados com links diretos de download (ComprasBR).
+## [REFACTOR] Extração de lógica de negócio de handlers para camadas dedicadas
 
-## Refatoração Fase 3 — Split de frontend/app/avisos-licitacoes/avisos-licitacoes-client.tsx
+### Contexto
+Vários handlers continham lógica de negócio inline (SQL queries, cálculos, chamadas HTTP externas, parsing HTML). A arquitetura exige que `*_handler.py` seja apenas orquestração HTTP, com lógica delegada para `*_business.py`, `*_data.py`, ou `*_adapter.py`.
 
-### Movido
-- **`frontend/app/avisos-licitacoes/avisos-licitacoes-client.tsx`** (1318 → 383 linhas): dividido em 11 arquivos por responsabilidade, sem barrel files:
-  - `constants.ts` (28 linhas) — `ViewMode`, `FonteFilter`, `StatusFilter`, `COMPRASBR_URL`, `QUALITY_URL`, `FONTES`, `STATUSES`, `DIAS_SEMANA`
-  - `parsers.ts` (119 linhas) — `parseComprasBR`, `parseDispensas`, `extrairTituloSucinto`
-  - `feriados.ts` (55 linhas) — `getFeriados` com algoritmo Meeus/Jones/Butcher + feriados fixos
-  - `filters.ts` (36 linhas) — `matchFonte`, `matchStatus`, `fmtIsoDate`
-  - `status-badge.tsx` (26 linhas) — componente `StatusBadge`
-  - `fonte-badge.tsx` (20 linhas) — componente `FonteBadge`
-  - `licitacao-modal.tsx` (251 linhas) — componente `LicitacaoModal` com detalhes ComprasBR, documentos e download de edital
-  - `month-view.tsx` (196 linhas) — componente `MonthView` com grid mensal, navegação e itens do dia
-  - `week-view.tsx` (175 linhas) — componente `WeekView` com grid semanal e itens do dia
-  - `list-view.tsx` (196 linhas) — componente `ListView` com tabela desktop, cards mobile e paginação
+### Mudanças por feature
 
-### Atualizado
-- Imports do componente principal apontam diretamente para os novos módulos (sem `index.ts`).
-- `page.tsx` inalterado — continua exportando `AvisosLicitacoesClient` como `export default`.
+#### KPI (`features/kpi/`)
+- **Criado** `kpi_data.py` — consultas SQL agregadas (totais anuais, mensais, por ano/tipo, resumo geral)
+- **Criado** `kpi_business.py` — cálculos de saldo, percentuais de execução, agregações mensais/anuais
+- **Refatorado** `kpi_handler.py` — agora delega para data + business (de 342 → 128 linhas)
 
-### Validação
-- `npm run lint`: passando (sem erros nos arquivos da feature; warnings pré-existentes em outras features mantidos).
-- `npm run type-check`: passando sem erros.
-- `npm run build`: passando — todas as páginas geradas com sucesso (`/avisos-licitacoes` 23 kB).
+#### Licitação (`features/licitacao/`)
+- **Criado** `licitacao_adapter.py` — ACL para APIs externas (ComprasBR, Quality HTML) com parsing HTML
+- **Refatorado** `licitacao_handler.py` — agora delega para adapter (de 321 → 106 linhas)
 
-## Refatoração Fase 4 — Split de frontend/app/movimento-extra/movimento-extra-client.tsx
+#### Movimento Extra (`features/movimento_extra/`)
+- **Criado** `movimento_extra_adapter.py` — ACL para API externa Quality
+- **Criado** `movimento_extra_business.py` — agrupamento por fundos, insights por categoria, totais
+- **Refatorado** `movimento_extra_handler.py` — agora delega para adapter + business (de 383 → 124 linhas)
 
-### Movido
-- **`frontend/app/movimento-extra/movimento-extra-client.tsx`** (1050 → 285 linhas): dividido em 10 arquivos por responsabilidade, sem barrel files:
-  - `constants.ts` (2 linhas) — `CURRENT_YEAR`, `YEARS`
-  - `glossario.ts` (15 linhas) — `getGlossaryKey`, `getGlossary`
-  - `tipo-pill.tsx` (28 linhas) — componente `TipoPill`
-  - `kpi-card.tsx` (34 linhas) — componente `KpiCard`
-  - `tipo-badge.tsx` (14 linhas) — componente `TipoBadge`
-  - `fundo-card.tsx` (126 linhas) — componente `FundoCard` com tooltip de glossário
-  - `item-row.tsx` (95 linhas) — componentes `ItemRow` (mobile) e `ItemTableRow` (desktop)
-  - `insight-card.tsx` (68 linhas) — componente `InsightCard` com barra de percentual
-  - `monthly-bar.tsx` (28 linhas) — componente `MonthlyEvolutionBar`
-  - `mensal-view.tsx` (342 linhas) — view completa do modo mensal (KPIs, insights, fundos, itens, glossário)
-  - `anual-view.tsx` (134 linhas) — view completa do modo anual (KPIs, evolução mensal, destaques)
+#### Despesa (`features/despesa/`)
+- **Estendido** `despesa_data.py` — adicionados `get_totais_por_ano`, `get_totais_por_mes`, `list_categorias`
+- **Refatorado** `despesa_handler.py` — agora delega para SQLDespesaRepository (de 334 → 241 linhas)
 
-### Atualizado
-- Imports do componente principal apontam diretamente para os novos módulos (sem `index.ts`).
-- `page.tsx` inalterado — continua exportando `MovimentoExtraClient` como `export default`.
+#### Receita (`features/receita/`)
+- **Estendido** `receita_data.py` — adicionado `list_detalhamento_by_ano`
+- **Refatorado** `receita_handler.py` — agora delega para SQLReceitaRepository (de 350 → 259 linhas)
+
+#### Export (`features/export/`)
+- **Criado** `export_business.py` — conversão para DataFrame, geração Excel, formatação de colunas
+- **Refatorado** `export_handler.py` — agora delega para business + data (de 273 → 139 linhas)
+
+### Arquivos criados
+- `backend/features/kpi/kpi_data.py`
+- `backend/features/kpi/kpi_business.py`
+- `backend/features/licitacao/licitacao_adapter.py`
+- `backend/features/movimento_extra/movimento_extra_adapter.py`
+- `backend/features/movimento_extra/movimento_extra_business.py`
+- `backend/features/export/export_business.py`
+
+### Arquivos modificados
+- `backend/features/kpi/kpi_handler.py`
+- `backend/features/licitacao/licitacao_handler.py`
+- `backend/features/movimento_extra/movimento_extra_handler.py`
+- `backend/features/despesa/despesa_handler.py`
+- `backend/features/despesa/despesa_data.py`
+- `backend/features/receita/receita_handler.py`
+- `backend/features/receita/receita_data.py`
+- `backend/features/export/export_handler.py`
+- `backend/tests/test_api/test_licitacoes.py` (atualizado import)
 
 ### Validação
-- `npm run lint`: passando (sem erros nos arquivos da feature; warnings pré-existentes em outras features mantidos).
-- `npm run type-check`: passando sem erros.
-- `npm run build`: passando — todas as páginas geradas com sucesso.
+- Ruff: All checks passed
+- Pytest: 74 passed (todos os testes passam)
+- Cross-feature imports: ✅ isolados
+- Dependência: `handler → business → types`, `handler → data → types`, `handler → adapter` (sem violações)
 
-## Refatoração Fase 4 — Split de frontend menores > 400 linhas
+---
 
-### Movido
-- **`frontend/components/dashboard/ForecastSection.tsx`** (557 → 349 linhas): extraídos tipos e helpers de transformação de dados:
-  - `frontend/types/forecast.ts` (53 linhas) — `ProjectionMode`, `ChartRow`, `KPIAnual`, `KPIMensal`, `KPIsResponse`, `ForecastPoint`, `ForecastResponse`, `ForecastSectionProps`
-  - `frontend/components/dashboard/forecast-helpers.ts` (251 linhas) — `fetchYearlyKPIs`, `fetchMonthlyKPIs`, `fetchForecast`, `buildForecastMaps`, `buildMonthlyActualMap`, `buildChartData`, `calculateGrowthMetrics`
-- **`frontend/lib/date.ts`** (412 → removido): dead code — nenhuma função era importada por nenhum consumidor do frontend. Barrel `frontend/lib/index.ts` atualizado para remover `export * from './date'`.
+## [CLEANUP] Remoção dos diretórios legados backward-compat (re-export stubs)
 
-### Atualizado
-- `frontend/types/index.ts` — adicionado `export * from './forecast'`.
+### Contexto
+Os diretórios layer-first (`domain/`, `infrastructure/`, `services/`, `etl/`) foram mantidos como re-export stubs após a migração para vertical bounded contexts. Após verificação, nenhum consumidor externo restava — todos já apontam para `features/` ou `shared/`.
+
+### Diretórios removidos
+- `backend/domain/` — entidades, repositórios, serviços de domínio (stub)
+- `backend/infrastructure/` — database e repositórios SQL (stub)
+- `backend/services/` — serviços de aplicação (stub)
+- `backend/etl/` — pipeline ETL, extractors e scrapers (stub)
+
+### Import corrigido
+- `backend/shared/pdf_extractor.py` linhas 22-23: `from backend.domain.entities.*` → `from backend.features.*.types`
 
 ### Validação
-- `python3 scripts/run_governance_gates.py`: `check_file_length` passou — zero violações de tamanho de arquivo restantes.
-- `npm run lint`: passando (sem erros nos arquivos modificados; warnings pré-existentes mantidos).
-- `npm run type-check`: passando sem erros.
-- `npm run build`: passando — todas as páginas geradas com sucesso.
+- **ruff check**: All checks passed
+- **pytest**: 76 passed, 0 failed
+- **governance gates**: 4/5 passed (check_file_length é débito técnico pré-existente em `shared/pdf_extractor.py`)

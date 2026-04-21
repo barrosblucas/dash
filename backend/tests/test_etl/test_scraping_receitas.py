@@ -9,9 +9,9 @@ from typing import Any
 
 import pytest
 
-from backend.domain.entities.receita import Receita, TipoReceita
-from backend.etl.extractors.pdf_entities import ReceitaDetalhamento
-from backend.services.scraping_service import ScrapingService
+from backend.features.receita.receita_types import Receita, TipoReceita
+from backend.features.scraping.scraping_orchestrator import ScrapingService
+from backend.shared.pdf_types import ReceitaDetalhamento
 
 
 @pytest.mark.asyncio
@@ -114,23 +114,23 @@ async def test_scrape_receitas_2026_usa_replace_por_ano(
         lambda data, year: detalhes,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._replace_receitas_for_year",
+        "backend.features.scraping.scraping_orchestrator._replace_receitas_for_year",
         fake_replace_receitas_for_year,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._upsert_receitas",
+        "backend.features.scraping.scraping_orchestrator._upsert_receitas",
         fake_upsert_receitas,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._replace_detalhamento",
+        "backend.features.scraping.scraping_orchestrator._replace_detalhamento",
         fake_replace_detalhamento,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._create_log",
+        "backend.features.scraping.scraping_orchestrator._create_log",
         fake_create_log,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._finalize_log",
+        "backend.features.scraping.scraping_orchestrator._finalize_log",
         fake_finalize_log,
     )
 

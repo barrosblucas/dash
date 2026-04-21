@@ -10,9 +10,13 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from backend.domain.services.forecasting_service import (
-    ForecastingService,
+from backend.features.forecast.forecast_business import (
     ForecastResult,
+    run_prophet_forecast,
+)
+from backend.features.forecast.forecast_data import (
+    get_despesas_mensais,
+    get_receitas_mensais,
 )
 
 
@@ -83,15 +87,17 @@ def _build_series_with_current_partial(total_months: int) -> list[tuple[datetime
 def test_forecast_receitas_descarta_mes_corrente_parcial_no_treino(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    service = ForecastingService(db=object())
     historical = _build_series_with_current_partial(total_months=30)
 
-    monkeypatch.setattr(service, "_get_receitas_mensais", lambda: historical)
     monkeypatch.setattr(
-        "backend.domain.services.forecasting_service.Prophet", _FakeProphet
+        "backend.features.forecast.forecast_business.Prophet", _FakeProphet
     )
 
-    resultados = service.forecast_receitas(horizonte_meses=3, nivel_confianca=0.95)
+    resultados = run_prophet_forecast(
+        dados_historicos=historical,
+        horizonte_meses=3,
+        nivel_confianca=0.95,
+    )
 
     assert len(resultados) == 3
     fit_df = _FakeProphet.last_fit_df
@@ -105,11 +111,8 @@ def test_forecast_receitas_descarta_mes_corrente_parcial_no_treino(
 def test_forecast_receitas_fallback_linear_apos_remover_mes_parcial(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    service = ForecastingService(db=object())
     historical = _build_series_with_current_partial(total_months=24)
     captured: dict[str, Any] = {}
-
-    monkeypatch.setattr(service, "_get_receitas_mensais", lambda: historical)
 
     def fake_linear(
         dados_historicos: list[tuple[datetime, float]], horizonte_meses: int
@@ -126,9 +129,15 @@ def test_forecast_receitas_fallback_linear_apos_remover_mes_parcial(
             )
         ]
 
-    monkeypatch.setattr(service, "_projecao_linear", fake_linear)
+    monkeypatch.setattr(
+        "backend.features.forecast.forecast_business.projecao_linear", fake_linear
+    )
 
-    resultados = service.forecast_receitas(horizonte_meses=5, nivel_confianca=0.95)
+    resultados = run_prophet_forecast(
+        dados_historicos=historical,
+        horizonte_meses=5,
+        nivel_confianca=0.95,
+    )
 
     assert captured["size"] == 23
     assert captured["horizonte"] == 5
@@ -138,13 +147,11 @@ def test_forecast_receitas_fallback_linear_apos_remover_mes_parcial(
 def test_forecast_receitas_fallback_linear_quando_prophet_falha(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    service = ForecastingService(db=object())
     historical = _build_series_with_current_partial(total_months=30)
     captured: dict[str, Any] = {}
 
-    monkeypatch.setattr(service, "_get_receitas_mensais", lambda: historical)
     monkeypatch.setattr(
-        "backend.domain.services.forecasting_service.Prophet", _BrokenProphet
+        "backend.features.forecast.forecast_business.Prophet", _BrokenProphet
     )
 
     def fake_linear(
@@ -162,9 +169,15 @@ def test_forecast_receitas_fallback_linear_quando_prophet_falha(
             )
         ]
 
-    monkeypatch.setattr(service, "_projecao_linear", fake_linear)
+    monkeypatch.setattr(
+        "backend.features.forecast.forecast_business.projecao_linear", fake_linear
+    )
 
-    resultados = service.forecast_receitas(horizonte_meses=4, nivel_confianca=0.95)
+    resultados = run_prophet_forecast(
+        dados_historicos=historical,
+        horizonte_meses=4,
+        nivel_confianca=0.95,
+    )
 
     assert captured["size"] >= 24
     assert captured["horizonte"] == 4
@@ -201,9 +214,7 @@ def test_get_receitas_mensais_converte_ano_mes_para_datetime() -> None:
         SimpleNamespace(ano=2025, mes=12, valor=Decimal("123.45")),
         SimpleNamespace(ano=2026, mes=1, valor=Decimal("456.78")),
     ]
-    service = ForecastingService(db=_FakeDB(rows))
-
-    dados = service._get_receitas_mensais()
+    dados = get_receitas_mensais(_FakeDB(rows))
 
     assert dados == [
         (datetime(2025, 12, 1), 123.45),
@@ -216,9 +227,7 @@ def test_get_despesas_mensais_converte_ano_mes_para_datetime() -> None:
         SimpleNamespace(ano=2025, mes=12, valor=Decimal("222.22")),
         SimpleNamespace(ano=2026, mes=1, valor=Decimal("333.33")),
     ]
-    service = ForecastingService(db=_FakeDB(rows))
-
-    dados = service._get_despesas_mensais()
+    dados = get_despesas_mensais(_FakeDB(rows))
 
     assert dados == [
         (datetime(2025, 12, 1), 222.22),

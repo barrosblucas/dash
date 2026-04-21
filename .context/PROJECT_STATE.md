@@ -1,10 +1,10 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-21 (atualizado pós-Fase 4)
+Snapshot: 2026-04-21 (atualizado pós-migração arquitetural)
 
 ## Status geral
 
-Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard interativo e portal público da transparência.
+Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard interativo, portal público da transparência e **arquitetura vertical bounded contexts (feature-first)**.
 
 ## Funcionalidade implementada
 
@@ -88,7 +88,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 **Console/print em produção (9 violações):**
 - `frontend/services/api.ts` — 5 ocorrências de `console.*`
 - `frontend/hooks/useExport.ts` — 1 ocorrência de `console.*`
-- `backend/infrastructure/database/connection.py` — 3 ocorrências de `print()`
+- `backend/shared/database/connection.py` — 3 ocorrências de `print()`
 
 **Ação de endurecimento tomada (2026-04-21):**
 - Limite unificado para 400 linhas em todos os tipos de arquivo (`.py`, `.ts`, `.tsx`, `.js`, `.jsx`)
@@ -100,25 +100,23 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 
 ### Arquitetura
 
+- **MIGRAÇÃO REALIZADA (2026-04-21):** Backend migrado de layer-first para vertical bounded contexts (`features/` + `shared/`). Re-exports backward-compatible de `domain/`, `infrastructure/`, `services/`, `etl/` **removidos** (2026-04-21). Apenas `api/routes/` e `api/schemas_*` mantidos como re-exports.
 - Testes `test_ml/` ainda vazio; `test_api/` parcialmente iniciado com `test_licitacoes.py`; `test_etl/` parcialmente coberto — cobertura automatizada ainda insuficiente
-- `domain/usecases/` vazio — lógica ainda acoplada nas rotas
-- `etl/transformers/` e `etl/loaders/` vazios — extração direta sem camada de transformação dedicada
-- `backend/ml/` vazio — forecasting service importa modelos diretamente
-- `backend/services/` vazio — serviços de aplicação não separados
+- Lógica de negócio ainda parcialmente acoplada nos handlers — extrair para `*_business.py` conforme crescer
 - `notebooks/` vazio — sem notebooks de exploração
 - Alembic migrations configurado mas sem migrations criadas (tabelas criadas por `create_all`)
 - CORS permite `*` — precisa ser restrito em produção
-- `ForecastingService` importa modelos ORM diretamente ao invés de usar repositório
+- `forecast_business.py` ainda importa modelos ORM via repositório ao invés de usar abstração pura
 
 ## Próximos passos planejados
 
-1. Implementar testes automatizados (pytest no backend, vitest no frontend)
-2. Separar lógica de negócio das rotas para use cases/services
-3. Criar transformers ETL dedicados
-4. Melhorar tratamento de erros e validações no ETL
-5. Configurar Alembic migrations
-6. Restringir CORS para domínios conhecidos
-7. Adicionar autenticação se necessário
+1. Melhorar cobertura de testes (especialmente handlers e business logic)
+2. Limpar re-exports backward-compatible restantes (`api/routes/`, `api/schemas_*`)
+3. Configurar Alembic migrations
+4. Restringir CORS para domínios conhecidos
+5. Adicionar autenticação se necessário
+6. Implementar testes automatizados no frontend (vitest)
+7. Extrair lógica de negócio restante dos handlers para `*_business.py`
 
 ## Ambiente
 

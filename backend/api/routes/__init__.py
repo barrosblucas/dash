@@ -1,11 +1,21 @@
-"""API routes module."""
+"""API routes module — backward-compatible re-exports."""
 
-from .despesas import router as despesas_router
-from .kpis import router as kpis_router
-from .licitacoes import router as licitacoes_router
-from .movimento_extra import router as movimento_extra_router
-from .receitas import router as receitas_router
-from .scraping import router as scraping_router
+from backend.features.despesa.despesa_handler import (
+    router as despesas_router,  # noqa: F401
+)
+from backend.features.kpi.kpi_handler import router as kpis_router  # noqa: F401
+from backend.features.licitacao.licitacao_handler import (
+    router as licitacoes_router,  # noqa: F401
+)
+from backend.features.movimento_extra.movimento_extra_handler import (
+    router as movimento_extra_router,  # noqa: F401
+)
+from backend.features.receita.receita_handler import (
+    router as receitas_router,  # noqa: F401
+)
+from backend.features.scraping.scraping_handler import (
+    router as scraping_router,  # noqa: F401
+)
 
 __all__ = [
     "receitas_router",

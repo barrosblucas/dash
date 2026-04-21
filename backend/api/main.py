@@ -15,21 +15,21 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.api.routes import (
-    despesas_router,
-    kpis_router,
-    licitacoes_router,
-    movimento_extra_router,
-    receitas_router,
-    scraping_router,
-)
-from backend.api.routes.export import router as export_router
-from backend.api.routes.forecast import router as forecast_router
 from backend.api.schemas import HealthCheckResponse
-from backend.infrastructure.database.connection import db_manager, init_database
-from backend.services.historical_data_bootstrap_service import (
+from backend.features.despesa.despesa_handler import router as despesas_router
+from backend.features.export.export_handler import router as export_router
+from backend.features.forecast.forecast_handler import router as forecast_router
+from backend.features.kpi.kpi_handler import router as kpis_router
+from backend.features.licitacao.licitacao_handler import router as licitacoes_router
+from backend.features.movimento_extra.movimento_extra_handler import (
+    router as movimento_extra_router,
+)
+from backend.features.receita.receita_handler import router as receitas_router
+from backend.features.scraping.historical_data_bootstrap_service import (
     HistoricalDataBootstrapService,
 )
+from backend.features.scraping.scraping_handler import router as scraping_router
+from backend.shared.database.connection import db_manager, init_database
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ async def lifespan(app: FastAPI):
     # Inicia scheduler de scraping
     scheduler = None
     try:
-        from backend.services.scraping_scheduler import ScrapingScheduler
+        from backend.features.scraping.scraping_scheduler import ScrapingScheduler
 
         scheduler = ScrapingScheduler()
         scheduler.start()

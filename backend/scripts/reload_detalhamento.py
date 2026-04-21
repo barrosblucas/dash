@@ -13,9 +13,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from sqlalchemy import delete
 
-from backend.etl.extractors.pdf_extractor import PDFExtractor
-from backend.infrastructure.database.connection import DatabaseManager
-from backend.infrastructure.database.models import Base, ReceitaDetalhamentoModel
+from backend.shared.database.connection import DatabaseManager
+from backend.shared.database.models import Base, ReceitaDetalhamentoModel
+from backend.shared.pdf_extractor import PDFExtractor
 
 logging.basicConfig(
     level=logging.INFO,

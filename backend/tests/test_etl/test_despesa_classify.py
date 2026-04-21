@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from backend.domain.entities.despesa import TipoDespesa
-from backend.etl.scrapers.despesa_scraper import _classificar_tipo_despesa
+from backend.features.despesa.despesa_scraper import _classificar_tipo_despesa
+from backend.features.despesa.despesa_types import TipoDespesa
 
 
 class TestClassificarTipoDespesa:

@@ -14,47 +14,70 @@ Snapshot: 2026-04-21
 - `.gitignore`: exclusões padrão (`node_modules/`, `__pycache__/`, `.next/`, `venv/`, `*.db`)
 
 ## Backend (`backend/`)
-- `api/main.py`: aplicação FastAPI com prefixo `/api/v1`, lifespan, CORS e exception handler global
+
+### Arquitetura: Vertical Bounded Contexts (feature-first)
+
+- `api/main.py`: aplicação FastAPI com prefixo `/api/v1`, lifespan, CORS e exception handler global — importa routers dos features
 - `api/schemas.py`: schemas Pydantic base (`HealthCheckResponse`, `ErrorResponse`)
-- `api/schemas_receita.py`: schemas Pydantic para receitas e detalhamento
-- `api/schemas_despesa.py`: schemas Pydantic para despesas
-- `api/schemas_kpi.py`: schemas Pydantic para KPIs
-- `api/schemas_forecast.py`: schemas Pydantic para forecasting
-- `api/schemas_scraping.py`: schemas Pydantic para scraping
-- `api/schemas_licitacao.py`: schemas Pydantic para licitações
-- `api/schemas_movimento.py`: schemas Pydantic para movimento extra orçamentário
-- `api/routes/receitas.py`: endpoints de receitas (listagem, totais por ano/mês, categorias, detalhamento hierárquico)
-- `api/routes/despesas.py`: endpoints de despesas (listagem, totais por ano/mês)
-- `api/routes/kpis.py`: endpoints de KPIs financeiros (resumo, mensal, anual)
-- `api/routes/forecast.py`: endpoints de forecasting (receitas, despesas)
-- `api/routes/export.py`: endpoints de exportação (PDF, Excel)
-- `api/routes/scraping.py`: endpoints de controle do scraping (status, trigger manual, histórico de execuções)
-- `api/routes/movimento_extra.py`: proxy para API Quality de movimento extra orçamentário (ano, mês, tipo=R/D/AMBOS, agrupamento por fundo)
-- `api/routes/licitacoes.py`: proxy para licitações — ComprasBR (JSON paginado + detalhes por ID) e Quality (scraping HTML de dispensas)
-- `domain/entities/receita.py`: entidade de domínio Receita com validação e cálculos derivados
-- `domain/entities/despesa.py`: entidade de domínio Despesa com validação e cálculos derivados
-- `domain/repositories/receita_repository.py`: interface de repositório para receitas
-- `domain/services/forecasting_service.py`: serviço de previsão financeira com Prophet e fallback linear
-- `infrastructure/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
-- `infrastructure/database/models.py`: modelos ORM (ReceitaModel, DespesaModel, ForecastModel, MetadataETLModel, ReceitaDetalhamentoModel)
-- `infrastructure/database/migrations/`: migrations Alembic (preparado)
-- `infrastructure/repositories/sql_receita_repository.py`: implementação SQLAlchemy do repositório de receitas
-- `infrastructure/repositories/sql_despesa_repository.py`: implementação SQLAlchemy do repositório de despesas
-- `backend/Dockerfile`: imagem Python para execução da API FastAPI via uvicorn
-- `etl/extractors/pdf_entities.py`: entidades e utilitários para extração de PDFs (`TipoDocumento`, `ReceitaDetalhamento`, `ResultadoExtracao`, `parse_valor_monetario`, constantes)
-- `etl/extractors/pdf_parsers.py`: funções helper de parsing de tabelas e texto de PDFs
-- `etl/extractors/pdf_extractor.py`: classe `PDFExtractor` — orquestração da extração de receitas, despesas e detalhamento hierárquico
-- `etl/scrapers/quality_api_client.py`: cliente HTTP assíncrono para API do portal QualitySistemas (receitas e despesas com retry; despesas via rota com barra dupla)
-- `etl/scrapers/despesa_scraper.py`: parser de despesas QualitySistemas JSON → entidades Despesa (annual, natureza, merge com degradação graciosa)
-- `etl/transformers/`: transformadores de dados (preparado para expansão)
-- `etl/loaders/`: carregadores de dados (preparado para expansão)
-- `ml/`: modelos de ML (preparado para Prophet/scikit-learn)
-- `services/`: serviços de aplicação
-- `services/scraping_service.py`: orquestração do scraping QualitySistemas (receitas, despesas, detalhamento)
-- `services/scraping_helpers.py`: helpers de persistência e logging para scraping (`ScrapingResult`, upserts, replace, logs)
-- `services/scraping_scheduler.py`: scheduler APScheduler para scraping periódico (10 min) com disparo imediato no startup
-- `services/expense_pdf_sync_service.py`: sincronização do PDF de despesas em duas etapas (geração de path via `RelatorioPdf` + download do binário)
-- `services/historical_data_bootstrap_service.py`: bootstrap idempotente de anos históricos ausentes a partir dos PDFs no startup da API
+
+#### `shared/` — infraestrutura compartilhada
+- `shared/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
+- `shared/database/models.py`: modelos ORM (ReceitaModel, DespesaModel, ForecastModel, MetadataETLModel, ReceitaDetalhamentoModel, ScrapingLogModel)
+- `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
+- `shared/quality_api_client.py`: cliente HTTP assíncrono para API QualitySistemas
+
+#### `features/receita/`
+- `receita_types.py`: entidade Receita, TipoReceita, ReceitaRepository Protocol, schemas Pydantic
+- `receita_handler.py`: endpoints HTTP de receitas (listagem, totais, categorias, detalhamento)
+- `receita_data.py`: repositório SQL de receitas (SQLReceitaRepository)
+- `receita_scraper.py`: parser de receitas QualitySistemas JSON → entidades
+
+#### `features/despesa/`
+- `despesa_types.py`: entidade Despesa, TipoDespesa, schemas Pydantic
+- `despesa_handler.py`: endpoints HTTP de despesas (delega para data layer)
+- `despesa_data.py`: repositório SQL de despesas (SQLRepesaRepository) — queries de listagem, totais, categorias
+- `despesa_scraper.py`: parser de despesas QualitySistemas JSON → entidades
+
+#### `features/forecast/`
+- `forecast_types.py`: schemas Pydantic de forecasting (ForecastPoint, ForecastResponse)
+- `forecast_handler.py`: endpoints de forecasting (receitas, despesas)
+- `forecast_business.py`: serviço de previsão financeira com Prophet e fallback linear
+
+#### `features/kpi/`
+- `kpi_types.py`: schemas Pydantic de KPIs (KPIMensal, KPIAnual, KPIsResponse)
+- `kpi_handler.py`: endpoints de KPIs financeiros (resumo, mensal, anual)
+- `kpi_data.py`: consultas SQL agregadas para KPIs (totais anuais, mensais, por tipo)
+- `kpi_business.py`: lógica de domínio pura — cálculos de saldo, percentuais, agregações
+
+#### `features/licitacao/`
+- `licitacao_types.py`: schemas Pydantic de licitações (ComprasBR, dispensas Quality)
+- `licitacao_handler.py`: proxy para licitações — delega para adapter
+- `licitacao_adapter.py`: ACL para APIs externas — ComprasBR + Quality (scraping HTML)
+
+#### `features/movimento_extra/`
+- `movimento_extra_types.py`: schemas Pydantic de movimento extra orçamentário
+- `movimento_extra_handler.py`: proxy para API Quality — delega para adapter e business
+- `movimento_extra_adapter.py`: ACL para API externa Quality de movimento extra
+- `movimento_extra_business.py`: lógica de domínio — agrupamento por fundos, insights, totais
+
+#### `features/scraping/`
+- `scraping_types.py`: schemas Pydantic de scraping (status, trigger, histórico)
+- `scraping_handler.py`: endpoints de controle do scraping
+- `scraping_orchestrator.py`: orquestração do scraping QualitySistemas
+- `scraping_helpers.py`: helpers de persistência e logging para scraping
+- `scraping_scheduler.py`: scheduler APScheduler para scraping periódico (10 min)
+- `expense_pdf_sync_service.py`: sincronização do PDF de despesas
+- `historical_data_bootstrap_service.py`: bootstrap idempotente de anos históricos
+
+#### `features/export/`
+- `export_types.py`: tipos de exportação
+- `export_handler.py`: endpoints de exportação (Excel para receitas, despesas, KPIs)
+- `export_business.py`: lógica de domínio — conversão para DataFrame, geração Excel, formatação
+
+#### Camadas legadas (removidas)
+- `domain/`, `infrastructure/`, `services/`, `etl/`: **removidos** — re-exports backward-compat eliminados após migração completa para features/
+- `api/routes/`: re-exportam de `features/*/`
+- `api/schemas_*.py`: re-exportam de `features/*/`
 - `tests/test_api/`: testes de integração das rotas
 - `tests/test_api/test_licitacoes.py`: testes unitários do parser HTML de licitações Quality e do proxy ComprasBR
 - `tests/test_etl/`: testes do pipeline ETL (preparado)
@@ -176,6 +199,7 @@ Snapshot: 2026-04-21
 ## Scripts (`scripts/`)
 - `check_file_length.py`: gate de tamanho de arquivo (strict, sem bypass — Python ≤ 400, TS/TSX/JS ≤ 400)
 - `check_frontend_boundaries.py`: gate de fronteiras (frontend não importa de backend)
+- `check_cross_feature_imports.py`: gate de isolamento entre features (features só importam de `shared/`)
 - `check_no_console.py`: gate de console.log/print em código de produção
 - `check_alembic_migration.py`: gate de migration quando models.py muda
 - `run_governance_gates.py`: runner unificado (strict por padrão, exit 1 em falha)

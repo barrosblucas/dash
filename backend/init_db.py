@@ -12,18 +12,14 @@ from pathlib import Path
 # Adiciona o diretório raiz ao path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from backend.infrastructure.database.connection import db_manager, init_database
-from backend.etl.extractors.pdf_extractor import PDFExtractor
-from backend.infrastructure.database.models import (
-    ReceitaModel,
+
+
+from backend.shared.database.connection import db_manager, init_database
+from backend.shared.database.models import (
     DespesaModel,
-    MetadataETLModel,
+    ReceitaModel,
 )
-from backend.infrastructure.repositories.sql_receita_repository import (
-    SQLReceitaRepository,
-)
-from sqlalchemy.orm import Session
-from datetime import datetime
+from backend.shared.pdf_extractor import PDFExtractor
 
 
 def popular_banco_dados():

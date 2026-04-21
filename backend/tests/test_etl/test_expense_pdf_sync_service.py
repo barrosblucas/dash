@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from backend.services.expense_pdf_sync_service import ExpensePDFSyncService
+from backend.features.scraping.expense_pdf_sync_service import ExpensePDFSyncService
 
 
 class _FakeResponse:
@@ -93,7 +93,7 @@ async def test_sync_year_pdf_salva_arquivo_quando_resposta_valida(
         )
 
     monkeypatch.setattr(
-        "backend.services.expense_pdf_sync_service.httpx.AsyncClient",
+        "backend.features.scraping.expense_pdf_sync_service.httpx.AsyncClient",
         fake_async_client_factory,
     )
     monkeypatch.setattr(
@@ -150,7 +150,7 @@ async def test_sync_year_pdf_nao_substitui_arquivo_em_conteudo_invalido(
         )
 
     monkeypatch.setattr(
-        "backend.services.expense_pdf_sync_service.httpx.AsyncClient",
+        "backend.features.scraping.expense_pdf_sync_service.httpx.AsyncClient",
         fake_async_client_factory,
     )
 
@@ -180,7 +180,7 @@ async def test_sync_year_pdf_retorna_falha_em_http_500(
         )
 
     monkeypatch.setattr(
-        "backend.services.expense_pdf_sync_service.httpx.AsyncClient",
+        "backend.features.scraping.expense_pdf_sync_service.httpx.AsyncClient",
         fake_async_client_factory,
     )
 
@@ -217,7 +217,7 @@ async def test_sync_year_pdf_reprova_pdf_muito_pequeno(
         )
 
     monkeypatch.setattr(
-        "backend.services.expense_pdf_sync_service.httpx.AsyncClient",
+        "backend.features.scraping.expense_pdf_sync_service.httpx.AsyncClient",
         fake_async_client_factory,
     )
 
@@ -259,7 +259,7 @@ async def test_sync_year_pdf_reprova_pdf_sem_paginas_e_preserva_anterior(
         )
 
     monkeypatch.setattr(
-        "backend.services.expense_pdf_sync_service.httpx.AsyncClient",
+        "backend.features.scraping.expense_pdf_sync_service.httpx.AsyncClient",
         fake_async_client_factory,
     )
     monkeypatch.setattr(

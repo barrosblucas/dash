@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from backend.etl.scrapers.receita_scraper import ReceitaScraper
+from backend.features.receita.receita_scraper import ReceitaScraper
 
 
 @pytest.fixture

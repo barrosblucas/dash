@@ -16,10 +16,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from backend.infrastructure.database.connection import db_manager, init_database
-from backend.etl.extractors.pdf_extractor import PDFExtractor
-from backend.infrastructure.database.models import ReceitaModel, DespesaModel
 from sqlalchemy import text
+
+from backend.shared.database.connection import db_manager, init_database
+from backend.shared.database.models import DespesaModel, ReceitaModel
+from backend.shared.pdf_extractor import PDFExtractor
 
 
 def limpar_dados(session):

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from backend.etl.scrapers.despesa_scraper import _parse_brazilian_currency
+from backend.features.despesa.despesa_scraper import _parse_brazilian_currency
 
 
 class TestParseBrazilianCurrency:

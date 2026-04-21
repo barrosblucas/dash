@@ -9,8 +9,8 @@ from typing import Any
 import pytest
 from apscheduler.triggers.interval import IntervalTrigger
 
-from backend.services.expense_pdf_sync_service import ExpensePDFSyncResult
-from backend.services.scraping_scheduler import ScrapingScheduler
+from backend.features.scraping.expense_pdf_sync_service import ExpensePDFSyncResult
+from backend.features.scraping.scraping_scheduler import ScrapingScheduler
 
 
 def test_start_configura_intervalo_de_dez_minutos_e_execucao_imediata(

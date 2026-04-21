@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from backend.domain.entities.despesa import Despesa
-from backend.services.scraping_service import ScrapingService
+from backend.features.despesa.despesa_types import Despesa
+from backend.features.scraping.scraping_orchestrator import ScrapingService
 from backend.tests.test_etl.conftest import LogCapture, _build_despesa
 
 
@@ -53,15 +53,15 @@ async def test_scrape_despesas_usa_fallback_pdf_quando_api_vazia(
         service, "_load_despesas_from_pdf", fake_load_despesas_from_pdf
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._replace_despesas_for_year",
+        "backend.features.scraping.scraping_orchestrator._replace_despesas_for_year",
         fake_replace_despesas_for_year,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._create_log",
+        "backend.features.scraping.scraping_orchestrator._create_log",
         log_capture.create_log,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._finalize_log",
+        "backend.features.scraping.scraping_orchestrator._finalize_log",
         log_capture.finalize_log,
     )
 
@@ -109,15 +109,15 @@ async def test_scrape_despesas_retorna_no_data_e_nao_replace_quando_sem_fonte(
         service, "_load_despesas_from_pdf", fake_load_despesas_from_pdf
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._replace_despesas_for_year",
+        "backend.features.scraping.scraping_orchestrator._replace_despesas_for_year",
         fail_if_replace_called,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._create_log",
+        "backend.features.scraping.scraping_orchestrator._create_log",
         log_capture.create_log,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._finalize_log",
+        "backend.features.scraping.scraping_orchestrator._finalize_log",
         log_capture.finalize_log,
     )
 
@@ -184,15 +184,15 @@ async def test_scrape_despesas_nao_usa_fallback_quando_api_tem_dados(
         service, "_load_despesas_from_pdf", fake_load_despesas_from_pdf
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._replace_despesas_for_year",
+        "backend.features.scraping.scraping_orchestrator._replace_despesas_for_year",
         fake_replace_despesas_for_year,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._create_log",
+        "backend.features.scraping.scraping_orchestrator._create_log",
         log_capture.create_log,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._finalize_log",
+        "backend.features.scraping.scraping_orchestrator._finalize_log",
         log_capture.finalize_log,
     )
 
@@ -280,15 +280,15 @@ async def test_scrape_despesas_ignora_natureza_sem_annual_e_usa_pdf(
         fake_load_despesas_from_pdf,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._replace_despesas_for_year",
+        "backend.features.scraping.scraping_orchestrator._replace_despesas_for_year",
         fake_replace_despesas_for_year,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._create_log",
+        "backend.features.scraping.scraping_orchestrator._create_log",
         log_capture.create_log,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._finalize_log",
+        "backend.features.scraping.scraping_orchestrator._finalize_log",
         log_capture.finalize_log,
     )
 
@@ -372,19 +372,19 @@ async def test_scrape_despesas_2026_usa_replace_por_ano(
         lambda annual, natureza: despesas,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._replace_despesas_for_year",
+        "backend.features.scraping.scraping_orchestrator._replace_despesas_for_year",
         fake_replace_despesas_for_year,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._upsert_despesas",
+        "backend.features.scraping.scraping_orchestrator._upsert_despesas",
         fake_upsert_despesas,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._create_log",
+        "backend.features.scraping.scraping_orchestrator._create_log",
         fake_create_log,
     )
     monkeypatch.setattr(
-        "backend.services.scraping_service._finalize_log",
+        "backend.features.scraping.scraping_orchestrator._finalize_log",
         fake_finalize_log,
     )
 

@@ -11,9 +11,9 @@ from typing import Any
 
 import pytest
 
-from backend.domain.entities.despesa import Despesa, TipoDespesa
-from backend.etl.scrapers.despesa_scraper import DespesaScraper
-from backend.services.scraping_service import ScrapingService
+from backend.features.despesa.despesa_scraper import DespesaScraper
+from backend.features.despesa.despesa_types import Despesa, TipoDespesa
+from backend.features.scraping.scraping_orchestrator import ScrapingService
 
 
 @pytest.fixture
@@ -80,6 +80,6 @@ def log_capture() -> LogCapture:
 def patch_db_session(monkeypatch: pytest.MonkeyPatch) -> None:
     """Patch db_manager.get_session para evitar I/O de banco."""
     monkeypatch.setattr(
-        "backend.services.scraping_service.db_manager.get_session",
+        "backend.features.scraping.scraping_orchestrator.db_manager.get_session",
         _fake_session_context,
     )

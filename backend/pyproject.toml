@@ -50,6 +50,7 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
+pythonpath = [".."]
 addopts = "-ra -q --cov=backend --cov-report=term-missing"
 testpaths = [
     "tests",

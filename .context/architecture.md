@@ -10,24 +10,38 @@ Plataforma de visualização e análise de dados financeiros municipais com ETL 
 ```
 dashboard/
 ├── backend/                  # API FastAPI (Python)
-│   ├── api/                  # Rotas HTTP e schemas Pydantic
-│   │   ├── main.py           # Aplicação FastAPI com lifespan
-│   │   ├── schemas.py        # Schemas de entrada/saída
-│   │   └── routes/           # Rotas por domínio (receitas, despesas, kpis, forecast, export)
-│   ├── domain/               # Entidades e regras de negócio
-│   │   ├── entities/         # Entidades de domínio (Receita, Despesa)
-│   │   ├── repositories/     # Interfaces de repositório (contratos)
-│   │   ├── services/         # Serviços de domínio (forecasting)
-│   │   └── usecases/         # Casos de uso (preparado para expansão)
-│   ├── infrastructure/       # Infraestrutura técnica
-│   │   ├── database/         # Engine SQLAlchemy, session factory, models ORM
-│   │   └── repositories/     # Implementações concretas de repositórios
-│   ├── etl/                  # Pipeline de extração/transformação/carga
-│   │   ├── extractors/       # Extração de PDFs (pdfplumber)
-│   │   ├── transformers/     # Transformação de dados (preparado)
-│   │   └── loaders/          # Carga no banco (preparado)
-│   ├── ml/                   # Modelos de ML (preparado para Prophet/scikit-learn)
-│   ├── services/             # Serviços de aplicação (preparado)
+│   ├── api/                  # Entry point HTTP
+│   │   ├── main.py           # Aplicação FastAPI com lifespan, router registration
+│   │   └── schemas.py        # Schemas base (HealthCheck, ErrorResponse)
+│   ├── features/             # Bounded contexts verticais (feature-first)
+│   │   ├── receita/          # Contexto de receitas
+│   │   │   ├── receita_types.py    # Entidade, Enums, Protocol, Schemas Pydantic
+│   │   │   ├── receita_handler.py  # Rotas HTTP (delega para data/business)
+│   │   │   ├── receita_data.py     # SQL Repository (persistência)
+│   │   │   └── receita_scraper.py  # Parser QualitySistemas → entidades
+│   │   ├── despesa/          # Contexto de despesas (mesmo padrão)
+│   │   ├── forecast/         # Contexto de forecasting
+│   │   │   ├── forecast_types.py
+│   │   │   ├── forecast_handler.py
+│   │   │   └── forecast_business.py  # Lógica Prophet isolada, testável
+│   │   ├── kpi/              # Contexto de KPIs
+│   │   ├── licitacao/        # Contexto de licitações
+│   │   ├── movimento_extra/  # Contexto de movimento extra
+│   │   ├── scraping/         # Contexto de scraping/orquestração
+│   │   │   ├── scraping_types.py
+│   │   │   ├── scraping_handler.py
+│   │   │   ├── scraping_orchestrator.py  # Orquestração principal
+│   │   │   ├── scraping_helpers.py       # Persistência + logging
+│   │   │   ├── scraping_scheduler.py     # APScheduler
+│   │   │   ├── expense_pdf_sync_service.py
+│   │   │   └── historical_data_bootstrap_service.py
+│   │   └── export/           # Contexto de exportação
+│   ├── shared/               # Infraestrutura compartilhada entre features
+│   │   ├── database/
+│   │   │   ├── connection.py # Engine SQLAlchemy, session factory, DatabaseManager
+│   │   │   └── models.py     # Modelos ORM (todos, schema compartilhado)
+│   │   ├── pdf_extractor.py  # Extração de PDFs consolidada
+│   │   └── quality_api_client.py # Cliente HTTP QualitySistemas
 │   └── tests/                # Testes pytest
 │       ├── test_api/         # Testes de integração das rotas
 │       ├── test_etl/         # Testes do pipeline ETL
@@ -76,40 +90,59 @@ dashboard/
 - `frontend/` consome `backend/` exclusivamente via HTTP (`/api/v1/*`)
 - Schemas Pydantic (`backend/api/schemas.py`) definem o contrato da API
 - Tipos TypeScript (`frontend/types/`) espelham os schemas Pydantic
-- ORM SQLAlchemy fica restrito ao `backend/infrastructure/`
-- Entidades de domínio (`backend/domain/entities/`) não dependem de SQLAlchemy
+- ORM SQLAlchemy fica restrito a `*_data.py` dentro de cada feature e a `shared/database/`
+- Entidades de domínio em `*_types.py` não dependem de SQLAlchemy, FastAPI ou Prophet
+- Features só importam de `shared/` — sem imports cross-feature (validado por `check_cross_feature_imports.py`)
 
-## Feature-first (organização por domínio)
+## Vertical Bounded Contexts (feature-first)
 
-Cada feature do sistema (receita, despesa, forecast, kpi, export) é organizada por domínio **dentro de cada camada**. Isso significa que os arquivos de uma feature ficam distribuídos nas camadas corretas (api, domain, infrastructure, tests), mas sempre nomeados e agrupados por domínio.
+O backend é organizado em bounded contexts verticais dentro de `features/`. Cada feature é autossuficiente — contém seus próprios tipos, handlers, lógica de negócio e persistência. Features só dependem de `shared/` e nunca importam umas das outras.
+
+### Convenção de arquivos por feature
+
+| Sufixo | Responsabilidade | Pode importar | Não pode importar |
+|--------|-----------------|---------------|-------------------|
+| `*_types.py` | Entidades, Enums, Protocols, Schemas Pydantic | Apenas stdlib + pydantic | SQLAlchemy, FastAPI, Prophet |
+| `*_handler.py` | Endpoints HTTP — recebe request, delega | FastAPI, types, data, business, adapter | Lógica de negócio inline |
+| `*_business.py` | Lógica de domínio pura (ex: Prophet) | types, libs de domínio | SQLAlchemy, FastAPI, HTTP |
+| `*_data.py` | Persistência (SQL Repository) | SQLAlchemy, types | FastAPI, HTTP |
+| `*_adapter.py` | ACL para APIs externas | httpx, types | FastAPI, SQLAlchemy |
+| `*_scraper.py` | Parser de dados externos → entidades | types, shared | FastAPI, SQLAlchemy |
 
 ### Features atuais
 
-| Feature | API Route | Entidade | Repository | Service | Types (Frontend) |
-|---------|-----------|----------|------------|---------|------------------|
-| Receita | `routes/receitas.py` | `entities/receita.py` | `repositories/receita_repository.py` | — | `types/receita.ts` |
-| Despesa | `routes/despesas.py` | `entities/despesa.py` | `repositories/sql_despesa_repository.py` | — | `types/despesa.ts` |
-| Forecast | `routes/forecast.py` | — | — | `services/forecasting_service.py` | — |
-| KPI | `routes/kpis.py` | — | — | — | — |
-| Export | `routes/export.py` | — | — | — | — |
-| ETL | — | — | — | `etl/extractors/pdf_extractor.py` | — |
+| Feature | Diretório | Arquivos |
+|---------|-----------|----------|
+| Receita | `features/receita/` | types, handler, data, scraper |
+| Despesa | `features/despesa/` | types, handler, data, scraper |
+| Forecast | `features/forecast/` | types, handler, business, data |
+| KPI | `features/kpi/` | types, handler, data, business |
+| Licitação | `features/licitacao/` | types, handler, adapter |
+| Movimento Extra | `features/movimento_extra/` | types, handler, adapter, business |
+| Scraping | `features/scraping/` | types, handler, orchestrator, helpers, scheduler, expense_pdf_sync_service, historical_data_bootstrap_service |
+| Export | `features/export/` | types, handler, business |
 
 ### Regra de adição de feature
 
-Ao adicionar uma nova feature, criar os arquivos em cada camada relevante:
-1. `api/routes/<feature>.py` — route handler
-2. Schemas em `api/schemas.py` — contratos Pydantic
-3. `domain/entities/<feature>.py` — entidade de domínio (se aplicável)
-4. `domain/services/<feature>_service.py` — lógica de negócio
-5. `infrastructure/repositories/sql_<feature>_repository.py` — persistência
-6. `tests/test_<camada>/test_<feature>.py` — testes
-7. `frontend/types/<feature>.ts` — tipos TypeScript
+Ao adicionar uma nova feature, criar diretório em `features/<nome>/`:
+1. `<nome>_types.py` — entidades, enums, schemas Pydantic
+2. `<nome>_handler.py` — rotas HTTP (delega para data/business)
+3. `<nome>_data.py` — persistência SQL (se aplicável)
+4. `<nome>_business.py` — lógica de domínio (se aplicável)
+5. `<nome>_scraper.py` — parser de dados externos (se aplicável)
+6. `tests/test_<camada>/test_<nome>.py` — testes
+7. `frontend/types/<nome>.ts` — tipos TypeScript
 
 ### Shared vs Feature
 
-- **Shared** (`lib/`, `ui/`, `utils/`): somente código reusado por 2+ features de forma estável
-- **Feature**: código específico de um domínio de negócio
-- **Nunca** colocar lógica de negócio em `utils/` ou `lib/`
+- **Shared** (`shared/`): infraestrutura compartilhada (database, pdf_extractor, quality_api_client)
+- **Feature** (`features/<nome>/`): código específico de um domínio de negócio
+- **Nunca** colocar lógica de negócio em `shared/`
+- Features nunca importam de outras features — isolamento validado por `check_cross_feature_imports.py`
+
+### Backward compatibility
+
+Localizações antigas (`domain/`, `infrastructure/`, `services/`, `etl/`, `api/routes/`, `api/schemas_*`) são mantidas como re-exports para compatibilidade. Devem ser removidas quando todos os consumidores forem migrados.
 
 ## Fluxo principal (alto nível)
 
@@ -122,31 +155,40 @@ Ao adicionar uma nova feature, criar os arquivos em cada camada relevante:
 7. Serviço de forecasting gera previsões com Prophet ou projeção linear
 8. Exportação gera relatórios em PDF (reportlab) e Excel (openpyxl)
 
-## Camadas do backend
+## Camadas do backend (vertical slicing)
+
+Cada feature é um slice vertical autossuficiente:
 
 ```
-api/routes/        → Controllers HTTP (recebem request, delegam para services)
-api/schemas.py     → Contratos de entrada/saída (Pydantic)
-domain/entities/   → Entidades de negócio puras (dataclasses)
-domain/services/   → Lógica de domínio (forecasting, cálculos)
-domain/repositories/ → Interfaces de persistência (contratos)
-infrastructure/repositories/ → Implementação SQLAlchemy dos repositórios
-infrastructure/database/ → Engine, session, models ORM
-etl/               → Pipeline de ingestão de PDFs
+features/<nome>/
+  *_types.py       → Entidades, Enums, Protocols, Schemas (sem infra)
+  *_handler.py     → Controllers HTTP (delegação, sem lógica)
+  *_business.py    → Lógica de domínio pura (sem infra, sem HTTP)
+  *_data.py        → Persistência SQL (SQLAlchemy)
+  *_adapter.py     → ACL para APIs externas (httpx, parsing)
+  *_scraper.py     → Parser de dados externos → entidades
+shared/
+  database/        → Engine, session, models ORM (compartilhado)
+  pdf_extractor.py → Extração de PDFs
+  quality_api_client.py → Cliente HTTP Quality
 ```
 
 ### Regra de dependência
 
 ```
-api → domain ← infrastructure
-         ↑
-        services, entities, repositories (interfaces)
+handler → types, data, business, adapter
+business → types
+data → types, shared/database
+adapter → types, httpx (ou lib HTTP equivalente)
+scraper → types, shared
+types → (nenhuma dependência externa)
 ```
 
-- `api/` depende de `domain/` (services, interfaces de repositório)
-- `domain/` não depende de nada externo
-- `infrastructure/` implementa interfaces de `domain/`
-- `etl/` depende de `domain/entities/` mas não de `infrastructure/`
+- `*_types.py` não depende de nada externo (nem SQLAlchemy, nem FastAPI, nem Prophet)
+- `*_handler.py` orquestra chamadas, não contém lógica de negócio
+- `*_business.py` não conhece HTTP nem persistência
+- `*_data.py` implementa persistência via SQLAlchemy
+- Features não importam de outras features — isolamento garantido por gate
 
 ## Modelo de dados
 
@@ -160,10 +202,23 @@ api → domain ← infrastructure
 - `TipoReceita`: CORRENTE | CAPITAL
 - `TipoDespesa`: CORRENTE | CAPITAL | CONTINGENCIA
 
-## Decisão arquitetural atual
+## Decisões arquiteturais
+
+### ADR-001: Migração para Vertical Bounded Contexts (2026-04-21)
+
+**Contexto**: Backend organizado em camadas horizontais (`api/`, `domain/`, `infrastructure/`, `services/`, `etl/`). Para adicionar ou modificar uma feature, era necessário tocar múltiplos diretórios.
+
+**Decisão**: Migrar para bounded contexts verticais (`features/<nome>/`) onde cada feature contém seus tipos, handlers, lógica e persistência. Infraestrutura compartilhada isolada em `shared/`.
+
+**Consequências**:
+- Cada feature é autossuficiente — mudanças ficam localizadas
+- Isolamento entre features enforce por gate `check_cross_feature_imports.py`
+- Convenção de sufixos (`*_types`, `*_handler`, `*_business`, `*_data`) substitui diretórios por camada
+- Re-exports backward-compatible mantidos temporariamente nas localizações antigas
+
+### Decisões anteriores
 
 Projeto em bootstrap com arquitetura limpa preparada para evolução:
-- Backend com separação domain/infrastructure/api
 - ETL funcional para extração de PDFs
 - Forecasting com Prophet (com fallback para projeção linear)
 - Frontend com dashboard interativo e API client centralizado
