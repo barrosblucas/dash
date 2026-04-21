@@ -78,7 +78,7 @@ async def listar_receitas(
     tipo_enum = _parse_tipo_receita(tipo)
 
     repo = SQLReceitaRepository(db)
-    receitas = repo.list(
+    receitas = repo.list_all(
         ano=ano,
         mes=mes,
         categoria=categoria,

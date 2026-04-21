@@ -13,7 +13,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from enum import Enum, StrEnum
+from enum import StrEnum
 from typing import Protocol
 
 from pydantic import BaseModel, Field
@@ -22,7 +22,7 @@ from pydantic import BaseModel, Field
 # ENTITY + ENUM
 # ═══════════════════════════════════════════════════════════════════════════
 
-class TipoReceita(str, Enum):
+class TipoReceita(StrEnum):
     """Enumeração dos tipos de receita."""
 
     CORRENTE = "RECEITAS CORRENTES"
@@ -133,7 +133,7 @@ class ReceitaRepository(Protocol):
     def get_by_id(self, receita_id: int) -> Receita | None: ...
 
     @abstractmethod
-    def list(
+    def list_all(
         self,
         ano: int | None = None,
         mes: int | None = None,

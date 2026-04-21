@@ -4,7 +4,6 @@ Implementação do repositório de receitas usando SQLAlchemy.
 Fornece persistência de receitas em banco SQLite/PostgreSQL.
 """
 
-import builtins
 from decimal import Decimal
 
 from sqlalchemy import and_, func
@@ -108,7 +107,7 @@ class SQLReceitaRepository:
         )
         return self._to_entity(model) if model else None
 
-    def list(
+    def list_all(
         self,
         ano: int | None = None,
         mes: int | None = None,
@@ -251,7 +250,7 @@ class SQLReceitaRepository:
         total = query.scalar()
         return Decimal(str(total)) if total else Decimal("0")
 
-    def get_categorias(self) -> builtins.list[str]:
+    def get_categorias(self) -> list[str]:
         """Retorna todas as categorias de receita cadastradas."""
         results = (
             self.session.query(ReceitaModel.categoria)

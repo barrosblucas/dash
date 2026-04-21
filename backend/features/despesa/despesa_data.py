@@ -3,7 +3,6 @@ Repositório SQL para Despesas.
 Dashboard Financeiro - Bandeirantes MS
 """
 
-import builtins
 from decimal import Decimal
 
 from sqlalchemy import and_, func
@@ -30,7 +29,7 @@ class SQLDespesaRepository:
 
         return self._model_to_entity(model)
 
-    def list(
+    def list_all(
         self,
         ano: int | None = None,
         mes: int | None = None,
@@ -129,7 +128,7 @@ class SQLDespesaRepository:
 
         return Decimal(str(result)) if result else Decimal("0")
 
-    def get_categorias(self) -> builtins.list[str]:
+    def get_categorias(self) -> list[str]:
         """Retorna todas as categorias de despesa cadastradas."""
         categorias = self.db.query(DespesaModel.categoria).distinct().all()
         return [c[0] for c in categorias if c[0]]

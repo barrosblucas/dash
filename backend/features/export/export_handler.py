@@ -51,7 +51,7 @@ async def export_receitas_excel(
         except KeyError:
             tipo_enum = None
 
-    receitas = repo.list(ano=ano, tipo=tipo_enum, limit=10000)
+    receitas = repo.list_all(ano=ano, tipo=tipo_enum, limit=10000)
     df = receitas_to_dataframe(receitas)
     output = dataframe_to_excel(df, "Receitas")
     filename = generate_filename("receitas", str(ano) if ano else "todos")
@@ -81,7 +81,7 @@ async def export_despesas_excel(
         except KeyError:
             tipo_enum = None
 
-    despesas = repo.list(ano=ano, tipo=tipo_enum, limit=10000)
+    despesas = repo.list_all(ano=ano, tipo=tipo_enum, limit=10000)
     df = despesas_to_dataframe(despesas)
     output = dataframe_to_excel(df, "Despesas")
     filename = generate_filename("despesas", str(ano) if ano else "todos")

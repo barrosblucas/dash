@@ -132,7 +132,7 @@ class DatabaseManager:
         self.create_tables()
 
     @contextmanager
-    def get_session(self) -> Generator[Session, None, None]:
+    def get_session(self) -> Generator[Session]:
         """
         Context manager para obter uma sessão do banco.
 
@@ -205,7 +205,7 @@ class DatabaseManager:
 db_manager = DatabaseManager()
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     """
     Dependency injection para FastAPI.
 

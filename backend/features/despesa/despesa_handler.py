@@ -66,7 +66,7 @@ async def listar_despesas(
     tipo_enum = _parse_tipo_despesa(tipo)
 
     repo = SQLDespesaRepository(db)
-    despesas = repo.list(
+    despesas = repo.list_all(
         ano=ano,
         mes=mes,
         categoria=categoria,

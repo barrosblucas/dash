@@ -150,3 +150,35 @@ Os diretórios layer-first (`domain/`, `infrastructure/`, `services/`, `etl/`) f
 - **ruff check**: All checks passed
 - **pytest**: 76 passed, 0 failed
 - **governance gates**: 4/5 passed (check_file_length é débito técnico pré-existente em `shared/pdf_extractor.py`)
+
+---
+
+## [FIX] Corrige TypeError ao importar backend por shadowing do built-in `list`
+
+### Contexto
+Ao iniciar a aplicação, ocorria `TypeError: 'function' object is not subscriptable` em `despesa_data.py:234` (`list_categorias`). O método `list` definido anteriormente na classe `SQLDespesaRepository` sombreava o built-in `list`, invalidando type hints como `list[str]` em métodos subsequentes.
+
+### Mudanças
+- **Renomeado** método `list` → `list_all` em `SQLDespesaRepository` (`despesa_data.py`) e `SQLReceitaRepository` (`receita_data.py`)
+- **Atualizado** Protocol `ReceitaRepository` (`receita_types.py`) para refletir o novo nome
+- **Atualizados** call sites nos handlers:
+  - `despesa_handler.py`
+  - `receita_handler.py`
+  - `export_handler.py`
+- **Removido** uso de `builtins.list` como workaround em `get_categorias` (ambos os repositórios)
+- **Ajustados** enums `TipoDespesa` e `TipoReceita` para herdar de `StrEnum` (resolve UP042 do ruff)
+- **Removidos** imports de `Enum` e `builtins` não utilizados
+
+### Arquivos modificados
+- `backend/features/despesa/despesa_data.py`
+- `backend/features/despesa/despesa_handler.py`
+- `backend/features/despesa/despesa_types.py`
+- `backend/features/receita/receita_data.py`
+- `backend/features/receita/receita_handler.py`
+- `backend/features/receita/receita_types.py`
+- `backend/features/export/export_handler.py`
+
+### Validação
+- **ruff check**: All checks passed
+- **Importação de `backend.api.main`**: ✅ OK (erro original eliminado)
+- **pytest**: Não executável no ambiente atual por falta de dependências do venv ativo, mas nenhuma lógica de negócio foi alterada

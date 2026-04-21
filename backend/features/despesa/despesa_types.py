@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from enum import Enum, StrEnum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 # ENTITY + ENUM
 # ═══════════════════════════════════════════════════════════════════════════
 
-class TipoDespesa(str, Enum):
+class TipoDespesa(StrEnum):
     """Enumeração dos tipos de despesa."""
 
     CORRENTE = "CORRENTE"
