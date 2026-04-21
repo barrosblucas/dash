@@ -81,6 +81,30 @@
 - `python3 scripts/run_governance_gates.py`: 3 arquivos da Fase 1 removidos da lista de violações; restam apenas arquivos das Fases 2–4.
 - `pytest backend/tests/`: 100% passando (76 testes).
 
+## Refatoração Fase 2 — Split de arquivos de teste backend > 400 linhas
+
+### Movido
+- **`backend/tests/test_etl/test_despesa_scraper.py`** (519 → removido): split por classe de teste em 5 arquivos independentes:
+  - `test_despesa_currency.py` — `TestParseBrazilianCurrency` (13 testes)
+  - `test_despesa_classify.py` — `TestClassificarTipoDespesa` (6 testes)
+  - `test_despesa_annual.py` — `TestParseDespesasAnnual` (7 testes)
+  - `test_despesa_natureza.py` — `TestParseDespesasNatureza` (8 testes)
+  - `test_despesa_merge.py` — `TestMergeDespesas` (6 testes)
+- **`backend/tests/test_etl/test_scraping_service.py`** (672 → removido): split por cenário em 3 arquivos + `conftest.py`:
+  - `conftest.py` — fixtures compartilhadas (`scraper`, `service`, `log_capture`, `patch_db_session`, `_build_despesa`, `LogCapture`, `_fake_session_context`)
+  - `test_scraping_despesas.py` — testes de scraping de despesas: fallback PDF, no-data, API com dados, ignora natureza, replace por ano (5 testes)
+  - `test_scraping_receitas.py` — teste de scraping de receitas: replace por ano (1 teste)
+  - `test_scraping_pdf_load.py` — testes de `_load_despesas_from_pdf`: retorna dados do extractor, retorna vazio em exceção (2 testes)
+
+### Atualizado
+- Imports em `test_scraping_despesas.py` e `test_scraping_receitas.py` ajustados para usar fixtures e helpers do `conftest.py`.
+- Fake `_build_despesa` e `LogCapture` centralizados no `conftest.py` para eliminar duplicação entre testes de scraping.
+
+### Validação
+- `python3 scripts/run_governance_gates.py`: 2 arquivos da Fase 2 removidos da lista de violações; restam apenas 4 arquivos frontend (Fases 3–4).
+- `pytest backend/tests/test_etl/`: 100% passando (66 testes).
+- `ruff check backend/tests/test_etl/`: passando sem erros.
+
 ## frontend/app/avisos-licitacoes/avisos-licitacoes-client.tsx
 
 ### Adicionado
