@@ -3,10 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { useThemeStore } from '@/stores/themeStore';
-import { MUNICIPIO } from '@/lib/constants';
-import Icon from '@/components/ui/Icon';
-
 interface SidebarProps {
   onClose?: () => void;
 }
@@ -22,45 +18,50 @@ const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: 'space_dashboard' },
   { name: 'Receitas', href: '/receitas', icon: 'trending_up' },
   { name: 'Despesas', href: '/despesas', icon: 'trending_down' },
-  { name: 'Previsoes', href: '/forecast', icon: 'insights' },
+  { name: 'Previsões', href: '/forecast', icon: 'insights' },
   { name: 'Comparativo', href: '/comparativo', icon: 'compare_arrows' },
-  { name: 'Relatorios', href: '/relatorios', icon: 'description' },
   { name: 'Mov. Extra', href: '/movimento-extra', icon: 'account_balance' },
+  { name: 'Obras', href: '/obras', icon: 'construction' },
   { name: 'Licitações', href: '/avisos-licitacoes', icon: 'gavel' },
+  { name: 'Relatórios', href: '/relatorios', icon: 'description' },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <div className="flex flex-col h-full bg-surface-container-low">
+    <div className="flex flex-col h-full bg-surface-container-low dark:bg-slate-900">
       {/* Logo */}
-      <div className="flex items-center gap-3 h-16 px-5">
+      <div className="flex items-center gap-3 px-5 py-5">
         <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
-          <Icon name="account_balance" filled size={20} className="text-on-primary" />
+          <span
+            className="material-symbols-outlined text-on-primary"
+            style={{ fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20", fontSize: '20px' }}
+          >
+            account_balance
+          </span>
         </div>
         <div className="flex flex-col min-w-0">
-          <span className="text-label-lg font-display font-semibold text-on-surface truncate">
-            Financeiro
+          <span className="text-label-lg font-headline font-bold text-on-surface truncate">
+            Gestão Municipal
           </span>
-          <span className="text-label-sm text-on-surface-variant">
-            {MUNICIPIO.nome}
+          <span className="text-label-sm text-on-surface-variant font-label">
+            Exercício 2024
           </span>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="ml-auto p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors lg:hidden"
+            className="ml-auto p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors md:hidden"
             aria-label="Fechar menu"
           >
-            <Icon name="close" size={20} />
+            <span className="material-symbols-outlined">close</span>
           </button>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
 
@@ -70,24 +71,25 @@ export default function Sidebar({ onClose }: SidebarProps) {
               href={item.href}
               onClick={onClose}
               className={`
-                group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
+                group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-primary-container/20 text-primary'
+                  ? 'bg-primary/10 text-primary'
                   : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
                 }
               `}
             >
               <span
                 className={`
-                  flex items-center justify-center w-8 h-8 rounded-lg transition-colors
+                  material-symbols-outlined text-[20px] leading-none transition-colors
                   ${isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-transparent text-on-surface-variant group-hover:text-on-surface'
+                    ? 'text-primary'
+                    : 'text-on-surface-variant group-hover:text-on-surface'
                   }
                 `}
+                style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
               >
-                <Icon name={item.icon} filled={isActive} size={20} />
+                {item.icon}
               </span>
               <span className="truncate">{item.name}</span>
               {isActive && (
@@ -99,27 +101,26 @@ export default function Sidebar({ onClose }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 space-y-2">
-        {/* Theme toggle */}
+      <div className="p-4 space-y-3">
+        {/* Download open data */}
         <button
-          onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                     text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high
-                     transition-all duration-200"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+                     bg-secondary text-on-secondary font-headline font-bold text-sm
+                     hover:bg-secondary-600 transition-colors duration-200"
         >
-          <span className="flex items-center justify-center w-8 h-8">
-            <Icon
-              name={theme === 'dark' ? 'light_mode' : 'dark_mode'}
-              size={20}
-            />
-          </span>
-          <span>{theme === 'dark' ? 'Modo claro' : 'Modo escuro'}</span>
+          <span className="material-symbols-outlined text-[18px]">download</span>
+          Baixar Dados Abertos
         </button>
 
-        {/* Data period badge */}
-        <div className="px-3 py-2.5 rounded-xl bg-surface-container-high">
-          <p className="text-label-sm text-on-surface-variant">Periodo dos dados</p>
-          <p className="text-label-md font-medium text-on-surface mt-0.5">2016 - 2026</p>
+        {/* Links */}
+        <div className="flex items-center justify-center gap-4 text-label-sm text-on-surface-variant">
+          <a href="#" className="hover:text-on-surface transition-colors">
+            Suporte
+          </a>
+          <span className="text-outline-variant">·</span>
+          <a href="#" className="hover:text-on-surface transition-colors">
+            Privacidade
+          </a>
         </div>
       </div>
     </div>

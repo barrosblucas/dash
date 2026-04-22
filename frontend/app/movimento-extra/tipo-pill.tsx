@@ -1,6 +1,5 @@
 'use client';
 
-/** Botão pill do tipo de filtro */
 export function TipoPill({
   active,
   onClick,
@@ -14,11 +13,11 @@ export function TipoPill({
     <button
       onClick={onClick}
       className={`
-        px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
+        rounded-full px-4 py-2 text-label-md font-medium transition-all duration-200
         ${
           active
-            ? 'bg-primary/15 text-primary ring-1 ring-primary/25 shadow-ambient'
-            : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+            ? 'bg-primary text-on-primary dark:bg-primary/80 dark:text-white shadow-ambient'
+            : 'bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60 hover:text-on-surface'
         }
       `}
     >

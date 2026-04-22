@@ -5,12 +5,12 @@ import { useState, useCallback, useMemo } from 'react';
 import type { ReceitaDetalhamento } from '@/types/receita';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 
-// --- Props ---
+/* ── Props ── */
 interface ReceitaDetalhamentoTableProps {
   itens: ReceitaDetalhamento[];
 }
 
-// --- Indentação por nível ---
+/* ── Indentação por nível ── */
 const INDENT_MAP: Record<number, string> = {
   1: 'pl-3',
   2: 'pl-11',
@@ -23,14 +23,14 @@ function getIndent(nivel: number): string {
   return INDENT_MAP[nivel] ?? 'pl-[8.5rem]';
 }
 
-// --- Cor do % de execução ---
+/* ── Cor do % de execução ── */
 function getExecColor(pct: number): string {
   if (pct >= 90) return 'text-secondary';
   if (pct >= 70) return 'text-tertiary';
   return 'text-error';
 }
 
-// --- Verifica se valor é dedução (negativo ou prefixo "(-)") ---
+/* ── Verifica se valor é dedução ── */
 function isDeducao(item: ReceitaDetalhamento): boolean {
   return item.detalhamento.startsWith('(-)');
 }
@@ -38,11 +38,11 @@ function isDeducao(item: ReceitaDetalhamento): boolean {
 /**
  * Tabela hierárquica de detalhamento de receitas
  * com expand/collapse por nível (formato escadinha)
+ * Design: The Architectural Archive — tonal layering, no borders
  */
 export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoTableProps) {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(() => new Set());
 
-  // Determina se o item tem filhos (próximo item tem nível maior)
   const hasChildren = useCallback(
     (index: number): boolean => {
       const next = itens[index + 1];
@@ -51,11 +51,9 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
     [itens]
   );
 
-  // Verifica se uma linha é visível (todos os ancestrais expandidos)
   const isVisible = useCallback(
     (index: number): boolean => {
       if (itens[index].nivel === 1) return true;
-      // Percorre de trás pra frente, verificando cadeia de ancestrais
       let targetNivel = itens[index].nivel - 1;
       for (let i = index - 1; i >= 0; i--) {
         if (itens[i].nivel === targetNivel) {
@@ -81,26 +79,35 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
     });
   }, []);
 
-  // Memoiza linhas visíveis para performance
   const visibleRows = useMemo(
     () => itens.map((item, idx) => ({ item, idx, visible: isVisible(idx) })),
     [itens, isVisible]
   );
 
   return (
-    <div className="overflow-x-auto">
-      <table className="data-table">
+    <div className="overflow-x-auto -mx-6">
+      <table className="w-full text-sm">
         <thead>
-          <tr className="text-on-surface-variant">
-            <th className="px-4 py-3 text-left font-medium">Detalhamento</th>
-            <th className="px-4 py-3 text-right font-medium">Previsto (Anual)</th>
-            <th className="px-4 py-3 text-right font-medium">Arrecadado</th>
-            <th className="px-4 py-3 text-right font-medium">Anulado</th>
-            <th className="px-4 py-3 text-right font-medium">% Exec.</th>
+          <tr className="text-label-md text-on-surface-variant uppercase tracking-wider">
+            <th className="px-6 py-3 text-left font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+              Detalhamento
+            </th>
+            <th className="px-4 py-3 text-right font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+              Previsto (Anual)
+            </th>
+            <th className="px-4 py-3 text-right font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+              Arrecadado
+            </th>
+            <th className="px-4 py-3 text-right font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+              Anulado
+            </th>
+            <th className="px-4 py-3 text-right font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+              % Exec.
+            </th>
           </tr>
         </thead>
         <tbody>
-          {visibleRows.map(({ item, idx, visible }) => {
+          {visibleRows.map(({ item, idx, visible }, rowIndex) => {
             if (!visible) return null;
 
             const isExpanded = expandedIds.has(item.id);
@@ -114,21 +121,30 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
             return (
               <tr
                 key={item.id}
-                className={`hover:bg-surface-container transition-colors cursor-${
-                  hasKids ? 'pointer' : 'default'
-                }`}
+                className={`transition-colors duration-150 ${
+                  hasKids ? 'cursor-pointer' : 'cursor-default'
+                } ${
+                  rowIndex % 2 === 0
+                    ? 'bg-surface-container-lowest dark:bg-slate-800/20'
+                    : 'bg-surface-container-low/60 dark:bg-slate-800/30'
+                } hover:bg-surface-container dark:hover:bg-slate-800/40`}
                 onClick={() => hasKids && toggleExpand(item.id)}
               >
-                {/* Coluna Detalhamento */}
+                {/* Detalhamento */}
                 <td className={`py-2.5 pr-4 ${getIndent(item.nivel)}`}>
                   <div className="flex items-center gap-1.5">
-                    {/* Ícone expand/collapse */}
                     {hasKids ? (
-                      <span className="text-on-surface-variant text-xs w-4 shrink-0 select-none">
-                        {isExpanded ? '▼' : '▶'}
+                      <span
+                        className={`shrink-0 w-5 h-5 flex items-center justify-center rounded-md
+                                    text-primary dark:text-primary-100 transition-transform duration-200
+                                    ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                      >
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                          expand_more
+                        </span>
                       </span>
                     ) : (
-                      <span className="w-4 shrink-0" />
+                      <span className="w-5 shrink-0" />
                     )}
                     <span
                       className={`${
@@ -141,22 +157,22 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
                 </td>
 
                 {/* Previsto */}
-                <td className={`px-4 py-2.5 text-right ${deducao ? 'text-error' : 'text-on-surface-variant'}`}>
+                <td className={`px-4 py-2.5 text-right font-mono ${deducao ? 'text-error' : 'text-on-surface-variant'}`}>
                   {formatCurrency(item.valor_previsto)}
                 </td>
 
                 {/* Arrecadado */}
-                <td className={`px-4 py-2.5 text-right font-medium ${item.valor_arrecadado < 0 || deducao ? 'text-error' : 'text-secondary'}`}>
+                <td className={`px-4 py-2.5 text-right font-mono font-medium ${item.valor_arrecadado < 0 || deducao ? 'text-error' : 'text-secondary'}`}>
                   {formatCurrency(item.valor_arrecadado)}
                 </td>
 
                 {/* Anulado */}
-                <td className={`px-4 py-2.5 text-right ${deducao ? 'text-error' : 'text-on-surface-variant'}`}>
+                <td className={`px-4 py-2.5 text-right font-mono ${deducao ? 'text-error' : 'text-on-surface-variant'}`}>
                   {formatCurrency(item.valor_anulado)}
                 </td>
 
                 {/* % Execução */}
-                <td className="px-4 py-2.5 text-right">
+                <td className="px-4 py-2.5 text-right font-mono">
                   <span className={deducao ? 'text-error' : getExecColor(execPct)}>
                     {formatPercent(execPct)}
                   </span>

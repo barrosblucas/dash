@@ -1,20 +1,16 @@
-/**
- * Badge de fonte de licitação
- */
-
 import type { FonteLicitacao } from '@/types/licitacao';
 
 export function FonteBadge({ fonte }: { fonte: FonteLicitacao }) {
   if (fonte === 'comprasbr') {
     return (
-      <span className="chip-tertiary text-xs">
+      <span className="rounded-full px-3 py-1 text-label-md font-medium bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300">
         ComprasBR
       </span>
     );
   }
   return (
-    <span className="chip-primary text-xs">
+    <span className="rounded-full px-3 py-1 text-label-md font-medium bg-primary/10 text-primary dark:bg-blue-900/30 dark:text-blue-400">
       Dispensa
-      </span>
+    </span>
   );
 }

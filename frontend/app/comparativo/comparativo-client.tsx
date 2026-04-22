@@ -5,14 +5,12 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 
 import Icon from '@/components/ui/Icon';
-import DashboardLayout from '@/components/layouts/DashboardLayout';
 import ComparativeSection from '@/components/dashboard/ComparativeSection';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
 import { PERIODO_DADOS } from '@/lib/constants';
 import apiClient from '@/services/api';
 import { formatCurrency, calcVariation } from '@/lib/utils';
-
 
 // --- Tipos ---
 
@@ -82,7 +80,19 @@ function formatVariation(value: number | null): { text: string; className: strin
   };
 }
 
-// --- Componente ---
+// --- Animações ---
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+};
+
+// --- Componente principal ---
 
 export default function ComparativoClient() {
   const {
@@ -119,160 +129,239 @@ export default function ComparativoClient() {
     return [
       { label: 'Maior Superávit', value: formatCurrency(superavitRow.saldo, { compact: true }),
         detail: `Ano ${superavitRow.ano}`, iconName: 'trending_up',
-        color: 'text-secondary', bgColor: 'bg-secondary/10' },
+        color: 'text-secondary', bgColor: 'bg-secondary-container/20' },
       { label: 'Maior Déficit', value: formatCurrency(deficitRow.saldo, { compact: true }),
         detail: `Ano ${deficitRow.ano}`, iconName: 'trending_down',
-        color: 'text-error', bgColor: 'bg-error/10' },
+        color: 'text-error', bgColor: 'bg-error-container/20' },
       { label: 'Maior Crescimento',
         value: crescRow.variacaoReceita !== null
           ? `${crescRow.variacaoReceita > 0 ? '+' : ''}${crescRow.variacaoReceita.toFixed(1)}%`
           : '—',
         detail: `Ano ${crescRow.ano}`, iconName: 'arrow_outward',
-        color: 'text-tertiary', bgColor: 'bg-tertiary/10' },
+        color: 'text-primary', bgColor: 'bg-primary/10' },
       { label: 'Média Anual Receitas', value: formatCurrency(mediaReceitas, { compact: true }),
         detail: `${tableRows.length} anos`, iconName: 'bar_chart',
-        color: 'text-primary', bgColor: 'bg-primary/10' },
+        color: 'text-tertiary', bgColor: 'bg-tertiary-container/20' },
     ];
   }, [tableRows]);
 
-  const selectClasses = 'select-field w-auto';
-
   return (
-    <DashboardLayout>
-      <div className="space-y-8">
-        {/* Cabeçalho monumental com seletores de período */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
-        >
-          <div>
-            <h1 className="text-display-sm font-display text-on-surface">Comparativo Anual</h1>
-            <p className="text-body-md text-on-surface-variant mt-2">Análise comparativa entre períodos</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <label htmlFor="ano-inicio" className="text-label-md text-on-surface-variant">De</label>
-              <select id="ano-inicio" value={periodoInicio}
-                onChange={(e) => setPeriodoPersonalizado(Number(e.target.value), periodoFim)}
-                className={selectClasses}>
-                {anosDisponiveis.map((ano) => (
-                  <option key={ano} value={ano} disabled={ano > periodoFim}>{ano}</option>
-                ))}
-              </select>
+    <motion.div className="space-y-8" variants={containerVariants} initial="hidden" animate="visible">
+      {/* ── Page Header ─────────────────────────────────────────── */}
+      <motion.div variants={itemVariants} className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10">
+              <Icon name="compare_arrows" className="text-primary" size={22} />
             </div>
-            <span className="text-on-surface-variant">—</span>
-            <div className="flex items-center gap-2">
-              <label htmlFor="ano-fim" className="text-label-md text-on-surface-variant">Até</label>
-              <select id="ano-fim" value={periodoFim}
-                onChange={(e) => setPeriodoPersonalizado(periodoInicio, Number(e.target.value))}
-                className={selectClasses}>
-                {anosDisponiveis.map((ano) => (
-                  <option key={ano} value={ano} disabled={ano < periodoInicio}>{ano}</option>
-                ))}
-              </select>
-            </div>
+            <span className="chip-primary">Análise Multi-Ano</span>
           </div>
-        </motion.div>
+          <h1 className="font-display font-bold text-headline-lg sm:text-display-sm text-on-surface tracking-tight">
+            Comparativo Anual
+          </h1>
+          <p className="mt-1 text-body-md text-on-surface-variant max-w-lg">
+            Análise comparativa entre períodos financeiros do município.
+          </p>
+        </div>
 
-        {/* Gráfico principal */}
+        {/* Year selector pills */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <label htmlFor="ano-inicio" className="text-label-md text-on-surface-variant">De</label>
+            <select
+              id="ano-inicio"
+              value={periodoInicio}
+              onChange={(e) => setPeriodoPersonalizado(Number(e.target.value), periodoFim)}
+              className="select-field w-auto"
+            >
+              {anosDisponiveis.map((ano) => (
+                <option key={ano} value={ano} disabled={ano > periodoFim}>{ano}</option>
+              ))}
+            </select>
+          </div>
+          <span className="text-on-surface-variant">—</span>
+          <div className="flex items-center gap-2">
+            <label htmlFor="ano-fim" className="text-label-md text-on-surface-variant">Até</label>
+            <select
+              id="ano-fim"
+              value={periodoFim}
+              onChange={(e) => setPeriodoPersonalizado(periodoInicio, Number(e.target.value))}
+              className="select-field w-auto"
+            >
+              {anosDisponiveis.map((ano) => (
+                <option key={ano} value={ano} disabled={ano < periodoInicio}>{ano}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── KPI Row: Key Metrics ────────────────────────────────── */}
+      {!isLoading && summaryStats.length > 0 && (
+        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {summaryStats.map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <span className="text-label-md text-on-surface-variant uppercase tracking-wider">{stat.label}</span>
+                <span className={`${stat.bgColor} ${stat.color} p-1.5 rounded-md`}>
+                  <Icon name={stat.iconName} size={18} />
+                </span>
+              </div>
+              <p className={`text-headline-lg font-display font-bold ${stat.color}`}>{stat.value}</p>
+              <p className="text-label-md text-on-surface-variant/60 mt-1">{stat.detail}</p>
+            </div>
+          ))}
+        </motion.div>
+      )}
+
+      {/* ── Main Comparative Chart ──────────────────────────────── */}
+      <motion.div variants={itemVariants}>
         {isLoading ? (
-          <div className="chart-container">
+          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient min-h-[320px] flex items-center justify-center">
             <LoadingSpinner size="lg" message="Carregando comparativo..." />
           </div>
         ) : error ? (
-          <div className="chart-container">
+          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient min-h-[200px] flex items-center justify-center">
             <p className="text-sm text-error">Erro ao carregar dados comparativos.</p>
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
+          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
             <ComparativeSection height={500} />
-          </motion.div>
+          </div>
         )}
+      </motion.div>
 
-        {/* Tabela ano a ano */}
-        {!isLoading && tableRows.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="glass-card overflow-hidden"
-          >
-            <div className="px-5 py-4">
-              <h2 className="text-headline-sm font-display text-on-surface">Análise Ano a Ano</h2>
-              <p className="text-label-md text-on-surface-variant mt-1">
-                Valores totais e variações percentuais
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr className="text-on-surface-variant">
-                    {['Ano', 'Receitas', 'Despesas', 'Saldo', 'Var. Receita', 'Var. Despesa'].map(
-                      (h, i) => (
-                        <th key={h} className={`${i === 0 ? 'text-left' : 'text-right'} px-5 py-3 font-medium`}>
-                          {h}
-                        </th>
-                      )
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableRows.map((row) => {
-                    const vr = formatVariation(row.variacaoReceita);
-                    const vd = formatVariation(row.variacaoDespesa);
-                    return (
-                      <tr key={row.ano} className="hover:bg-surface-container transition-colors">
-                        <td className="px-5 py-3 font-medium text-on-surface">{row.ano}</td>
-                        <td className="px-5 py-3 text-right text-on-surface">
-                          {formatCurrency(row.receitas, { compact: true })}
-                        </td>
-                        <td className="px-5 py-3 text-right text-on-surface">
-                          {formatCurrency(row.despesas, { compact: true })}
-                        </td>
-                        <td className={`px-5 py-3 text-right font-semibold ${
-                          row.saldo >= 0 ? 'text-secondary' : 'text-error'}`}>
-                          {formatCurrency(row.saldo, { compact: true })}
-                        </td>
-                        <td className={`px-5 py-3 text-right ${vr.className}`}>{vr.text}</td>
-                        <td className={`px-5 py-3 text-right ${vd.className}`}>{vd.text}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </motion.div>
-        )}
+      {/* ── Year Comparison Table ───────────────────────────────── */}
+      {!isLoading && tableRows.length > 0 && (
+        <motion.div variants={itemVariants} className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl shadow-ambient overflow-hidden">
+          <div className="px-5 py-4">
+            <h2 className="text-headline-sm font-display text-on-surface">Análise Ano a Ano</h2>
+            <p className="text-label-md text-on-surface-variant mt-1">
+              Valores totais e variações percentuais
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr className="text-on-surface-variant">
+                  {['Ano', 'Receitas', 'Despesas', 'Saldo', 'Var. Receita', 'Var. Despesa'].map(
+                    (h, i) => (
+                      <th key={h} className={`${i === 0 ? 'text-left' : 'text-right'} px-5 py-3 font-medium`}>
+                        {h}
+                      </th>
+                    )
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {tableRows.map((row) => {
+                  const vr = formatVariation(row.variacaoReceita);
+                  const vd = formatVariation(row.variacaoDespesa);
+                  return (
+                    <tr key={row.ano} className="hover:bg-surface-container transition-colors">
+                      <td className="px-5 py-3 font-medium text-on-surface">{row.ano}</td>
+                      <td className="px-5 py-3 text-right text-on-surface">
+                        {formatCurrency(row.receitas, { compact: true })}
+                      </td>
+                      <td className="px-5 py-3 text-right text-on-surface">
+                        {formatCurrency(row.despesas, { compact: true })}
+                      </td>
+                      <td className={`px-5 py-3 text-right font-semibold ${
+                        row.saldo >= 0 ? 'text-secondary' : 'text-error'}`}>
+                        {formatCurrency(row.saldo, { compact: true })}
+                      </td>
+                      <td className={`px-5 py-3 text-right ${vr.className}`}>
+                        <span className="inline-flex items-center gap-1">
+                          {row.variacaoReceita !== null && row.variacaoReceita > 0 && (
+                            <span className="material-symbols-outlined text-sm">arrow_upward</span>
+                          )}
+                          {row.variacaoReceita !== null && row.variacaoReceita < 0 && (
+                            <span className="material-symbols-outlined text-sm">arrow_downward</span>
+                          )}
+                          {vr.text}
+                        </span>
+                      </td>
+                      <td className={`px-5 py-3 text-right ${vd.className}`}>
+                        <span className="inline-flex items-center gap-1">
+                          {row.variacaoDespesa !== null && row.variacaoDespesa > 0 && (
+                            <span className="material-symbols-outlined text-sm">arrow_upward</span>
+                          )}
+                          {row.variacaoDespesa !== null && row.variacaoDespesa < 0 && (
+                            <span className="material-symbols-outlined text-sm">arrow_downward</span>
+                          )}
+                          {vd.text}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
 
-        {/* Cards de resumo */}
-        {!isLoading && summaryStats.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
-          >
-            {summaryStats.map((stat) => (
-              <div key={stat.label} className="metric-card hover:shadow-ambient transition-all duration-300">
-                <div className="flex items-start justify-between mb-3">
-                  <p className="metric-label">{stat.label}</p>
-                  <span className={`${stat.bgColor} ${stat.color} p-1.5 rounded-md`}>
-                    <Icon name={stat.iconName} size={20} />
-                  </span>
-                </div>
-                <p className={`metric-value ${stat.color}`}>{stat.value}</p>
-                <p className="text-label-md text-on-surface-variant/60 mt-1">{stat.detail}</p>
-              </div>
-            ))}
-          </motion.div>
-        )}
+      {/* ── Trend Indicator Cards ───────────────────────────────── */}
+      {!isLoading && tableRows.length >= 2 && (
+        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {(() => {
+            const latest = tableRows[tableRows.length - 1];
+            const prev = tableRows[tableRows.length - 2];
+            const receitaGrowth = prev ? calcVariation(latest.receitas, prev.receitas).percent : 0;
+            const despesaGrowth = prev ? calcVariation(latest.despesas, prev.despesas).percent : 0;
+            return (
+              <>
+                <TrendMetricCard
+                  label="Crescimento da Receita"
+                  value={`${receitaGrowth >= 0 ? '+' : ''}${receitaGrowth.toFixed(1)}%`}
+                  trend={receitaGrowth >= 0 ? 'up' : 'down'}
+                  icon="trending_up"
+                />
+                <TrendMetricCard
+                  label="Variação de Despesa"
+                  value={`${despesaGrowth >= 0 ? '+' : ''}${despesaGrowth.toFixed(1)}%`}
+                  trend={despesaGrowth <= 0 ? 'up' : 'down'}
+                  icon="trending_down"
+                />
+                <TrendMetricCard
+                  label="Resultado Anual"
+                  value={formatCurrency(latest.saldo, { compact: true })}
+                  trend={latest.saldo >= 0 ? 'up' : 'down'}
+                  icon="account_balance"
+                />
+              </>
+            );
+          })()}
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
+
+/* ─── Sub-componentes ───────────────────────────────────────────── */
+
+function TrendMetricCard({ label, value, trend, icon }: {
+  label: string; value: string; trend: 'up' | 'down'; icon: string;
+}) {
+  const accentClass = trend === 'up' ? 'text-secondary' : 'text-error';
+  const bgClass = trend === 'up' ? 'bg-secondary-container/20' : 'bg-error-container/20';
+  const arrowIcon = trend === 'up' ? 'north_east' : 'south_west';
+
+  return (
+    <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300">
+      <div className="flex items-center gap-3 mb-3">
+        <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${bgClass}`}>
+          <Icon name={icon} size={20} className={accentClass} />
+        </div>
+        <span className="text-label-md text-on-surface-variant uppercase tracking-wider">{label}</span>
       </div>
-    </DashboardLayout>
+      <div className="flex items-center gap-2">
+        <p className={`text-headline-lg font-display font-bold ${accentClass}`}>{value}</p>
+        <span className="material-symbols-outlined text-lg">{arrowIcon}</span>
+      </div>
+    </div>
   );
 }

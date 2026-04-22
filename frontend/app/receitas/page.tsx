@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+
 import ReceitasClient from './receitas-client';
 
 export const metadata: Metadata = {
@@ -8,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function ReceitasPage() {
-  return <ReceitasClient />;
+  return (
+    <DashboardLayout>
+      <ReceitasClient />
+    </DashboardLayout>
+  );
 }

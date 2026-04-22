@@ -12,7 +12,7 @@ export default function ContratosPage() {
     <PlaceholderPage
       title="Gestão de Contratos"
       description="Esta seção permitirá consultar os contratos firmados pela administração pública municipal. Está em desenvolvimento e estará disponível em breve."
-      iconName="FileText"
+      iconName="description"
     />
   );
 }

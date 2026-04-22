@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-21 (atualizado pós-migração arquitetural)
+Snapshot: 2026-04-22 (atualizado pós-reformulação visual completa do frontend)
 
 ## Status geral
 
@@ -69,6 +69,21 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Download direto de edital ComprasBR via `arquivoUri`
 - [x] Feriados nacionais, estaduais (MS) e móveis exibidos no calendário
 - [x] Títulos sucintos de licitações no calendário e lista
+
+### Frontend — Reformulação Visual Completa v2 (2026-04-22)
+- [x] **Reformulação completa do frontend** seguindo templates HTML de referência (`design_system/`)
+- [x] **Novos componentes de layout**: PortalHeader, PortalFooter, Sidebar expandida (10 itens), Header glassmorphism, DashboardLayout com drawer mobile animado
+- [x] **Homepage reformulada**: hero com gradient signature, search bar glass, stat cards flutuantes, grid 4 cards de navegação, seção "Acesso Rápido" com 6 cards, footer 4 colunas
+- [x] **Página de Obras implementada**: listagem com filtros, KPIs, grid de cards com progress bar + página de detalhe com cronograma timeline e info cards
+- [x] **Dashboard reformulado**: header com seletor de ano, KPIs 2x4, gráficos lado a lado, visão combinada
+- [x] **Receitas/Despesas reformuladas**: KPIs com cores semânticas (green/red), breakdown por categoria, tabela com tonal layering
+- [x] **Forecast/Comparativo/Relatórios reformulados**: KPIs, insights grid, cards de exportação
+- [x] **Movimento Extra reformulado**: todos os 11 sub-componentes reescritos com design system
+- [x] **Avisos/Licitações reformulado**: todos os 8 sub-componentes reescritos com glassmorphism modal
+- [x] **Ícones migrados** de lucide-react para Material Symbols (`<span className="material-symbols-outlined">`) em todos os componentes
+- [x] **framer-motion removido** — transições via CSS `transition-*` e `animate-*`
+- [x] **Mobile first** em todos os componentes com breakpoints consistentes
+- [x] **Dark mode** completo com `dark:` prefix e CSS custom properties
 
 ### Frontend — Reformulação Visual Completa (2026-04-21)
 - [x] **Novo design system "The Architectural Archive"** aplicado a todas as 9 páginas ativas

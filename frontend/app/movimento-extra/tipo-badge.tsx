@@ -1,14 +1,19 @@
-/** Badge de tipo (R/D) */
-export function TipoBadge({ tipo }: { tipo: 'R' | 'D' }) {
-  const isRevenue = tipo === 'R';
+'use client';
+
+export function TipoBadge({ tipo }: { tipo: string }) {
+  const isReceita = tipo === 'R';
+
   return (
     <span
       className={`
-        inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
-        ${isRevenue ? 'bg-green-500/15 text-green-400' : 'bg-orange-500/15 text-orange-400'}
+        rounded-full px-2.5 py-0.5 text-label-md font-medium
+        ${isReceita
+          ? 'bg-secondary/10 text-secondary dark:bg-emerald-900/30 dark:text-emerald-400'
+          : 'bg-error/10 text-error dark:bg-red-900/30 dark:text-red-400'
+        }
       `}
     >
-      {isRevenue ? 'Receita' : 'Despesa'}
+      {isReceita ? 'Receita' : 'Despesa'}
     </span>
   );
 }

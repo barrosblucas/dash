@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+
 import MovimentoExtraClient from './movimento-extra-client';
 
 export const metadata: Metadata = {
@@ -8,5 +10,9 @@ export const metadata: Metadata = {
 };
 
 export default function MovimentoExtraPage() {
-  return <MovimentoExtraClient />;
+  return (
+    <DashboardLayout>
+      <MovimentoExtraClient />
+    </DashboardLayout>
+  );
 }

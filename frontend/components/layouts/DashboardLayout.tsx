@@ -1,8 +1,6 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
-
-
+import { ReactNode, useState, useCallback } from 'react';
 
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -14,37 +12,40 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const openSidebar = useCallback(() => setSidebarOpen(true), []);
+  const closeSidebar = useCallback(() => setSidebarOpen(false), []);
+
   return (
     <div className="min-h-screen bg-surface">
-      {/* Sidebar — desktop fixed */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+      {/* Desktop sidebar — fixed */}
+      <aside className="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 z-40">
         <Sidebar />
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
-        <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+      <main className="flex-1 md:ml-64 min-h-screen flex flex-col">
+        <Header onMenuClick={openSidebar} />
 
-        <main className="py-6 px-4 sm:px-6 lg:px-8">
+        <div className="flex-1 px-4 sm:px-6 lg:px-8 py-6">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile sidebar drawer */}
       {sidebarOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-40"
-          onClick={() => setSidebarOpen(false)}
-        >
-          <div className="absolute inset-0 bg-surface/60 backdrop-blur-sm" />
-          <div
-            className="absolute inset-y-0 left-0 w-64 bg-surface-container-low shadow-ambient-lg"
+        <div className="md:hidden fixed inset-0 z-50" onClick={closeSidebar}>
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" />
+
+          {/* Slide-in sidebar */}
+          <aside
+            className="absolute inset-y-0 left-0 w-64 bg-surface-container-low dark:bg-slate-900 animate-slide-in-left"
             onClick={(e) => e.stopPropagation()}
           >
-            <Sidebar onClose={() => setSidebarOpen(false)} />
-          </div>
+            <Sidebar onClose={closeSidebar} />
+          </aside>
         </div>
       )}
     </div>

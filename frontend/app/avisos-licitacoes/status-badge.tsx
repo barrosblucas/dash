@@ -1,25 +1,23 @@
-/**
- * Badge de status de licitação
- */
-
 export function StatusBadge({ status }: { status: string }) {
   const startsWith = status.startsWith('AGUARDANDO');
-  let classes = 'chip-secondary';
+  let classes = '';
   let label = status;
 
   if (startsWith) {
-    classes = 'chip-secondary';
+    classes = 'bg-secondary/10 text-secondary dark:bg-emerald-900/30 dark:text-emerald-400';
     label = 'Aguardando';
   } else if (status === 'ENCERRADO') {
-    classes = 'chip';
+    classes = 'bg-on-surface-variant/10 text-on-surface-variant dark:bg-slate-600/30 dark:text-slate-400';
     label = 'Encerrado';
   } else if (status === 'SUSPENSO') {
-    classes = 'chip-error';
+    classes = 'bg-error/10 text-error dark:bg-red-900/30 dark:text-red-400';
     label = 'Suspenso';
+  } else {
+    classes = 'bg-on-surface-variant/10 text-on-surface-variant dark:bg-slate-600/30 dark:text-slate-400';
   }
 
   return (
-    <span className={`${classes} text-xs`}>
+    <span className={`rounded-full px-3 py-1 text-label-md font-medium ${classes}`}>
       {label}
     </span>
   );

@@ -158,26 +158,29 @@ module.exports = {
           glow: '#c29b0040',
         },
 
-        // Dark mode surface overrides (handled via CSS variables, see globals.css)
-        dark: {
-          50: '#f8f9ff',
-          100: '#e2e2e9',
-          200: '#c6c6d0',
-          300: '#ababba',
-          400: '#9090a3',
-          500: '#76768d',
-          600: '#5c5c77',
-          700: '#444461',
-          800: '#2d2d4b',
-          900: '#171735',
-          950: '#0a0f1a',
-        },
+        // Background (alias for surface in light, dark in dark mode)
+        background: '#f8f9ff',
+        'on-background': '#1a1c20',
+
+        // Fixed variants (Material Design 3)
+        'primary-fixed': '#abc7ff',
+        'primary-fixed-dim': '#a1c9ff',
+        'secondary-fixed': '#8df7c1',
+        'secondary-fixed-dim': '#71dba6',
+        'on-secondary-fixed': '#002115',
+        'on-secondary-fixed-variant': '#005235',
+        'tertiary-fixed': '#d3e4fe',
+        'tertiary-fixed-dim': '#b7c8e1',
+        'surface-tint': '#3e5e95',
+        'surface-dim': '#d7d9e3',
       },
 
       /* ── Typography: Editorial Voice ── */
       fontFamily: {
         display: ['var(--font-manrope)', 'system-ui', 'sans-serif'],
+        headline: ['var(--font-manrope)', 'system-ui', 'sans-serif'],
         body: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        label: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },

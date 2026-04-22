@@ -1,11 +1,11 @@
 /**
  * Visualização mensal do calendário de licitações
+ * Design: The Architectural Archive — tonal calendar grid
  */
 
 import { format, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-import Icon from '@/components/ui/Icon';
 import type { LicitacaoUnified } from '@/types/licitacao';
 
 import { DIAS_SEMANA } from './constants';
@@ -46,10 +46,10 @@ export function MonthView({
     if (!ind) return null;
 
     const dots: { color: string }[] = [];
-    if (ind.aguardando) dots.push({ color: 'bg-secondary' });
-    if (ind.encerrado) dots.push({ color: 'bg-outline' });
-    if (ind.suspenso) dots.push({ color: 'bg-error' });
-    if (ind.dispensa) dots.push({ color: 'bg-primary' });
+    if (ind.aguardando) dots.push({ color: 'bg-secondary dark:bg-emerald-500' });
+    if (ind.encerrado) dots.push({ color: 'bg-outline dark:bg-slate-500' });
+    if (ind.suspenso) dots.push({ color: 'bg-error dark:bg-red-500' });
+    if (ind.dispensa) dots.push({ color: 'bg-primary dark:bg-blue-400' });
 
     if (dots.length === 0) return null;
 
@@ -74,18 +74,18 @@ export function MonthView({
         key={key}
         onClick={() => onSelectDay(day)}
         className={`
-          relative flex flex-col items-center py-1.5 rounded-lg text-sm transition-all
-          ${!isInMonth ? 'text-outline' : 'text-on-surface-variant'}
-          ${isSelected ? 'bg-primary/15 ring-1 ring-primary/30 text-primary' : ''}
-          ${today && !isSelected ? 'bg-surface-container-high text-on-surface font-semibold' : ''}
-          ${hasItems && !isSelected ? 'hover:bg-surface-container-high cursor-pointer' : ''}
+          relative flex flex-col items-center py-1.5 rounded-xl text-sm transition-all
+          ${!isInMonth ? 'text-outline/40' : 'text-on-surface-variant dark:text-slate-400'}
+          ${isSelected ? 'bg-primary/15 dark:bg-blue-900/30 text-primary dark:text-blue-400' : ''}
+          ${today && !isSelected ? 'bg-tertiary/10 dark:bg-amber-900/20 text-on-surface dark:text-white font-semibold' : ''}
+          ${hasItems && !isSelected ? 'hover:bg-surface-container-high dark:hover:bg-slate-700/40 cursor-pointer' : ''}
         `}
       >
-        <span className={`${today ? 'w-6 h-6 flex items-center justify-center rounded-full bg-tertiary/15' : ''}`}>
+        <span className={`${today ? 'w-6 h-6 flex items-center justify-center rounded-full bg-tertiary/15 dark:bg-amber-700/30' : ''}`}>
           {format(day, 'd')}
         </span>
         {feriado && (
-          <span className="text-[9px] text-error font-medium leading-tight text-center px-0.5 mt-0.5 line-clamp-2">
+          <span className="text-[9px] text-error dark:text-red-400 font-medium leading-tight text-center px-0.5 mt-0.5 line-clamp-2">
             {feriado}
           </span>
         )}
@@ -96,39 +96,39 @@ export function MonthView({
 
   return (
     <div className="space-y-4">
-      {/* Navegação do mês */}
+      {/* Month navigation */}
       <div className="flex items-center justify-between">
         <button
           onClick={onNavigatePrev}
-          className="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
+          className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface transition-colors"
         >
-          <Icon name="chevron_left" size={20} />
+          <span className="material-symbols-outlined text-[20px]">chevron_left</span>
         </button>
         <div className="text-center">
-          <h2 className="text-headline-sm font-display text-on-surface capitalize">
+          <h2 className="text-headline-sm font-display text-on-surface dark:text-white capitalize">
             {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
           </h2>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onNavigateToday}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-container-high text-on-surface-variant hover:bg-surface-container transition-colors"
+            className="rounded-full px-3 py-1.5 text-label-md font-medium bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60 transition-colors"
           >
             Hoje
           </button>
           <button
             onClick={onNavigateNext}
-            className="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
+            className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface transition-colors"
           >
-            <Icon name="chevron_right" size={20} />
+            <span className="material-symbols-outlined text-[20px]">chevron_right</span>
           </button>
         </div>
       </div>
 
-      {/* Grid do calendário */}
-      <div className="surface-card overflow-hidden">
-        {/* Cabeçalho dias da semana */}
-        <div className="grid grid-cols-7 bg-surface-container-low">
+      {/* Calendar grid */}
+      <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl shadow-ambient overflow-hidden">
+        {/* Weekday header */}
+        <div className="grid grid-cols-7 bg-surface-container-low dark:bg-slate-800/30">
           {DIAS_SEMANA.map((dia) => (
             <div
               key={dia}
@@ -139,7 +139,7 @@ export function MonthView({
           ))}
         </div>
 
-        {/* Dias */}
+        {/* Days */}
         <div className="grid grid-cols-7">
           {monthDays.map((day) => {
             const inMonth = isSameMonth(day, currentDate);
@@ -148,20 +148,20 @@ export function MonthView({
         </div>
       </div>
 
-      {/* Itens do dia selecionado */}
+      {/* Selected day items */}
       {selectedDay && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-on-surface-variant">
+          <h3 className="text-sm font-semibold text-on-surface-variant dark:text-slate-400">
             Licitações em{' '}
-            <span className="text-primary">
+            <span className="text-primary dark:text-blue-400">
               {format(selectedDay, "dd 'de' MMMM", { locale: ptBR })}
             </span>
             <span className="text-on-surface-variant/50 ml-2">({selectedDayItems.length})</span>
           </h3>
 
           {selectedDayItems.length === 0 ? (
-            <div className="surface-card p-6 text-center">
-              <Icon name="calendar_today" size={32} className="text-outline mx-auto mb-2" />
+            <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 text-center shadow-ambient">
+              <span className="material-symbols-outlined text-outline text-[32px] block mx-auto mb-2">calendar_today</span>
               <p className="text-sm text-on-surface-variant">Nenhuma licitação nesta data</p>
             </div>
           ) : (
@@ -170,12 +170,12 @@ export function MonthView({
                 <button
                   key={item.id}
                   onClick={() => onOpenModal(item)}
-                  className="w-full text-left surface-card p-4 hover:shadow-card-hover transition-all"
+                  className="w-full text-left bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient transition-all duration-200 hover:shadow-ambient-lg"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-sm font-medium text-on-surface">{item.numero}</span>
+                        <span className="text-sm font-medium text-on-surface dark:text-white">{item.numero}</span>
                         <FonteBadge fonte={item.fonte} />
                         <StatusBadge status={item.status} />
                       </div>
@@ -183,7 +183,7 @@ export function MonthView({
                         {extrairTituloSucinto(item.objeto) || item.objeto}
                       </p>
                     </div>
-                    <Icon name="open_in_new" size={18} className="text-on-surface-variant flex-shrink-0 mt-0.5" />
+                    <span className="material-symbols-outlined text-on-surface-variant text-[18px] flex-shrink-0 mt-0.5">open_in_new</span>
                   </div>
                 </button>
               ))}

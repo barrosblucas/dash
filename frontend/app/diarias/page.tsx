@@ -12,7 +12,7 @@ export default function DiariasPage() {
     <PlaceholderPage
       title="Diárias e Passagens"
       description="Esta seção permitirá consultar as diárias e passagens concedidas pela administração. Está em desenvolvimento e estará disponível em breve."
-      iconName="Plane"
+      iconName="flight"
     />
   );
 }

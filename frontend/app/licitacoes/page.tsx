@@ -12,7 +12,7 @@ export default function LicitacoesPage() {
     <PlaceholderPage
       title="Licitações"
       description="Esta seção permitirá acompanhar os processos licitatórios do município. Está em desenvolvimento e estará disponível em breve."
-      iconName="Gavel"
+      iconName="gavel"
     />
   );
 }

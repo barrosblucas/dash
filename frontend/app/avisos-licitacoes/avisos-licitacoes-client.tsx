@@ -4,8 +4,8 @@
  * Aviso de Licitações — Painel do Cidadão
  * Portal da Transparência — Bandeirantes MS
  *
+ * Design: The Architectural Archive
  * Calendário mensal/semanal + lista com filtros por fonte e status.
- * Merge de dados ComprasBR + Quality Dispensas.
  */
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -24,8 +24,6 @@ import {
   isSameDay,
 } from 'date-fns';
 
-import Icon from '@/components/ui/Icon';
-import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useLicitacoesComprasBR, useLicitacoesDispensas } from '@/hooks/useLicitacoes';
 import type { LicitacaoUnified } from '@/types/licitacao';
@@ -46,27 +44,22 @@ import { WeekView } from './week-view';
 import { ListView } from './list-view';
 
 export default function AvisosLicitacoesClient() {
-  // Estado de navegação
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
-  // Filtros
   const [fonteFilter, setFonteFilter] = useState<FonteFilter>('todas');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('todas');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Modal
   const [modalItem, setModalItem] = useState<LicitacaoUnified | null>(null);
 
-  // Queries
   const { data: comprasbrData, isLoading: loadingCB, isError: errorCB } = useLicitacoesComprasBR();
   const { data: dispensasData, isLoading: loadingDisp, isError: errorDisp } = useLicitacoesDispensas();
 
   const isLoading = loadingCB || loadingDisp;
   const isError = errorCB || errorDisp;
 
-  // Merge dos dados
   const unifiedItems = useMemo<LicitacaoUnified[]>(() => {
     const items: LicitacaoUnified[] = [];
     if (comprasbrData?.items) items.push(...parseComprasBR(comprasbrData.items));
@@ -74,7 +67,6 @@ export default function AvisosLicitacoesClient() {
     return items;
   }, [comprasbrData, dispensasData]);
 
-  // Filtros aplicados
   const filteredItems = useMemo(() => {
     let items = unifiedItems;
     items = items.filter((i) => matchFonte(i, fonteFilter));
@@ -91,31 +83,26 @@ export default function AvisosLicitacoesClient() {
     return items;
   }, [unifiedItems, fonteFilter, statusFilter, searchTerm]);
 
-  // Itens do dia selecionado
   const selectedDayItems = useMemo(() => {
     if (!selectedDay) return [];
     return filteredItems.filter((i) => isSameDay(i.dataAbertura, selectedDay));
   }, [filteredItems, selectedDay]);
 
-  // Feriados
   const currentYear = currentDate.getFullYear();
   const feriados = useMemo(() => getFeriados(currentYear), [currentYear]);
 
-  // Calendário mensal
   const monthDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 0 });
     const end = endOfWeek(endOfMonth(currentDate), { weekStartsOn: 0 });
     return eachDayOfInterval({ start, end });
   }, [currentDate]);
 
-  // Calendário semanal
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentDate, { weekStartsOn: 0 });
     const end = endOfWeek(currentDate, { weekStartsOn: 0 });
     return eachDayOfInterval({ start, end });
   }, [currentDate]);
 
-  // Indicadores de dia (dots)
   const dayIndicators = useMemo(() => {
     const map = new Map<string, { aguardando: boolean; encerrado: boolean; suspenso: boolean; dispensa: boolean }>();
     for (const item of filteredItems) {
@@ -130,7 +117,6 @@ export default function AvisosLicitacoesClient() {
     return map;
   }, [filteredItems]);
 
-  // Navegação
   const navigatePrev = useCallback(() => {
     setCurrentDate((d) => (viewMode === 'month' ? subMonths(d, 1) : subWeeks(d, 1)));
   }, [viewMode]);
@@ -144,7 +130,6 @@ export default function AvisosLicitacoesClient() {
     setSelectedDay(new Date());
   }, []);
 
-  // Lista com paginação
   const [listPage, setListPage] = useState(0);
   const PAGE_SIZE = 15;
 
@@ -159,12 +144,8 @@ export default function AvisosLicitacoesClient() {
 
   const totalPages = Math.ceil(sortedListItems.length / PAGE_SIZE);
 
-  // Reset paginação quando filtros mudam
-  useEffect(() => {
-    setListPage(0);
-  }, [fonteFilter, statusFilter, searchTerm]);
+  useEffect(() => { setListPage(0); }, [fonteFilter, statusFilter, searchTerm]);
 
-  // Contagem por status (KPIs)
   const counts = useMemo(() => {
     let aguardando = 0;
     let encerrado = 0;
@@ -178,218 +159,199 @@ export default function AvisosLicitacoesClient() {
   }, [filteredItems]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-8 animate-fade-in">
-        {/* Header monumental */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Icon name="notifications_active" size={20} className="text-primary" />
-            </div>
-            <div>
-              <h1 className="text-headline-md font-display text-on-surface">Aviso de Licitações</h1>
-              <p className="text-body-sm text-on-surface-variant">Avisos e editais de processos licitatórios de Bandeirantes MS</p>
-            </div>
-          </div>
-        </motion.div>
+    <div className="space-y-6 animate-fade-in">
+      {/* Page header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="text-headline-lg font-display font-bold text-on-surface dark:text-white">
+          Avisos de Licitações
+        </h1>
+        <p className="text-body-md text-on-surface-variant mt-1">
+          Avisos e editais de processos licitatórios de Bandeirantes MS
+        </p>
+      </motion.div>
 
-        {/* KPI Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-        >
-          <div className="metric-card">
-            <p className="metric-label">Total</p>
-            <p className="metric-value mt-1">{counts.total}</p>
-          </div>
-          <div className="metric-card bg-secondary/5">
-            <p className="metric-label">Aguardando</p>
-            <p className="metric-value text-secondary mt-1">{counts.aguardando}</p>
-          </div>
-          <div className="metric-card">
-            <p className="metric-label">Encerrado</p>
-            <p className="metric-value text-on-surface-variant mt-1">{counts.encerrado}</p>
-          </div>
-          <div className="metric-card bg-error/5">
-            <p className="metric-label">Suspenso</p>
-            <p className="metric-value text-error mt-1">{counts.suspenso}</p>
-          </div>
-        </motion.div>
+      {/* KPI cards */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      >
+        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient">
+          <p className="text-label-md text-on-surface-variant">Total</p>
+          <p className="text-headline-sm font-display font-bold text-on-surface dark:text-white mt-1">{counts.total}</p>
+        </div>
+        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient">
+          <p className="text-label-md text-on-surface-variant">Aguardando</p>
+          <p className="text-headline-sm font-display font-bold text-secondary dark:text-emerald-400 mt-1">{counts.aguardando}</p>
+        </div>
+        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient">
+          <p className="text-label-md text-on-surface-variant">Encerrado</p>
+          <p className="text-headline-sm font-display font-bold text-on-surface-variant mt-1">{counts.encerrado}</p>
+        </div>
+        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient">
+          <p className="text-label-md text-on-surface-variant">Suspenso</p>
+          <p className="text-headline-sm font-display font-bold text-error dark:text-red-400 mt-1">{counts.suspenso}</p>
+        </div>
+      </motion.div>
 
-        {/* Filtros */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-          className="surface-card p-4 space-y-3"
-        >
-          <div className="relative">
-            <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
-            <input
-              type="text"
-              placeholder="Buscar por objeto, número ou modalidade..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-field pl-10 rounded-lg"
-            />
-            {searchTerm && (
+      {/* Filter bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.15 }}
+        className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient space-y-3"
+      >
+        {/* Search */}
+        <div className="relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[18px]">search</span>
+          <input
+            type="text"
+            placeholder="Buscar por objeto, número ou modalidade..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-surface-container-high dark:bg-slate-700/40 rounded-xl pl-10 pr-10 py-2.5 text-sm text-on-surface dark:text-slate-200 placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          )}
+        </div>
+
+        {/* Filter pills */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="material-symbols-outlined text-on-surface-variant text-[16px] flex-shrink-0">filter_alt</span>
+            {FONTES.map((f) => (
               <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+                key={f.key}
+                onClick={() => setFonteFilter(f.key)}
+                className={`rounded-full px-3 py-1.5 text-label-md font-medium transition-colors ${
+                  fonteFilter === f.key
+                    ? 'bg-primary text-on-primary dark:bg-primary/80 dark:text-white shadow-ambient'
+                    : 'bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60'
+                }`}
               >
-                <Icon name="close" size={18} />
+                {f.label}
               </button>
-            )}
+            ))}
           </div>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Icon name="filter_alt" size={16} className="text-on-surface-variant flex-shrink-0" />
-              {FONTES.map((f) => (
-                <button
-                  key={f.key}
-                  onClick={() => setFonteFilter(f.key)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    fonteFilter === f.key
-                      ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
-                      : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-1.5 flex-wrap sm:ml-auto">
-              {STATUSES.map((s) => (
-                <button
-                  key={s.key}
-                  onClick={() => setStatusFilter(s.key)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    statusFilter === s.key
-                      ? 'bg-surface-container text-on-surface ring-1 ring-outline-variant/30'
-                      : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
-                  }`}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-1.5 flex-wrap sm:ml-auto">
+            {STATUSES.map((s) => (
+              <button
+                key={s.key}
+                onClick={() => setStatusFilter(s.key)}
+                className={`rounded-full px-3 py-1.5 text-label-md font-medium transition-colors ${
+                  statusFilter === s.key
+                    ? 'bg-primary text-on-primary dark:bg-primary/80 dark:text-white shadow-ambient'
+                    : 'bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
           </div>
-        </motion.div>
+        </div>
+      </motion.div>
 
-        {/* Tabs de visualização */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="flex items-center gap-2"
-        >
+      {/* View toggle pills */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+        className="flex items-center gap-2"
+      >
+        {[
+          { key: 'month' as ViewMode, icon: 'calendar_month', label: 'Mensal' },
+          { key: 'week' as ViewMode, icon: 'grid_view', label: 'Semanal' },
+          { key: 'list' as ViewMode, icon: 'list', label: 'Lista' },
+        ].map(({ key, icon, label }) => (
           <button
-            onClick={() => setViewMode('month')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              viewMode === 'month'
-                ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
-                : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+            key={key}
+            onClick={() => setViewMode(key)}
+            className={`flex items-center gap-2 rounded-full px-4 py-2 text-label-md font-medium transition-all duration-200 ${
+              viewMode === key
+                ? 'bg-primary text-on-primary dark:bg-primary/80 dark:text-white shadow-ambient'
+                : 'bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60'
             }`}
           >
-            <Icon name="calendar_month" size={18} />
-            Mensal
+            <span className="material-symbols-outlined text-[18px]">{icon}</span>
+            {label}
           </button>
-          <button
-            onClick={() => setViewMode('week')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              viewMode === 'week'
-                ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
-                : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
-            }`}
-          >
-            <Icon name="grid_view" size={18} />
-            Semanal
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              viewMode === 'list'
-                ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
-                : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
-            }`}
-          >
-            <Icon name="list" size={18} />
-            Lista
-          </button>
-        </motion.div>
+        ))}
+      </motion.div>
 
-        {/* Loading */}
-        {isLoading && (
-          <LoadingSpinner size="lg" message="Carregando licitações..." className="py-20" />
-        )}
+      {/* Loading */}
+      {isLoading && (
+        <LoadingSpinner size="lg" message="Carregando licitações..." className="py-20" />
+      )}
 
-        {/* Error */}
-        {isError && !isLoading && (
-          <div className="surface-card p-6 text-center bg-error/5">
-            <Icon name="warning" size={32} className="text-error mx-auto mb-3" />
-            <p className="text-on-surface font-medium mb-1">Erro ao carregar licitações</p>
-            <p className="text-sm text-on-surface-variant">Tente novamente mais tarde.</p>
-          </div>
-        )}
+      {/* Error */}
+      {isError && !isLoading && (
+        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 text-center shadow-ambient">
+          <span className="material-symbols-outlined text-error text-[32px] block mx-auto mb-3">warning</span>
+          <p className="text-on-surface dark:text-white font-medium mb-1">Erro ao carregar licitações</p>
+          <p className="text-sm text-on-surface-variant">Tente novamente mais tarde.</p>
+        </div>
+      )}
 
-        {/* Calendar View (Month) */}
-        {!isLoading && !isError && viewMode === 'month' && (
-          <MonthView
-            currentDate={currentDate}
-            monthDays={monthDays}
-            selectedDay={selectedDay}
-            selectedDayItems={selectedDayItems}
-            dayIndicators={dayIndicators}
-            feriados={feriados}
-            onNavigatePrev={navigatePrev}
-            onNavigateNext={navigateNext}
-            onNavigateToday={navigateToday}
-            onSelectDay={setSelectedDay}
-            onOpenModal={setModalItem}
-          />
-        )}
+      {/* Month View */}
+      {!isLoading && !isError && viewMode === 'month' && (
+        <MonthView
+          currentDate={currentDate}
+          monthDays={monthDays}
+          selectedDay={selectedDay}
+          selectedDayItems={selectedDayItems}
+          dayIndicators={dayIndicators}
+          feriados={feriados}
+          onNavigatePrev={navigatePrev}
+          onNavigateNext={navigateNext}
+          onNavigateToday={navigateToday}
+          onSelectDay={setSelectedDay}
+          onOpenModal={setModalItem}
+        />
+      )}
 
-        {/* Calendar View (Week) */}
-        {!isLoading && !isError && viewMode === 'week' && (
-          <WeekView
-            weekDays={weekDays}
-            filteredItems={filteredItems}
-            selectedDay={selectedDay}
-            selectedDayItems={selectedDayItems}
-            feriados={feriados}
-            onNavigatePrev={navigatePrev}
-            onNavigateNext={navigateNext}
-            onNavigateToday={navigateToday}
-            onSelectDay={setSelectedDay}
-            onOpenModal={setModalItem}
-          />
-        )}
+      {/* Week View */}
+      {!isLoading && !isError && viewMode === 'week' && (
+        <WeekView
+          weekDays={weekDays}
+          filteredItems={filteredItems}
+          selectedDay={selectedDay}
+          selectedDayItems={selectedDayItems}
+          feriados={feriados}
+          onNavigatePrev={navigatePrev}
+          onNavigateNext={navigateNext}
+          onNavigateToday={navigateToday}
+          onSelectDay={setSelectedDay}
+          onOpenModal={setModalItem}
+        />
+      )}
 
-        {/* List View */}
-        {!isLoading && !isError && viewMode === 'list' && (
-          <ListView
-            pagedListItems={pagedListItems}
-            sortedListItems={sortedListItems}
-            totalPages={totalPages}
-            listPage={listPage}
-            searchTerm={searchTerm}
-            onSetListPage={setListPage}
-            onOpenModal={setModalItem}
-          />
-        )}
+      {/* List View */}
+      {!isLoading && !isError && viewMode === 'list' && (
+        <ListView
+          pagedListItems={pagedListItems}
+          sortedListItems={sortedListItems}
+          totalPages={totalPages}
+          listPage={listPage}
+          searchTerm={searchTerm}
+          onSetListPage={setListPage}
+          onOpenModal={setModalItem}
+        />
+      )}
 
-        {/* Modal */}
-        {modalItem && <LicitacaoModal item={modalItem} onClose={() => setModalItem(null)} />}
-      </div>
-    </DashboardLayout>
+      {/* Modal */}
+      {modalItem && <LicitacaoModal item={modalItem} onClose={() => setModalItem(null)} />}
+    </div>
   );
 }

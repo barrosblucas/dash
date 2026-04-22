@@ -1,11 +1,11 @@
 /**
  * Visualização semanal do calendário de licitações
+ * Design: The Architectural Archive — day columns with event cards
  */
 
 import { format, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-import Icon from '@/components/ui/Icon';
 import type { LicitacaoUnified } from '@/types/licitacao';
 
 import { extrairTituloSucinto } from './parsers';
@@ -39,35 +39,35 @@ export function WeekView({
 }: WeekViewProps) {
   return (
     <div className="space-y-4">
-      {/* Navegação da semana */}
+      {/* Week navigation */}
       <div className="flex items-center justify-between">
         <button
           onClick={onNavigatePrev}
-          className="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
+          className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface transition-colors"
         >
-          <Icon name="chevron_left" size={20} />
+          <span className="material-symbols-outlined text-[20px]">chevron_left</span>
         </button>
-        <h2 className="text-headline-sm font-display text-on-surface">
+        <h2 className="text-headline-sm font-display text-on-surface dark:text-white">
           {format(weekDays[0], "dd 'de' MMM", { locale: ptBR })} –{' '}
           {format(weekDays[6], "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
         </h2>
         <div className="flex items-center gap-2">
           <button
             onClick={onNavigateToday}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-container-high text-on-surface-variant hover:bg-surface-container transition-colors"
+            className="rounded-full px-3 py-1.5 text-label-md font-medium bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60 transition-colors"
           >
             Hoje
           </button>
           <button
             onClick={onNavigateNext}
-            className="p-2 rounded-lg hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
+            className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface transition-colors"
           >
-            <Icon name="chevron_right" size={20} />
+            <span className="material-symbols-outlined text-[20px]">chevron_right</span>
           </button>
         </div>
       </div>
 
-      {/* Grid semanal */}
+      {/* Week grid */}
       <div className="grid grid-cols-7 gap-2">
         {weekDays.map((day) => {
           const key = format(day, 'yyyy-MM-dd');
@@ -82,23 +82,29 @@ export function WeekView({
               onClick={() => onSelectDay(day)}
               className={`rounded-xl p-3 text-left transition-all min-h-[140px] flex flex-col ${
                 isSelected
-                  ? 'bg-primary/10 ring-1 ring-primary/25'
+                  ? 'bg-primary/10 dark:bg-blue-900/20'
                   : today
-                  ? 'bg-tertiary/5 ring-1 ring-tertiary/20'
-                  : 'bg-surface-container-low hover:bg-surface-container'
-              }`}
+                  ? 'bg-tertiary/5 dark:bg-amber-900/10'
+                  : 'bg-surface-container-lowest dark:bg-slate-800/50 hover:bg-surface-container dark:hover:bg-slate-800/70'
+              } shadow-ambient`}
             >
               <div className="flex items-center justify-between mb-1">
                 <span
                   className={`text-xs font-semibold uppercase tracking-wider ${
-                    today ? 'text-tertiary' : 'text-on-surface-variant'
+                    today
+                      ? 'text-tertiary dark:text-amber-400'
+                      : isSelected
+                      ? 'text-primary dark:text-blue-400'
+                      : 'text-on-surface-variant dark:text-slate-400'
                   }`}
                 >
                   {format(day, 'EEE', { locale: ptBR })}
                 </span>
                 <span
-                  className={`text-sm font-bold ${
-                    today ? 'text-tertiary' : 'text-on-surface-variant'
+                  className={`text-xs font-bold ${
+                    today
+                      ? 'w-5 h-5 flex items-center justify-center rounded-full bg-tertiary/20 dark:bg-amber-700/30 text-tertiary dark:text-amber-300'
+                      : 'text-on-surface-variant dark:text-slate-400'
                   }`}
                 >
                   {format(day, 'd')}
@@ -106,9 +112,7 @@ export function WeekView({
               </div>
 
               {feriado && (
-                <span className="text-[9px] text-error font-medium mb-1 truncate">
-                  {feriado}
-                </span>
+                <p className="text-[9px] text-error dark:text-red-400 font-medium mb-1 line-clamp-1">{feriado}</p>
               )}
 
               <div className="flex-1 space-y-1 overflow-hidden">
@@ -122,15 +126,17 @@ export function WeekView({
                     title={item.numero}
                     className={`text-[10px] leading-tight px-1.5 py-1 rounded truncate cursor-pointer ${
                       item.fonte === 'dispensa'
-                        ? 'bg-primary/15 text-primary'
-                        : 'bg-tertiary/15 text-tertiary'
+                        ? 'bg-primary/15 text-primary dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'bg-tertiary/15 text-tertiary dark:bg-amber-900/30 dark:text-amber-400'
                     }`}
                   >
                     {extrairTituloSucinto(item.objeto) || item.numero}
                   </div>
                 ))}
                 {items.length > 3 && (
-                  <span className="text-[10px] text-on-surface-variant/50 pl-1">+{items.length - 3} mais</span>
+                  <span className="text-[10px] text-on-surface-variant/50 dark:text-slate-500 pl-1">
+                    +{items.length - 3} mais
+                  </span>
                 )}
               </div>
             </button>
@@ -138,10 +144,10 @@ export function WeekView({
         })}
       </div>
 
-      {/* Itens do dia selecionado (semana) */}
+      {/* Selected day detail cards */}
       {selectedDay && selectedDayItems.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-on-surface-variant">
+          <h3 className="text-sm font-semibold text-on-surface-variant dark:text-slate-400">
             {format(selectedDay, "dd 'de' MMMM", { locale: ptBR })}
             <span className="text-on-surface-variant/50 ml-2">({selectedDayItems.length})</span>
           </h3>
@@ -150,12 +156,12 @@ export function WeekView({
               <button
                 key={item.id}
                 onClick={() => onOpenModal(item)}
-                className="w-full text-left surface-card p-4 hover:shadow-card-hover transition-all"
+                className="w-full text-left bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient transition-all duration-200 hover:shadow-ambient-lg"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sm font-medium text-on-surface">{item.numero}</span>
+                      <span className="text-sm font-medium text-on-surface dark:text-white">{item.numero}</span>
                       <FonteBadge fonte={item.fonte} />
                       <StatusBadge status={item.status} />
                     </div>
@@ -163,7 +169,7 @@ export function WeekView({
                       {extrairTituloSucinto(item.objeto) || item.objeto}
                     </p>
                   </div>
-                  <Icon name="open_in_new" size={18} className="text-on-surface-variant flex-shrink-0 mt-0.5" />
+                  <span className="material-symbols-outlined text-on-surface-variant text-[18px] flex-shrink-0 mt-0.5">open_in_new</span>
                 </div>
               </button>
             ))}

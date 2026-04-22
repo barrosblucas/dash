@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-04-21
+Snapshot: 2026-04-22
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -116,7 +116,12 @@ Snapshot: 2026-04-21
 - `components/dashboard/ForecastSection.tsx`: componente de previsão (≤400 linhas) com gráfico ComposedChart de receitas/despesas históricas e projetadas
 - `components/dashboard/forecast-helpers.ts`: fetchers e transformação de dados para ForecastSection
 - `components/kpi/`: cards de KPI
-- `components/layouts/`: layouts compartilhados
+- `components/layouts/`: layouts compartilhados (DashboardLayout, Header, Sidebar, PortalHeader, PortalFooter)
+- `components/layouts/Sidebar.tsx`: sidebar com navegação completa (10 itens incluindo Obras), logo, footer com "Baixar Dados Abertos"
+- `components/layouts/Header.tsx`: header glassmorphism para páginas internas (backdrop-blur-2xl, search, theme toggle)
+- `components/layouts/DashboardLayout.tsx`: layout wrapper com sidebar fixa (md+) e drawer mobile animado
+- `components/layouts/PortalHeader.tsx`: header público com nav links, theme toggle, "Acesso Restrito"
+- `components/layouts/PortalFooter.tsx`: footer com grid 4 colunas + copyright
 - `components/receitas/ReceitaDetalhamentoTable.tsx`: tabela hierárquica de detalhamento de receitas com expand/collapse
 - `components/ui/`: componentes base (shared)
 - `app/receitas/page.tsx`: página de receitas municipais
@@ -142,7 +147,10 @@ Snapshot: 2026-04-21
 - `app/movimento-extra/monthly-bar.tsx`: barra de evolução mensal (`MonthlyEvolutionBar`)
 - `app/movimento-extra/mensal-view.tsx`: view completa do modo mensal (KPIs, insights, fundos, itens, glossário)
 - `app/movimento-extra/anual-view.tsx`: view completa do modo anual (KPIs, evolução mensal, destaques)
-- `app/obras/page.tsx`: placeholder — Acompanhamento de Obras
+- `app/obras/page.tsx`: página de listagem de obras com filtros, KPIs e grid de cards
+- `app/obras/obras-client.tsx`: componente client com mock data, filtros (Todas/Em Andamento/Concluídas/Planejadas), progress bars
+- `app/obras/[id]/page.tsx`: página dinâmica de detalhe da obra
+- `app/obras/[id]/obra-detalhe-client.tsx`: detalhe com breadcrumb, hero, cronograma timeline, info cards
 - `app/contratos/page.tsx`: placeholder — Gestão de Contratos
 - `app/diarias/page.tsx`: placeholder — Diárias e Passagens
 - `app/licitacoes/page.tsx`: placeholder — Licitações

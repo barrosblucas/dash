@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 
-import Icon from '@/components/ui/Icon';
 import type { MovimentoExtraAnualResponse } from '@/types/movimento-extra';
 
 import { KpiCard } from './kpi-card';
@@ -41,18 +40,15 @@ export function AnualView({ dataAnual }: AnualViewProps) {
           iconName={dataAnual.saldo >= 0 ? 'bar_chart' : 'warning'}
           accentColor={dataAnual.saldo >= 0 ? '#06b6d4' : '#f97316'}
         />
-        {/* Total de Itens — card simples sem formatação de moeda */}
-        <div className="metric-card transition-all duration-300 hover:shadow-ambient">
+        {/* Total items count */}
+        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient transition-all duration-300 hover:shadow-ambient-lg">
           <div className="flex items-start justify-between mb-3">
-            <span className="metric-label">Total de Itens</span>
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#a855f718', color: '#a855f7' }}
-            >
-              <Icon name="sync_alt" size={20} />
+            <span className="text-label-md text-on-surface-variant">Total de Itens</span>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center bg-purple-500/15 text-purple-500">
+              <span className="material-symbols-outlined text-[20px]">sync_alt</span>
             </div>
           </div>
-          <p className="metric-value">
+          <p className="text-headline-lg font-display font-bold text-on-surface dark:text-white">
             {dataAnual.quantidade_total.toLocaleString('pt-BR')}
           </p>
         </div>
@@ -66,27 +62,28 @@ export function AnualView({ dataAnual }: AnualViewProps) {
           transition={{ duration: 0.4, delay: 0.1 }}
         >
           <div className="flex items-center gap-2 mb-4">
-            <Icon name="calendar_month" size={18} className="text-on-surface-variant" />
-            <h2 className="text-headline-sm font-display text-on-surface">Evolução Mensal</h2>
+            <span className="material-symbols-outlined text-on-surface-variant text-[18px]">calendar_month</span>
+            <h2 className="text-headline-sm font-display text-on-surface dark:text-white">Evolução Mensal</h2>
           </div>
-          <div className="surface-card p-4">
+          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-5 shadow-ambient">
             {/* Legend */}
             <div className="flex items-center gap-4 mb-4">
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-secondary/70" />
+                <div className="w-3 h-3 rounded-full bg-secondary/70 dark:bg-emerald-500/60" />
                 <span className="text-xs text-on-surface-variant">Receitas</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-error/70" />
+                <div className="w-3 h-3 rounded-full bg-error/70 dark:bg-red-500/60" />
                 <span className="text-xs text-on-surface-variant">Despesas</span>
               </div>
             </div>
+
             {(() => {
               const maxVal = Math.max(
-                ...dataAnual.evolucao_mensal.map(m => Math.max(m.total_receitas, m.total_despesas)),
+                ...dataAnual.evolucao_mensal.map((m) => Math.max(m.total_receitas, m.total_despesas)),
                 1
               );
-              return dataAnual.evolucao_mensal.map(item => (
+              return dataAnual.evolucao_mensal.map((item) => (
                 <MonthlyEvolutionBar key={item.mes} item={item} maxVal={maxVal} />
               ));
             })()}
@@ -102,15 +99,15 @@ export function AnualView({ dataAnual }: AnualViewProps) {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <div className="flex items-center gap-2 mb-4">
-            <Icon name="emoji_events" size={18} className="text-on-surface-variant" />
-            <h2 className="text-headline-sm font-display text-on-surface">Destaques do Ano</h2>
+            <span className="material-symbols-outlined text-on-surface-variant text-[18px]">emoji_events</span>
+            <h2 className="text-headline-sm font-display text-on-surface dark:text-white">Destaques do Ano</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {dataAnual.insights_receitas?.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Icon name="trending_up" size={18} className="text-secondary" />
-                  <h3 className="text-sm font-semibold text-secondary">Top Receitas</h3>
+                  <span className="material-symbols-outlined text-secondary text-[18px]">trending_up</span>
+                  <h3 className="text-sm font-semibold text-secondary dark:text-emerald-400">Top Receitas</h3>
                 </div>
                 <div className="space-y-3">
                   {dataAnual.insights_receitas.map((insight, i) => (
@@ -122,8 +119,8 @@ export function AnualView({ dataAnual }: AnualViewProps) {
             {dataAnual.insights_despesas?.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Icon name="trending_down" size={18} className="text-error" />
-                  <h3 className="text-sm font-semibold text-error">Top Despesas</h3>
+                  <span className="material-symbols-outlined text-error text-[18px]">trending_down</span>
+                  <h3 className="text-sm font-semibold text-error dark:text-red-400">Top Despesas</h3>
                 </div>
                 <div className="space-y-3">
                   {dataAnual.insights_despesas.map((insight, i) => (

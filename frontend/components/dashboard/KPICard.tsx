@@ -1,8 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
-
-import Icon from '@/components/ui/Icon';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import type { KPICardData } from '@/types';
 
@@ -21,7 +18,6 @@ export default function KPICard({
   size = 'md',
   showSparkline = false,
   showTrend = true,
-  _animated = true,
   onClick,
   className = '',
 }: KPICardProps) {
@@ -51,37 +47,8 @@ export default function KPICard({
     }
   })();
 
-  // Classes baseadas no tamanho
-  const sizeClasses = {
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8',
-  };
-
-  const valueSizeClasses = {
-    sm: 'text-headline-md',
-    md: 'text-headline-lg',
-    lg: 'text-display-sm',
-  };
-
-  // Cor da variação
-  const variacaoColor = (() => {
-    if (!variacao) return 'text-on-surface-variant';
-    if (variacao_tipo === 'positiva') return 'text-revenue-accent';
-    if (variacao_tipo === 'negativa') return 'text-expense-accent';
-    return 'text-on-surface-variant';
-  })();
-
-  // Ícone da variação
-  const variacaoIconName = (() => {
-    if (!variacao) return null;
-    if (tendencia === 'alta') return 'trending_up';
-    if (tendencia === 'baixa') return 'trending_down';
-    return 'remove';
-  })();
-
   // Ícone do card baseado no título
-  const cardIconName = (() => {
+  const iconName = (() => {
     if (titulo.includes('Receita')) return 'account_balance_wallet';
     if (titulo.includes('Despesa')) return 'payments';
     if (titulo.includes('Superávit') || titulo.includes('Déficit')) return 'savings';
@@ -90,38 +57,60 @@ export default function KPICard({
   })();
 
   // Cor do ícone baseada no tipo
-  const iconColorClass = (() => {
-    if (titulo.includes('Receita')) return 'text-revenue-accent bg-revenue-500/10';
-    if (titulo.includes('Despesa')) return 'text-expense-accent bg-expense-500/10';
-    if (titulo.includes('Superávit')) return 'text-revenue-accent bg-revenue-500/10';
-    if (titulo.includes('Déficit')) return 'text-expense-accent bg-expense-500/10';
-    if (titulo.includes('Execução')) return 'text-forecast-accent bg-forecast-500/10';
-    return 'text-primary bg-primary-container/20';
+  const iconStyle = (() => {
+    if (titulo.includes('Receita')) return 'bg-revenue-500/10 text-revenue-accent';
+    if (titulo.includes('Despesa')) return 'bg-expense-500/10 text-expense-accent';
+    if (titulo.includes('Superávit')) return 'bg-revenue-500/10 text-revenue-accent';
+    if (titulo.includes('Déficit')) return 'bg-expense-500/10 text-expense-accent';
+    if (titulo.includes('Execução')) return 'bg-forecast-500/10 text-forecast-accent';
+    return 'bg-primary-container/20 text-primary';
   })();
 
+  // Cor da variação
+  const trendColor = (() => {
+    if (!variacao) return 'text-on-surface-variant';
+    if (variacao_tipo === 'positiva') return 'text-revenue-accent';
+    if (variacao_tipo === 'negativa') return 'text-expense-accent';
+    return 'text-on-surface-variant';
+  })();
+
+  const trendIcon = (() => {
+    if (!variacao) return null;
+    if (tendencia === 'alta') return 'trending_up';
+    if (tendencia === 'baixa') return 'trending_down';
+    return 'remove';
+  })();
+
+  // Tamanhos
+  const iconSize = size === 'sm' ? 'w-10 h-10' : 'w-12 h-12';
+  const padding = size === 'sm' ? 'p-4' : 'p-6';
+  const valueClass = size === 'lg' ? 'text-display-sm' : size === 'sm' ? 'text-headline-md' : 'text-headline-md';
+
   return (
-    <motion.div
+    <div
       className={`
-        kpi-card ${sizeClasses[size]} transition-all duration-300
-        ${onClick ? 'cursor-pointer' : ''}
+        bg-surface-container-lowest dark:bg-slate-800/50
+        rounded-xl shadow-ambient hover:shadow-ambient-lg
+        transition-shadow duration-300
+        ${padding} ${onClick ? 'cursor-pointer' : ''}
         ${className}
       `}
       onClick={onClick}
-      whileHover={onClick ? { scale: 1.01 } : undefined}
-      whileTap={onClick ? { scale: 0.99 } : undefined}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-5">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconColorClass}`}>
-          <Icon name={cardIconName} size={20} />
+      {/* Header: ícone + alerta */}
+      <div className="flex items-start justify-between mb-4">
+        <div className={`${iconSize} rounded-full flex items-center justify-center ${iconStyle}`}>
+          <span className="material-symbols-outlined" style={{ fontSize: size === 'sm' ? 20 : 22 }}>
+            {iconName}
+          </span>
         </div>
         {alerta && (
           <span
             className={`
-              chip
-              ${alerta.tipo === 'info' ? 'chip-primary' : ''}
-              ${alerta.tipo === 'warning' ? 'chip-tertiary' : ''}
-              ${alerta.tipo === 'danger' ? 'chip-error' : ''}
+              inline-flex items-center px-2.5 py-0.5 rounded-full text-label-sm font-medium
+              ${alerta.tipo === 'info' ? 'bg-primary-container/20 text-primary' : ''}
+              ${alerta.tipo === 'warning' ? 'bg-tertiary-container/20 text-tertiary' : ''}
+              ${alerta.tipo === 'danger' ? 'bg-error-container/20 text-error' : ''}
             `}
           >
             {alerta.mensagem}
@@ -130,42 +119,39 @@ export default function KPICard({
       </div>
 
       {/* Label */}
-      <p className="kpi-label mb-2">{titulo}</p>
+      <p className="text-label-md text-on-surface-variant mb-1">{titulo}</p>
 
       {/* Value */}
-      <p className={`${valueSizeClasses[size]} font-display font-bold text-on-surface tracking-tight mb-3`}>
+      <p className={`${valueClass} font-display font-bold text-on-surface tracking-tight mb-3`}>
         {formattedValue}
       </p>
 
-      {/* Sparkline */}
+      {/* Sparkline placeholder */}
       {showSparkline && sparkline_data && sparkline_data.length > 0 && (
         <div className="h-10 mb-3">
-          {/* TODO: Implementar minichart sparkline */}
-          <div className="w-full h-full bg-surface-container-high/50 rounded animate-pulse" />
+          <div className="w-full h-full bg-surface-container-high/50 rounded-lg animate-pulse" />
         </div>
       )}
 
-      {/* Variation */}
+      {/* Trend indicator */}
       {showTrend && variacao !== undefined && (
-        <div className="flex items-center gap-2">
-          {variacaoIconName && (
-            <Icon
-              name={variacaoIconName}
-              size={16}
-              className={variacaoColor}
-            />
+        <div className="flex items-center gap-1.5">
+          {trendIcon && (
+            <span className={`material-symbols-outlined ${trendColor}`} style={{ fontSize: 16 }}>
+              {trendIcon}
+            </span>
           )}
-          <span className={`text-sm font-semibold ${variacaoColor}`}>
+          <span className={`text-label-md font-semibold ${trendColor}`}>
             {variacao > 0 ? '+' : ''}
             {variacao.toFixed(1)}%
           </span>
           {periodo_comparacao && (
-            <span className="text-xs text-on-surface-variant/60">
+            <span className="text-label-sm text-on-surface-variant/60">
               vs {periodo_comparacao}
             </span>
           )}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

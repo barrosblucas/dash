@@ -1,18 +1,18 @@
 import type { Metadata } from 'next';
 
-import PlaceholderPage from '@/components/portal/PlaceholderPage';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+
+import ObrasClient from './obras-client';
 
 export const metadata: Metadata = {
-  title: 'Acompanhamento de Obras',
-  description: 'Obras e projetos de infraestrutura do município de Bandeirantes MS',
+  title: 'Obras Públicas',
+  description: 'Acompanhamento de obras e projetos de infraestrutura do município',
 };
 
 export default function ObrasPage() {
   return (
-    <PlaceholderPage
-      title="Acompanhamento de Obras"
-      description="Esta seção permitirá acompanhar as obras e projetos de infraestrutura do município. Está em desenvolvimento e estará disponível em breve."
-      iconName="Building2"
-    />
+    <DashboardLayout>
+      <ObrasClient />
+    </DashboardLayout>
   );
 }

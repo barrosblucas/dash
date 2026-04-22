@@ -8,19 +8,31 @@ export function MonthlyEvolutionBar({ item, maxVal }: { item: ResumoMensalItem; 
 
   return (
     <div className="flex items-center gap-3 py-2">
-      <span className="text-xs text-on-surface-variant w-8 shrink-0">{MESES_ABREV[item.mes - 1]}</span>
+      <span className="text-xs text-on-surface-variant dark:text-slate-400 w-8 shrink-0 font-medium">
+        {MESES_ABREV[item.mes - 1]}
+      </span>
       <div className="flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-2 bg-surface-container-high rounded-full overflow-hidden">
-            <div className="h-full bg-secondary/70 rounded-full" style={{ width: `${receitaW}%` }} />
+          <div className="flex-1 h-2 bg-surface-container-high dark:bg-slate-700/40 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-secondary/70 dark:bg-emerald-500/60 rounded-full transition-all duration-500"
+              style={{ width: `${receitaW}%` }}
+            />
           </div>
-          <span className="text-xs text-secondary w-20 text-right">{formatCurrency(item.total_receitas)}</span>
+          <span className="text-xs text-secondary dark:text-emerald-400 w-20 text-right font-medium">
+            {formatCurrency(item.total_receitas)}
+          </span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-2 bg-surface-container-high rounded-full overflow-hidden">
-            <div className="h-full bg-error/70 rounded-full" style={{ width: `${despesaW}%` }} />
+          <div className="flex-1 h-2 bg-surface-container-high dark:bg-slate-700/40 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-error/70 dark:bg-red-500/60 rounded-full transition-all duration-500"
+              style={{ width: `${despesaW}%` }}
+            />
           </div>
-          <span className="text-xs text-error w-20 text-right">{formatCurrency(item.total_despesas)}</span>
+          <span className="text-xs text-error dark:text-red-400 w-20 text-right font-medium">
+            {formatCurrency(item.total_despesas)}
+          </span>
         </div>
       </div>
     </div>
