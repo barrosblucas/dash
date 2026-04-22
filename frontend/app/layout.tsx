@@ -1,24 +1,25 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Manrope, JetBrains_Mono } from 'next/font/google';
+import { Outfit, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 
 import Providers from '@/components/Providers';
 import 'material-symbols/outlined.css';
 import 'material-symbols/rounded.css';
 import './globals.css';
 
-/* ── Typography: Editorial Voice ── */
+/* ── Typography: Modern, Serene, Highly Legible ── */
 
-const manrope = Manrope({
+const outfit = Outfit({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-manrope',
+  variable: '--font-outfit',
   weight: ['400', '500', '600', '700', '800'],
 });
 
-const inter = Inter({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter',
+  variable: '--font-jakarta',
+  weight: ['400', '500', '600', '700'],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -32,10 +33,10 @@ const themeScript = `
 (function() {
   try {
     var stored = JSON.parse(localStorage.getItem('bandeirantes-theme') || '{}');
-    var theme = stored.state && stored.state.theme ? stored.state.theme : 'dark';
+    var theme = stored.state && stored.state.theme ? stored.state.theme : 'light';
     document.documentElement.classList.toggle('dark', theme === 'dark');
   } catch(e) {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('dark');
   }
 })();
 `;
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
     template: '%s | Bandeirantes MS',
   },
   description:
-    'Portal da Transparência — Prefeitura Municipal de Bandeirantes MS. Acesse informações sobre receitas, despesas, licitações, obras e gestão pública.',
+    'Portal da Transparência — Prefeitura Municipal de Bandeirantes MS. Uma nova experiência de transparência pública, intuitiva e inovadora.',
   keywords: [
     'dashboard financeiro',
     'prefeitura',
@@ -57,6 +58,7 @@ export const metadata: Metadata = {
     'despesas',
     'orcamento municipal',
     'transparencia',
+    'inovacao',
   ],
   authors: [{ name: 'Prefeitura de Bandeirantes' }],
   creator: 'Prefeitura de Bandeirantes',
@@ -69,7 +71,7 @@ export const metadata: Metadata = {
     siteName: 'Portal da Transparencia Bandeirantes',
     title: 'Portal da Transparencia | Bandeirantes MS',
     description:
-      'Portal da Transparencia — Prefeitura Municipal de Bandeirantes MS. Acesse informacoes sobre receitas, despesas, licitacoes, obras e gestao publica.',
+      'Uma nova experiência de transparência pública. Acesse informações detalhadas sobre a gestão da Prefeitura de Bandeirantes de forma simples e intuitiva.',
     images: [
       {
         url: '/og-image.png',
@@ -83,7 +85,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Portal da Transparencia | Bandeirantes MS',
     description:
-      'Portal da Transparencia — Prefeitura Municipal de Bandeirantes MS. Acesse informacoes sobre receitas, despesas, licitacoes, obras e gestao publica.',
+      'Uma nova experiência de transparência pública. Acesse informações detalhadas sobre a gestão da Prefeitura de Bandeirantes.',
     images: ['/og-image.png'],
   },
   manifest: '/manifest.json',
@@ -101,8 +103,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8f9ff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a0f1a' },
+    { media: '(prefers-color-scheme: light)', color: '#FAFAFA' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090B' },
   ],
 };
 
@@ -117,10 +119,10 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body
-        className={`${manrope.variable} ${inter.variable} ${jetbrainsMono.variable} font-body`}
+        className={`${outfit.variable} ${jakarta.variable} ${jetbrainsMono.variable} font-body bg-surface text-on-surface antialiased transition-colors duration-500`}
       >
         <Providers>
-          <div className="min-h-screen bg-surface transition-colors duration-300">
+          <div className="min-h-screen relative overflow-x-hidden selection:bg-secondary/20">
             {children}
           </div>
         </Providers>

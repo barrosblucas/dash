@@ -1,17 +1,15 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
-// Lazy loading para componentes pesados
-
 const KPISection = dynamic(
   () => import('@/components/dashboard/KPISection'),
-  { loading: () => <LoadingSpinner />, ssr: true }
+  { loading: () => <LoadingSpinner />, ssr: false }
 );
 
 const RevenueChart = dynamic(
@@ -39,10 +37,6 @@ const CombinedOverviewChart = dynamic(
   { loading: () => <LoadingSpinner />, ssr: false }
 );
 
-/* ────────────────────────────────────────────
-   Animações
-   ──────────────────────────────────────────── */
-
 const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
@@ -67,6 +61,14 @@ const staggerContainer = {
 };
 
 export default function DashboardClient() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <DashboardLayout>
       <motion.div
@@ -75,21 +77,18 @@ export default function DashboardClient() {
         animate="visible"
         variants={staggerContainer}
       >
-        {/* KPIs principais */}
         <motion.section variants={sectionVariants}>
           <Suspense fallback={<LoadingSpinner />}>
             <KPISection />
           </Suspense>
         </motion.section>
 
-        {/* Gráfico combinado: receitas x despesas */}
         <motion.section variants={sectionVariants}>
           <Suspense fallback={<LoadingSpinner />}>
             <CombinedOverviewChart />
           </Suspense>
         </motion.section>
 
-        {/* Gráficos individuais de receitas e despesas */}
         <motion.section
           variants={sectionVariants}
           className="grid grid-cols-1 lg:grid-cols-2 gap-6"
@@ -103,7 +102,6 @@ export default function DashboardClient() {
           </Suspense>
         </motion.section>
 
-        {/* Previsões e comparativo */}
         <motion.section
           variants={sectionVariants}
           className="grid grid-cols-1 xl:grid-cols-3 gap-6"

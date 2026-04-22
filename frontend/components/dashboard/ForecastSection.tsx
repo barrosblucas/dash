@@ -97,7 +97,7 @@ export default function ForecastSection({
       <div className={`chart-container ${className}`}>
         <div className="mb-5">
           <h3 className="text-title-lg font-display font-semibold text-on-surface flex items-center gap-2">
-            <Icon name="trending_up" size={22} className="text-forecast-accent" />
+            <Icon name="trending_up" size={22} className="text-tertiary" />
             Previsão
           </h3>
           <p className="text-body-sm text-on-surface-variant mt-1">Carregando dados...</p>
@@ -114,7 +114,7 @@ export default function ForecastSection({
       <div className={`chart-container ${className}`}>
         <div className="mb-5">
           <h3 className="text-title-lg font-display font-semibold text-on-surface flex items-center gap-2">
-            <Icon name="trending_up" size={22} className="text-forecast-accent" />
+            <Icon name="trending_up" size={22} className="text-tertiary" />
             Previsão
           </h3>
           <p className="text-body-sm text-error mt-1">Erro ao carregar dados</p>
@@ -147,7 +147,7 @@ export default function ForecastSection({
       <div className={`chart-container ${className}`}>
         <div className="mb-5">
           <h3 className="text-title-lg font-display font-semibold text-on-surface flex items-center gap-2">
-            <Icon name="trending_up" size={22} className="text-forecast-accent" />
+            <Icon name="trending_up" size={22} className="text-tertiary" />
             Previsão
           </h3>
           <p className="text-body-sm text-on-surface-variant mt-1">{chartSubtitle}</p>
@@ -192,13 +192,13 @@ export default function ForecastSection({
             <>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-on-surface-variant">Receitas:</span>
-                <span className="text-sm font-semibold text-revenue-accent">
+                <span className="text-sm font-semibold text-secondary">
                   {formatCurrency(yearData.receitas)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-on-surface-variant">Despesas:</span>
-                <span className="text-sm font-semibold text-expense-accent">
+                <span className="text-sm font-semibold text-error">
                   {formatCurrency(yearData.despesas)}
                 </span>
               </div>
@@ -207,13 +207,13 @@ export default function ForecastSection({
             <>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-on-surface-variant">Receitas (estimado):</span>
-                <span className="text-sm font-semibold text-revenue-accent">
+                <span className="text-sm font-semibold text-secondary">
                   {formatCurrency(yearData.receitasPrevistas)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-on-surface-variant">Despesas (estimado):</span>
-                <span className="text-sm font-semibold text-expense-accent">
+                <span className="text-sm font-semibold text-error">
                   {formatCurrency(yearData.despesasPrevistas)}
                 </span>
               </div>
@@ -235,7 +235,7 @@ export default function ForecastSection({
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
             <h3 className="text-title-lg font-display font-semibold text-on-surface flex items-center gap-2">
-              <Icon name="trending_up" size={22} className="text-forecast-accent" />
+              <Icon name="trending_up" size={22} className="text-tertiary" />
               {projectionMode === 'monthly' ? 'Previsão Mensal' : 'Previsão Anual'}
             </h3>
             <p className="text-body-sm text-on-surface-variant mt-1">
@@ -352,7 +352,7 @@ export default function ForecastSection({
           <p className="text-label-md text-on-surface-variant mb-1">
             Crescimento Estimado
           </p>
-          <p className={`text-headline-sm font-display font-bold ${receitaGrowth >= 0 ? 'text-revenue-accent' : 'text-expense-accent'}`}>
+          <p className={`text-headline-sm font-display font-bold ${receitaGrowth >= 0 ? 'text-secondary' : 'text-error'}`}>
             {receitaGrowth >= 0 ? '+' : ''}{receitaGrowth.toFixed(1)}%
           </p>
         </div>
@@ -360,7 +360,7 @@ export default function ForecastSection({
           <p className="text-label-md text-on-surface-variant mb-1">
             {projectionMode === 'monthly' ? 'Próximo Mês (est.)' : 'Próximo Ano (est.)'}
           </p>
-          <p className="text-headline-sm font-display font-bold text-forecast-accent">
+          <p className="text-headline-sm font-display font-bold text-tertiary">
             {formatCurrency(nextProjectedRevenue, { compact: true })}
           </p>
         </div>

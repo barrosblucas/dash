@@ -3,9 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { useThemeStore } from '@/stores/themeStore';
 import { MUNICIPIO } from '@/lib/constants';
-import Icon from '@/components/ui/Icon';
 
 interface SidebarProps {
   onClose?: () => void;
@@ -19,50 +17,49 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: 'Portal', href: '/', icon: 'home' },
-  { name: 'Dashboard', href: '/dashboard', icon: 'space_dashboard' },
+  { name: 'Visão Geral', href: '/dashboard', icon: 'space_dashboard' },
   { name: 'Receitas', href: '/receitas', icon: 'trending_up' },
   { name: 'Despesas', href: '/despesas', icon: 'trending_down' },
-  { name: 'Previsoes', href: '/forecast', icon: 'insights' },
+  { name: 'Previsões', href: '/forecast', icon: 'insights' },
   { name: 'Comparativo', href: '/comparativo', icon: 'compare_arrows' },
-  { name: 'Relatorios', href: '/relatorios', icon: 'description' },
-  { name: 'Mov. Extra', href: '/movimento-extra', icon: 'account_balance' },
+  { name: 'Relatórios', href: '/relatorios', icon: 'description' },
+  { name: 'Movimento Extra', href: '/movimento-extra', icon: 'account_balance_wallet' },
   { name: 'Licitações', href: '/avisos-licitacoes', icon: 'gavel' },
 ];
 
 export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <div className="flex flex-col h-full bg-surface-container-low">
-      {/* Logo */}
-      <div className="flex items-center gap-3 h-16 px-5">
-        <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
-          <Icon name="account_balance" filled size={20} className="text-on-primary" />
+    <div className="flex flex-col h-full bg-transparent">
+      {/* Logo Header */}
+      <div className="flex items-center gap-3 h-20 px-6 mt-2">
+        <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shrink-0 shadow-glow-primary">
+          <span className="material-symbols-rounded text-white text-[22px]">account_balance</span>
         </div>
         <div className="flex flex-col min-w-0">
-          <span className="text-label-lg font-display font-semibold text-on-surface truncate">
-            Financeiro
+          <span className="text-sm font-display font-bold text-on-surface truncate">
+            Transparência
           </span>
-          <span className="text-label-sm text-on-surface-variant">
+          <span className="text-xs font-medium text-on-surface-variant">
             {MUNICIPIO.nome}
           </span>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="ml-auto p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors lg:hidden"
+            className="ml-auto p-2 rounded-xl text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors lg:hidden"
             aria-label="Fechar menu"
           >
-            <Icon name="close" size={20} />
+            <span className="material-symbols-rounded">close</span>
           </button>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto no-scrollbar">
         {navigation.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
 
           return (
             <Link
@@ -70,57 +67,34 @@ export default function Sidebar({ onClose }: SidebarProps) {
               href={item.href}
               onClick={onClose}
               className={`
-                group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                transition-all duration-200
+                group flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold
+                transition-all duration-300 relative overflow-hidden
                 ${isActive
-                  ? 'bg-primary-container/20 text-primary'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
+                  ? 'text-primary bg-primary/10'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'
                 }
               `}
             >
-              <span
-                className={`
-                  flex items-center justify-center w-8 h-8 rounded-lg transition-colors
-                  ${isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'bg-transparent text-on-surface-variant group-hover:text-on-surface'
-                  }
-                `}
-              >
-                <Icon name={item.icon} filled={isActive} size={20} />
-              </span>
-              <span className="truncate">{item.name}</span>
               {isActive && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-r-full bg-primary" />
               )}
+
+              <span className={`material-symbols-rounded text-xl transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+                {item.icon}
+              </span>
+
+              <span className="truncate">{item.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-3 space-y-2">
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
-                     text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high
-                     transition-all duration-200"
-        >
-          <span className="flex items-center justify-center w-8 h-8">
-            <Icon
-              name={theme === 'dark' ? 'light_mode' : 'dark_mode'}
-              size={20}
-            />
-          </span>
-          <span>{theme === 'dark' ? 'Modo claro' : 'Modo escuro'}</span>
-        </button>
-
-        {/* Data period badge */}
-        <div className="px-3 py-2.5 rounded-xl bg-surface-container-high">
-          <p className="text-label-sm text-on-surface-variant">Periodo dos dados</p>
-          <p className="text-label-md font-medium text-on-surface mt-0.5">2016 - 2026</p>
-        </div>
+      {/* Footer Info */}
+      <div className="p-4 mx-4 mb-4 rounded-2xl bg-surface-container/50 border border-outline-variant/20 flex flex-col items-center text-center">
+         <p className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">
+           Período Base
+         </p>
+         <p className="text-sm font-bold text-on-surface">2016 - 2026</p>
       </div>
     </div>
   );

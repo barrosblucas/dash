@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 
-import Icon from '@/components/ui/Icon';
 import { formatCurrency, formatPercent } from '@/lib/utils';
 import type { KPICardData } from '@/types';
 
@@ -39,7 +38,6 @@ export default function KPICard({
     alerta,
   } = data;
 
-  // Formata valor
   const formattedValue = (() => {
     switch (tipo) {
       case 'currency':
@@ -51,7 +49,6 @@ export default function KPICard({
     }
   })();
 
-  // Classes baseadas no tamanho
   const sizeClasses = {
     sm: 'p-4',
     md: 'p-6',
@@ -64,15 +61,13 @@ export default function KPICard({
     lg: 'text-display-sm',
   };
 
-  // Cor da variação
   const variacaoColor = (() => {
     if (!variacao) return 'text-on-surface-variant';
-    if (variacao_tipo === 'positiva') return 'text-revenue-accent';
-    if (variacao_tipo === 'negativa') return 'text-expense-accent';
+    if (variacao_tipo === 'positiva') return 'text-secondary';
+    if (variacao_tipo === 'negativa') return 'text-error';
     return 'text-on-surface-variant';
   })();
 
-  // Ícone da variação
   const variacaoIconName = (() => {
     if (!variacao) return null;
     if (tendencia === 'alta') return 'trending_up';
@@ -80,7 +75,6 @@ export default function KPICard({
     return 'remove';
   })();
 
-  // Ícone do card baseado no título
   const cardIconName = (() => {
     if (titulo.includes('Receita')) return 'account_balance_wallet';
     if (titulo.includes('Despesa')) return 'payments';
@@ -89,38 +83,44 @@ export default function KPICard({
     return 'monitoring';
   })();
 
-  // Cor do ícone baseada no tipo
   const iconColorClass = (() => {
-    if (titulo.includes('Receita')) return 'text-revenue-accent bg-revenue-500/10';
-    if (titulo.includes('Despesa')) return 'text-expense-accent bg-expense-500/10';
-    if (titulo.includes('Superávit')) return 'text-revenue-accent bg-revenue-500/10';
-    if (titulo.includes('Déficit')) return 'text-expense-accent bg-expense-500/10';
-    if (titulo.includes('Execução')) return 'text-forecast-accent bg-forecast-500/10';
-    return 'text-primary bg-primary-container/20';
+    if (titulo.includes('Receita')) return 'text-secondary bg-secondary/10';
+    if (titulo.includes('Despesa')) return 'text-error bg-error/10';
+    if (titulo.includes('Superávit')) return 'text-secondary bg-secondary/10';
+    if (titulo.includes('Déficit')) return 'text-error bg-error/10';
+    if (titulo.includes('Execução')) return 'text-tertiary bg-tertiary/10';
+    return 'text-primary bg-primary/10';
+  })();
+
+  const glowHoverClass = (() => {
+    if (titulo.includes('Receita') || titulo.includes('Superávit')) return 'hover:shadow-glow-green';
+    if (titulo.includes('Despesa') || titulo.includes('Déficit')) return 'hover:shadow-glow-red';
+    if (titulo.includes('Execução')) return 'hover:shadow-glow-gold';
+    return 'hover:shadow-glow-primary';
   })();
 
   return (
     <motion.div
       className={`
-        kpi-card ${sizeClasses[size]} transition-all duration-300
+        glass-card hover:-translate-y-1 transition-all duration-500
+        ${glowHoverClass}
+        ${sizeClasses[size]}
         ${onClick ? 'cursor-pointer' : ''}
         ${className}
       `}
       onClick={onClick}
-      whileHover={onClick ? { scale: 1.01 } : undefined}
-      whileTap={onClick ? { scale: 0.99 } : undefined}
+      whileTap={onClick ? { scale: 0.98 } : undefined}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-5">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconColorClass}`}>
-          <Icon name={cardIconName} size={20} />
+      <div className="flex items-start justify-between mb-6">
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${iconColorClass}`}>
+          <span className="material-symbols-rounded text-[22px]">{cardIconName}</span>
         </div>
         {alerta && (
           <span
             className={`
               chip
               ${alerta.tipo === 'info' ? 'chip-primary' : ''}
-              ${alerta.tipo === 'warning' ? 'chip-tertiary' : ''}
+              ${alerta.tipo === 'warning' ? 'chip-tertiary bg-tertiary/10 text-tertiary border border-tertiary/20' : ''}
               ${alerta.tipo === 'danger' ? 'chip-error' : ''}
             `}
           >
@@ -129,38 +129,29 @@ export default function KPICard({
         )}
       </div>
 
-      {/* Label */}
-      <p className="kpi-label mb-2">{titulo}</p>
+      <p className="kpi-label mb-2 text-on-surface-variant/80">{titulo}</p>
 
-      {/* Value */}
-      <p className={`${valueSizeClasses[size]} font-display font-bold text-on-surface tracking-tight mb-3`}>
+      <p className={`${valueSizeClasses[size]} font-display font-bold text-on-surface tracking-tight mb-4`}>
         {formattedValue}
       </p>
 
-      {/* Sparkline */}
       {showSparkline && sparkline_data && sparkline_data.length > 0 && (
-        <div className="h-10 mb-3">
-          {/* TODO: Implementar minichart sparkline */}
-          <div className="w-full h-full bg-surface-container-high/50 rounded animate-pulse" />
-        </div>
+        <div className="h-10 mb-4 rounded-lg bg-surface-container/50 animate-pulse border border-outline-variant/10" />
       )}
 
-      {/* Variation */}
       {showTrend && variacao !== undefined && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-auto">
           {variacaoIconName && (
-            <Icon
-              name={variacaoIconName}
-              size={16}
-              className={variacaoColor}
-            />
+            <span className={`material-symbols-rounded text-lg ${variacaoColor}`}>
+              {variacaoIconName}
+            </span>
           )}
           <span className={`text-sm font-semibold ${variacaoColor}`}>
             {variacao > 0 ? '+' : ''}
             {variacao.toFixed(1)}%
           </span>
           {periodo_comparacao && (
-            <span className="text-xs text-on-surface-variant/60">
+            <span className="text-xs font-medium text-on-surface-variant/60">
               vs {periodo_comparacao}
             </span>
           )}
