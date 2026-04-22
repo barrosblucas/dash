@@ -134,13 +134,13 @@ export default function ComparativeSection({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs text-on-surface-variant">Receitas:</span>
-            <span className="text-sm font-semibold text-revenue-accent">
+            <span className="text-sm font-semibold text-secondary">
               {formatCurrency(yearData.receitas)}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-on-surface-variant">Despesas:</span>
-            <span className="text-sm font-semibold text-expense-accent">
+            <span className="text-sm font-semibold text-error">
               {formatCurrency(yearData.despesas)}
             </span>
           </div>
@@ -148,7 +148,7 @@ export default function ComparativeSection({
             <span className="text-xs text-on-surface-variant">
               {yearData.saldo >= 0 ? 'Superávit:' : 'Déficit:'}
             </span>
-            <span className={`text-sm font-bold ${yearData.saldo >= 0 ? 'text-revenue-accent' : 'text-expense-accent'}`}>
+            <span className={`text-sm font-bold ${yearData.saldo >= 0 ? 'text-secondary' : 'text-error'}`}>
               {formatCurrency(Math.abs(yearData.saldo))}
             </span>
           </div>
@@ -245,13 +245,13 @@ export default function ComparativeSection({
       <div className="mt-5 grid grid-cols-2 gap-4">
         <div className="surface-card p-4 rounded-xl">
           <p className="text-label-md text-on-surface-variant mb-1">Total Receitas</p>
-          <p className="text-headline-sm font-display font-bold text-revenue-accent">
+          <p className="text-headline-sm font-display font-bold text-secondary">
             {formatCurrency(totalReceitas, { compact: true })}
           </p>
         </div>
         <div className="surface-card p-4 rounded-xl">
           <p className="text-label-md text-on-surface-variant mb-1">Total Despesas</p>
-          <p className="text-headline-sm font-display font-bold text-expense-accent">
+          <p className="text-headline-sm font-display font-bold text-error">
             {formatCurrency(totalDespesas, { compact: true })}
           </p>
         </div>

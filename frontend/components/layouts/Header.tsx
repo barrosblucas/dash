@@ -2,7 +2,6 @@
 
 import { useThemeStore } from '@/stores/themeStore';
 import { MUNICIPIO } from '@/lib/constants';
-import Icon from '@/components/ui/Icon';
 import FilterPanel from '@/components/ui/FilterPanel';
 
 interface HeaderProps {
@@ -13,17 +12,17 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <header className="sticky top-0 z-30 glass-float border-b border-outline-variant/10">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
-          {/* Left */}
+    <header className="sticky top-4 z-40 mx-4 sm:mx-6 lg:mx-8 mb-4">
+      <div className="glass-card rounded-[2rem] px-4 py-2 border-none">
+        <div className="flex items-center justify-between h-12">
+          {/* Left: Mobile Menu & Filters */}
           <div className="flex items-center gap-3">
             <button
               onClick={onMenuClick}
-              className="lg:hidden p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+              className="lg:hidden p-2 rounded-xl text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors"
               aria-label="Abrir menu"
             >
-              <Icon name="menu" size={22} />
+              <span className="material-symbols-rounded">menu</span>
             </button>
 
             <div className="hidden sm:block">
@@ -31,24 +30,22 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </div>
           </div>
 
-          {/* Right */}
-          <div className="flex items-center gap-1">
-            {/* Theme toggle */}
+          {/* Right: Theme Toggle & Location Badge */}
+          <div className="flex items-center gap-3">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
+              className="p-2 rounded-xl text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors bg-surface-container/50"
               aria-label={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
             >
-              <Icon
-                name={theme === 'dark' ? 'light_mode' : 'dark_mode'}
-                size={20}
-              />
+              <span className="material-symbols-rounded">
+                {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+              </span>
             </button>
 
             {/* Municipality badge */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container-high">
-              <Icon name="location_on" size={16} className="text-secondary" />
-              <span className="text-label-md text-on-surface-variant">
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-container/50 border border-outline-variant/20">
+              <span className="material-symbols-rounded text-lg text-secondary">location_on</span>
+              <span className="text-sm font-semibold text-on-surface-variant">
                 {MUNICIPIO.nome} — {MUNICIPIO.estado}
               </span>
             </div>

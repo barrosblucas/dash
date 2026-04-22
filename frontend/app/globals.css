@@ -3,135 +3,109 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────
-   Material Symbols (Google Icons)
-   ───────────────────────────────────────────── */
-@import 'material-symbols/outlined.css';
-@import 'material-symbols/rounded.css';
-
-/* ─────────────────────────────────────────────
-   CSS Custom Properties: Light Theme
-   ───────────────────────────────────────────── */
-
-:root {
-  /* Primary */
-  --color-primary: #00193c;
-  --color-primary-container: #002d62;
-  --color-on-primary: #ffffff;
-  --color-on-primary-container: #c2d8ff;
-
-  /* Secondary */
-  --color-secondary: #006c47;
-  --color-secondary-container: #8af5be;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #00714b;
-
-  /* Tertiary */
-  --color-tertiary: #c29b00;
-  --color-tertiary-container: #fae285;
-  --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #5f4605;
-
-  /* Surface hierarchy — physical paper layers */
-  --color-surface: #f8f9ff;
-  --color-surface-variant: #e2e3eb;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #eff4ff;
-  --color-surface-container: #e8ecf5;
-  --color-surface-container-high: #e2e6ef;
-  --color-surface-container-highest: #dcdfe8;
-
-  /* Inverse */
-  --color-inverse-surface: #e2e2e9;
-  --color-inverse-on-surface: #2e3036;
-  --color-inverse-primary: #a1c9ff;
-
-  /* Text */
-  --color-on-surface: #1a1c20;
-  --color-on-surface-variant: #44474f;
-
-  /* Outline */
-  --color-outline: #74777f;
-  --color-outline-variant: #c4c6d1;
-
-  /* Error */
-  --color-error: #ba1a1a;
-  --color-error-container: #ffdad6;
-  --color-on-error: #ffffff;
-  --color-on-error-container: #410002;
-
-  /* Shadows */
-  --shadow-ambient: 0 4px 32px -4px rgba(0, 25, 60, 0.06);
-  --shadow-ambient-lg: 0 8px 48px -4px rgba(0, 25, 60, 0.08);
-  --shadow-card: 0 2px 16px -2px rgba(0, 25, 60, 0.05);
-  --shadow-card-hover: 0 8px 32px -4px rgba(0, 25, 60, 0.08);
-
-  /* Chart */
-  --chart-grid-color: rgba(196, 198, 209, 0.4);
-}
-
-/* ─────────────────────────────────────────────
-   CSS Custom Properties: Dark Theme
-   ───────────────────────────────────────────── */
-
-.dark {
-  --color-primary: #a1c9ff;
-  --color-primary-container: #002d62;
-  --color-on-primary: #00193c;
-  --color-on-primary-container: #c2d8ff;
-
-  --color-secondary: #6ddaa8;
-  --color-secondary-container: #005235;
-  --color-on-secondary: #003824;
-  --color-on-secondary-container: #8af5be;
-
-  --color-tertiary: #d4c172;
-  --color-tertiary-container: #4a3b00;
-  --color-on-tertiary: #362b00;
-  --color-on-tertiary-container: #fae285;
-
-  --color-surface: #0a0f1a;
-  --color-surface-variant: #1a2235;
-  --color-surface-container-lowest: #070b14;
-  --color-surface-container-low: #0f1522;
-  --color-surface-container: #131a2b;
-  --color-surface-container-high: #1a2235;
-  --color-surface-container-highest: #212a3d;
-
-  --color-inverse-surface: #e2e2e9;
-  --color-inverse-on-surface: #2e3036;
-  --color-inverse-primary: #00193c;
-
-  --color-on-surface: #e2e2e9;
-  --color-on-surface-variant: #8e9099;
-
-  --color-outline: #8e9099;
-  --color-outline-variant: #3d4049;
-
-  --color-error: #ffb4ab;
-  --color-error-container: #93000a;
-  --color-on-error: #690005;
-  --color-on-error-container: #ffdad6;
-
-  --shadow-ambient: 0 4px 32px -4px rgba(0, 0, 0, 0.3);
-  --shadow-ambient-lg: 0 8px 48px -4px rgba(0, 0, 0, 0.4);
-  --shadow-card: 0 2px 16px -2px rgba(0, 0, 0, 0.2);
-  --shadow-card-hover: 0 8px 32px -4px rgba(0, 0, 0, 0.3);
-
-  --chart-grid-color: rgba(61, 64, 73, 0.4);
-}
-
-/* ─────────────────────────────────────────────
-   Base Styles
+   CSS Variables: Serenidade & Elegância
    ───────────────────────────────────────────── */
 
 @layer base {
+  :root {
+    /* Base Surface */
+    --color-surface: #FAFAFA;
+    --color-surface-variant: #F4F4F5;
+    --color-surface-container-lowest: #FFFFFF;
+    --color-surface-container-low: #FAFAFA;
+    --color-surface-container: #F4F4F5;
+    --color-surface-container-high: #E4E4E7;
+    --color-surface-container-highest: #D4D4D8;
+
+    /* Theme Primary (Slate Blue) */
+    --color-primary: #1E3A8A;
+    --color-primary-container: #DBEAFE;
+
+    /* Theme Secondary (Soft Teal) */
+    --color-secondary: #0F766E;
+    --color-secondary-container: #CCFBF1;
+
+    /* Inverse */
+    --color-inverse-surface: #18181B;
+    --color-inverse-on-surface: #F4F4F5;
+    --color-inverse-primary: #60A5FA;
+
+    /* Text */
+    --color-on-surface: #18181B;
+    --color-on-surface-variant: #52525B;
+
+    /* Lines */
+    --color-outline: #A1A1AA;
+    --color-outline-variant: #D4D4D8;
+
+    /* State */
+    --color-error: #BE123C;
+    --color-error-container: #FFE4E6;
+    --color-on-error: #FFFFFF;
+    --color-on-error-container: #BE123C;
+
+    /* Shadows */
+    --shadow-ambient: 0 4px 40px -4px rgba(0, 0, 0, 0.03);
+    --shadow-ambient-lg: 0 12px 60px -8px rgba(0, 0, 0, 0.05);
+    --shadow-card: 0 2px 20px -2px rgba(0, 0, 0, 0.02);
+    --shadow-card-hover: 0 8px 40px -4px rgba(0, 0, 0, 0.05);
+
+    --chart-grid-color: rgba(212, 212, 216, 0.5);
+  }
+
+  .dark {
+    /* Base Surface */
+    --color-surface: #09090B; /* Zinc 950 */
+    --color-surface-variant: #18181B; /* Zinc 900 */
+    --color-surface-container-lowest: #000000;
+    --color-surface-container-low: #09090B;
+    --color-surface-container: #18181B;
+    --color-surface-container-high: #27272A; /* Zinc 800 */
+    --color-surface-container-highest: #3F3F46; /* Zinc 700 */
+
+    /* Theme Primary (Brighter Slate Blue for dark mode) */
+    --color-primary: #60A5FA;
+    --color-primary-container: #1E3A8A;
+
+    /* Theme Secondary (Brighter Teal for dark mode) */
+    --color-secondary: #2DD4BF;
+    --color-secondary-container: #115E59;
+
+    /* Inverse */
+    --color-inverse-surface: #F4F4F5;
+    --color-inverse-on-surface: #18181B;
+    --color-inverse-primary: #1E3A8A;
+
+    /* Text */
+    --color-on-surface: #F4F4F5;
+    --color-on-surface-variant: #A1A1AA;
+
+    /* Lines */
+    --color-outline: #71717A;
+    --color-outline-variant: #3F3F46;
+
+    /* State */
+    --color-error: #FB7185;
+    --color-error-container: #881337;
+    --color-on-error: #690005;
+    --color-on-error-container: #FFE4E6;
+
+    /* Shadows - softer and tighter in dark mode */
+    --shadow-ambient: 0 4px 40px -4px rgba(0, 0, 0, 0.5);
+    --shadow-ambient-lg: 0 12px 60px -8px rgba(0, 0, 0, 0.7);
+    --shadow-card: 0 2px 20px -2px rgba(0, 0, 0, 0.4);
+    --shadow-card-hover: 0 8px 40px -4px rgba(0, 0, 0, 0.6);
+
+    --chart-grid-color: rgba(63, 63, 70, 0.4);
+  }
+
   html {
     @apply scroll-smooth;
     -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-surface text-on-surface antialiased;
+    @apply bg-surface text-on-surface antialiased transition-colors duration-500;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 
@@ -140,33 +114,26 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Selection */
   ::selection {
     @apply bg-secondary/20 text-on-surface;
   }
 
-  /* Scrollbar */
   ::-webkit-scrollbar {
     @apply w-1.5 h-1.5;
   }
-
   ::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
-
   ::-webkit-scrollbar-thumb {
     @apply bg-outline-variant rounded-full;
   }
-
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-outline;
   }
 
-  /* Focus visible */
   :focus-visible {
     @apply outline-none ring-2 ring-primary/40 ring-offset-2 ring-offset-surface;
   }
-
   .dark :focus-visible {
     @apply ring-offset-surface;
   }
@@ -180,7 +147,7 @@
 .material-symbols-rounded {
   font-variation-settings:
     'FILL' 0,
-    'wght' 400,
+    'wght' 300,
     'GRAD' 0,
     'opsz' 24;
   font-size: 1.25rem;
@@ -191,238 +158,185 @@
 .material-symbols-rounded {
   font-variation-settings:
     'FILL' 1,
-    'wght' 400,
+    'wght' 300,
     'GRAD' 0,
     'opsz' 24;
 }
 
 /* ─────────────────────────────────────────────
-   Custom Components
+   Custom Components (Bento & Glass)
    ───────────────────────────────────────────── */
 
 @layer components {
-  /* Glass Card */
+  /* Bento Glass Card */
   .glass-card {
-    @apply bg-surface-container-lowest/80 backdrop-blur-xl rounded-2xl;
-    box-shadow: var(--shadow-card);
+    @apply bg-surface-container-lowest/70 backdrop-blur-2xl rounded-3xl border border-white/20;
+    box-shadow: var(--shadow-card), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+  .dark .glass-card {
+    @apply border-white/5;
+    box-shadow: var(--shadow-card), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
   }
 
   .glass-card-hover {
-    @apply glass-card transition-all duration-300;
+    @apply glass-card transition-all duration-500 hover:-translate-y-1 hover:bg-surface-container-lowest/90;
   }
-
   .glass-card-hover:hover {
-    box-shadow: var(--shadow-card-hover);
-    @apply bg-surface-container-lowest;
+    box-shadow: var(--shadow-card-hover), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+  .dark .glass-card-hover:hover {
+    box-shadow: var(--shadow-card-hover), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
   }
 
-  /* Surface Card — no border, tonal layering only */
+  /* Solid Bento Card */
   .surface-card {
-    @apply bg-surface-container-low rounded-2xl;
+    @apply bg-surface-container-lowest rounded-3xl border border-outline-variant/30;
     box-shadow: var(--shadow-card);
   }
-
   .surface-card-hover {
-    @apply surface-card transition-all duration-300;
+    @apply surface-card transition-all duration-500 hover:-translate-y-1;
   }
-
   .surface-card-hover:hover {
     box-shadow: var(--shadow-card-hover);
-    @apply bg-surface-container;
+    @apply bg-surface-container-low border-outline-variant/50;
   }
 
   /* Elevated Card */
   .elevated-card {
-    @apply bg-surface-container-lowest rounded-2xl;
+    @apply bg-surface-container-lowest rounded-3xl border border-white/10;
     box-shadow: var(--shadow-ambient);
   }
-
   .elevated-card-hover {
-    @apply elevated-card transition-all duration-300;
+    @apply elevated-card transition-all duration-500 hover:-translate-y-1;
   }
-
   .elevated-card-hover:hover {
     box-shadow: var(--shadow-ambient-lg);
   }
 
-  /* Glassmorphism for floating elements */
-  .glass-float {
-    @apply bg-surface/80 backdrop-blur-2xl;
-    box-shadow: var(--shadow-ambient);
-  }
-
-  /* Primary filled button */
+  /* Buttons */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
-           bg-primary text-on-primary font-medium text-sm
-           transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl
+           bg-primary text-white font-medium text-sm
+           transition-all duration-300 shadow-md hover:shadow-glow-primary hover:bg-primary-600 active:scale-95;
   }
 
-  .btn-primary:hover {
-    @apply bg-primary-container;
-    box-shadow: var(--shadow-ambient);
-  }
-
-  .btn-primary:active {
-    @apply scale-[0.98];
-  }
-
-  /* Secondary filled button */
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
-           bg-secondary text-on-secondary font-medium text-sm
-           transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl
+           bg-secondary text-white font-medium text-sm
+           transition-all duration-300 shadow-md hover:shadow-glow-green hover:bg-secondary-600 active:scale-95;
   }
 
-  .btn-secondary:hover {
-    @apply bg-secondary-700;
-    box-shadow: 0 4px 20px -2px rgba(0, 108, 71, 0.25);
-  }
-
-  .btn-secondary:active {
-    @apply scale-[0.98];
-  }
-
-  /* Ghost button */
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl
            text-on-surface-variant font-medium text-sm
-           hover:bg-surface-container-high
-           transition-all duration-200;
+           hover:bg-surface-container-high hover:text-on-surface
+           transition-all duration-300 active:scale-95;
   }
 
-  /* Outline button (ghost border only) */
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
-           border border-outline-variant/30
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl
+           border-2 border-outline-variant/50
            text-on-surface font-medium text-sm
-           hover:bg-surface-container-high hover:border-outline-variant/50
-           transition-all duration-200;
+           hover:bg-surface-container-high hover:border-outline-variant
+           transition-all duration-300 active:scale-95;
   }
 
-  /* Input field — minimalist, bottom accent only */
+  /* Forms */
   .input-field {
-    @apply w-full bg-surface-container-highest rounded-t-lg rounded-b-none
-           px-4 py-3 text-sm text-on-surface
-           border-b-2 border-outline-variant
-           placeholder:text-on-surface-variant/50
-           focus:border-primary focus:outline-none
-           transition-colors duration-200;
+    @apply w-full bg-surface-container rounded-2xl
+           px-5 py-3.5 text-sm text-on-surface border border-transparent
+           placeholder:text-on-surface-variant/60
+           focus:bg-surface-container-lowest focus:border-primary/50 focus:ring-4 focus:ring-primary/10 focus:outline-none
+           transition-all duration-300;
   }
 
-  .dark .input-field {
-    @apply bg-surface-container-high;
-  }
-
-  /* Select field */
   .select-field {
-    @apply w-full bg-surface-container-low rounded-lg
-           px-4 py-2.5 text-sm text-on-surface
-           border-0
-           focus:ring-2 focus:ring-primary/20 focus:outline-none
-           transition-all duration-200;
+    @apply input-field cursor-pointer appearance-none;
   }
 
-  /* KPI Card — monumental */
+  /* KPI Data */
   .kpi-card {
-    @apply elevated-card p-6 transition-all duration-300;
+    @apply glass-card p-6 md:p-8;
   }
-
-  .kpi-card:hover {
-    box-shadow: var(--shadow-ambient-lg);
-  }
-
   .kpi-value {
-    @apply text-display-sm font-display text-on-surface tracking-tight;
+    @apply text-display-sm font-display text-on-surface tracking-tight font-semibold;
   }
-
   .kpi-label {
-    @apply text-label-md text-on-surface-variant uppercase tracking-wider;
+    @apply text-label-md text-on-surface-variant uppercase tracking-widest font-medium;
   }
 
-  /* Metric card (smaller than KPI) */
   .metric-card {
     @apply surface-card p-5;
   }
-
   .metric-value {
-    @apply text-headline-sm font-display text-on-surface;
+    @apply text-headline-sm font-display text-on-surface font-semibold;
   }
-
   .metric-label {
     @apply text-label-md text-on-surface-variant;
   }
 
-  /* Chart container */
   .chart-container {
-    @apply surface-card p-5;
+    @apply surface-card p-5 md:p-6;
     min-height: 320px;
   }
 
-  /* Table — no lines */
+  /* Tables */
   .data-table {
-    @apply w-full text-sm;
+    @apply w-full text-sm text-left;
   }
-
-  .data-table thead {
-    @apply text-label-md text-on-surface-variant uppercase tracking-wider;
+  .data-table th {
+    @apply text-label-md text-on-surface-variant uppercase tracking-widest py-4 px-4 font-semibold border-b border-outline-variant/30;
   }
-
+  .data-table td {
+    @apply py-4 px-4 border-b border-outline-variant/10 text-on-surface;
+  }
   .data-table tbody tr {
-    @apply transition-colors duration-150;
+    @apply transition-colors duration-300;
   }
-
-  .data-table tbody tr:nth-child(even) {
-    @apply bg-surface-container-low/50;
-  }
-
   .data-table tbody tr:hover {
-    @apply bg-surface-container;
+    @apply bg-surface-container-high/30;
   }
 
-  /* Badge / Chip */
+  /* Chips */
   .chip {
-    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-md font-medium;
+    @apply inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide backdrop-blur-md;
   }
-
   .chip-primary {
-    @apply chip bg-primary-container/20 text-primary;
+    @apply chip bg-primary/10 text-primary border border-primary/20;
   }
-
+  .dark .chip-primary {
+    @apply bg-primary/20 text-primary-200 border-primary/30;
+  }
   .chip-secondary {
-    @apply chip bg-secondary-container/30 text-on-secondary-container;
+    @apply chip bg-secondary/10 text-secondary border border-secondary/20;
   }
-
-  .chip-tertiary {
-    @apply chip bg-tertiary-container/30 text-on-tertiary-container;
+  .dark .chip-secondary {
+    @apply bg-secondary/20 text-secondary-200 border-secondary/30;
   }
-
   .chip-error {
-    @apply chip bg-error-container/30 text-error;
+    @apply chip bg-error/10 text-error border border-error/20;
+  }
+  .dark .chip-error {
+    @apply bg-error/20 text-error-200 border-error/30;
   }
 
-  /* Section divider — no line, just space */
-  .section-spacer {
-    @apply py-16 md:py-24;
-  }
-
-  /* Hero gradient signature texture */
+  /* Hero effects */
   .hero-gradient {
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.05) 0%, rgba(15, 118, 110, 0.05) 100%);
+  }
+  .dark .hero-gradient {
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.05) 0%, rgba(45, 212, 191, 0.05) 100%);
   }
 
-  /* Text gradient */
   .text-gradient-primary {
     @apply text-transparent bg-clip-text;
     background-image: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   }
 
-  /* No-scrollbar utility */
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -435,92 +349,65 @@
 .recharts-wrapper {
   @apply font-body;
 }
-
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
   stroke: var(--chart-grid-color);
+  stroke-dasharray: 4 4;
 }
-
 .recharts-tooltip-wrapper {
   @apply outline-none;
 }
-
 .custom-tooltip {
-  @apply bg-surface-container-highest backdrop-blur-xl rounded-xl p-4;
+  @apply bg-surface-container-lowest/80 backdrop-blur-xl rounded-2xl p-4 border border-outline-variant/30;
   box-shadow: var(--shadow-ambient-lg);
 }
-
 .recharts-legend-wrapper {
-  @apply text-on-surface-variant;
+  @apply text-on-surface-variant text-sm font-medium;
 }
 
 /* ─────────────────────────────────────────────
-   Animations & Utilities
+   Utilities
    ───────────────────────────────────────────── */
 
 @layer utilities {
-  /* Stagger children */
   .stagger-children > * {
     opacity: 0;
-    animation: fadeInUp 0.5s ease-out forwards;
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-
   .stagger-children > *:nth-child(1) { animation-delay: 0s; }
-  .stagger-children > *:nth-child(2) { animation-delay: 0.08s; }
-  .stagger-children > *:nth-child(3) { animation-delay: 0.16s; }
-  .stagger-children > *:nth-child(4) { animation-delay: 0.24s; }
-  .stagger-children > *:nth-child(5) { animation-delay: 0.32s; }
-  .stagger-children > *:nth-child(6) { animation-delay: 0.40s; }
-  .stagger-children > *:nth-child(n + 7) { animation-delay: 0.48s; }
+  .stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+  .stagger-children > *:nth-child(3) { animation-delay: 0.2s; }
+  .stagger-children > *:nth-child(4) { animation-delay: 0.3s; }
+  .stagger-children > *:nth-child(5) { animation-delay: 0.4s; }
+  .stagger-children > *:nth-child(6) { animation-delay: 0.5s; }
+  .stagger-children > *:nth-child(n + 7) { animation-delay: 0.6s; }
 
-  /* Gradient text */
   .gradient-text {
     @apply text-transparent bg-clip-text;
     background-image: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   }
 
-  /* Loading shimmer */
   .shimmer {
     @apply relative overflow-hidden;
   }
-
   .shimmer::after {
     content: '';
     @apply absolute inset-0 -translate-x-full;
     animation: shimmer 2s infinite;
-    background: linear-gradient(90deg, transparent, rgba(0, 25, 60, 0.04), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
   }
-
   .dark .shimmer::after {
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
   }
 }
 
-/* ─────────────────────────────────────────────
-   Responsive
-   ───────────────────────────────────────────── */
-
 @media (max-width: 768px) {
-  .chart-container {
-    min-height: 260px;
-  }
-
-  .kpi-value {
-    @apply text-headline-lg;
-  }
-
-  .metric-value {
-    @apply text-title-lg;
-  }
+  .chart-container { min-height: 260px; }
+  .kpi-value { @apply text-headline-lg; }
+  .metric-value { @apply text-title-lg; }
 }
 
 @media (max-width: 640px) {
-  .chart-container {
-    min-height: 220px;
-  }
-
-  .kpi-card,
-  .metric-card {
-    @apply p-4;
-  }
+  .chart-container { min-height: 220px; }
+  .kpi-card, .metric-card { @apply p-5; }
 }
