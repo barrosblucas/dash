@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Portal da Transparência de Bandeirantes - MS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#002d62",
+                        "on-secondary-fixed-variant": "#005235",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#ccdbf3",
+                        "secondary-container": "#8af5be",
+                        "surface-tint": "#3e5e95",
+                        "surface-container-low": "#eff4ff",
+                        "secondary": "#006c47",
+                        "on-secondary-container": "#00714b",
+                        "primary-fixed": "#d7e2ff",
+                        "tertiary-container": "#1f2f43",
+                        "error-container": "#ffdad6",
+                        "background": "#f8f9ff",
+                        "on-primary-fixed": "#001b3f",
+                        "tertiary-fixed": "#d3e4fe",
+                        "primary": "#00193c",
+                        "primary-fixed-dim": "#abc7ff",
+                        "inverse-primary": "#abc7ff",
+                        "on-secondary-fixed": "#002113",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#71dba6",
+                        "inverse-on-surface": "#eaf1ff",
+                        "surface-container-highest": "#d5e3fc",
+                        "inverse-surface": "#233144",
+                        "surface-bright": "#f8f9ff",
+                        "on-surface": "#0d1c2e",
+                        "outline": "#747781",
+                        "on-surface-variant": "#43474f",
+                        "on-tertiary-container": "#8797af",
+                        "secondary-fixed": "#8df7c1",
+                        "on-background": "#0d1c2e",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary-fixed-variant": "#24467c",
+                        "tertiary": "#091a2d",
+                        "on-primary-container": "#7796d1",
+                        "surface-variant": "#d5e3fc",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "outline-variant": "#c4c6d1",
+                        "surface-container": "#e6eeff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "surface": "#f8f9ff",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {},
+                    "fontFamily": {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-headline { font-family: 'Manrope', sans-serif; }
+        .hero-texture {
+            background: linear-gradient(135deg, #00193c 0%, #002d62 100%);
+        }
+        .glass-panel {
+            background: rgba(248, 249, 255, 0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-50 bg-[#f8f9ff]/80 backdrop-blur-3xl dark:bg-slate-950/80 bg-[#eff4ff] dark:bg-slate-900 shadow-[0_1px_0_0_rgba(0,45,98,0.05)] shadow-[0_32px_32px_-4px_rgba(0,25,60,0.06)]">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto Headlines: text-manrope font-extrabold tracking-tight. Body: text-inter font-normal">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+<span class="text-xl font-bold uppercase tracking-tighter text-[#00193c] dark:text-white">Portal da Transparência</span>
+</div>
+<nav class="hidden md:flex gap-8">
+<a class="text-[#00193c] dark:text-white border-b-2 border-[#00193c] dark:border-emerald-500 pb-1 font-bold hover:text-[#002d62] dark:hover:text-emerald-400 transition-all duration-300 scale-95 duration-150 ease-in-out" href="#">Início</a>
+<a class="text-slate-500 dark:text-slate-400 font-medium hover:text-[#002d62] dark:hover:text-emerald-400 transition-all duration-300 scale-95 duration-150 ease-in-out" href="#">Painel Financeiro</a>
+<a class="text-slate-500 dark:text-slate-400 font-medium hover:text-[#002d62] dark:hover:text-emerald-400 transition-all duration-300 scale-95 duration-150 ease-in-out" href="#">Obras Públicas</a>
+<a class="text-slate-500 dark:text-slate-400 font-medium hover:text-[#002d62] dark:hover:text-emerald-400 transition-all duration-300 scale-95 duration-150 ease-in-out" href="#">Transparência</a>
+<a class="text-slate-500 dark:text-slate-400 font-medium hover:text-[#002d62] dark:hover:text-emerald-400 transition-all duration-300 scale-95 duration-150 ease-in-out" href="#">Serviços</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="hidden md:flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-md font-headline font-bold text-sm hover:bg-primary-container transition-colors">
+                    Acesso Restrito
+                </button>
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined text-3xl">menu</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="hero-texture pt-24 pb-32 px-8 relative overflow-hidden">
+<!-- Decorative Elements -->
+<div class="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at top right, #ffffff 0%, transparent 70%);"></div>
+<div class="max-w-screen-xl mx-auto relative z-10">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-7">
+<span class="inline-block px-4 py-1.5 rounded-full bg-secondary/20 text-secondary-fixed font-label text-sm font-semibold tracking-wide mb-6">
+                            BANDEIRANTES - MS
+                        </span>
+<h1 class="font-headline font-extrabold text-5xl md:text-7xl text-on-primary tracking-tighter leading-tight mb-8">
+                            A verdade<br/>em números.
+                        </h1>
+<p class="font-body text-xl text-primary-fixed-dim leading-relaxed mb-10 max-w-2xl">
+                            Acesso universal, claro e direto aos dados públicos do município. Transparência não é apenas um portal, é o nosso compromisso com a sua cidadania.
+                        </p>
+<!-- Universal Search -->
+<div class="bg-surface-container-highest/20 backdrop-blur-md rounded-xl p-2 max-w-2xl flex items-center shadow-[0_32px_32px_-4px_rgba(0,0,0,0.2)]">
+<span class="material-symbols-outlined text-on-primary pl-4 pr-2">search</span>
+<input class="w-full bg-transparent border-none text-on-primary placeholder:text-primary-fixed-dim font-body text-lg focus:ring-0" placeholder="O que você procura? (ex: despesas, licitações, obras...)" type="text"/>
+<button class="bg-secondary text-on-secondary px-8 py-4 rounded-lg font-headline font-bold hover:bg-secondary-container hover:text-on-secondary-container transition-colors shrink-0">
+                                Buscar
+                            </button>
+</div>
+</div>
+<div class="lg:col-span-5 hidden lg:block">
+<div class="grid grid-cols-2 gap-4 opacity-90 transform rotate-3">
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-2xl flex flex-col gap-4 translate-y-8">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-headline font-bold text-primary text-xl">R$ 14.2M</span>
+<span class="font-body text-sm text-on-surface-variant">Arrecadação Mês</span>
+</div>
+<div class="bg-secondary p-6 rounded-xl shadow-2xl flex flex-col gap-4">
+<span class="material-symbols-outlined text-on-secondary text-4xl" style="font-variation-settings: 'FILL' 1;">construction</span>
+<span class="font-headline font-bold text-on-secondary text-xl">12 Ativas</span>
+<span class="font-body text-sm text-secondary-fixed-dim">Obras em Andamento</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Navigation Grid - Breaking the Grid -->
+<section class="px-8 -mt-16 relative z-20 max-w-screen-xl mx-auto pb-24">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Card 1: Painel Financeiro -->
+<a class="bg-surface-container-lowest rounded-xl p-8 shadow-[0_32px_32px_-4px_rgba(0,25,60,0.06)] group hover:-translate-y-2 transition-transform duration-300 flex flex-col h-full border-b-[3px] border-primary" href="#">
+<div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-on-primary transition-colors text-primary">
+<span class="material-symbols-outlined text-3xl">monitoring</span>
+</div>
+<h3 class="font-headline font-extrabold text-2xl text-primary mb-3">Painel Financeiro</h3>
+<p class="font-body text-on-surface-variant mb-6 flex-grow">Acompanhe em tempo real as receitas, despesas e a saúde fiscal do município.</p>
+<span class="font-headline font-bold text-primary text-sm flex items-center gap-1 group-hover:gap-2 transition-all">Acessar Painel <span class="material-symbols-outlined text-sm">arrow_forward</span></span>
+</a>
+<!-- Card 2: Obras Públicas -->
+<a class="bg-surface-container-lowest rounded-xl p-8 shadow-[0_32px_32px_-4px_rgba(0,25,60,0.06)] group hover:-translate-y-2 transition-transform duration-300 flex flex-col h-full lg:translate-y-8 border-b-[3px] border-secondary" href="#">
+<div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center mb-6 group-hover:bg-secondary group-hover:text-on-secondary transition-colors text-secondary">
+<span class="material-symbols-outlined text-3xl">architecture</span>
+</div>
+<h3 class="font-headline font-extrabold text-2xl text-primary mb-3">Obras Públicas</h3>
+<p class="font-body text-on-surface-variant mb-6 flex-grow">Status, investimentos e prazos de todas as construções e reformas em andamento.</p>
+<span class="font-headline font-bold text-secondary text-sm flex items-center gap-1 group-hover:gap-2 transition-all">Ver Mapa de Obras <span class="material-symbols-outlined text-sm">arrow_forward</span></span>
+</a>
+<!-- Card 3: Contas Públicas -->
+<a class="bg-surface-container-lowest rounded-xl p-8 shadow-[0_32px_32px_-4px_rgba(0,25,60,0.06)] group hover:-translate-y-2 transition-transform duration-300 flex flex-col h-full border-b-[3px] border-primary" href="#">
+<div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-on-primary transition-colors text-primary">
+<span class="material-symbols-outlined text-3xl">description</span>
+</div>
+<h3 class="font-headline font-extrabold text-2xl text-primary mb-3">Contas Públicas</h3>
+<p class="font-body text-on-surface-variant mb-6 flex-grow">Relatórios de gestão fiscal, balanços anuais e prestação de contas detalhada.</p>
+<span class="font-headline font-bold text-primary text-sm flex items-center gap-1 group-hover:gap-2 transition-all">Consultar Documentos <span class="material-symbols-outlined text-sm">arrow_forward</span></span>
+</a>
+<!-- Card 4: Aviso de Licitação -->
+<a class="bg-surface-container-lowest rounded-xl p-8 shadow-[0_32px_32px_-4px_rgba(0,25,60,0.06)] group hover:-translate-y-2 transition-transform duration-300 flex flex-col h-full lg:translate-y-8 border-b-[3px] border-primary-container" href="#">
+<div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center mb-6 group-hover:bg-primary-container group-hover:text-on-primary transition-colors text-primary-container">
+<span class="material-symbols-outlined text-3xl">gavel</span>
+</div>
+<h3 class="font-headline font-extrabold text-2xl text-primary mb-3">Aviso de Licitação</h3>
+<p class="font-body text-on-surface-variant mb-6 flex-grow">Acompanhe editais, prazos e concorrências públicas do município.</p>
+<span class="font-headline font-bold text-primary-container text-sm flex items-center gap-1 group-hover:gap-2 transition-all">Ver Licitações <span class="material-symbols-outlined text-sm">arrow_forward</span></span>
+</a>
+</div>
+</section>
+<!-- Information Hub Section -->
+<section class="bg-surface-container-low py-20 px-8 mt-12 border-t border-surface-variant">
+<div class="max-w-screen-xl mx-auto">
+<h2 class="font-headline font-extrabold text-3xl md:text-4xl text-primary tracking-tight mb-10 text-center">Painel de Informações Rápidas</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Contas Públicas -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-secondary hover:shadow-md transition-shadow">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<h4 class="font-headline font-bold text-lg text-primary">Contas Públicas</h4>
+</div>
+<p class="font-body text-sm text-on-surface-variant"><strong>Status:</strong> Fechamento do último mês fiscal concluído e publicado sem ressalvas.</p>
+</div>
+<!-- Obras em Destaque -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-primary hover:shadow-md transition-shadow">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">construction</span>
+<h4 class="font-headline font-bold text-lg text-primary">Obras em Destaque</h4>
+</div>
+<p class="font-body text-sm text-on-surface-variant"><strong>Atualização:</strong> Reforma da Praça Central atingiu 85% de conclusão nesta semana.</p>
+</div>
+<!-- Aviso de Licitação -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-primary-container hover:shadow-md transition-shadow">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">gavel</span>
+<h4 class="font-headline font-bold text-lg text-primary">Aviso de Licitação</h4>
+</div>
+<p class="font-body text-sm text-on-surface-variant"><strong>Próxima:</strong> Pregão Eletrônico 04/2024 para aquisição de merenda escolar. Data: 15/05.</p>
+</div>
+<!-- Iluminação Pública -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-secondary hover:shadow-md transition-shadow">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+<h4 class="font-headline font-bold text-lg text-primary">Iluminação Pública</h4>
+</div>
+<p class="font-body text-sm text-on-surface-variant"><strong>Dados:</strong> 98% de cobertura LED no município. 12 manutenções realizadas nas últimas 24h.</p>
+</div>
+<!-- Notícias do Município -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-primary hover:shadow-md transition-shadow">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">newspaper</span>
+<h4 class="font-headline font-bold text-lg text-primary">Notícias do Município</h4>
+</div>
+<p class="font-body text-sm text-on-surface-variant"><strong>Destaque:</strong> Prefeitura lança novo programa de saúde preventiva nas escolas municipais.</p>
+</div>
+<!-- Diário Oficial -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border-l-4 border-primary-container hover:shadow-md transition-shadow">
+<div class="flex items-center gap-3 mb-3">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<h4 class="font-headline font-bold text-lg text-primary">Diário Oficial do Dia</h4>
+</div>
+<p class="font-body text-sm text-on-surface-variant"><strong>Edição 1250:</strong> Publicação do balancete financeiro mensal. Novas portarias de nomeação para a Secretaria de Educação.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-[#eff4ff] dark:bg-slate-900 text-[#00193c] dark:text-slate-300 text-inter text-sm tracking-wide w-full py-12 mt-auto tonal shift from surface to surface-container-low flat">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-8 max-w-screen-2xl mx-auto">
+<div>
+<span class="font-bold text-[#00193c] dark:text-white text-lg mb-4 block">Portal da Transparência</span>
+<p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+                    Compromisso com a clareza, honestidade e o acesso universal à informação pública em Bandeirantes - MS.
+                </p>
+<p class="opacity-80 hover:opacity-100">© 2024 Arquivo Arquitetônico Municipal. Todos os direitos reservados.</p>
+</div>
+<div class="flex flex-col md:items-end justify-start gap-4">
+<nav class="flex flex-wrap gap-6">
+<a class="text-slate-500 dark:text-slate-400 hover:underline hover:text-[#006c47] transition-all" href="#">Privacidade</a>
+<a class="font-semibold text-[#006c47] hover:underline hover:text-[#006c47] transition-all" href="#">Portal da Transparência</a>
+<a class="text-slate-500 dark:text-slate-400 hover:underline hover:text-[#006c47] transition-all" href="#">Ouvidoria</a>
+<a class="text-slate-500 dark:text-slate-400 hover:underline hover:text-[#006c47] transition-all" href="#">Dados Abertos</a>
+</nav>
+</div>
+</div>
+</footer>
+</body></html>

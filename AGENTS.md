@@ -27,7 +27,7 @@ Não duplique essas regras aqui. Em caso de conflito, siga o documento canônico
 8. Rode a validação final obrigatória
 
 ## Skills e especialistas
-- Utilize o `context-mode`, e suas tools, para economia de tokens e contexto.
+- Utilize o `context-mode`, e suas tools.
 - Use as skills apenas quando agregarem valor real à tarefa
 - Use skills e perspectivas especializadas de forma mínima e sob demanda
 - Trabalhe por padrão em single-thread

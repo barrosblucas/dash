@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Portal Transparência - Evolução da Obra</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#233144",
+                        "surface": "#f8f9ff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-surface": "#0d1c2e",
+                        "on-background": "#0d1c2e",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#d5e3fc",
+                        "surface-container-low": "#eff4ff",
+                        "primary-fixed-dim": "#abc7ff",
+                        "background": "#f8f9ff",
+                        "inverse-primary": "#abc7ff",
+                        "outline-variant": "#c4c6d1",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "surface-tint": "#3e5e95",
+                        "on-secondary-container": "#00714b",
+                        "outline": "#747781",
+                        "on-secondary-fixed-variant": "#005235",
+                        "secondary-fixed": "#8df7c1",
+                        "on-error-container": "#93000a",
+                        "secondary": "#006c47",
+                        "surface-container-highest": "#d5e3fc",
+                        "surface-dim": "#ccdbf3",
+                        "secondary-fixed-dim": "#71dba6",
+                        "tertiary-fixed": "#d3e4fe",
+                        "secondary-container": "#8af5be",
+                        "on-surface-variant": "#43474f",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "on-secondary-fixed": "#002113",
+                        "tertiary": "#091a2d",
+                        "on-primary-container": "#7796d1",
+                        "on-error": "#ffffff",
+                        "primary": "#00193c",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#001b3f",
+                        "primary-container": "#002d62",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary-fixed-variant": "#24467c",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#d7e2ff",
+                        "surface-container-high": "#dce9ff",
+                        "on-tertiary-container": "#8797af",
+                        "tertiary-container": "#1f2f43",
+                        "surface-container": "#e6eeff",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "on-tertiary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body antialiased selection:bg-primary-container selection:text-on-primary">
+<!-- TopNavBar -->
+<nav class="bg-[#f8f9ff]/80 backdrop-blur-2xl text-[#00193c] font-['Manrope'] font-bold tracking-tight docked full-width top-0 sticky z-50 bg-[#eff4ff] transition-colors duration-300 shadow-[0_32px_32px_-4px_rgba(0,25,60,0.06)] flex justify-between items-center w-full px-8 py-4 max-w-[1920px] mx-auto">
+<div class="flex items-center gap-8">
+<div class="text-2xl font-black text-[#00193c] tracking-tighter">Portal Transparência</div>
+<div class="hidden md:flex gap-6">
+<a class="text-[#00193c]/60 hover:text-[#00193c] hover:bg-[#eff4ff] rounded-md transition-all scale-95 active:scale-90 transition-transform" href="#">Dashboards</a>
+<a class="text-[#006c47] border-b-2 border-[#006c47] pb-1 hover:bg-[#eff4ff] rounded-md transition-all scale-95 active:scale-90 transition-transform" href="#">Obras Públicas</a>
+<a class="text-[#00193c]/60 hover:text-[#00193c] hover:bg-[#eff4ff] rounded-md transition-all scale-95 active:scale-90 transition-transform" href="#">Orçamento</a>
+<a class="text-[#00193c]/60 hover:text-[#00193c] hover:bg-[#eff4ff] rounded-md transition-all scale-95 active:scale-90 transition-transform" href="#">Receitas</a>
+<a class="text-[#00193c]/60 hover:text-[#00193c] hover:bg-[#eff4ff] rounded-md transition-all scale-95 active:scale-90 transition-transform" href="#">Despesas</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative bg-surface-container-highest rounded-full flex items-center px-4 py-2 border-b-2 border-primary/20 focus-within:border-primary transition-colors">
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 text-on-surface placeholder:text-on-surface-variant/70" placeholder="Buscar..." type="text"/>
+<span class="material-symbols-outlined text-primary/70" data-icon="search">search</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-[#00193c]/60 hover:text-[#00193c] hover:bg-[#eff4ff] p-2 rounded-md transition-all scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-[#00193c]/60 hover:text-[#00193c] hover:bg-[#eff4ff] p-2 rounded-md transition-all scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-md font-medium hover:bg-primary-container transition-colors shadow-sm">Acesso à Informação</button>
+</div>
+</div>
+</nav>
+<!-- Main Content Layout -->
+<div class="flex w-full min-h-screen">
+<!-- SideNavBar (Simulated Active: Gestão de Obras) -->
+<aside class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-[#eff4ff] border-r border-[#c4c6d1]/20 font-['Inter'] text-sm font-medium z-40 pt-24 px-4 pb-4 gap-2">
+<div class="mb-8 px-2 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+</div>
+<div>
+<h2 class="text-primary font-headline font-bold text-base leading-tight">Gestão Municipal</h2>
+<p class="text-on-surface-variant text-xs">Exercício 2024</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-[#00193c]/70 hover:bg-white/50 cursor-pointer active:opacity-80 hover:translate-x-1 transition-transform duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+                    Visão Geral
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 bg-white text-[#006c47] shadow-sm rounded-lg cursor-pointer active:opacity-80 hover:translate-x-1 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="construction" data-weight="fill" style="font-variation-settings: 'FILL' 1;">construction</span>
+                    Gestão de Obras
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-[#00193c]/70 hover:bg-white/50 cursor-pointer active:opacity-80 hover:translate-x-1 transition-transform duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="payments">payments</span>
+                    Fluxo Financeiro
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-[#00193c]/70 hover:bg-white/50 cursor-pointer active:opacity-80 hover:translate-x-1 transition-transform duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="gavel">gavel</span>
+                    Licitações
+                </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-[#00193c]/70 hover:bg-white/50 cursor-pointer active:opacity-80 hover:translate-x-1 transition-transform duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="description">description</span>
+                    Relatórios Anuais
+                </a>
+</nav>
+<div class="mt-auto flex flex-col gap-2 pt-4 border-t border-outline-variant/20">
+<a class="flex items-center gap-3 px-3 py-2 text-[#00193c]/70 hover:bg-white/50 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="help">help</span>
+                    Suporte
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#00193c]/70 hover:bg-white/50 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="security">security</span>
+                    Privacidade
+                </a>
+<button class="mt-4 w-full bg-secondary text-on-secondary py-2 px-4 rounded-md font-medium text-xs hover:bg-primary-container transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]" data-icon="download">download</span>
+                    Baixar Dados Abertos
+                </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-64 pt-8 px-4 md:px-12 pb-24 max-w-7xl mx-auto">
+<!-- Hero Header -->
+<div class="mb-12 relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary-container text-on-primary p-8 md:p-12 shadow-[0_32px_32px_-4px_rgba(0,25,60,0.1)]">
+<div class="relative z-10 max-w-3xl">
+<div class="flex items-center gap-2 mb-4">
+<span class="bg-secondary-container text-on-secondary-container text-xs font-bold px-2.5 py-1 rounded-sm uppercase tracking-wider inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="published_with_changes">published_with_changes</span>
+                            Em Execução
+                        </span>
+<span class="text-primary-fixed-dim text-sm font-medium">Contrato nº 042/2023</span>
+</div>
+<h1 class="font-headline font-extrabold text-4xl md:text-5xl tracking-tight mb-4 leading-tight">Complexo Educacional Vila Nova</h1>
+<p class="text-on-primary-container text-lg max-w-2xl font-medium leading-relaxed">Acompanhamento detalhado da evolução física e financeira. Dados atualizados referentes à última medição aprovada.</p>
+</div>
+<!-- Decorative Texture -->
+<div class="absolute top-0 right-0 w-full h-full opacity-10 pointer-events-none" style="background-image: radial-gradient(circle at right, #ffffff 1px, transparent 1px); background-size: 24px 24px;"></div>
+</div>
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+<!-- Main Chart Card: Avanço Físico (Span 2) -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-xl p-8 transition-shadow duration-300">
+<div class="flex justify-between items-start mb-8">
+<div>
+<h3 class="font-headline font-bold text-2xl text-primary tracking-tight mb-1">Avanço Físico</h3>
+<p class="text-on-surface-variant text-sm">Planejado vs. Realizado (Acumulado %)</p>
+</div>
+<div class="flex items-center gap-4 text-sm font-medium">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-outline-variant"></div>
+<span class="text-on-surface-variant">Planejado</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary"></div>
+<span class="text-primary">Realizado</span>
+</div>
+</div>
+</div>
+<!-- Simulated Line Chart Structure -->
+<div class="relative h-64 w-full flex items-end justify-between pt-4">
+<!-- Y-Axis Labels -->
+<div class="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-outline font-medium w-8">
+<span>100%</span>
+<span>75%</span>
+<span>50%</span>
+<span>25%</span>
+<span>0%</span>
+</div>
+<!-- Chart Area -->
+<div class="ml-10 flex-1 h-full relative border-b-2 border-outline-variant/20 flex justify-between items-end pb-2">
+<!-- Simulated Grid Lines -->
+<div class="absolute w-full h-px bg-outline-variant/10 top-0"></div>
+<div class="absolute w-full h-px bg-outline-variant/10 top-1/4"></div>
+<div class="absolute w-full h-px bg-outline-variant/10 top-2/4"></div>
+<div class="absolute w-full h-px bg-outline-variant/10 top-3/4"></div>
+<!-- Data Points (Simplified representation using flex columns) -->
+<div class="relative w-8 h-full flex items-end justify-center group">
+<div class="absolute bottom-[10%] w-2 h-2 rounded-full bg-outline-variant z-10"></div>
+<div class="absolute bottom-[12%] w-3 h-3 rounded-full bg-secondary border-2 border-surface-container-lowest z-20"></div>
+<span class="absolute -bottom-6 text-xs text-on-surface-variant font-medium">Jan</span>
+</div>
+<div class="relative w-8 h-full flex items-end justify-center group">
+<div class="absolute bottom-[25%] w-2 h-2 rounded-full bg-outline-variant z-10"></div>
+<div class="absolute bottom-[22%] w-3 h-3 rounded-full bg-secondary border-2 border-surface-container-lowest z-20"></div>
+<span class="absolute -bottom-6 text-xs text-on-surface-variant font-medium">Fev</span>
+</div>
+<div class="relative w-8 h-full flex items-end justify-center group">
+<div class="absolute bottom-[45%] w-2 h-2 rounded-full bg-outline-variant z-10"></div>
+<div class="absolute bottom-[40%] w-3 h-3 rounded-full bg-secondary border-2 border-surface-container-lowest z-20"></div>
+<span class="absolute -bottom-6 text-xs text-on-surface-variant font-medium">Mar</span>
+</div>
+<div class="relative w-8 h-full flex items-end justify-center group">
+<div class="absolute bottom-[65%] w-2 h-2 rounded-full bg-outline-variant z-10"></div>
+<div class="absolute bottom-[58%] w-3 h-3 rounded-full bg-secondary border-2 border-surface-container-lowest z-20"></div>
+<span class="absolute -bottom-6 text-xs text-on-surface-variant font-medium">Abr</span>
+</div>
+<div class="relative w-8 h-full flex items-end justify-center group">
+<div class="absolute bottom-[85%] w-2 h-2 rounded-full bg-outline-variant z-10"></div>
+<div class="absolute bottom-[72%] w-3 h-3 rounded-full bg-secondary border-2 border-surface-container-lowest z-20"></div>
+<span class="absolute -bottom-6 text-xs text-on-surface-variant font-medium">Mai</span>
+<!-- Tooltip simulated -->
+<div class="absolute -top-10 bg-inverse-surface text-inverse-on-surface text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-30">
+                                    Real: 72% | Plan: 85%
+                                </div>
+</div>
+<!-- Connecting lines conceptualization (SVG ideal here, but using styled divs for simplicity in HTML) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" preserveaspectratio="none">
+<path class="opacity-50" d="M 16 230 L 100 180 L 180 100 L 260 50 L 340 30" fill="none" stroke="#c4c6d1" stroke-dasharray="4 4" stroke-width="2"></path>
+<path d="M 16 225 L 100 200 L 180 130 L 260 80 L 340 60" fill="none" stroke="#006c47" stroke-width="3"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- KPI Side Panel -->
+<div class="flex flex-col gap-6">
+<div class="bg-surface-container-low rounded-xl p-6 flex-1 flex flex-col justify-center">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-secondary" data-icon="trending_up">trending_up</span>
+<h4 class="font-headline font-bold text-lg text-primary">Status Atual</h4>
+</div>
+<div class="text-4xl font-headline font-extrabold text-primary mb-1">72.4%</div>
+<p class="text-sm text-on-surface-variant font-medium">Concluído até Maio/2024</p>
+<div class="mt-6">
+<div class="flex justify-between text-xs font-medium text-on-surface-variant mb-2">
+<span>Atraso estimado</span>
+<span class="text-error font-bold">-12.6%</span>
+</div>
+<div class="w-full bg-surface-container-highest rounded-full h-1.5">
+<div class="bg-error h-1.5 rounded-full" style="width: 15%"></div>
+</div>
+</div>
+</div>
+<div class="bg-primary text-on-primary rounded-xl p-6 flex-1 flex flex-col justify-center relative overflow-hidden">
+<div class="relative z-10">
+<h4 class="font-headline font-bold text-lg text-primary-fixed-dim mb-2">Valor Total Empenhado</h4>
+<div class="text-3xl font-headline font-extrabold mb-1 tracking-tight">R$ 14.5M</div>
+<p class="text-xs text-on-primary-container font-medium">de R$ 18.2M previstos</p>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-[120px] text-primary-container opacity-50 pointer-events-none" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+</div>
+</div>
+<!-- Financial Bar Chart Section -->
+<div class="bg-surface-container-lowest rounded-xl p-8 mb-12">
+<h3 class="font-headline font-bold text-2xl text-primary tracking-tight mb-6">Desembolso Financeiro Mensal</h3>
+<div class="flex items-end gap-2 md:gap-4 h-48 mt-8 border-b border-outline-variant/30 pb-2">
+<!-- Bars -->
+<div class="flex-1 flex flex-col items-center justify-end group">
+<span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity mb-2">R$ 1.2M</span>
+<div class="w-full max-w-[40px] bg-surface-container-highest rounded-t-sm h-[30%] group-hover:bg-primary-fixed-dim transition-colors relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-primary h-[80%] rounded-t-sm"></div>
+</div>
+<span class="text-xs text-on-surface-variant mt-3 font-medium">Jan</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-end group">
+<span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity mb-2">R$ 2.4M</span>
+<div class="w-full max-w-[40px] bg-surface-container-highest rounded-t-sm h-[60%] group-hover:bg-primary-fixed-dim transition-colors relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-primary h-[90%] rounded-t-sm"></div>
+</div>
+<span class="text-xs text-on-surface-variant mt-3 font-medium">Fev</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-end group">
+<span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity mb-2">R$ 3.1M</span>
+<div class="w-full max-w-[40px] bg-surface-container-highest rounded-t-sm h-[80%] group-hover:bg-primary-fixed-dim transition-colors relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-primary h-[95%] rounded-t-sm"></div>
+</div>
+<span class="text-xs text-on-surface-variant mt-3 font-medium">Mar</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-end group">
+<span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity mb-2">R$ 1.8M</span>
+<div class="w-full max-w-[40px] bg-surface-container-highest rounded-t-sm h-[45%] group-hover:bg-primary-fixed-dim transition-colors relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-primary h-[100%] rounded-t-sm"></div>
+</div>
+<span class="text-xs text-on-surface-variant mt-3 font-medium">Abr</span>
+</div>
+<div class="flex-1 flex flex-col items-center justify-end group">
+<span class="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity mb-2">R$ 3.8M</span>
+<div class="w-full max-w-[40px] bg-surface-container-highest rounded-t-sm h-[100%] group-hover:bg-primary-fixed-dim transition-colors relative overflow-hidden">
+<div class="absolute bottom-0 w-full bg-secondary h-[40%] rounded-t-sm"></div> <!-- Indicating liquidation status variation if needed, or just color -->
+</div>
+<span class="text-xs text-on-surface-variant mt-3 font-medium">Mai</span>
+</div>
+</div>
+<div class="flex justify-end gap-6 mt-4 text-xs font-medium">
+<div class="flex items-center gap-2"><div class="w-3 h-3 bg-surface-container-highest rounded-sm"></div><span class="text-on-surface-variant">Empenhado</span></div>
+<div class="flex items-center gap-2"><div class="w-3 h-3 bg-primary rounded-sm"></div><span class="text-primary">Liquidado</span></div>
+<div class="flex items-center gap-2"><div class="w-3 h-3 bg-secondary rounded-sm"></div><span class="text-secondary">Pago</span></div>
+</div>
+</div>
+<!-- Data Table Section -->
+<div class="bg-surface-container-lowest rounded-xl p-8">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline font-bold text-2xl text-primary tracking-tight">Histórico de Medições</h3>
+<button class="flex items-center gap-2 text-primary hover:text-secondary font-medium text-sm transition-colors">
+                        Baixar Planilha <span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b-2 border-primary text-sm font-bold text-primary font-headline">
+<th class="py-4 px-4">Nº Medição</th>
+<th class="py-4 px-4">Período</th>
+<th class="py-4 px-4">% Avanço</th>
+<th class="py-4 px-4 text-right">Valor Medido (R$)</th>
+<th class="py-4 px-4">Status</th>
+</tr>
+</thead>
+<tbody class="text-sm font-medium">
+<tr class="bg-surface-container-low transition-colors hover:bg-surface-container-highest">
+<td class="py-4 px-4 text-primary font-bold">#005</td>
+<td class="py-4 px-4 text-on-surface-variant">01/05/24 a 31/05/24</td>
+<td class="py-4 px-4 text-secondary font-bold">14.2%</td>
+<td class="py-4 px-4 text-right font-headline text-base">3.850.000,00</td>
+<td class="py-4 px-4">
+<span class="bg-secondary-container text-on-secondary-container text-xs px-2 py-1 rounded-sm font-bold">Aprovado</span>
+</td>
+</tr>
+<tr class="bg-surface transition-colors hover:bg-surface-container-highest">
+<td class="py-4 px-4 text-primary font-bold">#004</td>
+<td class="py-4 px-4 text-on-surface-variant">01/04/24 a 30/04/24</td>
+<td class="py-4 px-4 text-primary">8.5%</td>
+<td class="py-4 px-4 text-right font-headline text-base">1.820.500,00</td>
+<td class="py-4 px-4">
+<span class="bg-surface-container-highest text-primary text-xs px-2 py-1 rounded-sm font-bold">Liquidado</span>
+</td>
+</tr>
+<tr class="bg-surface-container-low transition-colors hover:bg-surface-container-highest">
+<td class="py-4 px-4 text-primary font-bold">#003</td>
+<td class="py-4 px-4 text-on-surface-variant">01/03/24 a 31/03/24</td>
+<td class="py-4 px-4 text-primary">12.1%</td>
+<td class="py-4 px-4 text-right font-headline text-base">3.100.200,00</td>
+<td class="py-4 px-4">
+<span class="bg-surface-container-highest text-primary text-xs px-2 py-1 rounded-sm font-bold">Pago</span>
+</td>
+</tr>
+<tr class="bg-surface transition-colors hover:bg-surface-container-highest">
+<td class="py-4 px-4 text-primary font-bold">#002</td>
+<td class="py-4 px-4 text-on-surface-variant">01/02/24 a 29/02/24</td>
+<td class="py-4 px-4 text-primary">15.0%</td>
+<td class="py-4 px-4 text-right font-headline text-base">2.450.000,00</td>
+<td class="py-4 px-4">
+<span class="bg-surface-container-highest text-primary text-xs px-2 py-1 rounded-sm font-bold">Pago</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-[#f8f9ff] text-[#00193c] font-['Inter'] text-xs uppercase tracking-widest w-full py-12 px-8 border-t border-[#c4c6d1]/20 flex flex-col md:flex-row justify-between items-center gap-6 max-w-[1920px] mx-auto ml-0 md:ml-64 relative z-10">
+<div class="font-['Manrope'] font-bold text-[#00193c] text-sm">
+            © 2024 Controladoria Geral do Município. Todos os direitos reservados.
+        </div>
+<div class="flex gap-6 flex-wrap justify-center">
+<a class="text-[#00193c]/50 hover:text-[#006c47] transition-colors" href="#">Dados Abertos</a>
+<a class="text-[#00193c]/50 hover:text-[#006c47] transition-colors" href="#">Portal da Câmara</a>
+<a class="text-[#00193c]/50 hover:text-[#006c47] transition-colors" href="#">Glossário</a>
+<a class="text-[#00193c]/50 hover:text-[#006c47] transition-colors" href="#">Mapa do Site</a>
+</div>
+</footer>
+</body></html>
