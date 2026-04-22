@@ -169,3 +169,24 @@
 - Override check: ✅ zero `dark:bg-slate-*` / `dark:text-slate-*` / `dark:text-white` restantes
 - `npm run lint`: ✅ zero warnings, zero errors
 - `npm run build`: ✅ compiled successfully, 16 rotas geradas
+
+---
+
+### Alterado: Página de detalhe de obra — galeria de fotos substitui cronograma
+
+**Escopo:** Página de detalhamento de obra (`/obras/[id]`).
+
+**Arquivo alterado:**
+- `frontend/app/obras/[id]/obra-detalhe-client.tsx`
+
+**Mudanças:**
+- **Removido** mock de dados do cronograma e seção "Cronograma" (timeline com etapas)
+- **Adicionado** mock de galeria de fotos (6 fotos com legenda)
+- **Adicionado** componente `PhotoGallery` com foto principal grande (aspect 16:9), legenda overlay, contador e grid de thumbnails clicáveis
+- **Migrado** de `<img>` para `<Image>` do `next/image` com `unoptimized` (URLs externas)
+- **Adicionado** `useState` para controle da foto selecionada
+
+**Validação:**
+- `npm run lint`: ✅ zero warnings, zero errors
+- `tsc --noEmit`: ✅ zero erros
+- `npm run build`: ✅ compiled successfully

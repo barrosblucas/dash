@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 /* ── Mock Data ── */
@@ -26,43 +28,43 @@ const obra = {
   diasRestantes: 243,
 };
 
-/* ── Cronograma ── */
-const cronograma = [
+/* ── Galeria de Fotos ── */
+const fotos = [
   {
-    etapa: 'Licitação e Contratação',
-    data: 'Nov 2023',
-    status: 'concluida' as const,
-    icon: 'gavel',
+    id: 1,
+    src: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&q=80',
+    alt: 'Fachada da unidade de saúde em reforma',
+    legenda: 'Fachada principal',
   },
   {
-    etapa: 'Projeto Executivo',
-    data: 'Dez 2023',
-    status: 'concluida' as const,
-    icon: 'architecture',
+    id: 2,
+    src: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800&q=80',
+    alt: 'Interior do prédio em obras',
+    legenda: 'Área interna',
   },
   {
-    etapa: 'Demolição e Preparação',
-    data: 'Jan 2024',
-    status: 'concluida' as const,
-    icon: 'demolition',
+    id: 3,
+    src: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800&q=80',
+    alt: 'Equipamentos e andaimes',
+    legenda: 'Estrutura metálica',
   },
   {
-    etapa: 'Fundação e Estrutura',
-    data: 'Fev 2024',
-    status: 'concluida' as const,
-    icon: 'foundation',
+    id: 4,
+    src: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=800&q=80',
+    alt: 'Vista aérea da obra',
+    legenda: 'Vista aérea',
   },
   {
-    etapa: 'Instalações e Acabamento',
-    data: 'Jun 2024',
-    status: 'atual' as const,
-    icon: 'plumbing',
+    id: 5,
+    src: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&q=80',
+    alt: 'Detalhes do acabamento',
+    legenda: 'Acabamento',
   },
   {
-    etapa: 'Entrega e Fiscalização',
-    data: 'Dez 2024',
-    status: 'futura' as const,
-    icon: 'verified',
+    id: 6,
+    src: 'https://images.unsplash.com/photo-1590644365607-1c5a0a1e9b9c?w=800&q=80',
+    alt: 'Equipe de trabalho na obra',
+    legenda: 'Equipe',
   },
 ];
 
@@ -73,6 +75,66 @@ const valoresMedidos = [
   { mes: 'Março', valor: 'R$ 180.000,00' },
   { mes: 'Abril (Atual)', valor: 'R$ 210.000,00', atual: true },
 ];
+
+/* ── Photo Gallery Component ── */
+function PhotoGallery() {
+  const [selected, setSelected] = useState(0);
+
+  return (
+    <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
+      <h3 className="font-headline text-xl font-bold text-primary mb-6 flex items-center gap-2">
+        <span className="material-symbols-outlined">photo_library</span>
+        Galeria de Fotos
+      </h3>
+
+      {/* Foto Principal */}
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden bg-surface-container-high mb-4">
+        <Image
+          src={fotos[selected].src}
+          alt={fotos[selected].alt}
+          fill
+          sizes="(max-width: 768px) 100vw, 66vw"
+          className="object-cover transition-opacity duration-300"
+          unoptimized
+        />
+        {/* Legenda sobre a imagem */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent px-5 py-4 z-10">
+          <p className="font-label text-sm font-medium text-white">
+            {fotos[selected].legenda}
+          </p>
+        </div>
+        {/* Contador */}
+        <span className="absolute top-4 right-4 px-3 py-1 bg-black/50 backdrop-blur-sm rounded-full text-xs font-label text-white z-10">
+          {selected + 1} / {fotos.length}
+        </span>
+      </div>
+
+      {/* Thumbnails */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+        {fotos.map((foto, i) => (
+          <button
+            key={foto.id}
+            onClick={() => setSelected(i)}
+            className={`relative aspect-square rounded-lg overflow-hidden transition-all duration-200 ${
+              selected === i
+                ? 'ring-2 ring-primary ring-offset-2 ring-offset-surface-container-lowest dark:ring-offset-slate-900'
+                : 'opacity-70 hover:opacity-100'
+            }`}
+          >
+            <Image
+              src={foto.src}
+              alt={foto.alt}
+              fill
+              sizes="(max-width: 640px) 30vw, (max-width: 768px) 22vw, 10vw"
+              className="object-cover"
+              unoptimized
+            />
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 /* ── Component ── */
 export default function ObraDetalheClient({ id: _id }: { id: string }) {
@@ -175,53 +237,8 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
             </div>
           </section>
 
-          {/* Cronograma / Timeline */}
-          <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
-            <h3 className="font-headline text-xl font-bold text-primary mb-8 flex items-center gap-2">
-              <span className="material-symbols-outlined">timeline</span>
-              Cronograma
-            </h3>
-            <div className="relative">
-              {cronograma.map((step, i) => (
-                <div key={i} className="flex gap-4 pb-8 last:pb-0">
-                  {/* Timeline Dot + Line */}
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                        step.status === 'concluida'
-                          ? 'bg-secondary text-on-secondary'
-                          : step.status === 'atual'
-                          ? 'bg-primary text-on-primary shadow-lg shadow-primary/30'
-                          : 'bg-surface-container-high text-on-surface-variant'
-                      } ${step.status === 'atual' ? 'animate-pulse' : ''}`}
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        {step.status === 'concluida' ? 'check' : step.icon}
-                      </span>
-                    </div>
-                    {i < cronograma.length - 1 && (
-                      <div className="w-0.5 flex-1 bg-surface-container-high mt-2" />
-                    )}
-                  </div>
-                  {/* Step Content */}
-                  <div className="pt-1.5 pb-2">
-                    <p
-                      className={`font-headline font-bold text-sm ${
-                        step.status === 'futura'
-                          ? 'text-on-surface-variant'
-                          : 'text-primary'
-                      }`}
-                    >
-                      {step.etapa}
-                    </p>
-                    <p className="font-label text-xs text-on-surface-variant mt-0.5">
-                      {step.data}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          {/* Galeria de Fotos */}
+          <PhotoGallery />
 
           {/* Valores Medidos */}
           <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
