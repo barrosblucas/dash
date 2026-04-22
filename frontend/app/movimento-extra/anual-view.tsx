@@ -41,14 +41,14 @@ export function AnualView({ dataAnual }: AnualViewProps) {
           accentColor={dataAnual.saldo >= 0 ? '#06b6d4' : '#f97316'}
         />
         {/* Total items count */}
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient transition-all duration-300 hover:shadow-ambient-lg">
+        <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient transition-all duration-300 hover:shadow-ambient-lg">
           <div className="flex items-start justify-between mb-3">
             <span className="text-label-md text-on-surface-variant">Total de Itens</span>
             <div className="w-9 h-9 rounded-full flex items-center justify-center bg-purple-500/15 text-purple-500">
               <span className="material-symbols-outlined text-[20px]">sync_alt</span>
             </div>
           </div>
-          <p className="text-headline-lg font-display font-bold text-on-surface dark:text-white">
+          <p className="text-headline-lg font-display font-bold text-on-surface">
             {dataAnual.quantidade_total.toLocaleString('pt-BR')}
           </p>
         </div>
@@ -63,9 +63,9 @@ export function AnualView({ dataAnual }: AnualViewProps) {
         >
           <div className="flex items-center gap-2 mb-4">
             <span className="material-symbols-outlined text-on-surface-variant text-[18px]">calendar_month</span>
-            <h2 className="text-headline-sm font-display text-on-surface dark:text-white">Evolução Mensal</h2>
+            <h2 className="text-headline-sm font-display text-on-surface">Evolução Mensal</h2>
           </div>
-          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-5 shadow-ambient">
+          <div className="bg-surface-container-lowest rounded-xl p-5 shadow-ambient">
             {/* Legend */}
             <div className="flex items-center gap-4 mb-4">
               <div className="flex items-center gap-1.5">
@@ -100,14 +100,14 @@ export function AnualView({ dataAnual }: AnualViewProps) {
         >
           <div className="flex items-center gap-2 mb-4">
             <span className="material-symbols-outlined text-on-surface-variant text-[18px]">emoji_events</span>
-            <h2 className="text-headline-sm font-display text-on-surface dark:text-white">Destaques do Ano</h2>
+            <h2 className="text-headline-sm font-display text-on-surface">Destaques do Ano</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {dataAnual.insights_receitas?.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="material-symbols-outlined text-secondary text-[18px]">trending_up</span>
-                  <h3 className="text-sm font-semibold text-secondary dark:text-emerald-400">Top Receitas</h3>
+                  <h3 className="text-sm font-semibold text-secondary">Top Receitas</h3>
                 </div>
                 <div className="space-y-3">
                   {dataAnual.insights_receitas.map((insight, i) => (
@@ -120,7 +120,7 @@ export function AnualView({ dataAnual }: AnualViewProps) {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="material-symbols-outlined text-error text-[18px]">trending_down</span>
-                  <h3 className="text-sm font-semibold text-error dark:text-red-400">Top Despesas</h3>
+                  <h3 className="text-sm font-semibold text-error">Top Despesas</h3>
                 </div>
                 <div className="space-y-3">
                   {dataAnual.insights_despesas.map((insight, i) => (

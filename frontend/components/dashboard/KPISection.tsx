@@ -73,7 +73,7 @@ export default function KPISection() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient animate-pulse"
+              className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient animate-pulse"
             >
               <div className="w-10 h-10 rounded-full bg-surface-container-high mb-4" />
               <div className="h-3 bg-surface-container-high rounded w-24 mb-2" />

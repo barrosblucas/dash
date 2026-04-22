@@ -47,7 +47,7 @@ export function MonthView({
 
     const dots: { color: string }[] = [];
     if (ind.aguardando) dots.push({ color: 'bg-secondary dark:bg-emerald-500' });
-    if (ind.encerrado) dots.push({ color: 'bg-outline dark:bg-slate-500' });
+    if (ind.encerrado) dots.push({ color: 'bg-outline' });
     if (ind.suspenso) dots.push({ color: 'bg-error dark:bg-red-500' });
     if (ind.dispensa) dots.push({ color: 'bg-primary dark:bg-blue-400' });
 
@@ -75,17 +75,17 @@ export function MonthView({
         onClick={() => onSelectDay(day)}
         className={`
           relative flex flex-col items-center py-1.5 rounded-xl text-sm transition-all
-          ${!isInMonth ? 'text-outline/40' : 'text-on-surface-variant dark:text-slate-400'}
+          ${!isInMonth ? 'text-outline/40' : 'text-on-surface-variant'}
           ${isSelected ? 'bg-primary/15 dark:bg-blue-900/30 text-primary dark:text-blue-400' : ''}
-          ${today && !isSelected ? 'bg-tertiary/10 dark:bg-amber-900/20 text-on-surface dark:text-white font-semibold' : ''}
-          ${hasItems && !isSelected ? 'hover:bg-surface-container-high dark:hover:bg-slate-700/40 cursor-pointer' : ''}
+          ${today && !isSelected ? 'bg-tertiary/10 text-on-surface font-semibold' : ''}
+          ${hasItems && !isSelected ? 'hover:bg-surface-container-high cursor-pointer' : ''}
         `}
       >
         <span className={`${today ? 'w-6 h-6 flex items-center justify-center rounded-full bg-tertiary/15 dark:bg-amber-700/30' : ''}`}>
           {format(day, 'd')}
         </span>
         {feriado && (
-          <span className="text-[9px] text-error dark:text-red-400 font-medium leading-tight text-center px-0.5 mt-0.5 line-clamp-2">
+          <span className="text-[9px] text-error font-medium leading-tight text-center px-0.5 mt-0.5 line-clamp-2">
             {feriado}
           </span>
         )}
@@ -100,25 +100,25 @@ export function MonthView({
       <div className="flex items-center justify-between">
         <button
           onClick={onNavigatePrev}
-          className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface transition-colors"
+          className="p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
         >
           <span className="material-symbols-outlined text-[20px]">chevron_left</span>
         </button>
         <div className="text-center">
-          <h2 className="text-headline-sm font-display text-on-surface dark:text-white capitalize">
+          <h2 className="text-headline-sm font-display text-on-surface capitalize">
             {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
           </h2>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={onNavigateToday}
-            className="rounded-full px-3 py-1.5 text-label-md font-medium bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60 transition-colors"
+            className="rounded-full px-3 py-1.5 text-label-md font-medium bg-surface-container-high text-on-surface-variant hover:bg-surface-container transition-colors"
           >
             Hoje
           </button>
           <button
             onClick={onNavigateNext}
-            className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface transition-colors"
+            className="p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">chevron_right</span>
           </button>
@@ -126,9 +126,9 @@ export function MonthView({
       </div>
 
       {/* Calendar grid */}
-      <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl shadow-ambient overflow-hidden">
+      <div className="bg-surface-container-lowest rounded-xl shadow-ambient overflow-hidden">
         {/* Weekday header */}
-        <div className="grid grid-cols-7 bg-surface-container-low dark:bg-slate-800/30">
+        <div className="grid grid-cols-7 bg-surface-container-low">
           {DIAS_SEMANA.map((dia) => (
             <div
               key={dia}
@@ -151,7 +151,7 @@ export function MonthView({
       {/* Selected day items */}
       {selectedDay && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-on-surface-variant dark:text-slate-400">
+          <h3 className="text-sm font-semibold text-on-surface-variant">
             Licitações em{' '}
             <span className="text-primary dark:text-blue-400">
               {format(selectedDay, "dd 'de' MMMM", { locale: ptBR })}
@@ -160,7 +160,7 @@ export function MonthView({
           </h3>
 
           {selectedDayItems.length === 0 ? (
-            <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 text-center shadow-ambient">
+            <div className="bg-surface-container-lowest rounded-xl p-6 text-center shadow-ambient">
               <span className="material-symbols-outlined text-outline text-[32px] block mx-auto mb-2">calendar_today</span>
               <p className="text-sm text-on-surface-variant">Nenhuma licitação nesta data</p>
             </div>
@@ -170,12 +170,12 @@ export function MonthView({
                 <button
                   key={item.id}
                   onClick={() => onOpenModal(item)}
-                  className="w-full text-left bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient transition-all duration-200 hover:shadow-ambient-lg"
+                  className="w-full text-left bg-surface-container-lowest rounded-xl p-4 shadow-ambient transition-all duration-200 hover:shadow-ambient-lg"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-sm font-medium text-on-surface dark:text-white">{item.numero}</span>
+                        <span className="text-sm font-medium text-on-surface">{item.numero}</span>
                         <FonteBadge fonte={item.fonte} />
                         <StatusBadge status={item.status} />
                       </div>

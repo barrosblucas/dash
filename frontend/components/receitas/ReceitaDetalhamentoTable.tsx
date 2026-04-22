@@ -89,19 +89,19 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
       <table className="w-full text-sm">
         <thead>
           <tr className="text-label-md text-on-surface-variant uppercase tracking-wider">
-            <th className="px-6 py-3 text-left font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+            <th className="px-6 py-3 text-left font-medium bg-surface-container-low sticky top-0 z-10">
               Detalhamento
             </th>
-            <th className="px-4 py-3 text-right font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+            <th className="px-4 py-3 text-right font-medium bg-surface-container-low sticky top-0 z-10">
               Previsto (Anual)
             </th>
-            <th className="px-4 py-3 text-right font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+            <th className="px-4 py-3 text-right font-medium bg-surface-container-low sticky top-0 z-10">
               Arrecadado
             </th>
-            <th className="px-4 py-3 text-right font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+            <th className="px-4 py-3 text-right font-medium bg-surface-container-low sticky top-0 z-10">
               Anulado
             </th>
-            <th className="px-4 py-3 text-right font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0 z-10">
+            <th className="px-4 py-3 text-right font-medium bg-surface-container-low sticky top-0 z-10">
               % Exec.
             </th>
           </tr>
@@ -125,9 +125,9 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
                   hasKids ? 'cursor-pointer' : 'cursor-default'
                 } ${
                   rowIndex % 2 === 0
-                    ? 'bg-surface-container-lowest dark:bg-slate-800/20'
-                    : 'bg-surface-container-low/60 dark:bg-slate-800/30'
-                } hover:bg-surface-container dark:hover:bg-slate-800/40`}
+                    ? 'bg-surface-container-lowest'
+                    : 'bg-surface-container-low/60'
+                } hover:bg-surface-container`}
                 onClick={() => hasKids && toggleExpand(item.id)}
               >
                 {/* Detalhamento */}
@@ -136,7 +136,7 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
                     {hasKids ? (
                       <span
                         className={`shrink-0 w-5 h-5 flex items-center justify-center rounded-md
-                                    text-primary dark:text-primary-100 transition-transform duration-200
+                                    text-primary transition-transform duration-200
                                     ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
                       >
                         <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>

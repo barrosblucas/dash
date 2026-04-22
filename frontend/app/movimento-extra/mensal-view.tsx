@@ -83,14 +83,14 @@ export function MensalView({
         >
           <div className="flex items-center gap-2 mb-4">
             <span className="material-symbols-outlined text-on-surface-variant text-[18px]">emoji_events</span>
-            <h2 className="text-headline-sm font-display text-on-surface dark:text-white">Destaques do Mês</h2>
+            <h2 className="text-headline-sm font-display text-on-surface">Destaques do Mês</h2>
           </div>
 
           {tipo === 'R' && data.insights_receitas?.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-secondary text-[18px]">trending_up</span>
-                <h3 className="text-sm font-semibold text-secondary dark:text-emerald-400">Top Receitas</h3>
+                <h3 className="text-sm font-semibold text-secondary">Top Receitas</h3>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {data.insights_receitas.map((insight, i) => (
@@ -104,7 +104,7 @@ export function MensalView({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <span className="material-symbols-outlined text-error text-[18px]">trending_down</span>
-                <h3 className="text-sm font-semibold text-error dark:text-red-400">Top Despesas</h3>
+                <h3 className="text-sm font-semibold text-error">Top Despesas</h3>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {data.insights_despesas.map((insight, i) => (
@@ -120,7 +120,7 @@ export function MensalView({
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined text-secondary text-[18px]">trending_up</span>
-                    <h3 className="text-sm font-semibold text-secondary dark:text-emerald-400">Top Receitas</h3>
+                    <h3 className="text-sm font-semibold text-secondary">Top Receitas</h3>
                   </div>
                   <div className="space-y-3">
                     {data.insights_receitas.map((insight, i) => (
@@ -133,7 +133,7 @@ export function MensalView({
                 <div>
                   <div className="flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined text-error text-[18px]">trending_down</span>
-                    <h3 className="text-sm font-semibold text-error dark:text-red-400">Top Despesas</h3>
+                    <h3 className="text-sm font-semibold text-error">Top Despesas</h3>
                   </div>
                   <div className="space-y-3">
                     {data.insights_despesas.map((insight, i) => (
@@ -153,7 +153,7 @@ export function MensalView({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.15 }}
-          className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient"
+                className="bg-surface-container-lowest rounded-xl p-4 shadow-ambient"
           style={{ borderLeft: '3px solid #c29b00' }}
         >
           <div className="flex items-start gap-3">
@@ -181,7 +181,7 @@ export function MensalView({
         >
           <div className="flex items-center gap-2 mb-4">
             <span className="material-symbols-outlined text-on-surface-variant text-[18px]">account_balance</span>
-            <h2 className="text-headline-sm font-display text-on-surface dark:text-white">Fundos Municipais</h2>
+            <h2 className="text-headline-sm font-display text-on-surface">Fundos Municipais</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.fundos_resumo.map((fundo) => (
@@ -205,7 +205,7 @@ export function MensalView({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-on-surface-variant text-[18px]">receipt_long</span>
-            <h2 className="text-headline-sm font-display text-on-surface dark:text-white">
+            <h2 className="text-headline-sm font-display text-on-surface">
               Itens ({filteredItems.length})
             </h2>
           </div>
@@ -219,7 +219,7 @@ export function MensalView({
             placeholder="Buscar por descrição ou fornecedor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-surface-container-high dark:bg-slate-700/40 rounded-xl pl-10 pr-4 py-2.5 text-sm text-on-surface dark:text-slate-200 placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+            className="w-full bg-surface-container-high rounded-xl pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
           />
           {searchTerm && (
             <button
@@ -234,7 +234,7 @@ export function MensalView({
         {/* Mobile: card list */}
         <div className="space-y-2 lg:hidden">
           {filteredItems.length === 0 ? (
-            <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-8 text-center shadow-ambient">
+            <div className="bg-surface-container-lowest rounded-xl p-8 text-center shadow-ambient">
               <span className="material-symbols-outlined text-outline text-[32px] block mx-auto mb-2">search_off</span>
               <p className="text-on-surface-variant">Nenhum item encontrado</p>
             </div>
@@ -247,7 +247,7 @@ export function MensalView({
 
         {/* Desktop: table */}
         {filteredItems.length > 0 && (
-          <div className="hidden lg:block bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl shadow-ambient overflow-hidden">
+          <div className="hidden lg:block bg-surface-container-lowest rounded-xl shadow-ambient overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-label-md text-on-surface-variant uppercase tracking-wider">
@@ -304,11 +304,11 @@ export function MensalView({
             {Object.entries(GLOSSARIO_FUNDOS).map(([key, entry]) => (
               <div
                 key={key}
-                className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient"
+          className="bg-surface-container-lowest rounded-xl p-4 shadow-ambient"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.cor }} />
-                  <h4 className="text-sm font-semibold text-on-surface dark:text-white">{key}</h4>
+                  <h4 className="text-sm font-semibold text-on-surface">{key}</h4>
                 </div>
                 <p className="text-xs text-on-surface-variant mb-1.5">{entry.nome}</p>
                 <p className="text-sm text-on-surface-variant leading-relaxed">{entry.descricao}</p>

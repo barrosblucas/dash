@@ -104,3 +104,68 @@
 - `npm run lint`: ✅ zero warnings, zero errors
 - `tsc --noEmit`: ✅ zero erros de TypeScript
 - `npm run build`: ✅ compiled successfully, 16 rotas geradas
+
+---
+
+### Refatorado: Reformulação completa do tema escuro — design system conectado ao Tailwind
+
+**Problema:** O tema escuro tinha cores hardcoded `dark:bg-slate-*`, `dark:text-white`, `dark:text-emerald-*` etc. espalhadas por ~25 componentes. As CSS custom properties do `.dark` no `globals.css` eram ignoradas pelos componentes, criando inconsistência visual e falta de coesão.
+
+**Solução:** Arquitetura de tema escuro baseada em CSS custom properties + Tailwind `rgb(var(...) / <alpha-value>)`.
+
+**Arquivos alterados (27 arquivos):**
+
+#### Fundação
+- `frontend/app/globals.css` — Nova paleta dark com variáveis RGB para suporte a opacidade. Superfícies mais neutras e diferenciadas, texto com maior contraste, accent colors mais vibrantes.
+- `frontend/tailwind.config.js` — Cores semânticas agora usam `rgb(var(--color-*-rgb) / <alpha-value>)`, alternando automaticamente entre light/dark via CSS custom properties. Paletas fixas (primary-50..900, revenue, expense, forecast) mantidas como hex.
+
+#### Componentes de layout
+- `frontend/components/layouts/Sidebar.tsx` — Removido `dark:bg-slate-900`
+- `frontend/components/layouts/Header.tsx` — `dark:bg-slate-950/80` → `dark:bg-surface/80`
+- `frontend/components/layouts/DashboardLayout.tsx` — Removido `dark:bg-slate-900`
+- `frontend/components/layouts/PortalHeader.tsx` — `dark:bg-slate-950/80` → `dark:bg-surface/80`; removido `dark:bg-slate-900`
+- `frontend/components/layouts/PortalFooter.tsx` — Removido `dark:bg-slate-900`
+
+#### Componentes de UI
+- `frontend/components/dashboard/KPICard.tsx` — Removido `dark:bg-slate-800/50`
+- `frontend/components/dashboard/KPISection.tsx` — Removido `dark:bg-slate-800/50`
+- `frontend/components/portal/PlaceholderPage.tsx` — Removidos `dark:bg-slate-800/50`, `dark:text-white`, `dark:text-slate-400`
+- `frontend/components/receitas/ReceitaDetalhamentoTable.tsx` — Removidos `dark:bg-slate-*` e `dark:hover:bg-slate-*`
+
+#### Páginas — Avisos/Licitações
+- `avisos-licitacoes-client.tsx` — Removidos ~20 overrides `dark:bg-slate-*`, `dark:text-white`, `dark:text-emerald-400`, `dark:text-red-400`
+- `month-view.tsx` — Removidos ~15 overrides
+- `week-view.tsx` — Removidos ~12 overrides
+- `list-view.tsx` — Removidos ~10 overrides
+- `licitacao-modal.tsx` — `dark:bg-slate-800/95` → `dark:bg-surface-container/95`; removidos ~15 overrides
+- `status-badge.tsx` — `dark:bg-emerald-900/30` → `dark:bg-secondary/10`; `dark:bg-red-900/30` → `dark:bg-error/10`
+- `fonte-badge.tsx` — Removidos `dark:bg-slate-700/40 dark:text-slate-300`
+
+#### Páginas — Movimento Extra
+- `movimento-extra-client.tsx`, `mensal-view.tsx`, `anual-view.tsx`, `fundo-card.tsx`, `insight-card.tsx`, `item-row.tsx`, `monthly-bar.tsx`, `kpi-card.tsx` — Removidos todos os `dark:bg-slate-*`, `dark:text-white`, `dark:text-emerald-*`, `dark:text-red-*`
+- `tipo-badge.tsx` — `dark:bg-emerald-900/30` → `dark:bg-secondary/10`; `dark:bg-red-900/30` → `dark:bg-error/10`
+- `tipo-pill.tsx` — Removidos `dark:bg-primary/80 dark:text-white` e `dark:bg-slate-700/40 dark:text-slate-300`
+
+#### Páginas — Demais módulos
+- `despesas-client.tsx` — Removidos ~10 overrides
+- `receitas-client.tsx` — Removidos ~5 overrides
+- `forecast-client.tsx` — Removidos ~11 overrides
+- `comparativo-client.tsx` — Removidos ~6 overrides
+- `relatorios-client.tsx` — Removidos ~5 overrides
+- `dashboard-client.tsx` — Removidos ~4 overrides
+- `obras-client.tsx` — Removidos ~13 overrides; preservado `dark:shadow-none`
+- `obra-detalhe-client.tsx` — Removidos ~24 overrides; preservado `dark:shadow-none`
+- `portal-client.tsx` — Removidos ~8 overrides
+
+**Nova paleta dark:**
+- Superfícies: neutro-escuro com toque sutil de navy (#111318 → #2c2f3a), melhor diferenciação entre níveis
+- Texto: alto contraste (#e3e4ea on-surface, #9094a1 variant) para legibilidade de dados financeiros
+- Primary: azul mais brilhante (#a8c8ff) para contraste em fundo escuro
+- Secondary: verde vibrante (#6ddba8) para indicadores positivos
+- Tertiary: dourado quente (#e0c56e) para destaques
+- Error: vermelho claro (#ffb4ab) para alertas
+
+**Validação final:**
+- Override check: ✅ zero `dark:bg-slate-*` / `dark:text-slate-*` / `dark:text-white` restantes
+- `npm run lint`: ✅ zero warnings, zero errors
+- `npm run build`: ✅ compiled successfully, 16 rotas geradas

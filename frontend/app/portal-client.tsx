@@ -176,7 +176,7 @@ export default function PortalClient() {
               <div className="lg:col-span-5 hidden lg:block">
                 <div className="grid grid-cols-2 gap-4 opacity-90 rotate-3">
                   {/* Receitas card */}
-                  <div className="bg-surface-container-lowest dark:bg-slate-800 p-6 rounded-xl shadow-2xl flex flex-col gap-4 translate-y-8">
+                  <div className="bg-surface-container-lowest p-6 rounded-xl shadow-2xl flex flex-col gap-4 translate-y-8">
                     <span className="material-symbols-outlined text-primary text-4xl"
                       style={{ fontVariationSettings: "'FILL' 1" }}
                     >
@@ -218,7 +218,7 @@ export default function PortalClient() {
                 key={card.href}
                 href={card.href}
                 className={`
-                  bg-surface-container-lowest dark:bg-slate-800
+                  bg-surface-container-lowest
                   rounded-xl p-8
                   shadow-[0_32px_32px_-4px_rgba(0,25,60,0.06)]
                   dark:shadow-[0_32px_32px_-4px_rgba(0,0,0,0.3)]
@@ -229,7 +229,7 @@ export default function PortalClient() {
                 `}
               >
                 <div className={`
-                  w-14 h-14 rounded-full bg-surface-container-low dark:bg-slate-700
+                  w-14 h-14 rounded-full bg-surface-container-low
                   flex items-center justify-center mb-6
                   transition-colors ${accentIconBg[card.accent]} ${accentIconText[card.accent]}
                 `}>
@@ -238,7 +238,7 @@ export default function PortalClient() {
                   </span>
                 </div>
 
-                <h3 className="font-headline font-extrabold text-2xl text-primary dark:text-white mb-3">
+                <h3 className="font-headline font-extrabold text-2xl text-primary mb-3">
                   {card.title}
                 </h3>
 
@@ -256,9 +256,9 @@ export default function PortalClient() {
         </section>
 
         {/* ───── Quick Access / Information Hub ───── */}
-        <section className="bg-surface-container-low dark:bg-slate-900/50 py-20 px-6 sm:px-8">
+        <section className="bg-surface-container-low py-20 px-6 sm:px-8">
           <div className="max-w-screen-xl mx-auto">
-            <h2 className="font-headline font-extrabold text-3xl md:text-4xl text-primary dark:text-white tracking-tight mb-10 text-center">
+            <h2 className="font-headline font-extrabold text-3xl md:text-4xl text-primary tracking-tight mb-10 text-center">
               Painel de Informações Rápidas
             </h2>
 
@@ -267,7 +267,7 @@ export default function PortalClient() {
                 <div
                   key={item.title}
                   className={`
-                    bg-surface-container-lowest dark:bg-slate-800
+                    bg-surface-container-lowest
                     rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow
                     border-l-4 ${item.border}
                   `}
@@ -279,7 +279,7 @@ export default function PortalClient() {
                     >
                       {item.icon}
                     </span>
-                    <h4 className="font-headline font-bold text-lg text-primary dark:text-white">
+                    <h4 className="font-headline font-bold text-lg text-primary">
                       {item.title}
                     </h4>
                   </div>

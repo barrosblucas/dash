@@ -89,7 +89,7 @@ export default function KPICard({
   return (
     <div
       className={`
-        bg-surface-container-lowest dark:bg-slate-800/50
+        bg-surface-container-lowest
         rounded-xl shadow-ambient hover:shadow-ambient-lg
         transition-shadow duration-300
         ${padding} ${onClick ? 'cursor-pointer' : ''}

@@ -149,7 +149,7 @@ export default function ObrasClient() {
             className={`px-4 py-2 rounded-full font-label text-sm font-medium transition-all duration-200 ${
               activeFilter === f.key
                 ? 'bg-primary text-on-primary shadow-sm'
-                : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600'
+                : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
             }`}
           >
             {f.label}
@@ -162,17 +162,17 @@ export default function ObrasClient() {
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-5 md:p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none"
+            className="bg-surface-container-lowest rounded-xl p-5 md:p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none"
           >
             <div className="flex items-center gap-3 mb-3">
               <span className="material-symbols-outlined text-secondary text-xl">
                 {stat.icon}
               </span>
             </div>
-            <p className="font-headline text-2xl md:text-3xl font-extrabold text-primary dark:text-white">
+            <p className="font-headline text-2xl md:text-3xl font-extrabold text-primary">
               {stat.value}
             </p>
-            <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant dark:text-slate-400 mt-1">
+            <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant mt-1">
               {stat.label}
             </p>
           </div>
@@ -187,7 +187,7 @@ export default function ObrasClient() {
             <Link
               key={obra.id}
               href={`/obras/${obra.id}`}
-              className="group bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl overflow-hidden shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300"
+              className="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300"
             >
               {/* Image Placeholder */}
               <div className="h-48 bg-gradient-to-br from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 flex items-center justify-center relative">
@@ -209,11 +209,11 @@ export default function ObrasClient() {
 
               {/* Content */}
               <div className="p-6 space-y-4">
-                <h3 className="font-headline font-bold text-primary dark:text-white text-lg leading-snug line-clamp-2">
+                <h3 className="font-headline font-bold text-primary text-lg leading-snug line-clamp-2">
                   {obra.titulo}
                 </h3>
 
-                <p className="font-body text-sm text-on-surface-variant dark:text-slate-400 line-clamp-2">
+                <p className="font-body text-sm text-on-surface-variant line-clamp-2">
                   {obra.descricao}
                 </p>
 
@@ -221,14 +221,14 @@ export default function ObrasClient() {
                 {obra.status === 'em_andamento' && (
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <span className="font-label text-xs text-on-surface-variant dark:text-slate-400">
+                      <span className="font-label text-xs text-on-surface-variant">
                         Progresso
                       </span>
                       <span className="font-label text-xs font-bold text-secondary dark:text-secondary-300">
                         {obra.progresso}%
                       </span>
                     </div>
-                    <div className="h-2 w-full bg-surface-container-high dark:bg-slate-700 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-700"
                         style={{ width: `${obra.progresso}%` }}
@@ -239,13 +239,13 @@ export default function ObrasClient() {
 
                 {/* Meta Info */}
                 <div className="flex flex-col gap-1.5">
-                  <span className="flex items-center gap-2 font-label text-xs text-on-surface-variant dark:text-slate-400">
+                  <span className="flex items-center gap-2 font-label text-xs text-on-surface-variant">
                     <span className="material-symbols-outlined text-sm">
                       business
                     </span>
                     Secretaria de {obra.secretaria}
                   </span>
-                  <span className="flex items-center gap-2 font-label text-xs text-on-surface-variant dark:text-slate-400">
+                  <span className="flex items-center gap-2 font-label text-xs text-on-surface-variant">
                     <span className="material-symbols-outlined text-sm">
                       calendar_today
                     </span>
@@ -254,8 +254,8 @@ export default function ObrasClient() {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-3 border-t border-surface-container-high dark:border-slate-700">
-                  <span className="font-headline font-bold text-primary dark:text-white text-sm">
+                <div className="flex items-center justify-between pt-3 border-t border-surface-container-high">
+                  <span className="font-headline font-bold text-primary text-sm">
                     {obra.valor}
                   </span>
                   <span className="flex items-center gap-1 font-label text-xs font-medium text-secondary dark:text-secondary-300 group-hover:translate-x-1 transition-transform duration-200">
@@ -277,10 +277,10 @@ export default function ObrasClient() {
           <span className="material-symbols-outlined text-on-surface-variant/30 text-6xl mb-4">
             search_off
           </span>
-          <p className="font-headline text-xl font-bold text-primary dark:text-white">
+          <p className="font-headline text-xl font-bold text-primary">
             Nenhuma obra encontrada
           </p>
-          <p className="font-body text-sm text-on-surface-variant dark:text-slate-400 mt-1">
+          <p className="font-body text-sm text-on-surface-variant mt-1">
             Tente selecionar outro filtro de status.
           </p>
         </div>

@@ -18,9 +18,9 @@ const TIPO_OPTIONS = [
   { value: 'CAPITAL', label: 'Capital' },
 ] as const;
 
-const TH_BASE = 'px-4 py-3 font-medium bg-surface-container-low dark:bg-slate-800/30 sticky top-0';
-const BTN_EXPORT = 'inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-label-md font-medium text-on-surface-variant bg-surface-container-low dark:bg-slate-700/40 hover:bg-surface-container dark:hover:bg-slate-700/60 transition-colors disabled:opacity-40';
-const BTN_PAGE = 'inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-label-md font-medium text-on-surface-variant hover:bg-surface-container dark:hover:bg-slate-800/40 transition-colors disabled:opacity-30';
+const TH_BASE = 'px-4 py-3 font-medium bg-surface-container-low sticky top-0';
+const BTN_EXPORT = 'inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-label-md font-medium text-on-surface-variant bg-surface-container-low hover:bg-surface-container transition-colors disabled:opacity-40';
+const BTN_PAGE = 'inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-label-md font-medium text-on-surface-variant hover:bg-surface-container transition-colors disabled:opacity-30';
 
 type ExportRow = Record<string, string | number>;
 
@@ -135,7 +135,7 @@ export default function DespesasClient() {
               className={`px-4 py-2 rounded-full text-label-md font-medium transition-all duration-200 ${
                 tipoDespesa === opt.value
                   ? 'bg-error text-on-error shadow-sm dark:bg-error dark:text-on-error'
-                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container dark:bg-slate-800/40 dark:hover:bg-slate-800/60'
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
               }`}
             >
               {opt.label}
@@ -153,13 +153,13 @@ export default function DespesasClient() {
       </section>
 
       {/* Main Chart */}
-      <section className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+      <section className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
         <ExpenseChart height={360} />
       </section>
 
       {/* Category Breakdown */}
       {categoryBreakdown.length > 0 && (
-        <section className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+        <section className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
           <div className="flex items-center gap-3 mb-5">
             <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: '20px' }}>donut_small</span>
             <h3 className="text-title-md font-display text-on-surface">Top Categorias</h3>
@@ -178,7 +178,7 @@ export default function DespesasClient() {
                     </span>
                   </div>
                 </div>
-                <div className="w-full h-2 rounded-full bg-surface-container dark:bg-slate-700/50 overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-surface-container overflow-hidden">
                   <div className="h-full rounded-full bg-error/70 transition-all duration-500" style={{ width: `${Math.min(cat.percent, 100)}%` }} />
                 </div>
               </div>
@@ -188,7 +188,7 @@ export default function DespesasClient() {
       )}
 
       {/* Table */}
-      <section className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl overflow-hidden shadow-ambient">
+      <section className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-ambient">
         {isLoading ? (
           <div className="p-6 py-16 flex flex-col items-center gap-3">
             <LoadingSpinner message="Carregando despesas..." />
@@ -236,8 +236,8 @@ export default function DespesasClient() {
                     {data?.despesas.map((d, i) => (
                       <tr
                         key={`${d.ano}-${d.mes}-${d.categoria}-${d.tipo}`}
-                        className={`transition-colors duration-150 hover:bg-surface-container dark:hover:bg-slate-800/40 ${
-                          i % 2 === 1 ? 'bg-surface-container-low/50 dark:bg-slate-800/20' : 'bg-surface-container-lowest dark:bg-slate-800/30'
+                        className={`transition-colors duration-150 hover:bg-surface-container ${
+                          i % 2 === 1 ? 'bg-surface-container-low/50' : 'bg-surface-container-lowest'
                         }`}
                       >
                         <td className="px-4 py-3 text-on-surface font-mono">{d.ano}</td>
@@ -301,7 +301,7 @@ const ACCENT_MAP = {
 function KpiCard({ label, value, icon, accent }: KpiCardProps) {
   const c = ACCENT_MAP[accent];
   return (
-    <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient transition-shadow duration-300 hover:shadow-ambient-lg">
+    <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient transition-shadow duration-300 hover:shadow-ambient-lg">
       <div className="flex items-center gap-3 mb-3">
         <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${c.iconBg}`}>
           <span className={`material-symbols-outlined ${c.iconText}`} style={{ fontSize: '20px' }}>{icon}</span>

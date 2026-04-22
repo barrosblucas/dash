@@ -181,7 +181,7 @@ export default function ForecastClient() {
       <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {kpisLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient animate-pulse">
+                <div key={i} className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient animate-pulse">
               <div className="h-4 bg-surface-container-high rounded w-24 mb-3" />
               <div className="h-8 bg-surface-container-high rounded w-32" />
             </div>
@@ -218,7 +218,7 @@ export default function ForecastClient() {
             />
           </>
         ) : (
-          <div className="col-span-full bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-8 text-center shadow-ambient">
+          <div className="col-span-full bg-surface-container-lowest rounded-xl p-8 text-center shadow-ambient">
             <Icon name="analytics" className="text-on-surface-variant/30 mx-auto mb-3" size={40} />
             <p className="text-body-md text-on-surface-variant">Dados históricos insuficientes para calcular tendências.</p>
           </div>
@@ -226,7 +226,7 @@ export default function ForecastClient() {
       </motion.div>
 
       {/* ── Main Forecast Chart ─────────────────────────────────── */}
-      <motion.div variants={itemVariants} className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+      <motion.div variants={itemVariants} className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
         <Suspense fallback={<LoadingSpinner />}>
           <ForecastSection
             key={forecastViewKey}
@@ -240,7 +240,7 @@ export default function ForecastClient() {
       {/* ── Trend Analysis + Methodology ────────────────────────── */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Methodology */}
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient lg:col-span-1">
+        <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient lg:col-span-1">
           <div className="flex items-center gap-3 mb-5">
             <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-tertiary-container/20">
               <Icon name="menu_book" className="text-tertiary" size={20} />
@@ -253,7 +253,7 @@ export default function ForecastClient() {
               <span className="text-tertiary font-medium">modelo de forecast com sazonalidade</span>{' '}
               sobre o histórico municipal consolidado.
             </p>
-            <div className="bg-surface-container-low/60 dark:bg-slate-700/30 p-4 rounded-xl space-y-2">
+            <div className="bg-surface-container-low/60 p-4 rounded-xl space-y-2">
               <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Parâmetros</p>
               <ul className="space-y-1.5 text-label-md text-on-surface-variant">
                 <li className="flex items-start gap-2">
@@ -285,7 +285,7 @@ export default function ForecastClient() {
           {kpisLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient animate-pulse">
+            <div key={i} className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient animate-pulse">
                   <div className="h-4 bg-surface-container-high rounded w-24 mb-3" />
                   <div className="h-8 bg-surface-container-high rounded w-32" />
                 </div>
@@ -327,7 +327,7 @@ export default function ForecastClient() {
               />
             </div>
           ) : (
-            <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-8 text-center shadow-ambient">
+            <div className="bg-surface-container-lowest rounded-xl p-8 text-center shadow-ambient">
               <Icon name="analytics" className="text-on-surface-variant/30 mx-auto mb-3" size={40} />
               <p className="text-body-md text-on-surface-variant">Dados históricos insuficientes para calcular tendências.</p>
             </div>
@@ -340,7 +340,7 @@ export default function ForecastClient() {
         {INSIGHTS.map((insight) => (
           <div
             key={insight.label}
-            className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-5 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300"
+            className="bg-surface-container-lowest rounded-xl p-5 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300"
           >
             <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${insight.bg} mb-3`}>
               <Icon name={insight.icon} size={20} className={insight.color} />
@@ -351,7 +351,7 @@ export default function ForecastClient() {
       </motion.div>
 
       {/* ── Disclaimer ──────────────────────────────────────────── */}
-      <motion.div variants={itemVariants} className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+      <motion.div variants={itemVariants} className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
         <div className="flex items-start gap-3">
           <Icon name="warning_amber" className="text-tertiary mt-0.5 shrink-0" size={20} />
           <p className="text-body-sm text-on-surface-variant leading-relaxed">
@@ -372,7 +372,7 @@ interface TrendCardProps { label: string; value: string; iconName: string; accen
 
 function KpiCard({ label, value, icon, accent, iconBg }: KpiCardProps) {
   return (
-    <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300">
+    <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300">
       <div className="flex items-center gap-3 mb-3">
         <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${iconBg}`}>
           <Icon name={icon} size={20} className={accent} />
@@ -386,7 +386,7 @@ function KpiCard({ label, value, icon, accent, iconBg }: KpiCardProps) {
 
 function TrendCard({ label, value, iconName, accentColor, iconBg, description }: TrendCardProps) {
   return (
-    <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300">
+    <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300">
       <div className="flex items-center gap-3 mb-4">
         <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${iconBg}`}>
           <Icon name={iconName} size={20} className={accentColor} />

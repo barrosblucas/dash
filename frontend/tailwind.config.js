@@ -10,9 +10,9 @@ module.exports = {
     extend: {
       /* ── Color System: The Architectural Archive ── */
       colors: {
-        // Primary: Deep Navy
+        // Primary: Deep Navy (escala fixa para gráficos/ref)
         primary: {
-          DEFAULT: '#00193c',
+          DEFAULT: 'rgb(var(--color-primary-rgb) / <alpha-value>)',
           50: '#e6edf5',
           100: '#b0c5db',
           200: '#8aa9c7',
@@ -24,14 +24,13 @@ module.exports = {
           800: '#002549',
           900: '#00193c',
         },
-        // Primary container (lighter navy for hover/fill)
-        'primary-container': '#002d62',
-        'on-primary': '#ffffff',
-        'on-primary-container': '#c2d8ff',
+        'primary-container': 'rgb(var(--color-primary-container-rgb) / <alpha-value>)',
+        'on-primary': 'rgb(var(--color-on-primary-rgb) / <alpha-value>)',
+        'on-primary-container': 'rgb(var(--color-on-primary-container-rgb) / <alpha-value>)',
 
-        // Secondary: Emerald Green (growth, trust)
+        // Secondary: Emerald Green (escala fixa para gráficos/ref)
         secondary: {
-          DEFAULT: '#006c47',
+          DEFAULT: 'rgb(var(--color-secondary-rgb) / <alpha-value>)',
           50: '#e6f5ee',
           100: '#b0dfcb',
           200: '#8acfae',
@@ -43,13 +42,13 @@ module.exports = {
           800: '#00532d',
           900: '#006c47',
         },
-        'secondary-container': '#8af5be',
-        'on-secondary': '#ffffff',
-        'on-secondary-container': '#00714b',
+        'secondary-container': 'rgb(var(--color-secondary-container-rgb) / <alpha-value>)',
+        'on-secondary': 'rgb(var(--color-on-secondary-rgb) / <alpha-value>)',
+        'on-secondary-container': 'rgb(var(--color-on-secondary-container-rgb) / <alpha-value>)',
 
-        // Tertiary / Accent: Gold/Amber (highlights, emphasis)
+        // Tertiary / Accent: Gold/Amber (escala fixa para gráficos/ref)
         tertiary: {
-          DEFAULT: '#c29b00',
+          DEFAULT: 'rgb(var(--color-tertiary-rgb) / <alpha-value>)',
           50: '#fcf6e0',
           100: '#f6e3b0',
           200: '#f1d68a',
@@ -61,40 +60,39 @@ module.exports = {
           800: '#7c5b06',
           900: '#5f4605',
         },
-        'tertiary-container': '#fae285',
-        'on-tertiary': '#ffffff',
-        'on-tertiary-container': '#5f4605',
+        'tertiary-container': 'rgb(var(--color-tertiary-container-rgb) / <alpha-value>)',
+        'on-tertiary': 'rgb(var(--color-on-tertiary-rgb) / <alpha-value>)',
+        'on-tertiary-container': 'rgb(var(--color-on-tertiary-container-rgb) / <alpha-value>)',
 
-        // Surface hierarchy — physical paper layers
+        // Surface hierarchy — alterna automaticamente entre light/dark via CSS vars
         surface: {
-          DEFAULT: '#f8f9ff',
-          variant: '#e2e3eb',
+          DEFAULT: 'rgb(var(--color-surface-rgb) / <alpha-value>)',
+          variant: 'rgb(var(--color-surface-variant-rgb) / <alpha-value>)',
         },
         'surface-container': {
-          lowest: '#ffffff',
-          low: '#eff4ff',
-          DEFAULT: '#e8ecf5',
-          high: '#e2e6ef',
-          highest: '#dcdfe8',
+          lowest: 'rgb(var(--color-surface-container-lowest-rgb) / <alpha-value>)',
+          low: 'rgb(var(--color-surface-container-low-rgb) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--color-surface-container-rgb) / <alpha-value>)',
+          high: 'rgb(var(--color-surface-container-high-rgb) / <alpha-value>)',
+          highest: 'rgb(var(--color-surface-container-highest-rgb) / <alpha-value>)',
         },
-        // Inverse (used on primary background)
-        'inverse-surface': '#e2e2e9',
-        'inverse-on-surface': '#2e3036',
-        'inverse-primary': '#a1c9ff',
+        'inverse-surface': 'rgb(var(--color-inverse-surface-rgb) / <alpha-value>)',
+        'inverse-on-surface': 'rgb(var(--color-inverse-on-surface-rgb) / <alpha-value>)',
+        'inverse-primary': 'rgb(var(--color-inverse-primary-rgb) / <alpha-value>)',
 
-        // On-surface text colors
-        'on-surface': '#1a1c20',
-        'on-surface-variant': '#44474f',
+        // On-surface text — alterna automaticamente via CSS vars
+        'on-surface': 'rgb(var(--color-on-surface-rgb) / <alpha-value>)',
+        'on-surface-variant': 'rgb(var(--color-on-surface-variant-rgb) / <alpha-value>)',
 
-        // Outline & borders (ghost borders, low opacity)
+        // Outline & borders
         outline: {
-          DEFAULT: '#74777f',
-          variant: '#c4c6d1',
+          DEFAULT: 'rgb(var(--color-outline-rgb) / <alpha-value>)',
+          variant: 'rgb(var(--color-outline-variant-rgb) / <alpha-value>)',
         },
 
-        // Error
+        // Error — escala fixa + semânticos via CSS vars
         error: {
-          DEFAULT: '#ba1a1a',
+          DEFAULT: 'rgb(var(--color-error-rgb) / <alpha-value>)',
           50: '#fcece9',
           100: '#f5d4ce',
           200: '#eea99e',
@@ -106,9 +104,9 @@ module.exports = {
           800: '#570f05',
           900: '#2d0802',
         },
-        'error-container': '#ffdad6',
-        'on-error': '#ffffff',
-        'on-error-container': '#410002',
+        'error-container': 'rgb(var(--color-error-container-rgb) / <alpha-value>)',
+        'on-error': 'rgb(var(--color-on-error-rgb) / <alpha-value>)',
+        'on-error-container': 'rgb(var(--color-on-error-container-rgb) / <alpha-value>)',
 
         // Revenue (green family mapped to secondary)
         revenue: {
@@ -158,21 +156,9 @@ module.exports = {
           glow: '#c29b0040',
         },
 
-        // Background (alias for surface in light, dark in dark mode)
-        background: '#f8f9ff',
-        'on-background': '#1a1c20',
-
-        // Fixed variants (Material Design 3)
-        'primary-fixed': '#abc7ff',
-        'primary-fixed-dim': '#a1c9ff',
-        'secondary-fixed': '#8df7c1',
-        'secondary-fixed-dim': '#71dba6',
-        'on-secondary-fixed': '#002115',
-        'on-secondary-fixed-variant': '#005235',
-        'tertiary-fixed': '#d3e4fe',
-        'tertiary-fixed-dim': '#b7c8e1',
-        'surface-tint': '#3e5e95',
-        'surface-dim': '#d7d9e3',
+        // Background — alterna automaticamente via CSS vars
+        background: 'rgb(var(--color-background-rgb) / <alpha-value>)',
+        'on-background': 'rgb(var(--color-on-background-rgb) / <alpha-value>)',
       },
 
       /* ── Typography: Editorial Voice ── */

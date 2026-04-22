@@ -278,7 +278,7 @@ export default function RelatoriosClient() {
 
       {/* ── Quick Summary KPIs ──────────────────────────────────── */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
           <p className="text-label-md text-on-surface-variant uppercase tracking-wider mb-1">
             Receitas em {anoSelecionado}
           </p>
@@ -286,7 +286,7 @@ export default function RelatoriosClient() {
             {formatCurrency(receitasData?.receitas.reduce((s, r) => s + r.valor_arrecadado, 0) ?? 0, { compact: true })}
           </p>
         </div>
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
           <p className="text-label-md text-on-surface-variant uppercase tracking-wider mb-1">
             Despesas em {anoSelecionado}
           </p>
@@ -294,7 +294,7 @@ export default function RelatoriosClient() {
             {formatCurrency(despesasData?.despesas.reduce((s, d) => s + d.valor_pago, 0) ?? 0, { compact: true })}
           </p>
         </div>
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
           <p className="text-label-md text-on-surface-variant uppercase tracking-wider mb-1">
             Saldo em {anoSelecionado}
           </p>
@@ -314,7 +314,7 @@ export default function RelatoriosClient() {
           return (
             <div
               key={card.id}
-              className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300"
+              className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300"
             >
               {/* Icon + Title */}
               <div className="flex items-start gap-4 mb-4">
@@ -363,7 +363,7 @@ export default function RelatoriosClient() {
       </motion.div>
 
       {/* ── Info Section ────────────────────────────────────────── */}
-      <motion.div variants={itemVariants} className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+      <motion.div variants={itemVariants} className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
         <div className="flex items-start gap-3">
           <Icon name="download" size={20} className="text-on-surface-variant mt-0.5" />
           <div>

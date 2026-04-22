@@ -112,7 +112,7 @@ export default function MovimentoExtraClient() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-headline-lg font-display font-bold text-on-surface dark:text-white">
+        <h1 className="text-headline-lg font-display font-bold text-on-surface">
           Movimento Extra Orçamentário
         </h1>
         <p className="text-body-md text-on-surface-variant mt-1">
@@ -128,7 +128,7 @@ export default function MovimentoExtraClient() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient"
+        className="bg-surface-container-lowest rounded-xl p-4 shadow-ambient"
       >
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
           {/* Year selector */}
@@ -137,7 +137,7 @@ export default function MovimentoExtraClient() {
             <select
               value={ano}
               onChange={(e) => setAno(Number(e.target.value))}
-              className="bg-surface-container-high dark:bg-slate-700/60 rounded-lg px-3 py-2 text-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+              className="bg-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
             >
               {YEARS.map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -150,7 +150,7 @@ export default function MovimentoExtraClient() {
             <select
               value={mes}
               onChange={(e) => setMes(Number(e.target.value))}
-              className="bg-surface-container-high dark:bg-slate-700/60 rounded-lg px-3 py-2 text-sm text-on-surface dark:text-slate-200 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+              className="bg-surface-container-high rounded-lg px-3 py-2 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
             >
               {MESES.map((m, i) => (
                 <option key={i} value={i + 1}>{m}</option>
@@ -207,7 +207,7 @@ export default function MovimentoExtraClient() {
 
       {/* Error */}
       {viewMode === 'mensal' && isError && (
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 text-center shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-6 text-center shadow-ambient">
           <span className="material-symbols-outlined text-error text-[32px] block mx-auto mb-3">warning</span>
           <p className="text-on-surface font-medium mb-1">Erro ao carregar dados</p>
           <p className="text-sm text-on-surface-variant">

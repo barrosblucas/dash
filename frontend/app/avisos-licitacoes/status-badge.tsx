@@ -4,16 +4,16 @@ export function StatusBadge({ status }: { status: string }) {
   let label = status;
 
   if (startsWith) {
-    classes = 'bg-secondary/10 text-secondary dark:bg-emerald-900/30 dark:text-emerald-400';
+    classes = 'bg-secondary/10 text-secondary dark:bg-secondary/10';
     label = 'Aguardando';
   } else if (status === 'ENCERRADO') {
-    classes = 'bg-on-surface-variant/10 text-on-surface-variant dark:bg-slate-600/30 dark:text-slate-400';
+    classes = 'bg-on-surface-variant/10 text-on-surface-variant dark:bg-on-surface-variant/10';
     label = 'Encerrado';
   } else if (status === 'SUSPENSO') {
-    classes = 'bg-error/10 text-error dark:bg-red-900/30 dark:text-red-400';
+    classes = 'bg-error/10 text-error dark:bg-error/10';
     label = 'Suspenso';
   } else {
-    classes = 'bg-on-surface-variant/10 text-on-surface-variant dark:bg-slate-600/30 dark:text-slate-400';
+    classes = 'bg-on-surface-variant/10 text-on-surface-variant dark:bg-on-surface-variant/10';
   }
 
   return (

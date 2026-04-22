@@ -133,7 +133,7 @@ export default function ReceitasClient() {
               className={`px-4 py-2 rounded-full text-label-md font-medium transition-all duration-200
                 ${tipoReceita === opt.value
                   ? 'bg-secondary text-on-secondary shadow-sm dark:bg-secondary dark:text-on-secondary'
-                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container dark:bg-slate-800/40 dark:text-on-surface-variant dark:hover:bg-slate-800/60'
+                  : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container'
                 }`}
             >
               {opt.label}
@@ -171,14 +171,14 @@ export default function ReceitasClient() {
       </section>
 
       {/* ── Main Chart ── */}
-      <section className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+      <section className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
         <Suspense fallback={<LoadingSpinner />}>
           <RevenueChart />
         </Suspense>
       </section>
 
       {/* ── Detail Table ── */}
-      <section className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl overflow-hidden shadow-ambient">
+      <section className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-ambient">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 pb-0">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-on-surface-variant" style={{ fontSize: '20px' }}>
@@ -201,8 +201,8 @@ export default function ReceitasClient() {
               disabled={isExporting || itens.length === 0}
               className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
                          text-label-md font-medium text-on-surface-variant
-                         bg-surface-container-low dark:bg-slate-700/40
-                         hover:bg-surface-container dark:hover:bg-slate-700/60
+                         bg-surface-container-low
+                         hover:bg-surface-container
                          transition-colors disabled:opacity-40"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>download</span>
@@ -213,8 +213,8 @@ export default function ReceitasClient() {
               disabled={isExporting || itens.length === 0}
               className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg
                          text-label-md font-medium text-on-surface-variant
-                         bg-surface-container-low dark:bg-slate-700/40
-                         hover:bg-surface-container dark:hover:bg-slate-700/60
+                         bg-surface-container-low
+                         hover:bg-surface-container
                          transition-colors disabled:opacity-40"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>code</span>
@@ -276,7 +276,7 @@ const ACCENT_MAP = {
 function KpiCard({ label, value, icon, accent }: KpiCardProps) {
   const colors = ACCENT_MAP[accent];
   return (
-    <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient
+    <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient
                     transition-shadow duration-300 hover:shadow-ambient-lg">
       <div className="flex items-center gap-3 mb-3">
         <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${colors.iconBg}`}>

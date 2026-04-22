@@ -83,15 +83,15 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
       <nav className="flex items-center gap-2 font-label text-sm">
         <Link
           href="/obras"
-          className="flex items-center gap-1 text-on-surface-variant dark:text-slate-400 hover:text-primary dark:hover:text-white transition-colors"
+          className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors"
         >
           <span className="material-symbols-outlined text-sm">arrow_back</span>
           Obras
         </Link>
-        <span className="material-symbols-outlined text-sm text-on-surface-variant dark:text-slate-500">
+        <span className="material-symbols-outlined text-sm text-on-surface-variant">
           chevron_right
         </span>
-        <span className="text-primary dark:text-white font-medium truncate max-w-[260px]">
+        <span className="text-primary font-medium truncate max-w-[260px]">
           {obra.titulo}
         </span>
       </nav>
@@ -133,22 +133,22 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
         {/* ── Left Column (8 cols) ── */}
         <div className="lg:col-span-8 space-y-8">
           {/* Progress Indicators */}
-          <section className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-2xl p-8 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
-            <h3 className="font-headline text-2xl font-bold text-primary dark:text-white mb-6">
+          <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
+            <h3 className="font-headline text-2xl font-bold text-primary mb-6">
               Indicadores de Progresso
             </h3>
             <div className="space-y-8">
               {/* Físico */}
               <div>
                 <div className="flex justify-between items-end mb-3">
-                  <span className="font-label text-base font-medium text-on-surface-variant dark:text-slate-400">
+                  <span className="font-label text-base font-medium text-on-surface-variant">
                     Avanço Físico
                   </span>
-                  <span className="font-headline text-4xl font-black text-primary dark:text-white">
+                  <span className="font-headline text-4xl font-black text-primary">
                     {obra.progressoFisico}%
                   </span>
                 </div>
-                <div className="h-3 w-full bg-surface-container-high dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-3 w-full bg-surface-container-high rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
                     style={{ width: `${obra.progressoFisico}%` }}
@@ -158,14 +158,14 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
               {/* Financeiro */}
               <div>
                 <div className="flex justify-between items-end mb-3">
-                  <span className="font-label text-base font-medium text-on-surface-variant dark:text-slate-400">
+                  <span className="font-label text-base font-medium text-on-surface-variant">
                     Avanço Financeiro
                   </span>
-                  <span className="font-headline text-4xl font-black text-primary dark:text-white">
+                  <span className="font-headline text-4xl font-black text-primary">
                     {obra.progressoFinanceiro}%
                   </span>
                 </div>
-                <div className="h-3 w-full bg-surface-container-high dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="h-3 w-full bg-surface-container-high rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-1000"
                     style={{ width: `${obra.progressoFinanceiro}%` }}
@@ -176,8 +176,8 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
           </section>
 
           {/* Cronograma / Timeline */}
-          <section className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-2xl p-8 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
-            <h3 className="font-headline text-xl font-bold text-primary dark:text-white mb-8 flex items-center gap-2">
+          <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
+            <h3 className="font-headline text-xl font-bold text-primary mb-8 flex items-center gap-2">
               <span className="material-symbols-outlined">timeline</span>
               Cronograma
             </h3>
@@ -192,7 +192,7 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
                           ? 'bg-secondary text-on-secondary'
                           : step.status === 'atual'
                           ? 'bg-primary text-on-primary shadow-lg shadow-primary/30'
-                          : 'bg-surface-container-high dark:bg-slate-700 text-on-surface-variant dark:text-slate-500'
+                          : 'bg-surface-container-high text-on-surface-variant'
                       } ${step.status === 'atual' ? 'animate-pulse' : ''}`}
                     >
                       <span className="material-symbols-outlined text-lg">
@@ -200,7 +200,7 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
                       </span>
                     </div>
                     {i < cronograma.length - 1 && (
-                      <div className="w-0.5 flex-1 bg-surface-container-high dark:bg-slate-700 mt-2" />
+                      <div className="w-0.5 flex-1 bg-surface-container-high mt-2" />
                     )}
                   </div>
                   {/* Step Content */}
@@ -208,13 +208,13 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
                     <p
                       className={`font-headline font-bold text-sm ${
                         step.status === 'futura'
-                          ? 'text-on-surface-variant dark:text-slate-500'
-                          : 'text-primary dark:text-white'
+                          ? 'text-on-surface-variant'
+                          : 'text-primary'
                       }`}
                     >
                       {step.etapa}
                     </p>
-                    <p className="font-label text-xs text-on-surface-variant dark:text-slate-400 mt-0.5">
+                    <p className="font-label text-xs text-on-surface-variant mt-0.5">
                       {step.data}
                     </p>
                   </div>
@@ -224,8 +224,8 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
           </section>
 
           {/* Valores Medidos */}
-          <section className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-2xl p-8 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
-            <h3 className="font-headline text-xl font-bold text-primary dark:text-white mb-6">
+          <section className="bg-surface-container-lowest rounded-2xl p-8 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
+            <h3 className="font-headline text-xl font-bold text-primary mb-6">
               Valores Medidos
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -235,7 +235,7 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
                   className={`flex flex-col gap-1 p-5 rounded-xl transition-colors ${
                     item.atual
                       ? 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 relative overflow-hidden'
-                      : 'bg-surface-container-low dark:bg-slate-700/50 hover:bg-surface-container dark:hover:bg-slate-700'
+                      : 'bg-surface-container-low hover:bg-surface-container'
                   }`}
                 >
                   {item.atual && (
@@ -245,7 +245,7 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
                     className={`font-label text-sm ${
                       item.atual
                         ? 'text-teal-600 dark:text-teal-400 font-bold mt-1'
-                        : 'text-on-surface-variant dark:text-slate-400'
+                        : 'text-on-surface-variant'
                     }`}
                   >
                     {item.mes}
@@ -254,7 +254,7 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
                     className={`font-body text-xl font-semibold ${
                       item.atual
                         ? 'text-teal-700 dark:text-teal-300 font-bold'
-                        : 'text-primary dark:text-white'
+                        : 'text-primary'
                     }`}
                   >
                     {item.valor}
@@ -268,8 +268,8 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
         {/* ── Right Column (4 cols) ── */}
         <div className="lg:col-span-4 space-y-6">
           {/* Informações Gerais */}
-          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-2xl p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
-            <h4 className="font-headline text-lg font-bold text-primary dark:text-white mb-5 flex items-center gap-2">
+          <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
+            <h4 className="font-headline text-lg font-bold text-primary mb-5 flex items-center gap-2">
               <span className="material-symbols-outlined text-secondary">
                 info
               </span>
@@ -283,10 +283,10 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
                 { label: 'Modalidade', value: obra.modalidade },
               ].map((item) => (
                 <div key={item.label}>
-                  <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant dark:text-slate-400 block mb-1">
+                  <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant block mb-1">
                     {item.label}
                   </span>
-                  <p className="font-body text-sm font-medium text-primary dark:text-white">
+                  <p className="font-body text-sm font-medium text-primary">
                     {item.value}
                   </p>
                 </div>
@@ -295,8 +295,8 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
           </div>
 
           {/* Valores */}
-          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-2xl p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
-            <h4 className="font-headline text-lg font-bold text-primary dark:text-white mb-5 flex items-center gap-2">
+          <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
+            <h4 className="font-headline text-lg font-bold text-primary mb-5 flex items-center gap-2">
               <span className="material-symbols-outlined text-secondary">
                 payments
               </span>
@@ -310,14 +310,14 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
                 { label: 'Fonte de Recurso', value: obra.fonteRecurso },
               ].map((item) => (
                 <div key={item.label}>
-                  <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant dark:text-slate-400 block mb-1">
+                  <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant block mb-1">
                     {item.label}
                   </span>
                   <p
                     className={`font-body text-sm font-medium ${
                       item.highlight
                         ? 'text-secondary dark:text-secondary-300 font-bold text-base'
-                        : 'text-primary dark:text-white'
+                        : 'text-primary'
                     }`}
                   >
                     {item.value}
@@ -328,8 +328,8 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
           </div>
 
           {/* Prazos */}
-          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-2xl p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
-            <h4 className="font-headline text-lg font-bold text-primary dark:text-white mb-5 flex items-center gap-2">
+          <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
+            <h4 className="font-headline text-lg font-bold text-primary mb-5 flex items-center gap-2">
               <span className="material-symbols-outlined text-secondary">
                 schedule
               </span>
@@ -344,23 +344,23 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
                 },
               ].map((item) => (
                 <div key={item.label}>
-                  <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant dark:text-slate-400 block mb-1">
+                  <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant block mb-1">
                     {item.label}
                   </span>
-                  <p className="font-body text-sm font-semibold text-primary dark:text-white">
+                  <p className="font-body text-sm font-semibold text-primary">
                     {item.value}
                   </p>
                 </div>
               ))}
               {/* Dias Restantes - Highlight */}
-              <div className="bg-surface-container-low dark:bg-slate-700/50 rounded-xl p-4 mt-4">
-                <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant dark:text-slate-400 block mb-1">
+              <div className="bg-surface-container-low rounded-xl p-4 mt-4">
+                <span className="font-label text-xs uppercase tracking-widest text-on-surface-variant block mb-1">
                   Dias Restantes
                 </span>
                 <p className="font-headline text-2xl font-extrabold text-secondary dark:text-secondary-300">
                   {obra.diasRestantes}
                 </p>
-                <p className="font-label text-xs text-on-surface-variant dark:text-slate-400 mt-1">
+                <p className="font-label text-xs text-on-surface-variant mt-1">
                   dias até a conclusão prevista
                 </p>
               </div>
@@ -368,8 +368,8 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
           </div>
 
           {/* Documentos */}
-          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-2xl p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
-            <h4 className="font-headline text-lg font-bold text-primary dark:text-white mb-4 flex items-center gap-2">
+          <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none">
+            <h4 className="font-headline text-lg font-bold text-primary mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-secondary">
                 folder
               </span>
@@ -383,17 +383,17 @@ export default function ObraDetalheClient({ id: _id }: { id: string }) {
               ].map((doc) => (
                 <button
                   key={doc.label}
-                  className="flex items-center justify-between p-4 bg-surface-container-low dark:bg-slate-700/50 rounded-xl group hover:bg-surface-container-high dark:hover:bg-slate-700 transition-colors text-left"
+                  className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl group hover:bg-surface-container-high transition-colors text-left"
                 >
                   <div className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-secondary">
                       {doc.icon}
                     </span>
-                    <span className="font-label text-sm font-medium text-primary dark:text-white">
+                    <span className="font-label text-sm font-medium text-primary">
                       {doc.label}
                     </span>
                   </div>
-                  <span className="material-symbols-outlined text-outline dark:text-slate-500 group-hover:text-primary dark:group-hover:text-white transition-colors">
+                  <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors">
                     arrow_forward
                   </span>
                 </button>

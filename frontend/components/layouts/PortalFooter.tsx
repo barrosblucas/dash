@@ -41,7 +41,7 @@ const footerSections = [
 
 export default function PortalFooter() {
   return (
-    <footer className="bg-surface-container-low dark:bg-slate-900">
+    <footer className="bg-surface-container-low">
       {/* Top — Link columns */}
       <div className="max-w-screen-2xl mx-auto px-6 sm:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">

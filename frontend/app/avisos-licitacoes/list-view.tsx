@@ -37,9 +37,9 @@ export function ListView({
     <div className="space-y-4">
       {/* Empty state */}
       {pagedListItems.length === 0 && (
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-12 text-center shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-12 text-center shadow-ambient">
           <span className="material-symbols-outlined text-outline text-[40px] block mx-auto mb-3">calendar_today</span>
-          <p className="text-on-surface-variant dark:text-slate-400 font-medium mb-1">Nenhuma licitação encontrada</p>
+          <p className="text-on-surface-variant font-medium mb-1">Nenhuma licitação encontrada</p>
           <p className="text-sm text-on-surface-variant/60">
             {searchTerm ? 'Tente ajustar o termo de busca.' : 'Nenhum processo licitatório registrado.'}
           </p>
@@ -48,7 +48,7 @@ export function ListView({
 
       {/* Desktop: table */}
       {pagedListItems.length > 0 && (
-        <div className="hidden lg:block bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl shadow-ambient overflow-hidden">
+        <div className="hidden lg:block bg-surface-container-lowest rounded-xl shadow-ambient overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-label-md text-on-surface-variant uppercase tracking-wider">
@@ -64,11 +64,11 @@ export function ListView({
               {pagedListItems.map((item) => (
                 <tr
                   key={item.id}
-                  className="hover:bg-surface-container dark:hover:bg-slate-700/30 transition-colors cursor-pointer"
+                  className="hover:bg-surface-container transition-colors cursor-pointer"
                   onClick={() => onOpenModal(item)}
                 >
                   <td className="py-3 px-4">
-                    <span className="text-sm font-medium text-on-surface dark:text-slate-200">{item.numero}</span>
+                    <span className="text-sm font-medium text-on-surface">{item.numero}</span>
                   </td>
                   <td className="py-3 px-4 max-w-xs">
                     <p className="text-sm text-on-surface-variant truncate">{item.objeto}</p>
@@ -110,10 +110,10 @@ export function ListView({
             <button
               key={item.id}
               onClick={() => onOpenModal(item)}
-              className="w-full text-left bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-5 shadow-ambient transition-all duration-200 hover:shadow-ambient-lg"
+              className="w-full text-left bg-surface-container-lowest rounded-xl p-5 shadow-ambient transition-all duration-200 hover:shadow-ambient-lg"
             >
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <span className="text-sm font-medium text-on-surface dark:text-white">{item.numero}</span>
+                <span className="text-sm font-medium text-on-surface">{item.numero}</span>
                 <FonteBadge fonte={item.fonte} />
                 <StatusBadge status={item.status} />
               </div>
@@ -142,7 +142,7 @@ export function ListView({
             <button
               onClick={() => onSetListPage(Math.max(0, listPage - 1))}
               disabled={listPage === 0}
-              className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <span className="material-symbols-outlined text-[18px]">chevron_left</span>
             </button>
@@ -154,8 +154,8 @@ export function ListView({
                   onClick={() => onSetListPage(p)}
                   className={`w-8 h-8 rounded-xl text-xs font-medium transition-colors ${
                     p === listPage
-                      ? 'bg-primary text-on-primary dark:bg-primary/80'
-                      : 'text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-slate-700/40'
+                      ? 'bg-primary text-on-primary'
+                      : 'text-on-surface-variant hover:bg-surface-container-high'
                   }`}
                 >
                   {p + 1}
@@ -164,7 +164,7 @@ export function ListView({
             <button
               onClick={() => onSetListPage(Math.min(totalPages - 1, listPage + 1))}
               disabled={listPage >= totalPages - 1}
-              className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <span className="material-symbols-outlined text-[18px]">chevron_right</span>
             </button>

@@ -26,7 +26,7 @@ export default function PortalHeader() {
   return (
     <header className="sticky top-0 w-full z-50">
       <div
-        className="bg-[#f8f9ff]/80 dark:bg-slate-950/80 backdrop-blur-3xl
+        className="bg-[#f8f9ff]/80 dark:bg-surface/80 backdrop-blur-3xl
                     shadow-[0_1px_0_0_rgba(0,45,98,0.05)]"
       >
         <div className="flex justify-between items-center w-full px-6 sm:px-8 py-4 max-w-screen-2xl mx-auto">
@@ -102,7 +102,7 @@ export default function PortalHeader() {
 
         {/* Mobile nav dropdown */}
         {mobileMenuOpen && (
-          <nav className="md:hidden border-t border-outline-variant/10 bg-surface-container-low dark:bg-slate-900 px-6 py-4 space-y-1">
+          <nav className="md:hidden border-t border-outline-variant/10 bg-surface-container-low px-6 py-4 space-y-1">
             {portalNav.map((item) => (
               <Link
                 key={item.name}

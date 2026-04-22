@@ -12,7 +12,7 @@ interface KpiCardProps {
 
 export function KpiCard({ label, value, count, iconName, accentColor }: KpiCardProps) {
   return (
-    <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient transition-all duration-300 hover:shadow-ambient-lg">
+    <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient transition-all duration-300 hover:shadow-ambient-lg">
       <div className="flex items-start justify-between mb-3">
         <span className="text-label-md text-on-surface-variant">{label}</span>
         <div
@@ -22,7 +22,7 @@ export function KpiCard({ label, value, count, iconName, accentColor }: KpiCardP
           <span className="material-symbols-outlined text-[20px]">{iconName}</span>
         </div>
       </div>
-      <p className="text-headline-lg font-display font-bold text-on-surface dark:text-white">
+      <p className="text-headline-lg font-display font-bold text-on-surface">
         {formatCurrency(value)}
       </p>
       {count !== undefined && (

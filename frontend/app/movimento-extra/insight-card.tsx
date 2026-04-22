@@ -18,7 +18,7 @@ export function InsightCard({
 
   return (
     <div
-      className="bg-surface-container-low dark:bg-slate-800/30 rounded-xl p-4 transition-all duration-200 hover:shadow-ambient"
+      className="bg-surface-container-low rounded-xl p-4 transition-all duration-200 hover:shadow-ambient"
       style={{ borderLeft: `3px solid ${accentColor}` }}
     >
       <div className="flex items-start justify-between mb-2">
@@ -29,7 +29,7 @@ export function InsightCard({
           >
             {rank}
           </span>
-          <h4 className="text-sm font-semibold text-on-surface dark:text-slate-200">
+          <h4 className="text-sm font-semibold text-on-surface">
             {insight.categoria}
           </h4>
         </div>
@@ -42,13 +42,13 @@ export function InsightCard({
             <span className="material-symbols-outlined text-[16px]">info</span>
           </button>
           {showTip && (
-            <div className="absolute right-0 top-7 z-20 w-56 rounded-xl bg-surface-container-highest dark:bg-slate-700 p-3 shadow-ambient-lg">
+            <div className="absolute right-0 top-7 z-20 w-56 rounded-xl bg-surface-container-highest p-3 shadow-ambient-lg">
               <p className="text-xs text-on-surface-variant">{insight.descricao}</p>
             </div>
           )}
         </div>
       </div>
-      <p className="text-lg font-bold text-on-surface dark:text-white mb-1">
+      <p className="text-lg font-bold text-on-surface mb-1">
         {formatCurrency(insight.valor)}
       </p>
       <div className="flex items-center justify-between">
@@ -61,7 +61,7 @@ export function InsightCard({
         </span>
       </div>
       {/* Progress bar */}
-      <div className="mt-2 h-1.5 rounded-full bg-surface-container-high dark:bg-slate-700/40 overflow-hidden">
+      <div className="mt-2 h-1.5 rounded-full bg-surface-container-high overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{

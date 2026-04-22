@@ -202,7 +202,7 @@ export default function ComparativoClient() {
           {summaryStats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300"
+              className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300"
             >
               <div className="flex items-start justify-between mb-3">
                 <span className="text-label-md text-on-surface-variant uppercase tracking-wider">{stat.label}</span>
@@ -220,15 +220,15 @@ export default function ComparativoClient() {
       {/* ── Main Comparative Chart ──────────────────────────────── */}
       <motion.div variants={itemVariants}>
         {isLoading ? (
-          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient min-h-[320px] flex items-center justify-center">
+          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient min-h-[320px] flex items-center justify-center">
             <LoadingSpinner size="lg" message="Carregando comparativo..." />
           </div>
         ) : error ? (
-          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient min-h-[200px] flex items-center justify-center">
+          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient min-h-[200px] flex items-center justify-center">
             <p className="text-sm text-error">Erro ao carregar dados comparativos.</p>
           </div>
         ) : (
-          <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient">
+          <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
             <ComparativeSection height={500} />
           </div>
         )}
@@ -236,7 +236,7 @@ export default function ComparativoClient() {
 
       {/* ── Year Comparison Table ───────────────────────────────── */}
       {!isLoading && tableRows.length > 0 && (
-        <motion.div variants={itemVariants} className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl shadow-ambient overflow-hidden">
+        <motion.div variants={itemVariants} className="bg-surface-container-lowest rounded-xl shadow-ambient overflow-hidden">
           <div className="px-5 py-4">
             <h2 className="text-headline-sm font-display text-on-surface">Análise Ano a Ano</h2>
             <p className="text-label-md text-on-surface-variant mt-1">
@@ -351,7 +351,7 @@ function TrendMetricCard({ label, value, trend, icon }: {
   const arrowIcon = trend === 'up' ? 'north_east' : 'south_west';
 
   return (
-    <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300">
+    <div className="bg-surface-container-lowest rounded-xl p-6 shadow-ambient hover:shadow-ambient-lg transition-shadow duration-300">
       <div className="flex items-center gap-3 mb-3">
         <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${bgClass}`}>
           <Icon name={icon} size={20} className={accentClass} />

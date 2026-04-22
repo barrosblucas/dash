@@ -23,8 +23,8 @@ export default function PlaceholderPage({ title, description, iconName }: Placeh
     <DashboardLayout>
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
         {/* Icon */}
-        <div className="w-20 h-20 rounded-2xl bg-surface-container-low dark:bg-slate-800/50 flex items-center justify-center mb-6 shadow-ambient">
-          <span className="material-symbols-outlined text-primary dark:text-primary text-4xl">
+        <div className="w-20 h-20 rounded-2xl bg-surface-container-low flex items-center justify-center mb-6 shadow-ambient">
+          <span className="material-symbols-outlined text-primary text-4xl">
             {iconName}
           </span>
         </div>
@@ -40,12 +40,12 @@ export default function PlaceholderPage({ title, description, iconName }: Placeh
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl sm:text-3xl font-display font-bold text-on-surface dark:text-white mb-3">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold text-on-surface mb-3">
           {title}
         </h1>
 
         {/* Description */}
-        <p className="text-on-surface-variant dark:text-slate-400 text-base max-w-md leading-relaxed mb-8">
+        <p className="text-on-surface-variant text-base max-w-md leading-relaxed mb-8">
           {description}
         </p>
 

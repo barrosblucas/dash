@@ -16,7 +16,7 @@ export function ItemRow({ item }: { item: MovimentoExtraItem }) {
   const [showTip, setShowTip] = useState(false);
 
   return (
-    <div className="bg-surface-container-lowest/50 dark:bg-slate-800/30 rounded-xl p-4 hover:bg-surface-container dark:hover:bg-slate-800/50 transition-all duration-200">
+    <div className="bg-surface-container-lowest/50 rounded-xl p-4 hover:bg-surface-container transition-all duration-200">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <div
@@ -24,7 +24,7 @@ export function ItemRow({ item }: { item: MovimentoExtraItem }) {
             style={{ backgroundColor: glossary.cor }}
           />
           <div className="relative min-w-0">
-            <p className="text-sm font-medium text-on-surface dark:text-slate-200 truncate pr-6">
+            <p className="text-sm font-medium text-on-surface truncate pr-6">
               {item.descricao}
             </p>
             <button
@@ -35,7 +35,7 @@ export function ItemRow({ item }: { item: MovimentoExtraItem }) {
               <Icon name="help" size={16} />
             </button>
             {showTip && (
-              <div className="absolute left-0 top-6 z-10 w-64 rounded-xl bg-surface-container-highest dark:bg-slate-700 p-3 shadow-ambient-lg">
+              <div className="absolute left-0 top-6 z-10 w-64 rounded-xl bg-surface-container-highest p-3 shadow-ambient-lg">
                 <p className="text-xs text-on-surface-variant">{glossary.descricao}</p>
               </div>
             )}
@@ -51,8 +51,8 @@ export function ItemRow({ item }: { item: MovimentoExtraItem }) {
         <span
           className={`text-base font-bold ${
             item.tipo === 'R'
-              ? 'text-secondary dark:text-emerald-400'
-              : 'text-error dark:text-red-400'
+              ? 'text-secondary'
+              : 'text-error'
           }`}
         >
           {formatCurrency(item.valor_recebido)}
@@ -68,14 +68,14 @@ export function ItemTableRow({ item }: { item: MovimentoExtraItem }) {
   const glossary = getGlossary(glossaryKey);
 
   return (
-    <tr className="hover:bg-surface-container dark:hover:bg-slate-700/30 transition-colors">
+    <tr className="hover:bg-surface-container transition-colors">
       <td className="py-3 px-4">
         <div className="flex items-center gap-2">
           <div
             className="w-2 h-2 rounded-full shrink-0"
             style={{ backgroundColor: glossary.cor }}
           />
-          <span className="text-sm text-on-surface dark:text-slate-200">{item.descricao}</span>
+          <span className="text-sm text-on-surface">{item.descricao}</span>
         </div>
       </td>
       <td className="py-3 px-4">
@@ -88,8 +88,8 @@ export function ItemTableRow({ item }: { item: MovimentoExtraItem }) {
         <span
           className={`text-sm font-semibold ${
             item.tipo === 'R'
-              ? 'text-secondary dark:text-emerald-400'
-              : 'text-error dark:text-red-400'
+              ? 'text-secondary'
+              : 'text-error'
           }`}
         >
           {formatCurrency(item.valor_recebido)}

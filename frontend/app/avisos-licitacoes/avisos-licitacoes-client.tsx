@@ -166,7 +166,7 @@ export default function AvisosLicitacoesClient() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-headline-lg font-display font-bold text-on-surface dark:text-white">
+        <h1 className="text-headline-lg font-display font-bold text-on-surface">
           Avisos de Licitações
         </h1>
         <p className="text-body-md text-on-surface-variant mt-1">
@@ -181,21 +181,21 @@ export default function AvisosLicitacoesClient() {
         transition={{ duration: 0.4, delay: 0.1 }}
         className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-4 shadow-ambient">
           <p className="text-label-md text-on-surface-variant">Total</p>
-          <p className="text-headline-sm font-display font-bold text-on-surface dark:text-white mt-1">{counts.total}</p>
+          <p className="text-headline-sm font-display font-bold text-on-surface mt-1">{counts.total}</p>
         </div>
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-4 shadow-ambient">
           <p className="text-label-md text-on-surface-variant">Aguardando</p>
-          <p className="text-headline-sm font-display font-bold text-secondary dark:text-emerald-400 mt-1">{counts.aguardando}</p>
+          <p className="text-headline-sm font-display font-bold text-secondary mt-1">{counts.aguardando}</p>
         </div>
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-4 shadow-ambient">
           <p className="text-label-md text-on-surface-variant">Encerrado</p>
           <p className="text-headline-sm font-display font-bold text-on-surface-variant mt-1">{counts.encerrado}</p>
         </div>
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-4 shadow-ambient">
           <p className="text-label-md text-on-surface-variant">Suspenso</p>
-          <p className="text-headline-sm font-display font-bold text-error dark:text-red-400 mt-1">{counts.suspenso}</p>
+          <p className="text-headline-sm font-display font-bold text-error mt-1">{counts.suspenso}</p>
         </div>
       </motion.div>
 
@@ -204,7 +204,7 @@ export default function AvisosLicitacoesClient() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.15 }}
-        className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient space-y-3"
+        className="bg-surface-container-lowest rounded-xl p-4 shadow-ambient space-y-3"
       >
         {/* Search */}
         <div className="relative">
@@ -214,7 +214,7 @@ export default function AvisosLicitacoesClient() {
             placeholder="Buscar por objeto, número ou modalidade..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-surface-container-high dark:bg-slate-700/40 rounded-xl pl-10 pr-10 py-2.5 text-sm text-on-surface dark:text-slate-200 placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
+            className="w-full bg-surface-container-high rounded-xl pl-10 pr-10 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all"
           />
           {searchTerm && (
             <button
@@ -236,8 +236,8 @@ export default function AvisosLicitacoesClient() {
                 onClick={() => setFonteFilter(f.key)}
                 className={`rounded-full px-3 py-1.5 text-label-md font-medium transition-colors ${
                   fonteFilter === f.key
-                    ? 'bg-primary text-on-primary dark:bg-primary/80 dark:text-white shadow-ambient'
-                    : 'bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60'
+                    ? 'bg-primary text-on-primary shadow-ambient'
+                    : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container'
                 }`}
               >
                 {f.label}
@@ -252,8 +252,8 @@ export default function AvisosLicitacoesClient() {
                 onClick={() => setStatusFilter(s.key)}
                 className={`rounded-full px-3 py-1.5 text-label-md font-medium transition-colors ${
                   statusFilter === s.key
-                    ? 'bg-primary text-on-primary dark:bg-primary/80 dark:text-white shadow-ambient'
-                    : 'bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60'
+                    ? 'bg-primary text-on-primary shadow-ambient'
+                    : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container'
                 }`}
               >
                 {s.label}
@@ -280,8 +280,8 @@ export default function AvisosLicitacoesClient() {
             onClick={() => setViewMode(key)}
             className={`flex items-center gap-2 rounded-full px-4 py-2 text-label-md font-medium transition-all duration-200 ${
               viewMode === key
-                ? 'bg-primary text-on-primary dark:bg-primary/80 dark:text-white shadow-ambient'
-                : 'bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60'
+                ? 'bg-primary text-on-primary shadow-ambient'
+                : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container'
             }`}
           >
             <span className="material-symbols-outlined text-[18px]">{icon}</span>
@@ -297,9 +297,9 @@ export default function AvisosLicitacoesClient() {
 
       {/* Error */}
       {isError && !isLoading && (
-        <div className="bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-6 text-center shadow-ambient">
+        <div className="bg-surface-container-lowest rounded-xl p-6 text-center shadow-ambient">
           <span className="material-symbols-outlined text-error text-[32px] block mx-auto mb-3">warning</span>
-          <p className="text-on-surface dark:text-white font-medium mb-1">Erro ao carregar licitações</p>
+          <p className="text-on-surface font-medium mb-1">Erro ao carregar licitações</p>
           <p className="text-sm text-on-surface-variant">Tente novamente mais tarde.</p>
         </div>
       )}

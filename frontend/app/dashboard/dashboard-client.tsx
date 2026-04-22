@@ -55,9 +55,9 @@ function YearSelector() {
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         className="
           inline-flex items-center gap-2 px-4 py-2
-          bg-surface-container-low dark:bg-slate-700/50
+          bg-surface-container-low
           rounded-xl text-label-md font-semibold text-on-surface
-          hover:bg-surface-container dark:hover:bg-slate-700
+          hover:bg-surface-container
           transition-colors duration-200
         "
       >
@@ -71,7 +71,7 @@ function YearSelector() {
       {open && (
         <div className="
           absolute right-0 top-full mt-2 z-50
-          bg-surface-container-lowest dark:bg-slate-800
+          bg-surface-container-lowest
           rounded-xl shadow-ambient-lg py-1 min-w-[120px]
         ">
           {anos.map((ano) => (
@@ -113,7 +113,7 @@ function SectionCard({
   return (
     <div
       className={`
-        bg-surface-container-lowest dark:bg-slate-800/50
+        bg-surface-container-lowest
         rounded-xl shadow-ambient hover:shadow-ambient-lg
         transition-shadow duration-300
         ${className}

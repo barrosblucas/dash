@@ -43,24 +43,24 @@ export function WeekView({
       <div className="flex items-center justify-between">
         <button
           onClick={onNavigatePrev}
-          className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface transition-colors"
+          className="p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
         >
           <span className="material-symbols-outlined text-[20px]">chevron_left</span>
         </button>
-        <h2 className="text-headline-sm font-display text-on-surface dark:text-white">
+        <h2 className="text-headline-sm font-display text-on-surface">
           {format(weekDays[0], "dd 'de' MMM", { locale: ptBR })} –{' '}
           {format(weekDays[6], "dd 'de' MMM 'de' yyyy", { locale: ptBR })}
         </h2>
         <div className="flex items-center gap-2">
           <button
             onClick={onNavigateToday}
-            className="rounded-full px-3 py-1.5 text-label-md font-medium bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300 hover:bg-surface-container dark:hover:bg-slate-700/60 transition-colors"
+            className="rounded-full px-3 py-1.5 text-label-md font-medium bg-surface-container-high text-on-surface-variant hover:bg-surface-container transition-colors"
           >
             Hoje
           </button>
           <button
             onClick={onNavigateNext}
-            className="p-2 rounded-xl hover:bg-surface-container-high dark:hover:bg-slate-700/40 text-on-surface-variant hover:text-on-surface transition-colors"
+            className="p-2 rounded-xl hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">chevron_right</span>
           </button>
@@ -85,7 +85,7 @@ export function WeekView({
                   ? 'bg-primary/10 dark:bg-blue-900/20'
                   : today
                   ? 'bg-tertiary/5 dark:bg-amber-900/10'
-                  : 'bg-surface-container-lowest dark:bg-slate-800/50 hover:bg-surface-container dark:hover:bg-slate-800/70'
+                  : 'bg-surface-container-lowest hover:bg-surface-container'
               } shadow-ambient`}
             >
               <div className="flex items-center justify-between mb-1">
@@ -95,7 +95,7 @@ export function WeekView({
                       ? 'text-tertiary dark:text-amber-400'
                       : isSelected
                       ? 'text-primary dark:text-blue-400'
-                      : 'text-on-surface-variant dark:text-slate-400'
+                      : 'text-on-surface-variant'
                   }`}
                 >
                   {format(day, 'EEE', { locale: ptBR })}
@@ -104,7 +104,7 @@ export function WeekView({
                   className={`text-xs font-bold ${
                     today
                       ? 'w-5 h-5 flex items-center justify-center rounded-full bg-tertiary/20 dark:bg-amber-700/30 text-tertiary dark:text-amber-300'
-                      : 'text-on-surface-variant dark:text-slate-400'
+                      : 'text-on-surface-variant'
                   }`}
                 >
                   {format(day, 'd')}
@@ -112,7 +112,7 @@ export function WeekView({
               </div>
 
               {feriado && (
-                <p className="text-[9px] text-error dark:text-red-400 font-medium mb-1 line-clamp-1">{feriado}</p>
+                <p className="text-[9px] text-error font-medium mb-1 line-clamp-1">{feriado}</p>
               )}
 
               <div className="flex-1 space-y-1 overflow-hidden">
@@ -134,7 +134,7 @@ export function WeekView({
                   </div>
                 ))}
                 {items.length > 3 && (
-                  <span className="text-[10px] text-on-surface-variant/50 dark:text-slate-500 pl-1">
+                  <span className="text-[10px] text-on-surface-variant/50 pl-1">
                     +{items.length - 3} mais
                   </span>
                 )}
@@ -147,7 +147,7 @@ export function WeekView({
       {/* Selected day detail cards */}
       {selectedDay && selectedDayItems.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-on-surface-variant dark:text-slate-400">
+          <h3 className="text-sm font-semibold text-on-surface-variant">
             {format(selectedDay, "dd 'de' MMMM", { locale: ptBR })}
             <span className="text-on-surface-variant/50 ml-2">({selectedDayItems.length})</span>
           </h3>
@@ -156,12 +156,12 @@ export function WeekView({
               <button
                 key={item.id}
                 onClick={() => onOpenModal(item)}
-                className="w-full text-left bg-surface-container-lowest dark:bg-slate-800/50 rounded-xl p-4 shadow-ambient transition-all duration-200 hover:shadow-ambient-lg"
+                className="w-full text-left bg-surface-container-lowest rounded-xl p-4 shadow-ambient transition-all duration-200 hover:shadow-ambient-lg"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sm font-medium text-on-surface dark:text-white">{item.numero}</span>
+                      <span className="text-sm font-medium text-on-surface">{item.numero}</span>
                       <FonteBadge fonte={item.fonte} />
                       <StatusBadge status={item.status} />
                     </div>

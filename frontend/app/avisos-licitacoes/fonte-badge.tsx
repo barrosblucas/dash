@@ -3,7 +3,7 @@ import type { FonteLicitacao } from '@/types/licitacao';
 export function FonteBadge({ fonte }: { fonte: FonteLicitacao }) {
   if (fonte === 'comprasbr') {
     return (
-      <span className="rounded-full px-3 py-1 text-label-md font-medium bg-surface-container-high dark:bg-slate-700/40 text-on-surface-variant dark:text-slate-300">
+      <span className="rounded-full px-3 py-1 text-label-md font-medium bg-surface-container-high text-on-surface-variant">
         ComprasBR
       </span>
     );

@@ -41,7 +41,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Slide-in sidebar */}
           <aside
-            className="absolute inset-y-0 left-0 w-64 bg-surface-container-low dark:bg-slate-900 animate-slide-in-left"
+            className="absolute inset-y-0 left-0 w-64 bg-surface-container-low animate-slide-in-left"
             onClick={(e) => e.stopPropagation()}
           >
             <Sidebar onClose={closeSidebar} />

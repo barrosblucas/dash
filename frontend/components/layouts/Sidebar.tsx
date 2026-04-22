@@ -30,7 +30,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col h-full bg-surface-container-low dark:bg-slate-900">
+    <div className="flex flex-col h-full bg-surface-container-low">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5">
         <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0">
