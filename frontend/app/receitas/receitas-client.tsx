@@ -3,21 +3,35 @@
 import { useMemo } from 'react';
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
 
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Icon from '@/components/ui/Icon';
 import { useReceitasDetalhamento, useReceitasTotalAno } from '@/hooks/useFinanceData';
 import type { ReceitaDetalhamento } from '@/types/receita';
 import useExport from '@/hooks/useExport';
 import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
 import { formatCurrency, formatPercent } from '@/lib/utils';
-import { COLORS } from '@/lib/constants';
 import ReceitaDetalhamentoTable from '@/components/receitas/ReceitaDetalhamentoTable';
 
 const RevenueChart = dynamic(
   () => import('@/components/charts/RevenueChart'),
   { loading: () => <LoadingSpinner />, ssr: false }
 );
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+};
 
 export default function ReceitasClient() {
   const { anoSelecionado, setAnoSelecionado, tipoReceita, setTipoReceita } = useDashboardFilters();
@@ -76,125 +90,168 @@ export default function ReceitasClient() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Cabeçalho */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <motion.div
+        className="space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Header monumental */}
+        <motion.div variants={itemVariants} className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-dark-100">Receitas Municipais</h1>
-            <p className="text-sm text-dark-400">Arrecadação por fonte e categoria</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-secondary-container/30">
+                <Icon name="account_balance_wallet" className="text-secondary" size={22} />
+              </div>
+              <span className="chip-secondary">Arrecadação Municipal</span>
+            </div>
+            <h1 className="font-display text-headline-lg sm:text-display-sm text-on-surface tracking-tight">
+              Receitas
+            </h1>
+            <p className="mt-1 text-body-md text-on-surface-variant max-w-lg">
+              Arrecadação por fonte e categoria. Acompanhe a execução orçamentária em tempo real.
+            </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <select
-              value={anoSelecionado}
-              onChange={(e) => setAnoSelecionado(Number(e.target.value))}
-              className="bg-dark-800 border border-dark-700 text-dark-200 rounded-lg px-3 py-2 text-sm
-                         focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
-            >
-              {anos.map((ano) => (
-                <option key={ano} value={ano}>{ano}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <Icon name="calendar_today" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
+              <select
+                value={anoSelecionado}
+                onChange={(e) => setAnoSelecionado(Number(e.target.value))}
+                className="select-field pl-9 pr-8"
+              >
+                {anos.map((ano) => (
+                  <option key={ano} value={ano}>{ano}</option>
+                ))}
+              </select>
+            </div>
 
-            <select
-              value={tipoReceita}
-              onChange={(e) => {
-                setTipoReceita(e.target.value as 'TODOS' | 'CORRENTE' | 'CAPITAL');
-              }}
-              className="bg-dark-800 border border-dark-700 text-dark-200 rounded-lg px-3 py-2 text-sm
-                         focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
-            >
-              <option value="TODOS">Todos os tipos</option>
-              <option value="CORRENTE">Corrente</option>
-              <option value="CAPITAL">Capital</option>
-            </select>
+            <div className="relative">
+              <Icon name="filter_list" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
+              <select
+                value={tipoReceita}
+                onChange={(e) => {
+                  setTipoReceita(e.target.value as 'TODOS' | 'CORRENTE' | 'CAPITAL');
+                }}
+                className="select-field pl-9 pr-8"
+              >
+                <option value="TODOS">Todos os tipos</option>
+                <option value="CORRENTE">Corrente</option>
+                <option value="CAPITAL">Capital</option>
+              </select>
+            </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Cards resumo */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <SummaryCard
+        {/* Cards de resumo */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <KpiCard
             label="Total Arrecadado"
             value={formatCurrency(summary.arrecadado, { compact: true })}
-            accent={COLORS.revenue.accent}
+            accentColor="text-secondary"
+            iconName="trending_up"
+            iconBg="bg-secondary-container/20"
           />
-          <SummaryCard
+          <KpiCard
             label="Total Previsto"
             value={formatCurrency(summary.previsto, { compact: true })}
-            accent={COLORS.forecast.accent}
+            accentColor="text-tertiary"
+            iconName="target"
+            iconBg="bg-tertiary-container/20"
           />
-          <SummaryCard
+          <KpiCard
             label="% Execução"
             value={formatPercent(summary.execucao)}
-            accent={summary.execucao >= 90 ? COLORS.status.success : COLORS.status.warning}
+            accentColor={summary.execucao >= 90 ? 'text-secondary' : summary.execucao >= 70 ? 'text-tertiary' : 'text-error'}
+            iconName="percent"
+            iconBg={summary.execucao >= 90 ? 'bg-secondary-container/20' : summary.execucao >= 70 ? 'bg-tertiary-container/20' : 'bg-error-container/20'}
           />
-        </div>
+        </motion.div>
 
         {/* Gráfico de receitas */}
-        <Suspense fallback={<LoadingSpinner />}>
-          <RevenueChart />
-        </Suspense>
+        <motion.div variants={itemVariants}>
+          <Suspense fallback={<LoadingSpinner />}>
+            <RevenueChart />
+          </Suspense>
+        </motion.div>
 
         {/* Tabela hierárquica de detalhamento */}
-        <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 backdrop-blur-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-dark-700/50 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-dark-200">
-              Detalhamento Hierárquico
-              {detalhamentoData && (
-                <span className="ml-2 text-xs text-dark-400 font-normal">
-                  ({detalhamentoData.total_itens} itens)
-                </span>
-              )}
-            </h3>
-            <div className="flex gap-2">
+        <motion.div variants={itemVariants} className="chart-container">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+            <div className="flex items-center gap-3">
+              <Icon name="table_chart" className="text-on-surface-variant" size={20} />
+              <div>
+                <h3 className="text-title-md font-display text-on-surface">
+                  Detalhamento Hierárquico
+                </h3>
+                {detalhamentoData && (
+                  <p className="text-label-md text-on-surface-variant mt-0.5">
+                    {detalhamentoData.total_itens} itens registrados
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => handleExport('csv')}
                 disabled={isExporting || itens.length === 0}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-dark-700 text-dark-300
-                           hover:bg-dark-600 hover:text-dark-100 transition-colors disabled:opacity-40"
+                className="btn-outline text-xs px-4 py-2"
               >
-                CSV
+                <Icon name="download" size={16} />
+                <span>CSV</span>
               </button>
               <button
                 onClick={() => handleExport('json')}
                 disabled={isExporting || itens.length === 0}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-dark-700 text-dark-300
-                           hover:bg-dark-600 hover:text-dark-100 transition-colors disabled:opacity-40"
+                className="btn-outline text-xs px-4 py-2"
               >
-                JSON
+                <Icon name="code" size={16} />
+                <span>JSON</span>
               </button>
             </div>
           </div>
 
           {isLoadingDetalhamento ? (
-            <div className="py-12">
+            <div className="py-16 flex flex-col items-center gap-3">
               <LoadingSpinner message="Carregando detalhamento..." />
             </div>
           ) : itens.length === 0 ? (
-            <div className="py-12 text-center text-dark-400 text-sm">
-              Nenhum registro encontrado para o filtro selecionado.
+            <div className="py-16 text-center">
+              <Icon name="search_off" className="text-on-surface-variant/40 mx-auto mb-3" size={40} />
+              <p className="text-body-md text-on-surface-variant">
+                Nenhum registro encontrado para o filtro selecionado.
+              </p>
             </div>
           ) : (
             <ReceitaDetalhamentoTable itens={itens} />
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </DashboardLayout>
   );
 }
 
-/* Card de resumo reutilizável */
-interface SummaryCardProps {
+/* ─── Sub-componentes ───────────────────────────────────────────────── */
+
+interface KpiCardProps {
   label: string;
   value: string;
-  accent: string;
+  accentColor: string;
+  iconName: string;
+  iconBg: string;
 }
 
-function SummaryCard({ label, value, accent }: SummaryCardProps) {
+function KpiCard({ label, value, accentColor, iconName, iconBg }: KpiCardProps) {
   return (
-    <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 backdrop-blur-sm p-4">
-      <p className="text-xs font-medium text-dark-400 uppercase tracking-wider">{label}</p>
-      <p className="mt-1 text-xl font-bold" style={{ color: accent }}>{value}</p>
+    <div className="kpi-card">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${iconBg}`}>
+          <Icon name={iconName} className={accentColor} size={20} />
+        </div>
+        <span className="kpi-label">{label}</span>
+      </div>
+      <p className={`kpi-value ${accentColor}`}>{value}</p>
     </div>
   );
 }

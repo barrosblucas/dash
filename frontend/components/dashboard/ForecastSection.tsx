@@ -11,8 +11,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { TrendingUp, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
+import Icon from '@/components/ui/Icon';
 import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG } from '@/lib/constants';
 import { useDashboardFilters } from '@/stores/filtersStore';
@@ -28,7 +29,7 @@ import {
 } from './forecast-helpers';
 
 export default function ForecastSection({
-  height = 300,
+  height = 320,
   yearsToProject = 2,
   projectionMode = 'annual',
   className = '',
@@ -94,12 +95,15 @@ export default function ForecastSection({
   if (isLoading) {
     return (
       <div className={`chart-container ${className}`}>
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-dark-100">Previsão</h3>
-          <p className="text-sm text-dark-400">Carregando dados...</p>
+        <div className="mb-5">
+          <h3 className="text-title-lg font-display font-semibold text-on-surface flex items-center gap-2">
+            <Icon name="trending_up" size={22} className="text-forecast-accent" />
+            Previsão
+          </h3>
+          <p className="text-body-sm text-on-surface-variant mt-1">Carregando dados...</p>
         </div>
         <div className="animate-pulse" style={{ height }}>
-          <div className="w-full h-full bg-dark-800/50 rounded"></div>
+          <div className="w-full h-full bg-surface-container-high/50 rounded-2xl"></div>
         </div>
       </div>
     );
@@ -108,9 +112,12 @@ export default function ForecastSection({
   if (hasError) {
     return (
       <div className={`chart-container ${className}`}>
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-dark-100">Previsão</h3>
-          <p className="text-sm text-red-400">Erro ao carregar dados</p>
+        <div className="mb-5">
+          <h3 className="text-title-lg font-display font-semibold text-on-surface flex items-center gap-2">
+            <Icon name="trending_up" size={22} className="text-forecast-accent" />
+            Previsão
+          </h3>
+          <p className="text-body-sm text-error mt-1">Erro ao carregar dados</p>
         </div>
       </div>
     );
@@ -138,9 +145,12 @@ export default function ForecastSection({
   if (chartData.length === 0) {
     return (
       <div className={`chart-container ${className}`}>
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-dark-100">Previsão</h3>
-          <p className="text-sm text-dark-400">{chartSubtitle}</p>
+        <div className="mb-5">
+          <h3 className="text-title-lg font-display font-semibold text-on-surface flex items-center gap-2">
+            <Icon name="trending_up" size={22} className="text-forecast-accent" />
+            Previsão
+          </h3>
+          <p className="text-body-sm text-on-surface-variant mt-1">{chartSubtitle}</p>
         </div>
       </div>
     );
@@ -148,35 +158,47 @@ export default function ForecastSection({
 
   const { nextProjectedRevenue, receitaGrowth } = calculateGrowthMetrics(chartData);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      payload: {
+        tipo: string;
+        receitas: number;
+        despesas: number;
+        receitasPrevistas: number;
+        despesasPrevistas: number;
+      };
+    }>;
+    label?: string;
+  }
+
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (!active || !payload || !payload.length) return null;
 
     const yearData = payload[0].payload;
     const isProjection = yearData.tipo === 'projeção';
 
     return (
-      <div className="custom-tooltip bg-dark-850 border border-dark-700 rounded-lg p-4 shadow-lg min-w-[200px]">
-        <div className="flex items-center gap-2 mb-2">
-          <p className="text-sm font-semibold text-dark-100">{label}</p>
+      <div className="custom-tooltip bg-surface-container-highest backdrop-blur-xl rounded-xl p-4 shadow-ambient-lg min-w-[200px]">
+        <div className="flex items-center gap-2 mb-3">
+          <p className="text-sm font-semibold text-on-surface">{label}</p>
           {isProjection && (
-            <span className="text-xs px-2 py-0.5 bg-forecast-500/20 text-forecast-accent rounded-full">
-              Projeção
-            </span>
+            <span className="chip-tertiary">Projeção</span>
           )}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {!isProjection ? (
             <>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-dark-400">Receitas:</span>
-                <span className="text-sm font-medium text-revenue-accent">
+                <span className="text-xs text-on-surface-variant">Receitas:</span>
+                <span className="text-sm font-semibold text-revenue-accent">
                   {formatCurrency(yearData.receitas)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-dark-400">Despesas:</span>
-                <span className="text-sm font-medium text-expense-DEFAULT">
+                <span className="text-xs text-on-surface-variant">Despesas:</span>
+                <span className="text-sm font-semibold text-expense-accent">
                   {formatCurrency(yearData.despesas)}
                 </span>
               </div>
@@ -184,14 +206,14 @@ export default function ForecastSection({
           ) : (
             <>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-dark-400">Receitas (estimado):</span>
-                <span className="text-sm font-medium text-revenue-accent">
+                <span className="text-xs text-on-surface-variant">Receitas (estimado):</span>
+                <span className="text-sm font-semibold text-revenue-accent">
                   {formatCurrency(yearData.receitasPrevistas)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-dark-400">Despesas (estimado):</span>
-                <span className="text-sm font-medium text-expense-DEFAULT">
+                <span className="text-xs text-on-surface-variant">Despesas (estimado):</span>
+                <span className="text-sm font-semibold text-expense-accent">
                   {formatCurrency(yearData.despesasPrevistas)}
                 </span>
               </div>
@@ -203,20 +225,25 @@ export default function ForecastSection({
   };
 
   return (
-    <div className={`chart-container ${className}`}>
-      <div className="mb-4">
-        <div className="flex items-start justify-between">
+    <motion.div
+      className={`chart-container ${className}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <div className="mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-dark-100 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-forecast-accent" />
+            <h3 className="text-title-lg font-display font-semibold text-on-surface flex items-center gap-2">
+              <Icon name="trending_up" size={22} className="text-forecast-accent" />
               {projectionMode === 'monthly' ? 'Previsão Mensal' : 'Previsão Anual'}
             </h3>
-            <p className="text-sm text-dark-400">
+            <p className="text-body-sm text-on-surface-variant mt-1">
               {chartSubtitle}
             </p>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-dark-400 bg-dark-800/50 px-2 py-1 rounded">
-            <AlertCircle className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-1.5 text-xs text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-lg self-start">
+            <Icon name="info" size={14} />
             <span>{projectionTag}</span>
           </div>
         </div>
@@ -276,7 +303,7 @@ export default function ForecastSection({
             type="monotone"
             dataKey="receitas"
             stroke={COLORS.revenue.chart.primary}
-            strokeWidth={2}
+            strokeWidth={2.5}
             dot={{ fill: COLORS.revenue.chart.primary, strokeWidth: 2, r: 4 }}
             activeDot={{ r: 6, strokeWidth: 2 }}
             connectNulls={false}
@@ -288,7 +315,7 @@ export default function ForecastSection({
             type="monotone"
             dataKey="despesas"
             stroke={COLORS.expense.chart.primary}
-            strokeWidth={2}
+            strokeWidth={2.5}
             dot={{ fill: COLORS.expense.chart.primary, strokeWidth: 2, r: 4 }}
             activeDot={{ r: 6, strokeWidth: 2 }}
             connectNulls={false}
@@ -320,30 +347,30 @@ export default function ForecastSection({
         </ComposedChart>
       </ResponsiveContainer>
 
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div className="glass-card p-3">
-          <p className="text-xs text-dark-400 mb-1">
+      <div className="mt-5 grid grid-cols-2 gap-4">
+        <div className="surface-card p-4 rounded-xl">
+          <p className="text-label-md text-on-surface-variant mb-1">
             Crescimento Estimado
           </p>
-          <p className={`text-lg font-bold ${receitaGrowth >= 0 ? 'text-revenue-accent' : 'text-expense-accent'}`}>
+          <p className={`text-headline-sm font-display font-bold ${receitaGrowth >= 0 ? 'text-revenue-accent' : 'text-expense-accent'}`}>
             {receitaGrowth >= 0 ? '+' : ''}{receitaGrowth.toFixed(1)}%
           </p>
         </div>
-        <div className="glass-card p-3">
-          <p className="text-xs text-dark-400 mb-1">
+        <div className="surface-card p-4 rounded-xl">
+          <p className="text-label-md text-on-surface-variant mb-1">
             {projectionMode === 'monthly' ? 'Próximo Mês (est.)' : 'Próximo Ano (est.)'}
           </p>
-          <p className="text-lg font-bold text-forecast-accent">
+          <p className="text-headline-sm font-display font-bold text-forecast-accent">
             {formatCurrency(nextProjectedRevenue, { compact: true })}
           </p>
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-dark-500 text-center">
+      <p className="mt-4 text-xs text-on-surface-variant/60 text-center">
         {projectionMode === 'monthly'
           ? '* Meses futuros são projetados com modelo de forecast a partir do histórico municipal consolidado.'
           : '* Projeção anual combina histórico consolidado e agregação das previsões mensais dos períodos seguintes.'}
       </p>
-    </div>
+    </motion.div>
   );
 }

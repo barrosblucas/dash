@@ -1,74 +1,140 @@
-/* ============================================
-   Theme CSS Variables
-   ============================================ */
-
-:root {
-  /* Light theme — inverted scale:
-     dark-950 = white (main bg), dark-100 = near-black (headings) */
-  --color-dark-50: 2 6 23;
-  --color-dark-100: 15 23 42;
-  --color-dark-200: 30 41 59;
-  --color-dark-300: 51 65 85;
-  --color-dark-400: 100 116 139;
-  --color-dark-500: 148 163 184;
-  --color-dark-600: 203 213 225;
-  --color-dark-700: 226 232 240;
-  --color-dark-800: 241 245 249;
-  --color-dark-850: 255 255 255;
-  --color-dark-900: 248 250 252;
-  --color-dark-950: 255 255 255;
-
-  /* Shadows — softer for light mode */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-
-  /* Chart grid */
-  --chart-grid-color: rgba(203, 213, 225, 0.5);
-}
-
-.dark {
-  /* Dark theme — original values, ZERO visual change */
-  --color-dark-50: 248 250 252;
-  --color-dark-100: 241 245 249;
-  --color-dark-200: 226 232 240;
-  --color-dark-300: 203 213 225;
-  --color-dark-400: 148 163 184;
-  --color-dark-500: 100 116 139;
-  --color-dark-600: 71 85 105;
-  --color-dark-700: 51 65 85;
-  --color-dark-800: 30 41 59;
-  --color-dark-850: 23 32 51;
-  --color-dark-900: 15 23 42;
-  --color-dark-950: 2 6 23;
-
-  /* Shadows — stronger for dark mode */
-  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
-  --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
-
-  /* Chart grid */
-  --chart-grid-color: rgba(51, 65, 85, 0.3);
-}
-
-/* App layout global */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================
+/* ─────────────────────────────────────────────
+   Material Symbols (Google Icons)
+   ───────────────────────────────────────────── */
+@import 'material-symbols/outlined.css';
+@import 'material-symbols/rounded.css';
+
+/* ─────────────────────────────────────────────
+   CSS Custom Properties: Light Theme
+   ───────────────────────────────────────────── */
+
+:root {
+  /* Primary */
+  --color-primary: #00193c;
+  --color-primary-container: #002d62;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #c2d8ff;
+
+  /* Secondary */
+  --color-secondary: #006c47;
+  --color-secondary-container: #8af5be;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #00714b;
+
+  /* Tertiary */
+  --color-tertiary: #c29b00;
+  --color-tertiary-container: #fae285;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #5f4605;
+
+  /* Surface hierarchy — physical paper layers */
+  --color-surface: #f8f9ff;
+  --color-surface-variant: #e2e3eb;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e8ecf5;
+  --color-surface-container-high: #e2e6ef;
+  --color-surface-container-highest: #dcdfe8;
+
+  /* Inverse */
+  --color-inverse-surface: #e2e2e9;
+  --color-inverse-on-surface: #2e3036;
+  --color-inverse-primary: #a1c9ff;
+
+  /* Text */
+  --color-on-surface: #1a1c20;
+  --color-on-surface-variant: #44474f;
+
+  /* Outline */
+  --color-outline: #74777f;
+  --color-outline-variant: #c4c6d1;
+
+  /* Error */
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #410002;
+
+  /* Shadows */
+  --shadow-ambient: 0 4px 32px -4px rgba(0, 25, 60, 0.06);
+  --shadow-ambient-lg: 0 8px 48px -4px rgba(0, 25, 60, 0.08);
+  --shadow-card: 0 2px 16px -2px rgba(0, 25, 60, 0.05);
+  --shadow-card-hover: 0 8px 32px -4px rgba(0, 25, 60, 0.08);
+
+  /* Chart */
+  --chart-grid-color: rgba(196, 198, 209, 0.4);
+}
+
+/* ─────────────────────────────────────────────
+   CSS Custom Properties: Dark Theme
+   ───────────────────────────────────────────── */
+
+.dark {
+  --color-primary: #a1c9ff;
+  --color-primary-container: #002d62;
+  --color-on-primary: #00193c;
+  --color-on-primary-container: #c2d8ff;
+
+  --color-secondary: #6ddaa8;
+  --color-secondary-container: #005235;
+  --color-on-secondary: #003824;
+  --color-on-secondary-container: #8af5be;
+
+  --color-tertiary: #d4c172;
+  --color-tertiary-container: #4a3b00;
+  --color-on-tertiary: #362b00;
+  --color-on-tertiary-container: #fae285;
+
+  --color-surface: #0a0f1a;
+  --color-surface-variant: #1a2235;
+  --color-surface-container-lowest: #070b14;
+  --color-surface-container-low: #0f1522;
+  --color-surface-container: #131a2b;
+  --color-surface-container-high: #1a2235;
+  --color-surface-container-highest: #212a3d;
+
+  --color-inverse-surface: #e2e2e9;
+  --color-inverse-on-surface: #2e3036;
+  --color-inverse-primary: #00193c;
+
+  --color-on-surface: #e2e2e9;
+  --color-on-surface-variant: #8e9099;
+
+  --color-outline: #8e9099;
+  --color-outline-variant: #3d4049;
+
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-on-error: #690005;
+  --color-on-error-container: #ffdad6;
+
+  --shadow-ambient: 0 4px 32px -4px rgba(0, 0, 0, 0.3);
+  --shadow-ambient-lg: 0 8px 48px -4px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 2px 16px -2px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 8px 32px -4px rgba(0, 0, 0, 0.3);
+
+  --chart-grid-color: rgba(61, 64, 73, 0.4);
+}
+
+/* ─────────────────────────────────────────────
    Base Styles
-   ============================================ */
+   ───────────────────────────────────────────── */
 
 @layer base {
   html {
     @apply scroll-smooth;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    @apply bg-dark-950 text-dark-100 antialiased;
+    @apply bg-surface text-on-surface antialiased;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 
-  /* Font smoothing */
   * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -76,170 +142,282 @@
 
   /* Selection */
   ::selection {
-    @apply bg-revenue-accent/30 text-dark-100;
+    @apply bg-secondary/20 text-on-surface;
   }
 
   /* Scrollbar */
   ::-webkit-scrollbar {
-    @apply w-2 h-2;
+    @apply w-1.5 h-1.5;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-dark-900;
+    @apply bg-transparent;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-dark-600 rounded-full;
+    @apply bg-outline-variant rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-dark-500;
+    @apply bg-outline;
+  }
+
+  /* Focus visible */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary/40 ring-offset-2 ring-offset-surface;
+  }
+
+  .dark :focus-visible {
+    @apply ring-offset-surface;
   }
 }
 
-/* ============================================
+/* ─────────────────────────────────────────────
+   Material Symbols Setup
+   ───────────────────────────────────────────── */
+
+.material-symbols-outlined,
+.material-symbols-rounded {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  font-size: 1.25rem;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.material-symbols-rounded {
+  font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+/* ─────────────────────────────────────────────
    Custom Components
-   ============================================ */
+   ───────────────────────────────────────────── */
 
 @layer components {
-  /* Glass card effect */
+  /* Glass Card */
   .glass-card {
-    @apply bg-gradient-to-br from-dark-800/80 to-dark-900/90 
-           backdrop-blur-md border border-dark-700/50 
-           rounded-2xl shadow-card;
+    @apply bg-surface-container-lowest/80 backdrop-blur-xl rounded-2xl;
+    box-shadow: var(--shadow-card);
   }
 
-  /* Glow effects */
-  .glow-green {
-    @apply shadow-glow-green;
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
   }
 
-  .glow-orange {
-    @apply shadow-glow-orange;
+  .glass-card-hover:hover {
+    box-shadow: var(--shadow-card-hover);
+    @apply bg-surface-container-lowest;
   }
 
-  .glow-blue {
-    @apply shadow-glow-blue;
+  /* Surface Card — no border, tonal layering only */
+  .surface-card {
+    @apply bg-surface-container-low rounded-2xl;
+    box-shadow: var(--shadow-card);
   }
 
-  /* Animated gradient background */
-  .gradient-animate {
-    background-size: 200% 200%;
-    animation: gradient 3s ease infinite;
+  .surface-card-hover {
+    @apply surface-card transition-all duration-300;
   }
 
-  @keyframes gradient {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
+  .surface-card-hover:hover {
+    box-shadow: var(--shadow-card-hover);
+    @apply bg-surface-container;
   }
 
-  /* Shimmer loading effect */
-  .shimmer {
-    @apply relative overflow-hidden;
+  /* Elevated Card */
+  .elevated-card {
+    @apply bg-surface-container-lowest rounded-2xl;
+    box-shadow: var(--shadow-ambient);
   }
 
-  .shimmer::after {
-    content: '';
-    @apply absolute inset-0 -translate-x-full;
-    animation: shimmer 2s infinite;
+  .elevated-card-hover {
+    @apply elevated-card transition-all duration-300;
   }
 
-  @keyframes shimmer {
-    100% {
-      transform: translateX(100%);
-    }
+  .elevated-card-hover:hover {
+    box-shadow: var(--shadow-ambient-lg);
   }
 
-  /* Light mode shimmer uses dark sweep */
-  :root .shimmer::after {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(0, 0, 0, 0.03),
-      transparent
-    );
+  /* Glassmorphism for floating elements */
+  .glass-float {
+    @apply bg-surface/80 backdrop-blur-2xl;
+    box-shadow: var(--shadow-ambient);
   }
 
-  /* Dark mode shimmer uses light sweep */
-  .dark .shimmer::after {
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.05),
-      transparent
-    );
+  /* Primary filled button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
+           bg-primary text-on-primary font-medium text-sm
+           transition-all duration-200;
   }
 
-  /* KPI Card */
+  .btn-primary:hover {
+    @apply bg-primary-container;
+    box-shadow: var(--shadow-ambient);
+  }
+
+  .btn-primary:active {
+    @apply scale-[0.98];
+  }
+
+  /* Secondary filled button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
+           bg-secondary text-on-secondary font-medium text-sm
+           transition-all duration-200;
+  }
+
+  .btn-secondary:hover {
+    @apply bg-secondary-700;
+    box-shadow: 0 4px 20px -2px rgba(0, 108, 71, 0.25);
+  }
+
+  .btn-secondary:active {
+    @apply scale-[0.98];
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+           text-on-surface-variant font-medium text-sm
+           hover:bg-surface-container-high
+           transition-all duration-200;
+  }
+
+  /* Outline button (ghost border only) */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg
+           border border-outline-variant/30
+           text-on-surface font-medium text-sm
+           hover:bg-surface-container-high hover:border-outline-variant/50
+           transition-all duration-200;
+  }
+
+  /* Input field — minimalist, bottom accent only */
+  .input-field {
+    @apply w-full bg-surface-container-highest rounded-t-lg rounded-b-none
+           px-4 py-3 text-sm text-on-surface
+           border-b-2 border-outline-variant
+           placeholder:text-on-surface-variant/50
+           focus:border-primary focus:outline-none
+           transition-colors duration-200;
+  }
+
+  .dark .input-field {
+    @apply bg-surface-container-high;
+  }
+
+  /* Select field */
+  .select-field {
+    @apply w-full bg-surface-container-low rounded-lg
+           px-4 py-2.5 text-sm text-on-surface
+           border-0
+           focus:ring-2 focus:ring-primary/20 focus:outline-none
+           transition-all duration-200;
+  }
+
+  /* KPI Card — monumental */
   .kpi-card {
-    @apply glass-card p-6 transition-all duration-300;
+    @apply elevated-card p-6 transition-all duration-300;
   }
 
   .kpi-card:hover {
-    @apply shadow-card-hover border-dark-600;
+    box-shadow: var(--shadow-ambient-lg);
+  }
+
+  .kpi-value {
+    @apply text-display-sm font-display text-on-surface tracking-tight;
+  }
+
+  .kpi-label {
+    @apply text-label-md text-on-surface-variant uppercase tracking-wider;
+  }
+
+  /* Metric card (smaller than KPI) */
+  .metric-card {
+    @apply surface-card p-5;
+  }
+
+  .metric-value {
+    @apply text-headline-sm font-display text-on-surface;
+  }
+
+  .metric-label {
+    @apply text-label-md text-on-surface-variant;
   }
 
   /* Chart container */
   .chart-container {
-    @apply glass-card p-4 relative;
-    min-height: 300px;
+    @apply surface-card p-5;
+    min-height: 320px;
   }
 
-  /* Metric value */
-  .metric-value {
-    @apply text-3xl md:text-4xl font-bold font-display tracking-tight;
+  /* Table — no lines */
+  .data-table {
+    @apply w-full text-sm;
   }
 
-  /* Metric label */
-  .metric-label {
-    @apply text-sm text-dark-400 font-medium;
+  .data-table thead {
+    @apply text-label-md text-on-surface-variant uppercase tracking-wider;
   }
 
-  /* Badge */
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  .data-table tbody tr {
+    @apply transition-colors duration-150;
   }
 
-  .badge-success {
-    @apply bg-revenue-500/20 text-revenue-accent;
+  .data-table tbody tr:nth-child(even) {
+    @apply bg-surface-container-low/50;
   }
 
-  .badge-warning {
-    @apply bg-expense-500/20 text-expense-500;
+  .data-table tbody tr:hover {
+    @apply bg-surface-container;
   }
 
-  .badge-danger {
-    @apply bg-red-500/20 text-red-400;
+  /* Badge / Chip */
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-md font-medium;
   }
 
-  .badge-info {
-    @apply bg-forecast-500/20 text-forecast-accent;
+  .chip-primary {
+    @apply chip bg-primary-container/20 text-primary;
   }
 
-  /* Tooltip */
-  .tooltip {
-    @apply absolute z-50 px-3 py-2 text-sm bg-dark-850 border border-dark-700 
-           rounded-lg shadow-lg opacity-0 invisible transition-all duration-200;
+  .chip-secondary {
+    @apply chip bg-secondary-container/30 text-on-secondary-container;
   }
 
-  .tooltip-active {
-    @apply opacity-100 visible;
+  .chip-tertiary {
+    @apply chip bg-tertiary-container/30 text-on-tertiary-container;
   }
-}
 
-/* ============================================
-   Utilities
-   ============================================ */
+  .chip-error {
+    @apply chip bg-error-container/30 text-error;
+  }
 
-@layer utilities {
-  /* Hide scrollbar */
+  /* Section divider — no line, just space */
+  .section-spacer {
+    @apply py-16 md:py-24;
+  }
+
+  /* Hero gradient signature texture */
+  .hero-gradient {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-container) 100%);
+  }
+
+  /* Text gradient */
+  .text-gradient-primary {
+    @apply text-transparent bg-clip-text;
+    background-image: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  }
+
+  /* No-scrollbar utility */
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -248,90 +426,14 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
-
-  /* Gradient text */
-  .text-gradient-green {
-    @apply text-transparent bg-clip-text bg-gradient-to-r from-revenue-400 to-revenue-accent;
-  }
-
-  .text-gradient-orange {
-    @apply text-transparent bg-clip-text bg-gradient-to-r from-expense-400 to-expense-accent;
-  }
-
-  .text-gradient-blue {
-    @apply text-transparent bg-clip-text bg-gradient-to-r from-forecast-400 to-forecast-accent;
-  }
-
-  /* Chart lines animation */
-  .chart-line-draw {
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 1000;
-    animation: draw 2s ease-out forwards;
-  }
-
-  @keyframes draw {
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
-
-  /* Pulse animation for data loading */
-  .pulse-data {
-    animation: pulse-data 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse-data {
-    0%,
-    100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.6;
-    }
-  }
-
-  /* Fade in animations */
-  .fade-in {
-    animation: fadeIn 0.5s ease-out;
-  }
-
-  .fade-in-up {
-    animation: fadeInUp 0.5s ease-out;
-  }
-
-  .fade-in-down {
-    animation: fadeInDown 0.5s ease-out;
-  }
-
-  /* Stagger children animation */
-  .stagger-children > * {
-    opacity: 0;
-    animation: fadeInUp 0.5s ease-out forwards;
-  }
-
-  .stagger-children > *:nth-child(1) {
-    animation-delay: 0s;
-  }
-  .stagger-children > *:nth-child(2) {
-    animation-delay: 0.1s;
-  }
-  .stagger-children > *:nth-child(3) {
-    animation-delay: 0.2s;
-  }
-  .stagger-children > *:nth-child(4) {
-    animation-delay: 0.3s;
-  }
-  .stagger-children > *:nth-child(n + 5) {
-    animation-delay: 0.4s;
-  }
 }
 
-/* ============================================
+/* ─────────────────────────────────────────────
    Recharts Custom Styles
-   ============================================ */
+   ───────────────────────────────────────────── */
 
 .recharts-wrapper {
-  @apply font-sans;
+  @apply font-body;
 }
 
 .recharts-cartesian-grid-horizontal line,
@@ -344,57 +446,81 @@
 }
 
 .custom-tooltip {
-  @apply bg-dark-850 border border-dark-700 rounded-lg p-3 shadow-lg;
+  @apply bg-surface-container-highest backdrop-blur-xl rounded-xl p-4;
+  box-shadow: var(--shadow-ambient-lg);
 }
 
 .recharts-legend-wrapper {
-  @apply text-dark-400;
+  @apply text-on-surface-variant;
 }
 
-/* ============================================
-   D3 Custom Styles  
-   ============================================ */
+/* ─────────────────────────────────────────────
+   Animations & Utilities
+   ───────────────────────────────────────────── */
 
-.sankey-node rect {
-  @apply cursor-pointer transition-opacity duration-200;
+@layer utilities {
+  /* Stagger children */
+  .stagger-children > * {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+
+  .stagger-children > *:nth-child(1) { animation-delay: 0s; }
+  .stagger-children > *:nth-child(2) { animation-delay: 0.08s; }
+  .stagger-children > *:nth-child(3) { animation-delay: 0.16s; }
+  .stagger-children > *:nth-child(4) { animation-delay: 0.24s; }
+  .stagger-children > *:nth-child(5) { animation-delay: 0.32s; }
+  .stagger-children > *:nth-child(6) { animation-delay: 0.40s; }
+  .stagger-children > *:nth-child(n + 7) { animation-delay: 0.48s; }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply text-transparent bg-clip-text;
+    background-image: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  }
+
+  /* Loading shimmer */
+  .shimmer {
+    @apply relative overflow-hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full;
+    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, transparent, rgba(0, 25, 60, 0.04), transparent);
+  }
+
+  .dark .shimmer::after {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+  }
 }
 
-.sankey-node rect:hover {
-  opacity: 0.9;
-}
-
-.sankey-link {
-  @apply fill-none transition-opacity duration-200;
-}
-
-.sankey-link:hover {
-  opacity: 0.8;
-}
-
-/* ============================================
-   Responsive Charts
-   ============================================ */
+/* ─────────────────────────────────────────────
+   Responsive
+   ───────────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .chart-container {
-    min-height: 250px;
+    min-height: 260px;
+  }
+
+  .kpi-value {
+    @apply text-headline-lg;
   }
 
   .metric-value {
-    @apply text-2xl;
+    @apply text-title-lg;
   }
 }
 
 @media (max-width: 640px) {
   .chart-container {
-    min-height: 200px;
+    min-height: 220px;
   }
 
-  .metric-value {
-    @apply text-xl;
-  }
-
-  .kpi-card {
+  .kpi-card,
+  .metric-card {
     @apply p-4;
   }
 }

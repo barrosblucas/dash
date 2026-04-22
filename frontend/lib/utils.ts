@@ -3,6 +3,9 @@
  * Dashboard Financeiro - Bandeirantes MS
  */
 
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
 import { FORMATOS } from './constants';
 
 /**
@@ -323,4 +326,14 @@ export function sumBy<T>(array: T[], key: keyof T): number {
 export function averageBy<T>(array: T[], key: keyof T): number {
   if (array.length === 0) return 0;
   return sumBy(array, key) / array.length;
+}
+
+/* ── Tailwind class merger ── */
+
+/**
+ * Combina classes do Tailwind de forma inteligente,
+ * resolvendo conflitos (ex: padding, margin) via tailwind-merge.
+ */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }

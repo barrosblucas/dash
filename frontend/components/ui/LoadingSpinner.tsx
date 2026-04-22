@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import Icon from './Icon';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -6,10 +6,10 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-const sizeClasses = {
-  sm: 'w-4 h-4',
-  md: 'w-8 h-8',
-  lg: 'w-12 h-12',
+const sizeMap = {
+  sm: { icon: 20, text: 'text-label-md' },
+  md: { icon: 28, text: 'text-body-sm' },
+  lg: { icon: 40, text: 'text-body-md' },
 };
 
 export default function LoadingSpinner({
@@ -17,11 +17,17 @@ export default function LoadingSpinner({
   message,
   className = '',
 }: LoadingSpinnerProps) {
+  const { icon, text } = sizeMap[size];
+
   return (
-    <div className={`flex flex-col items-center justify-center gap-4 ${className}`}>
-      <Loader2 className={`${sizeClasses[size]} animate-spin text-revenue-accent`} />
+    <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
+      <span className="animate-spin-slow">
+        <Icon name="progress_activity" size={icon} className="text-secondary" />
+      </span>
       {message && (
-        <p className="text-sm text-dark-400 animate-pulse">{message}</p>
+        <p className={`${text} text-on-surface-variant animate-pulse-soft`}>
+          {message}
+        </p>
       )}
     </div>
   );

@@ -1,8 +1,10 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ComposedChart, Bar, Area } from 'recharts';
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ComposedChart, Bar } from 'recharts';
+import { motion } from 'framer-motion';
 
+import Icon from '@/components/ui/Icon';
 import { formatCurrency } from '@/lib/utils';
 import { COLORS, CHART_CONFIG, PERIODO_DADOS } from '@/lib/constants';
 import apiClient from '@/services/api';
@@ -52,7 +54,7 @@ interface ComparativeSectionProps {
 }
 
 export default function ComparativeSection({
-  height = 300,
+  height = 320,
   className = '',
 }: ComparativeSectionProps) {
   const { periodoPersonalizado, anoInicio, anoFim, anoSelecionado } = useDashboardFilters();
@@ -66,19 +68,19 @@ export default function ComparativeSection({
   const { data: kpisResponse, isLoading, error } = useQuery({
     queryKey: ['kpis', 'anual', 'comparativo', periodoInicio, periodoFim],
     queryFn: () => fetchYearlyKPIs(periodoInicio, periodoFim),
-    staleTime: 10 * 60 * 1000, // 10 minutos
-    gcTime: 30 * 60 * 1000, // 30 minutos
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   if (isLoading) {
     return (
       <div className={`chart-container ${className}`}>
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-dark-100">Comparativo</h3>
-          <p className="text-sm text-dark-400">Carregando dados...</p>
+        <div className="mb-5">
+          <h3 className="text-title-lg font-display font-semibold text-on-surface">Comparativo</h3>
+          <p className="text-body-sm text-on-surface-variant mt-1">Carregando dados...</p>
         </div>
         <div className="animate-pulse" style={{ height }}>
-          <div className="w-full h-full bg-dark-800/50 rounded"></div>
+          <div className="w-full h-full bg-surface-container-high/50 rounded-2xl"></div>
         </div>
       </div>
     );
@@ -87,9 +89,9 @@ export default function ComparativeSection({
   if (error || !kpisResponse?.kpis_anuais) {
     return (
       <div className={`chart-container ${className}`}>
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-dark-100">Comparativo</h3>
-          <p className="text-sm text-red-400">Erro ao carregar dados</p>
+        <div className="mb-5">
+          <h3 className="text-title-lg font-display font-semibold text-on-surface">Comparativo</h3>
+          <p className="text-body-sm text-error mt-1">Erro ao carregar dados</p>
         </div>
       </div>
     );
@@ -109,32 +111,44 @@ export default function ComparativeSection({
   const totalReceitas = chartData.reduce((sum, item) => sum + item.receitas, 0);
   const totalDespesas = chartData.reduce((sum, item) => sum + item.despesas, 0);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      payload: {
+        receitas: number;
+        despesas: number;
+        saldo: number;
+      };
+    }>;
+    label?: string;
+  }
+
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (!active || !payload || !payload.length) return null;
 
     const yearData = payload[0].payload;
 
     return (
-      <div className="custom-tooltip bg-dark-850 border border-dark-700 rounded-lg p-4 shadow-lg min-w-[200px]">
-        <p className="text-sm font-semibold text-dark-100 mb-2">{label}</p>
-        <div className="space-y-1.5">
+      <div className="custom-tooltip bg-surface-container-highest backdrop-blur-xl rounded-xl p-4 shadow-ambient-lg min-w-[200px]">
+        <p className="text-sm font-semibold text-on-surface mb-3">{label}</p>
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-dark-400">Receitas:</span>
-            <span className="text-sm font-medium text-revenue-accent">
+            <span className="text-xs text-on-surface-variant">Receitas:</span>
+            <span className="text-sm font-semibold text-revenue-accent">
               {formatCurrency(yearData.receitas)}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-dark-400">Despesas:</span>
-            <span className="text-sm font-medium text-expense-DEFAULT">
+            <span className="text-xs text-on-surface-variant">Despesas:</span>
+            <span className="text-sm font-semibold text-expense-accent">
               {formatCurrency(yearData.despesas)}
             </span>
           </div>
-          <div className="flex items-center justify-between pt-1.5 border-t border-dark-700">
-            <span className="text-xs text-dark-400">
+          <div className="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+            <span className="text-xs text-on-surface-variant">
               {yearData.saldo >= 0 ? 'Superávit:' : 'Déficit:'}
             </span>
-            <span className={`text-sm font-semibold ${yearData.saldo >= 0 ? 'text-revenue-accent' : 'text-expense-accent'}`}>
+            <span className={`text-sm font-bold ${yearData.saldo >= 0 ? 'text-revenue-accent' : 'text-expense-accent'}`}>
               {formatCurrency(Math.abs(yearData.saldo))}
             </span>
           </div>
@@ -144,11 +158,19 @@ export default function ComparativeSection({
   };
 
   return (
-    <div className={`chart-container ${className}`}>
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-dark-100">Comparativo Anual</h3>
-        <p className="text-sm text-dark-400">
-          Evolução histórica ({periodoInicio}-{periodoFim})
+    <motion.div
+      className={`chart-container ${className}`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+    >
+      <div className="mb-5">
+        <h3 className="text-title-lg font-display font-semibold text-on-surface flex items-center gap-2">
+          <Icon name="bar_chart" size={22} className="text-primary" />
+          Comparativo Anual
+        </h3>
+        <p className="text-body-sm text-on-surface-variant mt-1">
+          Evolução histórica ({periodoInicio}–{periodoFim})
         </p>
       </div>
 
@@ -185,7 +207,7 @@ export default function ComparativeSection({
             iconType="circle"
             iconSize={8}
             formatter={(value) => (
-              <span className="text-xs text-dark-300">{value}</span>
+              <span className="text-xs text-on-surface-variant">{value}</span>
             )}
           />
 
@@ -212,7 +234,7 @@ export default function ComparativeSection({
             type="monotone"
             dataKey="saldo"
             stroke={COLORS.forecast.chart.primary}
-            strokeWidth={2}
+            strokeWidth={2.5}
             dot={{ fill: COLORS.forecast.chart.primary, strokeWidth: 2, r: 4 }}
             activeDot={{ r: 6, strokeWidth: 2 }}
             animationDuration={CHART_CONFIG.animation.duration}
@@ -220,20 +242,20 @@ export default function ComparativeSection({
         </ComposedChart>
       </ResponsiveContainer>
 
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div className="glass-card p-3">
-          <p className="text-xs text-dark-400 mb-1">Total Receitas</p>
-          <p className="text-lg font-bold text-revenue-accent">
+      <div className="mt-5 grid grid-cols-2 gap-4">
+        <div className="surface-card p-4 rounded-xl">
+          <p className="text-label-md text-on-surface-variant mb-1">Total Receitas</p>
+          <p className="text-headline-sm font-display font-bold text-revenue-accent">
             {formatCurrency(totalReceitas, { compact: true })}
           </p>
         </div>
-        <div className="glass-card p-3">
-          <p className="text-xs text-dark-400 mb-1">Total Despesas</p>
-          <p className="text-lg font-bold text-expense-DEFAULT">
+        <div className="surface-card p-4 rounded-xl">
+          <p className="text-label-md text-on-surface-variant mb-1">Total Despesas</p>
+          <p className="text-headline-sm font-display font-bold text-expense-accent">
             {formatCurrency(totalDespesas, { compact: true })}
           </p>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

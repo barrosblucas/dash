@@ -1,6 +1,6 @@
 /**
  * Store global para gerenciamento de tema (light/dark)
- * Persiste preferência no localStorage e sincroniza com <html> class.
+ * Persiste preferencia no localStorage e sincroniza com <html> class.
  */
 
 import { create } from 'zustand';
@@ -50,26 +50,20 @@ export const useThemeStore = create<ThemeState & ThemeActions>()(
 );
 
 /**
- * Cores adaptáveis ao tema para uso em SVG inline (Recharts).
- * Necessário porque SVG stroke/fill não herdam CSS custom properties.
+ * Cores adaptaveis ao tema para uso em SVG inline (Recharts).
+ * Necessario porque SVG stroke/fill nao herdam CSS custom properties.
  */
 export function useChartThemeColors() {
   const theme = useThemeStore((s) => s.theme);
-
   const isDark = theme === 'dark';
 
   return {
-    /** Cor de texto suave para ticks de eixos */
-    textMuted: isDark ? '#94a3b8' : '#64748b',
-    /** Cor de borda para grid de gráficos */
-    borderDefault: isDark ? '#334155' : '#e2e8f0',
-    /** Background de tooltip */
-    tooltipBg: isDark ? 'rgba(23, 32, 51, 0.95)' : 'rgba(255, 255, 255, 0.98)',
-    /** Borda de tooltip */
-    tooltipBorder: isDark ? '#334155' : '#e2e8f0',
-    /** Cor de label de legenda Recharts */
-    legendText: isDark ? '#94a3b8' : '#64748b',
-    /** Cor de texto de label de PieChart */
-    pieLabel: isDark ? '#94a3b8' : '#475569',
+    textMuted: isDark ? '#8e9099' : '#44474f',
+    borderDefault: isDark ? '#3d4049' : '#c4c6d1',
+    tooltipBg: isDark ? 'rgba(18, 24, 40, 0.96)' : 'rgba(255, 255, 255, 0.98)',
+    tooltipBorder: isDark ? '#3d4049' : '#e2e3eb',
+    legendText: isDark ? '#8e9099' : '#44474f',
+    pieLabel: isDark ? '#8e9099' : '#44474f',
+    gridColor: isDark ? 'rgba(61, 64, 73, 0.3)' : 'rgba(196, 198, 209, 0.4)',
   };
 }

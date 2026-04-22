@@ -4,22 +4,22 @@
 
 export function StatusBadge({ status }: { status: string }) {
   const startsWith = status.startsWith('AGUARDANDO');
-  let classes = 'bg-dark-700/60 text-dark-400';
+  let classes = 'chip-secondary';
   let label = status;
 
   if (startsWith) {
-    classes = 'bg-green-500/15 text-green-400';
+    classes = 'chip-secondary';
     label = 'Aguardando';
   } else if (status === 'ENCERRADO') {
-    classes = 'bg-dark-700/60 text-dark-400';
+    classes = 'chip';
     label = 'Encerrado';
   } else if (status === 'SUSPENSO') {
-    classes = 'bg-orange-500/15 text-orange-400';
+    classes = 'chip-error';
     label = 'Suspenso';
   }
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${classes}`}>
+    <span className={`${classes} text-xs`}>
       {label}
     </span>
   );

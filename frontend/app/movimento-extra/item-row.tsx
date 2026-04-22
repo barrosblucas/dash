@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { HelpCircle } from 'lucide-react';
 
+import Icon from '@/components/ui/Icon';
 import { formatCurrency } from '@/lib/utils';
 import type { MovimentoExtraItem } from '@/types/movimento-extra';
 
@@ -16,7 +16,7 @@ export function ItemRow({ item }: { item: MovimentoExtraItem }) {
   const [showTip, setShowTip] = useState(false);
 
   return (
-    <div className="rounded-xl border border-dark-700/40 bg-dark-800/30 p-4 hover:border-dark-600/50 transition-colors">
+    <div className="surface-card p-4 hover:shadow-card-hover transition-all duration-200">
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <div
@@ -24,34 +24,34 @@ export function ItemRow({ item }: { item: MovimentoExtraItem }) {
             style={{ backgroundColor: glossary.cor }}
           />
           <div className="relative min-w-0">
-            <p className="text-sm font-medium text-dark-200 truncate pr-6">
+            <p className="text-sm font-medium text-on-surface truncate pr-6">
               {item.descricao}
             </p>
             <button
               onClick={() => setShowTip(!showTip)}
-              className="absolute right-0 top-0 text-dark-600 hover:text-dark-400 transition-colors"
+              className="absolute right-0 top-0 text-outline hover:text-on-surface-variant transition-colors"
               aria-label="Glossário"
             >
-              <HelpCircle className="w-3.5 h-3.5" />
+              <Icon name="help" size={16} />
             </button>
             {showTip && (
-              <div className="absolute left-0 top-6 z-10 w-64 rounded-lg border border-dark-700/60 bg-dark-900 p-3 shadow-xl">
-                <p className="text-xs text-dark-300">{glossary.descricao}</p>
+              <div className="absolute left-0 top-6 z-10 w-64 rounded-xl bg-surface-container-highest p-3 shadow-ambient-lg">
+                <p className="text-xs text-on-surface-variant">{glossary.descricao}</p>
               </div>
             )}
           </div>
         </div>
         <TipoBadge tipo={item.tipo} />
       </div>
-      <p className="text-xs text-dark-500 mb-2 truncate">{item.fornecedor}</p>
+      <p className="text-xs text-on-surface-variant mb-2 truncate">{item.fornecedor}</p>
       <div className="flex items-center justify-between">
-        <span className="text-xs text-dark-600">
+        <span className="text-xs text-outline">
           Entidade {item.ent_codigo} · Mês {item.mes}
         </span>
         <span
           className={`
             text-base font-bold
-            ${item.tipo === 'R' ? 'text-green-400' : 'text-orange-400'}
+            ${item.tipo === 'R' ? 'text-secondary' : 'text-error'}
           `}
         >
           {formatCurrency(item.valor_recebido)}
@@ -67,25 +67,25 @@ export function ItemTableRow({ item }: { item: MovimentoExtraItem }) {
   const glossary = getGlossary(glossaryKey);
 
   return (
-    <tr className="border-b border-dark-700/30 hover:bg-dark-800/40 transition-colors">
+    <tr className="hover:bg-surface-container transition-colors">
       <td className="py-3 px-4">
         <div className="flex items-center gap-2">
           <div
             className="w-2 h-2 rounded-full shrink-0"
             style={{ backgroundColor: glossary.cor }}
           />
-          <span className="text-sm text-dark-200">{item.descricao}</span>
+          <span className="text-sm text-on-surface">{item.descricao}</span>
         </div>
       </td>
       <td className="py-3 px-4">
-        <span className="text-sm text-dark-400 max-w-[200px] truncate block">{item.fornecedor}</span>
+        <span className="text-sm text-on-surface-variant max-w-[200px] truncate block">{item.fornecedor}</span>
       </td>
       <td className="py-3 px-4">
         <TipoBadge tipo={item.tipo} />
       </td>
       <td className="py-3 px-4 text-right">
         <span
-          className={`text-sm font-semibold ${item.tipo === 'R' ? 'text-green-400' : 'text-orange-400'}`}
+          className={`text-sm font-semibold ${item.tipo === 'R' ? 'text-secondary' : 'text-error'}`}
         >
           {formatCurrency(item.valor_recebido)}
         </span>

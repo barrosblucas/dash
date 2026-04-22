@@ -1,19 +1,8 @@
 'use client';
 
-import {
-  Search,
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Lightbulb,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-  Trophy,
-  Eye,
-  AlertTriangle,
-} from 'lucide-react';
+import { motion } from 'framer-motion';
 
+import Icon from '@/components/ui/Icon';
 import { COLORS } from '@/lib/constants';
 import { GLOSSARIO_FUNDOS } from '@/types/movimento-extra';
 import type { MovimentoExtraResponse, MovimentoTipo } from '@/types/movimento-extra';
@@ -58,44 +47,53 @@ export function MensalView({
   return (
     <>
       {/* ─── KPI Cards ─── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+      >
         <KpiCard
           label="Total Receitas"
           value={data.total_receitas}
           count={data.items.filter((i) => i.tipo === 'R').length}
-          icon={TrendingUp}
+          iconName="trending_up"
           accentColor={COLORS.revenue.DEFAULT}
         />
         <KpiCard
           label="Total Despesas"
           value={data.total_despesas}
           count={data.items.filter((i) => i.tipo === 'D').length}
-          icon={TrendingDown}
+          iconName="trending_down"
           accentColor={COLORS.expense.DEFAULT}
         />
         <KpiCard
           label="Saldo"
           value={data.saldo}
           count={data.quantidade}
-          icon={data.saldo >= 0 ? BarChart3 : AlertTriangle}
+          iconName={data.saldo >= 0 ? 'bar_chart' : 'warning'}
           accentColor={data.saldo >= 0 ? COLORS.forecast.DEFAULT : COLORS.expense.DEFAULT}
         />
-      </div>
+      </motion.div>
 
       {/* ─── Insight Cards do Mês ─── */}
       {(data.insights_receitas?.length > 0 || data.insights_despesas?.length > 0) && (
-        <section>
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
           <div className="flex items-center gap-2 mb-4">
-            <Trophy className="w-4 h-4 text-dark-500" />
-            <h2 className="text-lg font-semibold text-dark-200">Destaques do Mês</h2>
+            <Icon name="emoji_events" size={18} className="text-on-surface-variant" />
+            <h2 className="text-headline-sm font-display text-on-surface">Destaques do Mês</h2>
           </div>
 
           {/* Só Receitas — cards em linha horizontal */}
           {tipo === 'R' && data.insights_receitas?.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <TrendingUp className="w-4 h-4 text-green-400" />
-                <h3 className="text-sm font-semibold text-green-400">Top Receitas</h3>
+                <Icon name="trending_up" size={18} className="text-secondary" />
+                <h3 className="text-sm font-semibold text-secondary">Top Receitas</h3>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {data.insights_receitas.map((insight, i) => (
@@ -109,8 +107,8 @@ export function MensalView({
           {tipo === 'D' && data.insights_despesas?.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <TrendingDown className="w-4 h-4 text-orange-400" />
-                <h3 className="text-sm font-semibold text-orange-400">Top Despesas</h3>
+                <Icon name="trending_down" size={18} className="text-error" />
+                <h3 className="text-sm font-semibold text-error">Top Despesas</h3>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {data.insights_despesas.map((insight, i) => (
@@ -126,8 +124,8 @@ export function MensalView({
               {data.insights_receitas?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp className="w-4 h-4 text-green-400" />
-                    <h3 className="text-sm font-semibold text-green-400">Top Receitas</h3>
+                    <Icon name="trending_up" size={18} className="text-secondary" />
+                    <h3 className="text-sm font-semibold text-secondary">Top Receitas</h3>
                   </div>
                   <div className="space-y-3">
                     {data.insights_receitas.map((insight, i) => (
@@ -139,8 +137,8 @@ export function MensalView({
               {data.insights_despesas?.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <TrendingDown className="w-4 h-4 text-orange-400" />
-                    <h3 className="text-sm font-semibold text-orange-400">Top Despesas</h3>
+                    <Icon name="trending_down" size={18} className="text-error" />
+                    <h3 className="text-sm font-semibold text-error">Top Despesas</h3>
                   </div>
                   <div className="space-y-3">
                     {data.insights_despesas.map((insight, i) => (
@@ -151,36 +149,45 @@ export function MensalView({
               )}
             </div>
           )}
-        </section>
+        </motion.section>
       )}
 
       {/* ─── Insight Banner ─── */}
       {insights.length > 0 && (
-        <div className="rounded-xl border border-forecast-500/20 bg-forecast-500/5 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className="surface-card p-4 bg-tertiary/5"
+        >
           <div className="flex items-start gap-3">
-            <Lightbulb className="w-5 h-5 text-forecast-400 shrink-0 mt-0.5" />
+            <Icon name="lightbulb" size={20} className="text-tertiary shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-sm font-semibold text-forecast-300 mb-1.5">
+              <h3 className="text-sm font-semibold text-tertiary mb-1.5">
                 Observações do período
               </h3>
               <ul className="space-y-1">
                 {insights.map((insight, i) => (
-                  <li key={i} className="text-sm text-dark-300">
+                  <li key={i} className="text-sm text-on-surface-variant">
                     • {insight}
                   </li>
                 ))}
               </ul>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* ─── Fund Summary Cards ─── */}
       {data.fundos_resumo.length > 0 && (
-        <section>
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
           <div className="flex items-center gap-2 mb-4">
-            <Eye className="w-4 h-4 text-dark-500" />
-            <h2 className="text-lg font-semibold text-dark-200">Resumo por Fundo</h2>
+            <Icon name="visibility" size={18} className="text-on-surface-variant" />
+            <h2 className="text-headline-sm font-display text-on-surface">Resumo por Fundo</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {data.fundos_resumo.map((fundo) => (
@@ -192,32 +199,36 @@ export function MensalView({
               />
             ))}
           </div>
-        </section>
+        </motion.section>
       )}
 
       {/* ─── Items Table/List ─── */}
-      <section>
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.25 }}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-          <h2 className="text-lg font-semibold text-dark-200">
+          <h2 className="text-headline-sm font-display text-on-surface">
             Itens ({filteredItems.length})
           </h2>
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-500" />
+            <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
             <input
               type="text"
               placeholder="Buscar por descrição ou fornecedor..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-72 bg-dark-800 border border-dark-700 rounded-lg pl-10 pr-4 py-2 text-sm text-dark-200 placeholder:text-dark-600 focus:outline-none focus:ring-1 focus:ring-forecast-500/50"
+              className="input-field w-full sm:w-72 rounded-lg pl-10"
             />
           </div>
         </div>
 
         {/* Sort controls */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-xs text-dark-500">Ordenar por:</span>
+          <span className="text-xs text-on-surface-variant/50">Ordenar por:</span>
           {(
             [
               ['descricao', 'Descrição'],
@@ -232,8 +243,8 @@ export function MensalView({
                 px-2.5 py-1 rounded-md text-xs font-medium transition-colors
                 ${
                   sortField === field
-                    ? 'bg-dark-700 text-dark-200'
-                    : 'text-dark-500 hover:text-dark-400'
+                    ? 'bg-surface-container-high text-on-surface'
+                    : 'text-on-surface-variant hover:text-on-surface'
                 }
               `}
             >
@@ -248,9 +259,9 @@ export function MensalView({
         {/* Empty state */}
         {filteredItems.length === 0 && (
           <div className="text-center py-12">
-            <BarChart3 className="w-10 h-10 text-dark-600 mx-auto mb-3" />
-            <p className="text-dark-400 font-medium mb-1">Nenhum item encontrado</p>
-            <p className="text-sm text-dark-500">
+            <Icon name="bar_chart" size={40} className="text-outline mx-auto mb-3" />
+            <p className="text-on-surface-variant font-medium mb-1">Nenhum item encontrado</p>
+            <p className="text-sm text-on-surface-variant/60">
               {searchTerm
                 ? 'Tente ajustar o termo de busca.'
                 : 'Nenhuma movimentação registrada para este período.'}
@@ -267,22 +278,14 @@ export function MensalView({
 
         {/* Desktop: Table */}
         {filteredItems.length > 0 && (
-          <div className="hidden lg:block rounded-xl border border-dark-700/50 bg-dark-800/30 overflow-hidden">
-            <table className="w-full">
+          <div className="hidden lg:block surface-card overflow-hidden">
+            <table className="data-table">
               <thead>
-                <tr className="border-b border-dark-700/50 bg-dark-800/60">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-dark-400 uppercase tracking-wider">
-                    Descrição
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-dark-400 uppercase tracking-wider">
-                    Fornecedor
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-dark-400 uppercase tracking-wider">
-                    Tipo
-                  </th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-dark-400 uppercase tracking-wider">
-                    Valor
-                  </th>
+                <tr>
+                  <th className="text-left py-3 px-4">Descrição</th>
+                  <th className="text-left py-3 px-4">Fornecedor</th>
+                  <th className="text-left py-3 px-4">Tipo</th>
+                  <th className="text-right py-3 px-4">Valor</th>
                 </tr>
               </thead>
               <tbody>
@@ -293,21 +296,22 @@ export function MensalView({
             </table>
           </div>
         )}
-      </section>
+      </motion.section>
 
       {/* ─── Glossary (collapsible) ─── */}
-      <section className="pt-4">
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+        className="pt-4"
+      >
         <button
           onClick={() => setShowGlossary(!showGlossary)}
-          className="flex items-center gap-2 text-sm font-medium text-dark-300 hover:text-dark-200 transition-colors"
+          className="flex items-center gap-2 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors"
         >
-          <BookOpen className="w-4 h-4" />
+          <Icon name="menu_book" size={18} />
           <span>Glossário — O que cada termo significa?</span>
-          {showGlossary ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
+          <Icon name={showGlossary ? 'expand_less' : 'expand_more'} size={18} />
         </button>
 
         {showGlossary && (
@@ -315,19 +319,19 @@ export function MensalView({
             {Object.entries(GLOSSARIO_FUNDOS).map(([key, entry]) => (
               <div
                 key={key}
-                className="rounded-xl border border-dark-700/40 bg-dark-800/30 p-4"
+                className="surface-card p-4"
               >
                 <div className="flex items-center gap-2 mb-2">
                   <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: entry.cor }}
                   />
-                  <h4 className="text-sm font-semibold text-dark-200">{key}</h4>
+                  <h4 className="text-sm font-semibold text-on-surface">{key}</h4>
                 </div>
-                <p className="text-xs text-dark-400 mb-1.5">{entry.nome}</p>
-                <p className="text-sm text-dark-400 leading-relaxed">{entry.descricao}</p>
-                <div className="mt-2 pt-2 border-t border-dark-700/30">
-                  <p className="text-xs text-forecast-400/80">
+                <p className="text-xs text-on-surface-variant mb-1.5">{entry.nome}</p>
+                <p className="text-sm text-on-surface-variant leading-relaxed">{entry.descricao}</p>
+                <div className="mt-2 pt-2">
+                  <p className="text-xs text-tertiary/80">
                     <span className="font-medium">Impacto para você:</span>{' '}
                     {entry.impacto_cidadao}
                   </p>
@@ -336,7 +340,7 @@ export function MensalView({
             ))}
           </div>
         )}
-      </section>
+      </motion.section>
     </>
   );
 }

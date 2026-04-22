@@ -2,16 +2,15 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, TrendingDown, DollarSign, BarChart3, Info, BookOpen } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Icon from '@/components/ui/Icon';
 import ForecastSection from '@/components/dashboard/ForecastSection';
 import { useDashboardFilters } from '@/stores/filtersStore';
-import { COLORS } from '@/lib/constants';
 import apiClient from '@/services/api';
 import { formatCurrency } from '@/lib/utils';
-
 
 interface KPIAnual {
   ano: number;
@@ -37,7 +36,6 @@ interface TrendMetrics {
 
 type ProjectionMode = 'annual' | 'monthly';
 
-// Projeção linear para o próximo valor (mesma lógica do ForecastSection)
 function projectNextValue(data: number[]): number {
   if (data.length < 2) return data[0] || 0;
   const rates: number[] = [];
@@ -65,6 +63,19 @@ function computeTrendMetrics(anuais: KPIAnual[]): TrendMetrics | null {
 
 const YEARS_OPTIONS = [1, 2, 3, 4, 5] as const;
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.05 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
+};
+
 export default function ForecastClient() {
   const { anoSelecionado, mostrarProjecao, setMostrarProjecao, setAnoSelecionado } = useDashboardFilters();
   const [yearsToProject, setYearsToProject] = useState(2);
@@ -72,12 +83,10 @@ export default function ForecastClient() {
   const currentYear = new Date().getFullYear();
   const trendEndYear = Math.min(anoSelecionado, currentYear - 1);
 
-  // Projeções ativadas por padrão nesta página
   useEffect(() => {
     setMostrarProjecao(true);
   }, [setMostrarProjecao]);
 
-  // KPIs anuais para os cards de tendência
   const { data: kpisResponse, isLoading: kpisLoading } = useQuery({
     queryKey: ['kpis', 'anual', 'forecast-page', trendEndYear],
     queryFn: () => apiClient.get<KPIsResponse>(`/api/v1/kpis/anual?ano_inicio=2016&ano_fim=${trendEndYear}`),
@@ -92,93 +101,121 @@ export default function ForecastClient() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <motion.div
+        className="space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <motion.div variants={itemVariants} className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-dark-100 flex items-center gap-3">
-              <TrendingUp className="w-7 h-7 text-forecast-accent" />
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-tertiary-container/20">
+                <Icon name="query_stats" className="text-tertiary" size={22} />
+              </div>
+              <span className="chip-tertiary">Projeções Financeiras</span>
+            </div>
+            <h1 className="font-display text-headline-lg sm:text-display-sm text-on-surface tracking-tight">
               Previsões Financeiras
             </h1>
-            <p className="text-sm text-dark-400 mt-1">Projeção baseada em dados históricos</p>
+            <p className="mt-1 text-body-md text-on-surface-variant max-w-lg">
+              Projeção baseada em dados históricos municipais consolidados de receitas e despesas.
+            </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <label htmlFor="projection-mode" className="text-xs text-dark-400 whitespace-nowrap">Visualização:</label>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative">
+              <Icon name="visibility" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
               <select
                 id="projection-mode"
                 value={projectionMode}
                 onChange={(e) => setProjectionMode(e.target.value as ProjectionMode)}
-                className="bg-dark-800 border border-dark-700 text-dark-100 text-sm rounded-lg px-3 py-1.5 focus:border-forecast-accent focus:outline-none"
+                className="select-field pl-9 pr-8"
               >
                 <option value="annual">Anual (ano a ano)</option>
                 <option value="monthly">Mensal (meses seguintes)</option>
               </select>
             </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="base-year" className="text-xs text-dark-400 whitespace-nowrap">Ano base:</label>
+
+            <div className="relative">
+              <Icon name="calendar_today" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
               <select
                 id="base-year"
                 value={anoSelecionado}
                 onChange={(e) => setAnoSelecionado(Number(e.target.value))}
-                className="bg-dark-800 border border-dark-700 text-dark-100 text-sm rounded-lg px-3 py-1.5 focus:border-forecast-accent focus:outline-none"
+                className="select-field pl-9 pr-8"
               >
                 {availableYears.map((ano) => <option key={ano} value={ano}>{ano}</option>)}
               </select>
             </div>
+
             {projectionMode === 'annual' ? (
-              <div className="flex items-center gap-2">
-                <label htmlFor="years-project" className="text-xs text-dark-400 whitespace-nowrap">Projetar:</label>
+              <div className="relative">
+                <Icon name="date_range" className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
                 <select
                   id="years-project"
                   value={yearsToProject}
                   onChange={(e) => setYearsToProject(Number(e.target.value))}
-                  className="bg-dark-800 border border-dark-700 text-dark-100 text-sm rounded-lg px-3 py-1.5 focus:border-forecast-accent focus:outline-none"
+                  className="select-field pl-9 pr-8"
                 >
                   {YEARS_OPTIONS.map((n) => <option key={n} value={n}>{n} ano{n > 1 ? 's' : ''}</option>)}
                 </select>
               </div>
             ) : null}
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Forecast Chart */}
-        <Suspense fallback={<LoadingSpinner />}>
-          <ForecastSection
-            key={forecastViewKey}
-            height={500}
-            yearsToProject={yearsToProject}
-            projectionMode={projectionMode}
-          />
-        </Suspense>
+        <motion.div variants={itemVariants}>
+          <Suspense fallback={<LoadingSpinner />}>
+            <ForecastSection
+              key={forecastViewKey}
+              height={500}
+              yearsToProject={yearsToProject}
+              projectionMode={projectionMode}
+            />
+          </Suspense>
+        </motion.div>
 
         {/* Methodology + Trend Analysis */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Methodology Card */}
-          <div className="glass-card p-6 lg:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <BookOpen className="w-5 h-5 text-forecast-accent" />
-              <h3 className="text-base font-semibold text-dark-100">Metodologia</h3>
+          <div className="surface-card p-6 lg:col-span-1">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-tertiary-container/20">
+                <Icon name="menu_book" className="text-tertiary" size={20} />
+              </div>
+              <h3 className="text-title-md font-display text-on-surface">Metodologia</h3>
             </div>
-            <div className="space-y-3 text-sm text-dark-300">
+            <div className="space-y-4 text-body-sm text-on-surface-variant">
               <p>
                 A projeção utiliza{' '}
-                <span className="text-forecast-accent font-medium">modelo de forecast com sazonalidade</span>{' '}
+                <span className="text-tertiary font-medium">modelo de forecast com sazonalidade</span>{' '}
                 sobre o histórico municipal consolidado de receitas e despesas.
               </p>
-              <div className="glass-card p-3 space-y-2">
-                <p className="text-xs text-dark-400 font-medium uppercase tracking-wide">Parâmetros</p>
-                <ul className="space-y-1 text-xs text-dark-400">
-                  <li>&bull; Histórico municipal completo (base anual e mensal)</li>
-                  <li>&bull; Ajuste para mês corrente parcial no treino</li>
-                  <li>&bull; Agregação anual da projeção mensal para o ano corrente</li>
+              <div className="surface-card bg-surface-container-low/60 p-4 space-y-2">
+                <p className="text-label-md text-on-surface-variant uppercase tracking-wider">Parâmetros</p>
+                <ul className="space-y-1.5 text-label-md text-on-surface-variant">
+                  <li className="flex items-start gap-2">
+                    <Icon name="check" size={14} className="text-secondary mt-0.5 shrink-0" />
+                    <span>Histórico municipal completo (base anual e mensal)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="check" size={14} className="text-secondary mt-0.5 shrink-0" />
+                    <span>Ajuste para mês corrente parcial no treino</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Icon name="check" size={14} className="text-secondary mt-0.5 shrink-0" />
+                    <span>Agregação anual da projeção mensal para o ano corrente</span>
+                  </li>
                 </ul>
               </div>
-              <div className="flex items-start gap-2 p-3 bg-forecast-500/10 border border-forecast-500/20 rounded-lg">
-                <Info className="w-4 h-4 text-forecast-accent mt-0.5 shrink-0" />
-                <p className="text-xs text-dark-400">
-                  O operador pode alternar entre visão <span className="text-forecast-accent">mensal</span>
-                  para os meses seguintes do ano corrente e visão <span className="text-forecast-accent">anual</span>.
+              <div className="flex items-start gap-3 p-4 bg-tertiary-container/10 rounded-xl">
+                <Icon name="info" className="text-tertiary mt-0.5 shrink-0" size={18} />
+                <p className="text-label-md text-on-surface-variant">
+                  O operador pode alternar entre visão <span className="text-tertiary font-medium">mensal</span>
+                  {' '}para os meses seguintes do ano corrente e visão <span className="text-tertiary font-medium">anual</span>.
                 </p>
               </div>
             </div>
@@ -189,84 +226,94 @@ export default function ForecastClient() {
             {kpisLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="glass-card p-5 animate-pulse">
-                    <div className="h-4 bg-dark-800/50 rounded w-24 mb-3" />
-                    <div className="h-8 bg-dark-800/50 rounded w-32" />
+                  <div key={i} className="kpi-card animate-pulse">
+                    <div className="h-4 bg-surface-container-high rounded w-24 mb-3" />
+                    <div className="h-8 bg-surface-container-high rounded w-32" />
                   </div>
                 ))}
               </div>
             ) : trendMetrics ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Crescimento Médio Anual */}
-                <div className="glass-card p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    {trendMetrics.avgGrowth >= 0
-                      ? <TrendingUp className="w-4 h-4 text-revenue-accent" />
-                      : <TrendingDown className="w-4 h-4 text-expense-accent" />}
-                    <span className="text-xs text-dark-400">Crescimento Médio Anual</span>
-                  </div>
-                  <p className={`text-xl font-bold ${trendMetrics.avgGrowth >= 0 ? 'text-revenue-accent' : 'text-expense-accent'}`}>
-                    {trendMetrics.avgGrowth >= 0 ? '+' : ''}{trendMetrics.avgGrowth.toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-dark-500 mt-1">Média das variações anuais de receita</p>
-                </div>
-
-                {/* Receita Projetada */}
-                <div className="glass-card p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="w-4 h-4 text-revenue-accent" />
-                    <span className="text-xs text-dark-400">Receita Projetada ({anoSelecionado + 1})</span>
-                  </div>
-                  <p className="text-xl font-bold text-revenue-accent">
-                    {formatCurrency(trendMetrics.projectedReceita, { compact: true })}
-                  </p>
-                  <p className="text-xs text-dark-500 mt-1">Estimativa para o próximo exercício</p>
-                </div>
-
-                {/* Despesa Projetada */}
-                <div className="glass-card p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="w-4 h-4 text-expense-DEFAULT" />
-                    <span className="text-xs text-dark-400">Despesa Projetada ({anoSelecionado + 1})</span>
-                  </div>
-                  <p className="text-xl font-bold text-expense-DEFAULT">
-                    {formatCurrency(trendMetrics.projectedDespesa, { compact: true })}
-                  </p>
-                  <p className="text-xs text-dark-500 mt-1">Estimativa para o próximo exercício</p>
-                </div>
-
-                {/* Saldo Projetado */}
-                <div className="glass-card p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign
-                      className="w-4 h-4"
-                      style={{ color: trendMetrics.projectedSaldo >= 0 ? COLORS.revenue.accent : COLORS.expense.accent }}
-                    />
-                    <span className="text-xs text-dark-400">Saldo Projetado ({anoSelecionado + 1})</span>
-                  </div>
-                  <p className={`text-xl font-bold ${trendMetrics.projectedSaldo >= 0 ? 'text-revenue-accent' : 'text-expense-accent'}`}>
-                    {formatCurrency(trendMetrics.projectedSaldo, { compact: true })}
-                  </p>
-                  <p className="text-xs text-dark-500 mt-1">Receita projetada - Despesa projetada</p>
-                </div>
+                <TrendCard
+                  label="Crescimento Médio Anual"
+                  value={`${trendMetrics.avgGrowth >= 0 ? '+' : ''}${trendMetrics.avgGrowth.toFixed(1)}%`}
+                  iconName={trendMetrics.avgGrowth >= 0 ? 'trending_up' : 'trending_down'}
+                  accentColor={trendMetrics.avgGrowth >= 0 ? 'text-secondary' : 'text-error'}
+                  iconBg={trendMetrics.avgGrowth >= 0 ? 'bg-secondary-container/20' : 'bg-error-container/20'}
+                  description="Média das variações anuais de receita"
+                />
+                <TrendCard
+                  label={`Receita Projetada (${anoSelecionado + 1})`}
+                  value={formatCurrency(trendMetrics.projectedReceita, { compact: true })}
+                  iconName="attach_money"
+                  accentColor="text-secondary"
+                  iconBg="bg-secondary-container/20"
+                  description="Estimativa para o próximo exercício"
+                />
+                <TrendCard
+                  label={`Despesa Projetada (${anoSelecionado + 1})`}
+                  value={formatCurrency(trendMetrics.projectedDespesa, { compact: true })}
+                  iconName="bar_chart"
+                  accentColor="text-expense"
+                  iconBg="bg-error-container/20"
+                  description="Estimativa para o próximo exercício"
+                />
+                <TrendCard
+                  label={`Saldo Projetado (${anoSelecionado + 1})`}
+                  value={formatCurrency(trendMetrics.projectedSaldo, { compact: true })}
+                  iconName="account_balance"
+                  accentColor={trendMetrics.projectedSaldo >= 0 ? 'text-secondary' : 'text-error'}
+                  iconBg={trendMetrics.projectedSaldo >= 0 ? 'bg-secondary-container/20' : 'bg-error-container/20'}
+                  description="Receita projetada - Despesa projetada"
+                />
               </div>
             ) : (
-              <div className="glass-card p-6 text-center">
-                <p className="text-sm text-dark-400">Dados históricos insuficientes para calcular tendências.</p>
+              <div className="surface-card p-8 text-center">
+                <Icon name="analytics" className="text-on-surface-variant/30 mx-auto mb-3" size={40} />
+                <p className="text-body-md text-on-surface-variant">Dados históricos insuficientes para calcular tendências.</p>
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* Disclaimer */}
-        <div className="border-t border-dark-800 pt-4">
-          <p className="text-xs text-dark-500 text-center leading-relaxed">
-            As projeções apresentadas são estimativas baseadas em dados históricos financeiros do município e não constituem
-            garantia de resultados futuros. Fatores econômicos, mudanças na legislação e eventos imprevisíveis podem
-            afetar significativamente os valores reais. Utilize como referência para planejamento.
-          </p>
-        </div>
-      </div>
+        <motion.div variants={itemVariants} className="surface-card p-6">
+          <div className="flex items-start gap-3">
+            <Icon name="warning_amber" className="text-tertiary mt-0.5 shrink-0" size={20} />
+            <p className="text-body-sm text-on-surface-variant leading-relaxed">
+              As projeções apresentadas são estimativas baseadas em dados históricos financeiros do município e não constituem
+              garantia de resultados futuros. Fatores econômicos, mudanças na legislação e eventos imprevisíveis podem
+              afetar significativamente os valores reais. Utilize como referência para planejamento.
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
     </DashboardLayout>
+  );
+}
+
+/* ─── Sub-componentes ───────────────────────────────────────────────── */
+
+interface TrendCardProps {
+  label: string;
+  value: string;
+  iconName: string;
+  accentColor: string;
+  iconBg: string;
+  description: string;
+}
+
+function TrendCard({ label, value, iconName, accentColor, iconBg, description }: TrendCardProps) {
+  return (
+    <div className="kpi-card">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`flex items-center justify-center w-9 h-9 rounded-lg ${iconBg}`}>
+          <Icon name={iconName} className={accentColor} size={20} />
+        </div>
+        <span className="kpi-label">{label}</span>
+      </div>
+      <p className={`kpi-value ${accentColor}`}>{value}</p>
+      <p className="text-label-md text-on-surface-variant mt-2">{description}</p>
+    </div>
   );
 }

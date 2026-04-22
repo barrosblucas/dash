@@ -70,6 +70,28 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Feriados nacionais, estaduais (MS) e móveis exibidos no calendário
 - [x] Títulos sucintos de licitações no calendário e lista
 
+### Frontend — Reformulação Visual Completa (2026-04-21)
+- [x] **Novo design system "The Architectural Archive"** aplicado a todas as 9 páginas ativas
+- [x] Paleta de cores: Deep Navy (#00193c) + Emerald Green (#006c47) + Gold (#c29b00)
+- [x] Tipografia editorial: Manrope (display) + Inter (body) com hierarquia monumental
+- [x] **NO-LINE RULE**: separação visual por tonal layering, sem bordas de 1px
+- [x] Surface hierarchy: `surface`, `surface-container-low`, `surface-container-high`, `surface-container-lowest`
+- [x] Glassmorphism para elementos flutuantes (header sticky, modais, dropdowns)
+- [x] Componentes UI base reutilizáveis: `glass-card`, `surface-card`, `elevated-card`, `kpi-card`, `metric-card`, `chart-container`, `data-table`, `chip-*`, `btn-*`, `input-field`, `select-field`
+- [x] Ícones migrados de lucide-react para **Material Symbols do Google** via componente `<Icon />`
+- [x] Animações de entrada com **framer-motion** em todas as páginas (fade-in-up, stagger)
+- [x] Mobile first com breakpoints responsivos em todos os componentes
+- [x] Tema claro/escuro com CSS custom properties e classe `.dark`
+- [x] Portal público reformulado: hero monumental, grid de cards com efeitos hover, footer elegante
+- [x] Dashboard reformulado: KPIs monumentais, gráficos com novas cores, layout refinado
+- [x] Receitas reformuladas: header monumental, cards de resumo, tabela hierárquica sem bordas
+- [x] Despesas reformuladas: header monumental, KPIs, tabela paginada, exportação elegante
+- [x] Forecast reformulado: header com ícone, seletores elegantes, cards de tendência, metodologia
+- [x] Comparativo reformulado: header monumental, gráfico comparativo, tabela ano a ano, estatísticas
+- [x] Relatórios reformulados: cards de exportação elegantes, resumo rápido, seção informativa
+- [x] Movimento Extra reformulado: KPIs, visualização por fundos, glossário interativo, insights
+- [x] Avisos de Licitações reformulados: calendário mensal/semanal, lista paginada, modal elegante
+
 ### Dados
 - [x] Receitas: ~160 registros (2013–2026) extraídos de PDFs
 - [x] Receitas detalhamento: 1.498 itens hierárquicos (2013–2026) extraídos de PDFs
@@ -117,6 +139,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 5. Adicionar autenticação se necessário
 6. Implementar testes automatizados no frontend (vitest)
 7. Extrair lógica de negócio restante dos handlers para `*_business.py`
+8. ~~Consolidar ícones restantes do lucide-react para Material Symbols~~ ✅ Concluído em 2026-04-21
 
 ## Ambiente
 

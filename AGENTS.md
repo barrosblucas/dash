@@ -27,6 +27,7 @@ Não duplique essas regras aqui. Em caso de conflito, siga o documento canônico
 8. Rode a validação final obrigatória
 
 ## Skills e especialistas
+- Utilize o `context-mode`, e suas tools, para economia de tokens e contexto.
 - Use as skills apenas quando agregarem valor real à tarefa
 - Use skills e perspectivas especializadas de forma mínima e sob demanda
 - Trabalhe por padrão em single-thread
@@ -56,6 +57,23 @@ cd frontend && npm run lint && npm run type-check && npm run build
 ### Se ambos mudaram
 Rode ambos os conjuntos de validação antes de considerar a tarefa pronta.
 
+## Context-Mode: padrão obrigatório
+
+  O context-mode é a ferramenta **padrão** para todas as operações de leitura, execução e busca. Sempre que houver uma operação equivalente no context-mode, ele deve ser usado por padrão. Ferramentas clássicas (`read`, `bash`, `grep`) permanecem disponíveis e podem ser usadas quando o context-mode não oferece equivalente direto ou quando a operação é trivialmente pequena.
+
+  ### Hierarquia de seleção de ferramenta (padrão obrigatório)
+  1. **`ctx_batch_execute`** — padrão para múltiplos comandos e queries simultâneas.
+  2. **`ctx_execute`** / **`ctx_execute_file`** — padrão para processamento, análise, contagem, filtro e parse de dados.
+  3. **`ctx_fetch_and_index`** + **`ctx_search`** — padrão para fetch web e consulta indexada.
+  4. **`read`/`edit`/`write`** — usar quando o objetivo for **editar** o arquivo. Para leitura de análise/extração, preferir `ctx_execute_file`; `read` é aceitável para arquivos pequenos (< 100 linhas) no planejamento imediato.
+  5. **`bash`** — usar quando o comando tiver saída garantidamente pequena (< 20 linhas, < 1 KB). Para `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm typecheck`, o padrão é `ctx_batch_execute`.
+  6. **`grep`** / **`glob`** — usar para padrões de busca rápida; para resultados potencialmente grandes, preferir `ctx_execute`.
+
+  ### Diretriz operacional
+  - O context-mode é o **default**; não é proibido usar outras ferramentas, mas a escolha do context-mode deve ser explícita e priorizada.
+  - Se optar por `bash`, `read` ou `grep` quando existe equivalente no context-mode, registre a razão no raciocínio (mesmo que breve).
+  - Em caso de dúvida, use o context-mode. Ele é mais seguro para o context window e permite busca indexada posterior.
+  
 ## Guardrails operacionais
 
 - Não invente campos, endpoints, schemas ou comportamentos

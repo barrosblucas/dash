@@ -136,6 +136,7 @@ Exemplos esperados:
 7. Logs não podem expor PII ou payload bruto sensível
 8. Entidades de domínio (`domain/entities/`) não dependem de infraestrutura
 9. Services de domínio (`domain/services/`) não importam diretamente de `infrastructure/` — usam interfaces de repositório
+10. **Context-Mode é o padrão obrigatório**: toda operação de leitura, execução e busca deve preferir ferramentas `ctx_*` quando houver equivalente. Ferramentas clássicas (`bash`, `read`, `grep`) podem ser usadas quando o context-mode não oferece equivalente direto ou quando a operação é trivialmente pequena, mas a escolha deve ser consciente e documentada no raciocínio.
 
 ## Taxonomia de mudança
 

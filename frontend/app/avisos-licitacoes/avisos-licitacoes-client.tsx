@@ -9,6 +9,7 @@
  */
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   format,
   startOfMonth,
@@ -22,17 +23,8 @@ import {
   subWeeks,
   isSameDay,
 } from 'date-fns';
-import {
-  Calendar as CalendarIcon,
-  List,
-  Search,
-  X,
-  AlertTriangle,
-  BellRing,
-  Filter,
-  LayoutGrid,
-} from 'lucide-react';
 
+import Icon from '@/components/ui/Icon';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useLicitacoesComprasBR, useLicitacoesDispensas } from '@/hooks/useLicitacoes';
@@ -187,72 +179,87 @@ export default function AvisosLicitacoesClient() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-8 animate-fade-in">
+        {/* Header monumental */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent-500/15 flex items-center justify-center">
-              <BellRing className="w-5 h-5 text-accent-400" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Icon name="notifications_active" size={20} className="text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-display font-bold text-dark-100">Aviso de Licitações</h1>
-              <p className="text-sm text-dark-400">Avisos e editais de processos licitatórios de Bandeirantes MS</p>
+              <h1 className="text-headline-md font-display text-on-surface">Aviso de Licitações</h1>
+              <p className="text-body-sm text-on-surface-variant">Avisos e editais de processos licitatórios de Bandeirantes MS</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 backdrop-blur-sm p-4">
-            <p className="text-xs font-medium text-dark-500 uppercase tracking-wider">Total</p>
-            <p className="text-2xl font-display font-bold text-dark-100 mt-1">{counts.total}</p>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+        >
+          <div className="metric-card">
+            <p className="metric-label">Total</p>
+            <p className="metric-value mt-1">{counts.total}</p>
           </div>
-          <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-4">
-            <p className="text-xs font-medium text-dark-500 uppercase tracking-wider">Aguardando</p>
-            <p className="text-2xl font-display font-bold text-green-400 mt-1">{counts.aguardando}</p>
+          <div className="metric-card bg-secondary/5">
+            <p className="metric-label">Aguardando</p>
+            <p className="metric-value text-secondary mt-1">{counts.aguardando}</p>
           </div>
-          <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 backdrop-blur-sm p-4">
-            <p className="text-xs font-medium text-dark-500 uppercase tracking-wider">Encerrado</p>
-            <p className="text-2xl font-display font-bold text-dark-400 mt-1">{counts.encerrado}</p>
+          <div className="metric-card">
+            <p className="metric-label">Encerrado</p>
+            <p className="metric-value text-on-surface-variant mt-1">{counts.encerrado}</p>
           </div>
-          <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4">
-            <p className="text-xs font-medium text-dark-500 uppercase tracking-wider">Suspenso</p>
-            <p className="text-2xl font-display font-bold text-orange-400 mt-1">{counts.suspenso}</p>
+          <div className="metric-card bg-error/5">
+            <p className="metric-label">Suspenso</p>
+            <p className="metric-value text-error mt-1">{counts.suspenso}</p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Filtros */}
-        <div className="rounded-xl border border-dark-700/50 bg-dark-800/50 backdrop-blur-sm p-4 space-y-3">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.15 }}
+          className="surface-card p-4 space-y-3"
+        >
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-500" />
+            <Icon name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50" />
             <input
               type="text"
               placeholder="Buscar por objeto, número ou modalidade..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-dark-900/80 border border-dark-700/50 text-dark-200 text-sm placeholder:text-dark-500 focus:outline-none focus:ring-1 focus:ring-accent-500/40 focus:border-accent-500/40 transition-colors"
+              className="input-field pl-10 rounded-lg"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 hover:text-dark-300"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
               >
-                <X className="w-4 h-4" />
+                <Icon name="close" size={18} />
               </button>
             )}
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <Filter className="w-3.5 h-3.5 text-dark-500 flex-shrink-0" />
+              <Icon name="filter_alt" size={16} className="text-on-surface-variant flex-shrink-0" />
               {FONTES.map((f) => (
                 <button
                   key={f.key}
                   onClick={() => setFonteFilter(f.key)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     fonteFilter === f.key
-                      ? 'bg-accent-500/20 text-accent-300 ring-1 ring-accent-500/30'
-                      : 'bg-dark-700/40 text-dark-400 hover:bg-dark-700/60 hover:text-dark-300'
+                      ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
+                      : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
                   }`}
                 >
                   {f.label}
@@ -267,8 +274,8 @@ export default function AvisosLicitacoesClient() {
                   onClick={() => setStatusFilter(s.key)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     statusFilter === s.key
-                      ? 'bg-dark-600/60 text-dark-200 ring-1 ring-dark-500/50'
-                      : 'bg-dark-700/40 text-dark-400 hover:bg-dark-700/60 hover:text-dark-300'
+                      ? 'bg-surface-container text-on-surface ring-1 ring-outline-variant/30'
+                      : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
                   }`}
                 >
                   {s.label}
@@ -276,44 +283,49 @@ export default function AvisosLicitacoesClient() {
               ))}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Tabs de visualização */}
-        <div className="flex items-center gap-2">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="flex items-center gap-2"
+        >
           <button
             onClick={() => setViewMode('month')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'month'
-                ? 'bg-accent-500/20 text-accent-300 ring-1 ring-accent-500/30'
-                : 'bg-dark-800/50 text-dark-400 hover:bg-dark-700/40 hover:text-dark-300'
+                ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
+                : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
             }`}
           >
-            <CalendarIcon className="w-4 h-4" />
+            <Icon name="calendar_month" size={18} />
             Mensal
           </button>
           <button
             onClick={() => setViewMode('week')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'week'
-                ? 'bg-accent-500/20 text-accent-300 ring-1 ring-accent-500/30'
-                : 'bg-dark-800/50 text-dark-400 hover:bg-dark-700/40 hover:text-dark-300'
+                ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
+                : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
             }`}
           >
-            <LayoutGrid className="w-4 h-4" />
+            <Icon name="grid_view" size={18} />
             Semanal
           </button>
           <button
             onClick={() => setViewMode('list')}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               viewMode === 'list'
-                ? 'bg-accent-500/20 text-accent-300 ring-1 ring-accent-500/30'
-                : 'bg-dark-800/50 text-dark-400 hover:bg-dark-700/40 hover:text-dark-300'
+                ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
+                : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
             }`}
           >
-            <List className="w-4 h-4" />
+            <Icon name="list" size={18} />
             Lista
           </button>
-        </div>
+        </motion.div>
 
         {/* Loading */}
         {isLoading && (
@@ -322,10 +334,10 @@ export default function AvisosLicitacoesClient() {
 
         {/* Error */}
         {isError && !isLoading && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-6 text-center">
-            <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-            <p className="text-dark-200 font-medium mb-1">Erro ao carregar licitações</p>
-            <p className="text-sm text-dark-400">Tente novamente mais tarde.</p>
+          <div className="surface-card p-6 text-center bg-error/5">
+            <Icon name="warning" size={32} className="text-error mx-auto mb-3" />
+            <p className="text-on-surface font-medium mb-1">Erro ao carregar licitações</p>
+            <p className="text-sm text-on-surface-variant">Tente novamente mais tarde.</p>
           </div>
         )}
 

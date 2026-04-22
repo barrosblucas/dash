@@ -25,9 +25,9 @@ function getIndent(nivel: number): string {
 
 // --- Cor do % de execução ---
 function getExecColor(pct: number): string {
-  if (pct >= 90) return 'text-emerald-500';
-  if (pct >= 70) return 'text-yellow-500';
-  return 'text-red-400';
+  if (pct >= 90) return 'text-secondary';
+  if (pct >= 70) return 'text-tertiary';
+  return 'text-error';
 }
 
 // --- Verifica se valor é dedução (negativo ou prefixo "(-)") ---
@@ -89,9 +89,9 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="data-table">
         <thead>
-          <tr className="border-b border-dark-700/50 text-dark-400 text-xs uppercase tracking-wider">
+          <tr className="text-on-surface-variant">
             <th className="px-4 py-3 text-left font-medium">Detalhamento</th>
             <th className="px-4 py-3 text-right font-medium">Previsto (Anual)</th>
             <th className="px-4 py-3 text-right font-medium">Arrecadado</th>
@@ -114,9 +114,9 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
             return (
               <tr
                 key={item.id}
-                className={`hover:bg-dark-700/30 transition-colors cursor-${
+                className={`hover:bg-surface-container transition-colors cursor-${
                   hasKids ? 'pointer' : 'default'
-                } ${idx % 2 === 0 ? 'bg-dark-800/30' : 'bg-dark-800/10'}`}
+                }`}
                 onClick={() => hasKids && toggleExpand(item.id)}
               >
                 {/* Coluna Detalhamento */}
@@ -124,7 +124,7 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
                   <div className="flex items-center gap-1.5">
                     {/* Ícone expand/collapse */}
                     {hasKids ? (
-                      <span className="text-dark-400 text-xs w-4 shrink-0 select-none">
+                      <span className="text-on-surface-variant text-xs w-4 shrink-0 select-none">
                         {isExpanded ? '▼' : '▶'}
                       </span>
                     ) : (
@@ -132,8 +132,8 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
                     )}
                     <span
                       className={`${
-                        isBold ? 'font-semibold text-dark-100' : 'text-dark-200'
-                      } ${deducao ? 'text-red-400' : ''}`}
+                        isBold ? 'font-semibold text-on-surface' : 'text-on-surface'
+                      } ${deducao ? 'text-error' : ''}`}
                     >
                       {item.detalhamento}
                     </span>
@@ -141,23 +141,23 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
                 </td>
 
                 {/* Previsto */}
-                <td className={`px-4 py-2.5 text-right ${deducao ? 'text-red-400' : 'text-dark-300'}`}>
+                <td className={`px-4 py-2.5 text-right ${deducao ? 'text-error' : 'text-on-surface-variant'}`}>
                   {formatCurrency(item.valor_previsto)}
                 </td>
 
                 {/* Arrecadado */}
-                <td className={`px-4 py-2.5 text-right font-medium ${item.valor_arrecadado < 0 || deducao ? 'text-red-400' : 'text-emerald-500'}`}>
+                <td className={`px-4 py-2.5 text-right font-medium ${item.valor_arrecadado < 0 || deducao ? 'text-error' : 'text-secondary'}`}>
                   {formatCurrency(item.valor_arrecadado)}
                 </td>
 
                 {/* Anulado */}
-                <td className={`px-4 py-2.5 text-right ${deducao ? 'text-red-400' : 'text-dark-400'}`}>
+                <td className={`px-4 py-2.5 text-right ${deducao ? 'text-error' : 'text-on-surface-variant'}`}>
                   {formatCurrency(item.valor_anulado)}
                 </td>
 
                 {/* % Execução */}
                 <td className="px-4 py-2.5 text-right">
-                  <span className={deducao ? 'text-red-400' : getExecColor(execPct)}>
+                  <span className={deducao ? 'text-error' : getExecColor(execPct)}>
                     {formatPercent(execPct)}
                   </span>
                 </td>

@@ -1,18 +1,9 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import {
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Download,
-  FileText,
-  FileSpreadsheet,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-} from 'lucide-react';
+import { motion } from 'framer-motion';
 
+import Icon from '@/components/ui/Icon';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import useExport from '@/hooks/useExport';
 import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
@@ -29,7 +20,7 @@ interface ExportState {
 
 interface ExportCardConfig {
   id: string;
-  icon: React.ElementType;
+  iconName: string;
   title: string;
   description: string;
   colorClass: string;
@@ -40,29 +31,29 @@ interface ExportCardConfig {
 const EXPORT_CARDS: ExportCardConfig[] = [
   {
     id: 'receitas',
-    icon: TrendingUp,
+    iconName: 'trending_up',
     title: 'Relatório de Receitas',
     description: 'Dados de arrecadação municipal',
-    colorClass: 'text-revenue-accent',
-    iconBgClass: 'bg-revenue-500/10',
+    colorClass: 'text-secondary',
+    iconBgClass: 'bg-secondary/10',
     filename: 'receitas',
   },
   {
     id: 'despesas',
-    icon: TrendingDown,
+    iconName: 'trending_down',
     title: 'Relatório de Despesas',
     description: 'Dados de execução orçamentária',
-    colorClass: 'text-expense-accent',
-    iconBgClass: 'bg-expense-500/10',
+    colorClass: 'text-error',
+    iconBgClass: 'bg-error/10',
     filename: 'despesas',
   },
   {
     id: 'kpis',
-    icon: BarChart3,
+    iconName: 'bar_chart',
     title: 'KPIs Consolidados',
     description: 'Indicadores financeiros consolidados',
-    colorClass: 'text-forecast-accent',
-    iconBgClass: 'bg-forecast-500/10',
+    colorClass: 'text-tertiary',
+    iconBgClass: 'bg-tertiary/10',
     filename: 'kpis-consolidados',
   },
 ];
@@ -151,18 +142,18 @@ export default function RelatoriosClient() {
     const state = exportStates[cardId];
     if (state.status === 'idle') return null;
 
-    const badgeStyles: Record<ExportStatus, { bg: string; icon: React.ElementType | null; text: string }> = {
-      idle: { bg: '', icon: null, text: '' },
-      loading: { bg: 'bg-forecast-500/10 text-forecast-400', icon: Loader2, text: 'Exportando...' },
-      success: { bg: 'bg-revenue-500/10 text-revenue-400', icon: CheckCircle2, text: state.message },
-      error: { bg: 'bg-expense-500/10 text-expense-400', icon: AlertCircle, text: state.message },
+    const badgeStyles: Record<ExportStatus, { bg: string; iconName: string; text: string; spin?: boolean }> = {
+      idle: { bg: '', iconName: '', text: '' },
+      loading: { bg: 'bg-tertiary/10 text-tertiary', iconName: 'progress_activity', text: 'Exportando...', spin: true },
+      success: { bg: 'bg-secondary/10 text-secondary', iconName: 'check_circle', text: state.message },
+      error: { bg: 'bg-error/10 text-error', iconName: 'error', text: state.message },
     };
 
-    const { bg, icon: Icon, text } = badgeStyles[state.status];
+    const { bg, iconName, text, spin } = badgeStyles[state.status];
 
     return (
       <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium ${bg}`}>
-        {Icon && <Icon className={`w-3.5 h-3.5 ${state.status === 'loading' ? 'animate-spin' : ''}`} />}
+        {iconName && <Icon name={iconName} size={16} className={spin ? 'animate-spin' : ''} />}
         <span>{text}</span>
       </div>
     );
@@ -176,54 +167,68 @@ export default function RelatoriosClient() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Cabeçalho */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div className="space-y-8">
+        {/* Cabeçalho monumental */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
+        >
           <div>
-            <h1 className="text-2xl font-bold text-dark-100">Relatórios e Exportação</h1>
-            <p className="text-sm text-dark-400 mt-1">Exporte dados financeiros em diferentes formatos</p>
+            <h1 className="text-display-sm font-display text-on-surface">Relatórios e Exportação</h1>
+            <p className="text-body-md text-on-surface-variant mt-2">Exporte dados financeiros em diferentes formatos</p>
           </div>
           <div className="flex items-center gap-2">
-            <label htmlFor="year-select" className="text-sm text-dark-400">Ano:</label>
+            <label htmlFor="year-select" className="text-label-md text-on-surface-variant">Ano:</label>
             <select
               id="year-select"
               value={anoSelecionado}
               onChange={(e) => setAnoSelecionado(Number(e.target.value))}
-              className="bg-dark-800 border border-dark-700 text-dark-200 text-sm rounded-lg px-3 py-2 focus:ring-forecast-500 focus:border-forecast-500 outline-none"
+              className="select-field w-auto"
             >
               {anosDisponiveis.map((ano) => (
                 <option key={ano} value={ano}>{ano}</option>
               ))}
             </select>
           </div>
-        </div>
+        </motion.div>
 
         {/* Resumo rápido */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-dark-850 border border-dark-700 rounded-xl px-4 py-3">
-            <p className="text-xs text-dark-400">Receitas em {anoSelecionado}</p>
-            <p className="text-lg font-semibold text-revenue-accent">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        >
+          <div className="metric-card">
+            <p className="metric-label">Receitas em {anoSelecionado}</p>
+            <p className="metric-value text-secondary">
               {formatCurrency(receitasData?.receitas.reduce((s, r) => s + r.valor_arrecadado, 0) ?? 0, { compact: true })}
             </p>
           </div>
-          <div className="bg-dark-850 border border-dark-700 rounded-xl px-4 py-3">
-            <p className="text-xs text-dark-400">Despesas em {anoSelecionado}</p>
-            <p className="text-lg font-semibold text-expense-accent">
+          <div className="metric-card">
+            <p className="metric-label">Despesas em {anoSelecionado}</p>
+            <p className="metric-value text-error">
               {formatCurrency(despesasData?.despesas.reduce((s, d) => s + d.valor_pago, 0) ?? 0, { compact: true })}
             </p>
           </div>
-          <div className="bg-dark-850 border border-dark-700 rounded-xl px-4 py-3">
-            <p className="text-xs text-dark-400">Saldo em {anoSelecionado}</p>
-            <p className="text-lg font-semibold text-forecast-accent">
+          <div className="metric-card">
+            <p className="metric-label">Saldo em {anoSelecionado}</p>
+            <p className="metric-value text-tertiary">
               {formatCurrency(kpisData?.saldo ?? 0, { compact: true })}
             </p>
           </div>
-        </div>
+        </motion.div>
 
         {/* Cards de exportação */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+        >
           {EXPORT_CARDS.map((card) => {
-            const Icon = card.icon;
             const cardState = exportStates[card.id];
             const isLoading = cardState.status === 'loading' || isExporting;
             const count = recordCounts[card.id];
@@ -231,21 +236,21 @@ export default function RelatoriosClient() {
             return (
               <div
                 key={card.id}
-                className="bg-dark-850 border border-dark-700 rounded-xl p-6 hover:border-dark-600 transition-colors"
+                className="elevated-card p-6 hover:shadow-ambient-lg transition-all duration-300"
               >
                 {/* Ícone e título */}
                 <div className="flex items-start gap-4 mb-4">
                   <div className={`p-3 rounded-lg ${card.iconBgClass}`}>
-                    <Icon className={`w-6 h-6 ${card.colorClass}`} />
+                    <Icon name={card.iconName} size={24} className={card.colorClass} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-semibold text-dark-100">{card.title}</h3>
-                    <p className="text-sm text-dark-400 mt-0.5">{card.description}</p>
+                    <h3 className="text-title-md text-on-surface">{card.title}</h3>
+                    <p className="text-body-sm text-on-surface-variant mt-0.5">{card.description}</p>
                   </div>
                 </div>
 
                 {/* Contagem de registros */}
-                <p className="text-xs text-dark-500 mb-4">
+                <p className="text-label-md text-on-surface-variant/60 mb-4">
                   {count} registro{count !== 1 ? 's' : ''} disponíve{count !== 1 ? 'is' : 'l'} para {anoSelecionado}
                 </p>
 
@@ -259,40 +264,45 @@ export default function RelatoriosClient() {
                   <button
                     onClick={() => handleExport(card.id, 'csv')}
                     disabled={isLoading || count === 0}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-dark-800 hover:bg-dark-700 disabled:opacity-50 disabled:cursor-not-allowed text-dark-200 text-sm font-medium rounded-lg border border-dark-600 transition-colors"
+                    className="flex-1 btn-outline text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <FileSpreadsheet className="w-4 h-4 text-revenue-400" />
+                    <Icon name="table" size={18} className="text-secondary" />
                     CSV
                   </button>
                   <button
                     onClick={() => handleExport(card.id, 'json')}
                     disabled={isLoading || count === 0}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-dark-800 hover:bg-dark-700 disabled:opacity-50 disabled:cursor-not-allowed text-dark-200 text-sm font-medium rounded-lg border border-dark-600 transition-colors"
+                    className="flex-1 btn-outline text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <FileText className="w-4 h-4 text-forecast-400" />
+                    <Icon name="description" size={18} className="text-tertiary" />
                     JSON
                   </button>
                 </div>
               </div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Seção informativa */}
-        <div className="bg-dark-850 border border-dark-700 rounded-xl p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="surface-card p-6"
+        >
           <div className="flex items-start gap-3">
-            <Download className="w-5 h-5 text-dark-400 mt-0.5" />
+            <Icon name="download" size={20} className="text-on-surface-variant mt-0.5" />
             <div>
-              <h3 className="text-sm font-semibold text-dark-200">Sobre a exportação</h3>
-              <ul className="mt-2 text-xs text-dark-400 space-y-1">
-                <li>• <strong className="text-dark-300">CSV</strong> — compatível com Excel, Google Sheets e outros softwares de planilha</li>
-                <li>• <strong className="text-dark-300">JSON</strong> — formato estruturado para integração com sistemas e APIs</li>
+              <h3 className="text-title-sm text-on-surface">Sobre a exportação</h3>
+              <ul className="mt-2 text-body-sm text-on-surface-variant space-y-1">
+                <li>• <strong className="text-on-surface">CSV</strong> — compatível com Excel, Google Sheets e outros softwares de planilha</li>
+                <li>• <strong className="text-on-surface">JSON</strong> — formato estruturado para integração com sistemas e APIs</li>
                 <li>• Os dados são exportados conforme o ano selecionado no filtro acima</li>
                 <li>• Registros nulos ou ausentes podem aparecer como valores vazios</li>
               </ul>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </DashboardLayout>
   );

@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
 
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -38,22 +39,61 @@ const CombinedOverviewChart = dynamic(
   { loading: () => <LoadingSpinner />, ssr: false }
 );
 
+/* ────────────────────────────────────────────
+   Animações
+   ──────────────────────────────────────────── */
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.22, 1, 0.36, 1],
+    },
+  },
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.1,
+    },
+  },
+};
+
 export default function DashboardClient() {
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <motion.div
+        className="space-y-8"
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+      >
         {/* KPIs principais */}
-        <Suspense fallback={<LoadingSpinner />}>
-          <KPISection />
-        </Suspense>
+        <motion.section variants={sectionVariants}>
+          <Suspense fallback={<LoadingSpinner />}>
+            <KPISection />
+          </Suspense>
+        </motion.section>
 
         {/* Gráfico combinado: receitas x despesas */}
-        <Suspense fallback={<LoadingSpinner />}>
-          <CombinedOverviewChart />
-        </Suspense>
+        <motion.section variants={sectionVariants}>
+          <Suspense fallback={<LoadingSpinner />}>
+            <CombinedOverviewChart />
+          </Suspense>
+        </motion.section>
 
         {/* Gráficos individuais de receitas e despesas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.section
+          variants={sectionVariants}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+        >
           <Suspense fallback={<LoadingSpinner />}>
             <RevenueChart />
           </Suspense>
@@ -61,19 +101,26 @@ export default function DashboardClient() {
           <Suspense fallback={<LoadingSpinner />}>
             <ExpenseChart />
           </Suspense>
-        </div>
+        </motion.section>
 
-        {/* Previsões e sazonalidade */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <Suspense fallback={<LoadingSpinner />}>
-            <ForecastSection />
-          </Suspense>
+        {/* Previsões e comparativo */}
+        <motion.section
+          variants={sectionVariants}
+          className="grid grid-cols-1 xl:grid-cols-3 gap-6"
+        >
+          <div className="xl:col-span-2">
+            <Suspense fallback={<LoadingSpinner />}>
+              <ForecastSection />
+            </Suspense>
+          </div>
 
-          <Suspense fallback={<LoadingSpinner />}>
-            <ComparativeSection />
-          </Suspense>
-        </div>
-      </div>
+          <div>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ComparativeSection />
+            </Suspense>
+          </div>
+        </motion.section>
+      </motion.div>
     </DashboardLayout>
   );
 }
