@@ -49,3 +49,11 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# SQLite WAL files
+*.db-shm
+*.db-wal
+
+# Test artifacts
+.coverage
+*.tsbuildinfo
