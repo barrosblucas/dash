@@ -56,6 +56,13 @@
   - `next/navigation` e `next/link` mockados para isolamento dos componentes client
   - Validação final: `npm run lint && npm run type-check && npm run test && npm run build` — **todos verdes**
 
+## Corrigido
+- **Ambiente virtual do backend com dependências faltantes**
+  - Sintoma: `ImportError: email-validator is not installed` ao iniciar a aplicação (`backend/shared/security.py` também falhava com `No module named 'jwt'`)
+  - Causa: o venv em `/home/thanos/dashboard/venv` estava desatualizado/inconsistente em relação ao `backend/requirements.txt`
+  - Ação: reinstalação completa das dependências via `pip install -r requirements.txt` no venv do projeto
+  - Validação: `ruff check .`, `mypy .` e `pytest` — todos verdes após a correção
+
 ## Riscos reais restantes
 - `cast()` em leituras ORM assume que colunas não-nulas nunca retornam `None`; se o banco violar isso, o erro será em runtime (não novo — reflete contrato implícito)
 - `# type: ignore[assignment]` em escritas ORM mascara eventuais bugs reais de tipo; mitigado pelo fato de que entidades são validadas por Pydantic antes de chegarem ao repositório
