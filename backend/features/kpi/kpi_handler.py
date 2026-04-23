@@ -5,6 +5,8 @@ Endpoints para consulta de indicadores financeiros.
 Apenas orquestração HTTP — delega para data e business.
 """
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -32,7 +34,7 @@ async def obter_kpis(
         None, ge=2013, le=2030, description="Ano para cálculo dos KPIs"
     ),
     db: Session = Depends(get_db),
-):
+) -> KPIsResponse:
     """
     Obtém os principais KPIs financeiros.
 
@@ -59,7 +61,7 @@ async def obter_kpis(
 async def obter_kpis_mensal(
     ano: int,
     db: Session = Depends(get_db),
-):
+) -> KPIsResponse:
     """
     Obtém KPIs financeiros por mês do ano.
 
@@ -83,7 +85,7 @@ async def obter_kpis_anuais(
     ),
     ano_fim: int | None = Query(None, ge=2013, le=2030, description="Ano final"),
     db: Session = Depends(get_db),
-):
+) -> KPIsResponse:
     """
     Obtém KPIs financeiros por ano.
 
@@ -115,7 +117,7 @@ async def obter_kpis_anuais(
 
 
 @router.get("/resumo", response_model=dict, summary="Resumo geral")
-async def obter_resumo_geral(db: Session = Depends(get_db)):
+async def obter_resumo_geral(db: Session = Depends(get_db)) -> dict[str, Any]:
     """
     Obtém resumo geral dos dados financeiros.
 

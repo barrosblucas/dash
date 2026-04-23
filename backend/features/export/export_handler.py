@@ -38,7 +38,7 @@ async def export_receitas_excel(
         None, description="Filtrar por tipo (CORRENTE ou CAPITAL)"
     ),
     db: Session = Depends(get_db),
-):
+) -> StreamingResponse:
     """
     Exporta receitas para arquivo Excel (.xlsx).
     """
@@ -68,7 +68,7 @@ async def export_despesas_excel(
     ano: int | None = Query(None, ge=2013, le=2030, description="Filtrar por ano"),
     tipo: str | None = Query(None, description="Filtrar por tipo"),
     db: Session = Depends(get_db),
-):
+) -> StreamingResponse:
     """
     Exporta despesas para arquivo Excel (.xlsx).
     """
@@ -100,7 +100,7 @@ async def export_kpis_excel(
     ),
     ano_fim: int | None = Query(None, ge=2013, le=2030, description="Ano final"),
     db: Session = Depends(get_db),
-):
+) -> StreamingResponse:
     """
     Exporta KPIs consolidados para arquivo Excel (.xlsx).
     """

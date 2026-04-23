@@ -59,7 +59,7 @@ async def forecast_receitas(
         0.95, ge=0.80, le=0.99, description="Nível de confiança (0.80-0.99)"
     ),
     db: Session = Depends(get_db),
-):
+) -> ForecastResponse:
     """
     Prevê receitas para os próximos N meses usando Prophet.
 
@@ -77,6 +77,8 @@ async def forecast_receitas(
     Example:
         GET /api/v1/forecast/receitas?horizonte=24&confianca=0.90
     """
+    assert horizonte is not None
+    assert confianca is not None
     dados_historicos = get_receitas_mensais(db)
     previsoes = run_prophet_forecast(
         dados_historicos=dados_historicos,
@@ -97,7 +99,7 @@ async def forecast_despesas(
         0.95, ge=0.80, le=0.99, description="Nível de confiança (0.80-0.99)"
     ),
     db: Session = Depends(get_db),
-):
+) -> ForecastResponse:
     """
     Prevê despesas para os próximos N meses usando Prophet.
 
@@ -115,6 +117,8 @@ async def forecast_despesas(
     Example:
         GET /api/v1/forecast/despesas?horizonte=24&confianca=0.90
     """
+    assert horizonte is not None
+    assert confianca is not None
     dados_historicos = get_despesas_mensais(db)
     previsoes = run_prophet_forecast(
         dados_historicos=dados_historicos,

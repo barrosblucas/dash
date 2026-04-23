@@ -35,13 +35,17 @@ dashboard/
 │   │   │   ├── scraping_scheduler.py     # APScheduler
 │   │   │   ├── expense_pdf_sync_service.py
 │   │   │   └── historical_data_bootstrap_service.py
-│   │   └── export/           # Contexto de exportação
+│   │   ├── export/           # Contexto de exportação
+│   │   ├── identity/         # Contexto de identidade/admin
+│   │   └── obra/             # Contexto de obras públicas
 │   ├── shared/               # Infraestrutura compartilhada entre features
 │   │   ├── database/
 │   │   │   ├── connection.py # Engine SQLAlchemy, session factory, DatabaseManager
 │   │   │   └── models.py     # Modelos ORM (todos, schema compartilhado)
 │   │   ├── pdf_extractor.py  # Extração de PDFs consolidada
-│   │   └── quality_api_client.py # Cliente HTTP QualitySistemas
+│   │   ├── quality_api_client.py # Cliente HTTP QualitySistemas
+│   │   ├── security.py       # Hash de senha, JWT e dependências auth
+│   │   └── settings.py       # Settings centralizados (CORS, segredos, bootstrap)
 │   └── tests/                # Testes pytest
 │       ├── test_api/         # Testes de integração das rotas
 │       ├── test_etl/         # Testes do pipeline ETL
@@ -121,6 +125,8 @@ O backend é organizado em bounded contexts verticais dentro de `features/`. Cad
 | Movimento Extra | `features/movimento_extra/` | types, handler, adapter, business |
 | Scraping | `features/scraping/` | types, handler, orchestrator, helpers, scheduler, expense_pdf_sync_service, historical_data_bootstrap_service |
 | Export | `features/export/` | types, handler, business |
+| Identity | `features/identity/` | types, handler, data |
+| Obra | `features/obra/` | types, handler, data, business |
 
 ### Regra de adição de feature
 
@@ -197,6 +203,10 @@ types → (nenhuma dependência externa)
 - **Despesa**: despesa orçamentária com empenhado, liquidado e pago por mês/categoria
 - **Forecast**: previsão gerada por ML com intervalo de confiança
 - **MetadataETL**: rastreabilidade de execuções do pipeline de extração
+- **User**: identidade administrativa com role, status ativo e versionamento de tokens
+- **IdentityToken**: refresh/reset tokens persistidos com `jti`, expiração e revogação
+- **Obra**: obra pública identificada externamente por `hash`
+- **ObraMedicao**: medições mensais filhas substituídas pela payload de escrita
 
 ### Enums de domínio
 - `TipoReceita`: CORRENTE | CAPITAL
@@ -215,6 +225,33 @@ types → (nenhuma dependência externa)
 - Isolamento entre features enforce por gate `check_cross_feature_imports.py`
 - Convenção de sufixos (`*_types`, `*_handler`, `*_business`, `*_data`) substitui diretórios por camada
 - Re-exports backward-compatible mantidos temporariamente nas localizações antigas
+
+### ADR-002: Sessão administrativa híbrida no frontend (2026-04-22)
+
+**Contexto**: o portal público permanece aberto, mas a nova área administrativa exige proteção de navegação no Next.js sem persistir access token em `localStorage`/`sessionStorage`.
+
+**Decisão**: usar route handlers do frontend (`/api/auth/login`, `/api/auth/session`, `/api/auth/logout`) como borda para conversar com `/api/v1/identity/*`, mantendo o refresh token em cookie `HttpOnly` seguro e o access token apenas em memória no cliente. O middleware do Next protege `/admin` pela presença do cookie, enquanto a autorização real permanece no backend.
+
+**Consequências**:
+- a navegação protegida fica separada do portal público por um layout administrativo próprio
+- o frontend ganha contratos TS dedicados para `identity`, `user` e `obra`
+- páginas administrativas conseguem reidratar a sessão via `/api/auth/session` sem expor refresh token ao browser JavaScript
+
+### ADR-003: Identidade administrativa rotativa e obras como bounded contexts próprios (2026-04-22)
+
+**Contexto**: a área administrativa passou a exigir autenticação backend, gestão de usuários, reset de senha e CRUD real de obras com leitura pública e escrita restrita.
+
+**Decisão**:
+- introduzir `features/identity/` com access token curto e refresh token rotativo persistido no servidor;
+- proteger superfícies administrativas com dependência explícita de usuário admin;
+- introduzir `features/obra/` com identificador público por `hash` e medições mensais como entidade filha;
+- centralizar CORS e segredos em `shared/settings.py` e `shared/security.py`.
+
+**Consequências**:
+- o backend combina access token stateless com refresh/reset tokens revogáveis no servidor;
+- reset de senha passa a ser invalidável de forma segura e one-shot;
+- obras ficam isoladas em um slice vertical sem dependência de outras features;
+- configurações sensíveis deixam de ficar espalhadas na inicialização da aplicação.
 
 ### Decisões anteriores
 

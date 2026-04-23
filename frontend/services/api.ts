@@ -18,9 +18,11 @@ export interface ApiErrorResponse {
 class ApiClient {
   private client: AxiosInstance;
   private baseURL: string;
+  private accessToken: string | null;
 
   constructor() {
     this.baseURL = API_ENDPOINTS.base;
+    this.accessToken = null;
     
     this.client = axios.create({
       baseURL: this.baseURL,
@@ -32,7 +34,13 @@ class ApiClient {
 
     // Interceptor para logs de Requisição
     this.client.interceptors.request.use(
-      (config) => config,
+      (config) => {
+        if (this.accessToken) {
+          config.headers.Authorization = `Bearer ${this.accessToken}`;
+        }
+
+        return config;
+      },
       (error) => Promise.reject(error)
     );
 
@@ -53,7 +61,11 @@ class ApiClient {
           if (status === 400) {
             throw new Error(`Requisição inválida: ${detail || message}`);
           }
-          
+
+          if (status === 401) {
+            throw new Error('Sessão expirada ou acesso não autorizado.');
+          }
+
           if (status >= 500) {
             throw new Error(`Erro interno do servidor: ${message}`);
           }
@@ -89,6 +101,14 @@ class ApiClient {
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.delete<T>(url, config);
     return response.data;
+  }
+
+  setAccessToken(token: string | null) {
+    this.accessToken = token;
+  }
+
+  clearAccessToken() {
+    this.accessToken = null;
   }
 
   // Health check

@@ -7,8 +7,9 @@ com lógica de upsert e logging de execução.
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from backend.features.despesa.despesa_scraper import DespesaScraper
 from backend.features.despesa.despesa_types import Despesa
@@ -131,7 +132,7 @@ class ScrapingService:
         except Exception as exc:
             msg = f"Erro scraping receitas {year}: {exc}"
             logger.error(msg, exc_info=True)
-            _try_log_error("receitas", year, msg, log.started_at)
+            _try_log_error("receitas", year, msg, cast(datetime, log.started_at))
             return ScrapingResult(False, "receitas", year, 0, 0, 0, [msg])
 
     async def scrape_despesas(self, year: int) -> ScrapingResult:
@@ -184,7 +185,7 @@ class ScrapingService:
         except Exception as exc:
             msg = f"Erro scraping despesas {year}: {exc}"
             logger.error(msg, exc_info=True)
-            _try_log_error("despesas", year, msg, log.started_at)
+            _try_log_error("despesas", year, msg, cast(datetime, log.started_at))
             return ScrapingResult(False, "despesas", year, 0, 0, 0, [msg])
 
     def _load_despesas_from_pdf(self, year: int) -> list[Despesa]:

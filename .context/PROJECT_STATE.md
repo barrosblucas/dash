@@ -17,6 +17,8 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Endpoints de forecast (receitas, despesas)
 - [x] Endpoints de exportação (PDF, Excel)
 - [x] Endpoints de scraping (status do scheduler, trigger manual, histórico de execuções)
+- [x] Bounded context `identity` com login, refresh rotativo, logout, `me`, gestão de usuários e reset de senha
+- [x] Bounded context `obra` com CRUD completo, hash público, medições mensais filhas e cálculo de valores derivados
 - [x] Scheduler de scraping periódico (APScheduler, 10 min) com primeira execução imediata no startup
 - [x] Serviço de scraping QualitySistemas com upsert de receitas, despesas e detalhamento
 - [x] Sincronização de PDF de despesas com contrato real do portal (RelatorioPdf retorna path + download subsequente do binário)
@@ -30,7 +32,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
 - [x] Detalhamento hierárquico de receitas com extração por indentação de PDF
 - [x] Forecasting com Prophet + fallback para projeção linear
-- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl, receita_detalhamento)
+- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, usuários, tokens de identidade, obras, medições)
+- [x] CORS parametrizado via settings com lista explícita de origens permitidas
+- [x] Endpoints administrativos de banco protegidos por autenticação admin
 
 ### Frontend
 - [x] App Next.js rodando na porta 3000
@@ -69,6 +73,11 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Download direto de edital ComprasBR via `arquivoUri`
 - [x] Feriados nacionais, estaduais (MS) e móveis exibidos no calendário
 - [x] Títulos sucintos de licitações no calendário e lista
+- [x] Área restrita administrativa em `/admin` protegida por middleware do Next com `/login` dedicado
+- [x] Sessão de autenticação no frontend com access token somente em memória e refresh token em cookie `HttpOnly` via route handlers `/api/auth/*`
+- [x] Gestão de usuários no frontend administrativo (listagem, cadastro, edição e reset de senha)
+- [x] CRUD administrativo de obras com edição completa de metadados e medições mensais dinâmicas
+- [x] Portal público de obras consumindo API real em `/obras` e `/obras/[id]`, sem mocks locais
 
 ### Frontend — Reformulação Visual Completa v2 (2026-04-22)
 - [x] **Reformulação completa do frontend** seguindo templates HTML de referência (`design_system/`)
@@ -138,23 +147,28 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 ### Arquitetura
 
 - **MIGRAÇÃO REALIZADA (2026-04-21):** Backend migrado de layer-first para vertical bounded contexts (`features/` + `shared/`). Re-exports backward-compatible de `domain/`, `infrastructure/`, `services/`, `etl/` **removidos** (2026-04-21). Apenas `api/routes/` e `api/schemas_*` mantidos como re-exports.
-- Testes `test_ml/` ainda vazio; `test_api/` parcialmente iniciado com `test_licitacoes.py`; `test_etl/` parcialmente coberto — cobertura automatizada ainda insuficiente
+- `test_api/` agora cobre licitações, identidade e obras; `test_ml/` e parte de `test_etl/` seguem com cobertura parcial
 - Lógica de negócio ainda parcialmente acoplada nos handlers — extrair para `*_business.py` conforme crescer
 - `notebooks/` vazio — sem notebooks de exploração
-- Alembic migrations configurado mas sem migrations criadas (tabelas criadas por `create_all`)
-- CORS permite `*` — precisa ser restrito em produção
+- Alembic migrations configurado e migration inicial gerada cobrindo todas as tabelas existentes (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, scraping_log, users, identity_tokens, obras, obra_medicoes)
 - `forecast_business.py` ainda importa modelos ORM via repositório ao invés de usar abstração pura
+
+### Type checking (mypy)
+
+- `mypy .` **verde global** — débito técnico legado em `features/receita/`, `features/despesa/`, `features/scraping/` e scripts auxiliares foi limpo em 2026-04-23.
+- Gate CI (`ruff check . && mypy . && pytest`) passando sem erros.
 
 ## Próximos passos planejados
 
 1. Melhorar cobertura de testes (especialmente handlers e business logic)
 2. Limpar re-exports backward-compatible restantes (`api/routes/`, `api/schemas_*`)
-3. Configurar Alembic migrations
-4. Restringir CORS para domínios conhecidos
-5. Adicionar autenticação se necessário
-6. Implementar testes automatizados no frontend (vitest)
-7. Extrair lógica de negócio restante dos handlers para `*_business.py`
-8. ~~Consolidar ícones restantes do lucide-react para Material Symbols~~ ✅ Concluído em 2026-04-21
+3. ~~Configurar Alembic migrations~~ ✅ Concluído em 2026-04-23
+4. ~~Integrar o backend de identidade/usuários/obras ao frontend administrativo~~ ✅ Concluído em 2026-04-22
+5. Configurar estratégia operacional de entrega de reset de senha fora do ambiente local
+6. ~~Implementar testes automatizados no frontend (vitest)~~ ✅ Concluído em 2026-04-23
+7. ~~Limpar débito técnico `mypy` nos módulos legados~~ ✅ Concluído em 2026-04-23
+8. Extrair lógica de negócio restante dos handlers para `*_business.py`
+9. ~~Consolidar ícones restantes do lucide-react para Material Symbols~~ ✅ Concluído em 2026-04-21
 
 ## Ambiente
 

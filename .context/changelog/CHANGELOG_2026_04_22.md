@@ -1,6 +1,87 @@
 # Changelog — 2026-04-22
 
+## Backend
+
+### Adicionado: bounded context `identity` com autenticação rotativa e administração de usuários
+
+**Escopo:** Backend FastAPI (`/api/v1/identity`), segurança compartilhada e proteção de superfícies administrativas.
+
+**Arquivos criados/alterados:**
+- `backend/shared/settings.py` — settings centralizados para CORS explícito, segredos JWT, bootstrap de admin e reset de senha
+- `backend/shared/security.py` — hash Argon2, emissão/validação de access token e refresh token, dependências de autenticação/autorização
+- `backend/features/identity/identity_types.py` — schemas Pydantic de login, refresh, logout, usuário e reset de senha
+- `backend/features/identity/identity_data.py` — persistência de usuários e tokens rotativos/revogáveis + bootstrap do primeiro admin
+- `backend/features/identity/identity_handler.py` — rotas de login, refresh, logout, `me`, CRUD básico de usuários e reset de senha
+- `backend/shared/database/models.py` — tabelas `users` e `identity_tokens`
+- `backend/api/main.py` — registro do router, CORS via settings, sanitização de 500 e proteção de `/admin/*`
+
+**Mudanças principais:**
+- access token curto via `Authorization: Bearer`
+- refresh token rotativo com `jti` persistido e revogado no servidor
+- reset de senha com token assinado de uso único e expiração curta
+- bootstrap one-shot do primeiro admin a partir de env/settings quando o banco ainda não possui usuários
+- `/admin/reset-database` e `/admin/stats` agora exigem usuário admin autenticado
+- handler global de 500 deixou de expor `str(exc)` ao cliente
+- CORS deixou de usar `allow_origins=["*"]` com credenciais
+
+**Validação:**
+- `cd backend && ruff check .` ✅
+- `cd backend && pytest` ✅ (80 testes)
+- `cd backend && mypy .` — arquivos novos (`features/identity/`, `features/obra/`, `shared/settings.py`, `shared/security.py`) passam isoladamente; gate global ainda falha por débito legado em `receita/`, `despesa/`, `scraping/` (conhecido e planejado para correção no ciclo seguinte)
+
+---
+
+### Adicionado: bounded context `obra` com CRUD completo e medições filhas
+
+**Escopo:** Backend FastAPI (`/api/v1/obras`) com leitura pública e escrita restrita a admins.
+
+**Arquivos criados/alterados:**
+- `backend/features/obra/obra_types.py` — schemas Pydantic de obra e medição
+- `backend/features/obra/obra_business.py` — cálculos puros (`valor_economizado`, `valor_medido_total`)
+- `backend/features/obra/obra_data.py` — persistência SQLAlchemy de obras e substituição completa de medições no update
+- `backend/features/obra/obra_handler.py` — listagem, detalhe, criação, edição e remoção por `hash`
+- `backend/shared/database/models.py` — tabelas `obras` e `obra_medicoes`
+- `backend/tests/test_api/test_obra.py` — cobertura de CRUD, proteção admin, leitura pública e medições
+
+**Mudanças principais:**
+- identificador externo de obra passou a ser `hash` gerado no backend
+- status válidos: `em_andamento`, `paralisada`, `concluida`
+- payload aceita e retorna coleção `medicoes`
+- update substitui integralmente a coleção de medições enviada
+- `valor_economizado` e `valor_medido_total` são calculados e retornados pela API
+
+**Validação:**
+- `cd backend && ruff check .` ✅
+- `cd backend && pytest` ✅ (80 testes)
+- `cd backend && mypy <arquivos novos>` ✅
+
 ## Frontend
+
+### Adicionado: Área administrativa com autenticação isolada e CRUD de obras/usuários
+
+**Escopo:** frontend administrativo (`/login`, `/admin/*`), borda de autenticação via route handlers e substituição dos mocks públicos de obras por consumo real da API.
+
+**Arquivos-chave:**
+- `frontend/middleware.ts` — proteção de navegação para `/admin` baseada em cookie HttpOnly de refresh
+- `frontend/app/api/auth/*` + `frontend/lib/auth-server.ts` — borda `login/session/logout` para conversar com `/api/v1/identity/*`
+- `frontend/stores/authStore.ts` + `frontend/services/auth-service.ts` — sessão client-side com access token apenas em memória
+- `frontend/components/admin/**` + `frontend/app/admin/**` — layout administrativo separado, gestão de usuários e CRUD completo de obras com medições dinâmicas
+- `frontend/services/obra-service.ts`, `frontend/services/user-service.ts`, `frontend/types/{identity,user,obra}.ts` — contratos TS e serviços dedicados
+- `frontend/app/obras/obras-client.tsx` + `frontend/app/obras/[id]/obra-detalhe-client.tsx` — consumo real da API de obras no portal público
+- `frontend/components/layouts/PortalHeader.tsx` — CTA “Acesso Restrito” apontando para `/login`
+
+**Decisões relevantes:**
+- access token fica exclusivamente em memória no frontend; refresh token permanece em cookie `HttpOnly` seguro controlado pelos route handlers
+- middleware protege apenas a navegação de `/admin`; autorização efetiva continua delegada ao backend
+- layout administrativo foi separado da navegação pública para reduzir ambiguidade entre área aberta e área restrita
+- `valor_economizado` permanece somente leitura nos fluxos público e administrativo
+
+**Validação final:**
+- `cd frontend && npm run lint`: ✅ sem warnings ou erros
+- `cd frontend && npm run type-check`: ✅ sem erros
+- `cd frontend && npm run build`: ✅ sucesso (mantido warning pré-existente de `metadataBase` ausente)
+
+---
 
 ### Refatorado: Reformulação visual completa do frontend — design system "The Architectural Archive"
 
@@ -190,3 +271,27 @@
 - `npm run lint`: ✅ zero warnings, zero errors
 - `tsc --noEmit`: ✅ zero erros
 - `npm run build`: ✅ compiled successfully
+
+---
+
+### Corrigido: reconciliação frontend/backend e jornada de reset de senha
+
+**Escopo:** Ajustes de contrato, segurança de rota admin e conclusão do fluxo de reset de senha.
+
+**Arquivos alterados/criados:**
+- `frontend/services/obra-service.ts` — parser de valores decimais retornados como string pelo backend para `number`
+- `frontend/lib/obra-formatters.ts` — `formatCurrency` agora aceita `number | string | null | undefined`
+- `frontend/types/identity.ts` — tipos para consumo de reset de senha (`PasswordResetConsumeRequest/Response`)
+- `frontend/services/auth-service.ts` — `consumePasswordReset` integrado com `POST /api/v1/identity/password-resets/consume`
+- `frontend/components/admin/AdminShell.tsx` — redirecionamento de não-admin para `/dashboard` e bloqueio de renderização
+- `frontend/app/reset-password/page.tsx` + `frontend/components/auth/ResetPasswordPageClient.tsx` — página pública para redefinir senha a partir do token/link gerado no admin
+
+**Mudanças principais:**
+- contrato de obras agora é tolerante a `Decimal` serializado como string pelo backend
+- `AdminShell` protege a área admin não apenas por cookie, mas também por `role === 'admin'`
+- jornada de reset de senha está completa: admin gera link → usuário acessa `/reset-password?token=...` → consome token → redireciona para login
+
+**Validação final:**
+- `cd frontend && npm run lint` ✅
+- `cd frontend && npm run type-check` ✅
+- `cd frontend && npm run build` ✅

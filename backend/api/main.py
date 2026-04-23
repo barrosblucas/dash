@@ -7,11 +7,14 @@ API para consulta de dados financeiros da Prefeitura de Bandeirantes MS.
 from __future__ import annotations
 
 import logging
+import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
-from fastapi import FastAPI, Request, status
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -19,26 +22,32 @@ from backend.api.schemas import HealthCheckResponse
 from backend.features.despesa.despesa_handler import router as despesas_router
 from backend.features.export.export_handler import router as export_router
 from backend.features.forecast.forecast_handler import router as forecast_router
+from backend.features.identity.identity_data import bootstrap_first_admin
+from backend.features.identity.identity_handler import router as identity_router
 from backend.features.kpi.kpi_handler import router as kpis_router
 from backend.features.licitacao.licitacao_handler import router as licitacoes_router
 from backend.features.movimento_extra.movimento_extra_handler import (
     router as movimento_extra_router,
 )
+from backend.features.obra.obra_handler import router as obra_router
 from backend.features.receita.receita_handler import router as receitas_router
 from backend.features.scraping.historical_data_bootstrap_service import (
     HistoricalDataBootstrapService,
 )
 from backend.features.scraping.scraping_handler import router as scraping_router
 from backend.shared.database.connection import db_manager, init_database
+from backend.shared.security import require_admin_user
+from backend.shared.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
 # Diretório base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+settings = get_settings()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Gerenciador do ciclo de vida da aplicação.
 
@@ -48,10 +57,23 @@ async def lifespan(app: FastAPI):
     logger.info("Iniciando Dashboard Financeiro Municipal API")
 
     try:
-        init_database()
-        logger.info("Banco de dados inicializado com sucesso")
+        if os.environ.get("SKIP_AUTO_DB_INIT"):
+            logger.info(
+                "SKIP_AUTO_DB_INIT ativo; pulando init_database() — "
+                "presumindo que Alembic (ou outro migrador) gerencia o schema"
+            )
+        else:
+            init_database()
+            logger.info("Banco de dados inicializado com sucesso")
     except Exception:
         logger.exception("Erro ao inicializar banco de dados")
+        raise
+
+    try:
+        with db_manager.get_session() as session:
+            bootstrap_first_admin(session, settings)
+    except Exception:
+        logger.exception("Falha ao executar bootstrap inicial de admin")
         raise
 
     try:
@@ -126,7 +148,7 @@ app = FastAPI(
 # Configura CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Em produção, especificar domínios
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -135,17 +157,18 @@ app.add_middleware(
 
 # Handler de exceções global
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
     Handler global para exceções não tratadas.
 
     Retorna resposta JSON pad ronizada para erros.
     """
+    logger.exception("Erro não tratado em %s", request.url.path, exc_info=exc)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "error": "Erro interno do servidor",
-            "detail": str(exc),
+            "detail": None,
             "code": "INTERNAL_ERROR",
         },
     )
@@ -160,11 +183,13 @@ app.include_router(export_router, prefix="/api/v1")
 app.include_router(scraping_router, prefix="/api/v1")
 app.include_router(movimento_extra_router, prefix="/api/v1")
 app.include_router(licitacoes_router, prefix="/api/v1")
+app.include_router(identity_router, prefix="/api/v1")
+app.include_router(obra_router, prefix="/api/v1")
 
 
 # Endpoint de health check
 @app.get("/health", response_model=HealthCheckResponse, tags=["health"])
-async def health_check():
+async def health_check() -> HealthCheckResponse:
     """
     Verifica a saúde da API e do banco de dados.
 
@@ -193,7 +218,7 @@ async def health_check():
 
 # Endpoint raiz
 @app.get("/", tags=["root"])
-async def root():
+async def root() -> dict[str, Any]:
     """
     Endpoint raiz da API.
 
@@ -219,7 +244,7 @@ async def root():
 
 # Endpoint para reinicializar o banco (útil em desenvolvimento)
 @app.post("/admin/reset-database", tags=["admin"])
-async def reset_database():
+async def reset_database(_: object = Depends(require_admin_user)) -> dict[str, str]:
     """
     Reinicializa o banco de dados.
 
@@ -230,6 +255,8 @@ async def reset_database():
         Mensagem de confirmação.
     """
     db_manager.reset_database()
+    with db_manager.get_session() as session:
+        bootstrap_first_admin(session, settings)
     return {
         "message": "Banco de dados reinicializado com sucesso",
         "status": "success",
@@ -238,7 +265,7 @@ async def reset_database():
 
 # Endpoint para estatísticas do banco
 @app.get("/admin/stats", tags=["admin"])
-async def get_database_stats():
+async def get_database_stats(_: object = Depends(require_admin_user)) -> dict[str, Any]:
     """
     Retorna estatísticas do banco de dados.
 

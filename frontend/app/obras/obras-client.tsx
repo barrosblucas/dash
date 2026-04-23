@@ -1,290 +1,134 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
-/* ── Mock Data ── */
-const obras = [
-  {
-    id: 1,
-    titulo: 'Reforma da Unidade de Saúde Central',
-    status: 'em_andamento' as const,
-    progresso: 65,
-    secretaria: 'Saúde',
-    inicio: 'Jan 2024',
-    valor: 'R$ 1.200.000',
-    descricao: 'Reforma completa da unidade de saúde central, incluindo ampliação do pronto-socorro e modernização dos consultórios médicos.',
-  },
-  {
-    id: 2,
-    titulo: 'Pavimentação Rua das Flores',
-    status: 'em_andamento' as const,
-    progresso: 40,
-    secretaria: 'Obras',
-    inicio: 'Mar 2024',
-    valor: 'R$ 850.000',
-    descricao: 'Pavimentação asfáltica da Rua das Flores e galerias pluviais nos trechos entre as Avenidas Central e Brasil.',
-  },
-  {
-    id: 3,
-    titulo: 'Construção do Centro Esportivo',
-    status: 'planejada' as const,
-    progresso: 0,
-    secretaria: 'Esportes',
-    inicio: 'Jun 2024',
-    valor: 'R$ 2.500.000',
-    descricao: 'Construção de centro esportivo com quadra poliesportiva, pista de caminhada e área de lazer para a comunidade.',
-  },
-  {
-    id: 4,
-    titulo: 'Ampliação da Escola Municipal',
-    status: 'concluida' as const,
-    progresso: 100,
-    secretaria: 'Educação',
-    inicio: 'Jul 2023',
-    valor: 'R$ 980.000',
-    descricao: 'Ampliação da escola municipal com 4 novas salas de aula, laboratório de informática e biblioteca.',
-  },
-  {
-    id: 5,
-    titulo: 'Reforma da Praça Central',
-    status: 'em_andamento' as const,
-    progresso: 80,
-    secretaria: 'Urbanismo',
-    inicio: 'Fev 2024',
-    valor: 'R$ 450.000',
-    descricao: 'Revitalização da praça central com novo paisagismo, iluminação LED e equipamentos de ginástica ao ar livre.',
-  },
-  {
-    id: 6,
-    titulo: 'Sistema de Esgoto - Vila Nova',
-    status: 'em_andamento' as const,
-    progresso: 30,
-    secretaria: 'Saneamento',
-    inicio: 'Abr 2024',
-    valor: 'R$ 3.200.000',
-    descricao: 'Implantação de rede coletora de esgoto no bairro Vila Nova, beneficiando aproximadamente 2.000 famílias.',
-  },
+import { formatCurrency, formatDate, obraStatusLabels, obraStatusTone } from '@/lib/obra-formatters';
+import { obrasService } from '@/services/obra-service';
+import type { ObraStatus } from '@/types/obra';
+
+const filters: Array<{ key: 'todas' | ObraStatus; label: string }> = [
+  { key: 'todas', label: 'Todas' },
+  { key: 'em_andamento', label: 'Em andamento' },
+  { key: 'paralisada', label: 'Paralisadas' },
+  { key: 'concluida', label: 'Concluídas' },
 ];
 
-/* ── Status Helpers ── */
-type Status = 'em_andamento' | 'concluida' | 'planejada';
-
-const statusConfig: Record<Status, { label: string; color: string; dotColor: string }> = {
-  em_andamento: {
-    label: 'Em Andamento',
-    color: 'bg-secondary-container text-on-secondary-container',
-    dotColor: 'bg-secondary',
-  },
-  concluida: {
-    label: 'Concluída',
-    color: 'bg-primary text-on-primary',
-    dotColor: 'bg-primary',
-  },
-  planejada: {
-    label: 'Planejada',
-    color: 'bg-tertiary-container text-on-tertiary-container',
-    dotColor: 'bg-tertiary',
-  },
-};
-
-const filters = [
-  { key: 'todas', label: 'Todas' },
-  { key: 'em_andamento', label: 'Em Andamento' },
-  { key: 'concluida', label: 'Concluídas' },
-  { key: 'planejada', label: 'Planejadas' },
-] as const;
-
-/* ── Component ── */
 export default function ObrasClient() {
-  const [activeFilter, setActiveFilter] = useState<string>('todas');
+  const [activeFilter, setActiveFilter] = useState<(typeof filters)[number]['key']>('todas');
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['public', 'obras', activeFilter],
+    queryFn: () => obrasService.list(activeFilter === 'todas' ? undefined : activeFilter),
+  });
 
-  const filteredObras =
-    activeFilter === 'todas'
-      ? obras
-      : obras.filter((o) => o.status === activeFilter);
+  const obras = useMemo(() => data?.obras ?? [], [data?.obras]);
+  const filteredObras = useMemo(
+    () => (activeFilter === 'todas' ? obras : obras.filter((obra) => obra.status === activeFilter)),
+    [activeFilter, obras]
+  );
+
+  const totalInvestimento = useMemo(
+    () => obras.reduce((sum, obra) => sum + (obra.valor_homologado ?? obra.valor_original ?? 0), 0),
+    [obras]
+  );
 
   const stats = [
-    {
-      icon: 'apartment',
-      value: obras.length.toString(),
-      label: 'Total Obras',
-    },
+    { icon: 'apartment', label: 'Total obras', value: obras.length.toString() },
     {
       icon: 'engineering',
-      value: obras.filter((o) => o.status === 'em_andamento').length.toString(),
-      label: 'Em Andamento',
+      label: 'Em andamento',
+      value: obras.filter((obra) => obra.status === 'em_andamento').length.toString(),
     },
     {
-      icon: 'check_circle',
-      value: obras.filter((o) => o.status === 'concluida').length.toString(),
-      label: 'Concluídas',
+      icon: 'pause_circle',
+      label: 'Paralisadas',
+      value: obras.filter((obra) => obra.status === 'paralisada').length.toString(),
     },
-    {
-      icon: 'account_balance_wallet',
-      value: 'R$ 8,5 Mi',
-      label: 'Investimento Total',
-    },
+    { icon: 'account_balance_wallet', label: 'Investimento total', value: formatCurrency(totalInvestimento) },
   ];
 
   return (
     <div className="space-y-8">
-      {/* ── Header ── */}
       <div>
-        <h1 className="font-headline text-3xl md:text-4xl font-extrabold text-primary tracking-tight">
-          Obras Públicas
-        </h1>
-        <p className="mt-2 font-body text-on-surface-variant text-base max-w-2xl">
-          Acompanhe em tempo real as obras e projetos de infraestrutura do
-          município. Acesse detalhes, cronogramas e valores investidos.
+        <h1 className="font-headline text-3xl font-extrabold text-primary md:text-4xl">Obras Públicas</h1>
+        <p className="mt-2 max-w-2xl text-base text-on-surface-variant">
+          Acompanhe o andamento, contratos e medições das obras cadastradas no portal.
         </p>
       </div>
 
-      {/* ── Filter Pills ── */}
       <div className="flex flex-wrap gap-2">
-        {filters.map((f) => (
+        {filters.map((filter) => (
           <button
-            key={f.key}
-            onClick={() => setActiveFilter(f.key)}
-            className={`px-4 py-2 rounded-full font-label text-sm font-medium transition-all duration-200 ${
-              activeFilter === f.key
-                ? 'bg-primary text-on-primary shadow-sm'
+            key={filter.key}
+            onClick={() => setActiveFilter(filter.key)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              activeFilter === filter.key
+                ? 'bg-primary text-on-primary'
                 : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
             }`}
           >
-            {f.label}
+            {filter.label}
           </button>
         ))}
       </div>
 
-      {/* ── KPI Stats Row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
         {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-surface-container-lowest rounded-xl p-5 md:p-6 shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <span className="material-symbols-outlined text-secondary text-xl">
-                {stat.icon}
-              </span>
-            </div>
-            <p className="font-headline text-2xl md:text-3xl font-extrabold text-primary">
-              {stat.value}
-            </p>
-            <p className="font-label text-xs uppercase tracking-widest text-on-surface-variant mt-1">
-              {stat.label}
-            </p>
+          <div key={stat.label} className="rounded-xl bg-surface-container-lowest p-5 shadow-ambient">
+            <span className="material-symbols-outlined text-secondary">{stat.icon}</span>
+            <p className="mt-3 font-headline text-2xl font-extrabold text-primary">{stat.value}</p>
+            <p className="mt-1 text-xs uppercase tracking-[0.2em] text-on-surface-variant">{stat.label}</p>
           </div>
         ))}
       </div>
 
-      {/* ── Obras Cards Grid ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
-        {filteredObras.map((obra) => {
-          const cfg = statusConfig[obra.status];
-          return (
-            <Link
-              key={obra.id}
-              href={`/obras/${obra.id}`}
-              className="group bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0_2px_16px_-2px_rgba(0,25,60,0.05)] dark:shadow-none hover:-translate-y-1 transition-transform duration-300"
-            >
-              {/* Image Placeholder */}
-              <div className="h-48 bg-gradient-to-br from-primary/10 to-secondary/10 dark:from-primary/20 dark:to-secondary/20 flex items-center justify-center relative">
-                <span className="material-symbols-outlined text-primary/30 dark:text-primary/40 text-6xl">
-                  construction
-                </span>
-                {/* Status Badge */}
-                <div className="absolute top-4 left-4">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${cfg.color}`}
-                  >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full ${cfg.dotColor}`}
-                    />
-                    {cfg.label}
-                  </span>
+      {isLoading ? <p className="text-sm text-on-surface-variant">Carregando obras...</p> : null}
+      {error instanceof Error ? <p className="text-sm text-red-300">{error.message}</p> : null}
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {filteredObras.map((obra) => (
+          <Link
+            key={obra.hash}
+            href={`/obras/${obra.hash}`}
+            className="group overflow-hidden rounded-xl bg-surface-container-lowest shadow-ambient transition hover:-translate-y-1"
+          >
+            <div className="flex h-44 items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+              <span className="material-symbols-outlined text-6xl text-primary/30">construction</span>
+            </div>
+
+            <div className="space-y-4 p-6">
+              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${obraStatusTone[obra.status]}`}>
+                {obraStatusLabels[obra.status]}
+              </span>
+
+              <div>
+                <h3 className="font-headline text-lg font-bold text-primary line-clamp-2">{obra.titulo}</h3>
+                <p className="mt-2 text-sm text-on-surface-variant line-clamp-3">{obra.descricao}</p>
+              </div>
+
+              <div>
+                <div className="mb-1.5 flex items-center justify-between text-xs text-on-surface-variant">
+                  <span>Progresso físico</span>
+                  <span>{obra.progresso_fisico ?? 0}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-surface-container-high">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+                    style={{ width: `${obra.progresso_fisico ?? 0}%` }}
+                  />
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="p-6 space-y-4">
-                <h3 className="font-headline font-bold text-primary text-lg leading-snug line-clamp-2">
-                  {obra.titulo}
-                </h3>
-
-                <p className="font-body text-sm text-on-surface-variant line-clamp-2">
-                  {obra.descricao}
-                </p>
-
-                {/* Progress Bar (only for active works) */}
-                {obra.status === 'em_andamento' && (
-                  <div>
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className="font-label text-xs text-on-surface-variant">
-                        Progresso
-                      </span>
-                      <span className="font-label text-xs font-bold text-secondary dark:text-secondary-300">
-                        {obra.progresso}%
-                      </span>
-                    </div>
-                    <div className="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-700"
-                        style={{ width: `${obra.progresso}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Meta Info */}
-                <div className="flex flex-col gap-1.5">
-                  <span className="flex items-center gap-2 font-label text-xs text-on-surface-variant">
-                    <span className="material-symbols-outlined text-sm">
-                      business
-                    </span>
-                    Secretaria de {obra.secretaria}
-                  </span>
-                  <span className="flex items-center gap-2 font-label text-xs text-on-surface-variant">
-                    <span className="material-symbols-outlined text-sm">
-                      calendar_today
-                    </span>
-                    Início: {obra.inicio}
-                  </span>
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-3 border-t border-surface-container-high">
-                  <span className="font-headline font-bold text-primary text-sm">
-                    {obra.valor}
-                  </span>
-                  <span className="flex items-center gap-1 font-label text-xs font-medium text-secondary dark:text-secondary-300 group-hover:translate-x-1 transition-transform duration-200">
-                    Ver Detalhes
-                    <span className="material-symbols-outlined text-sm">
-                      arrow_forward
-                    </span>
-                  </span>
-                </div>
+              <div className="space-y-1.5 text-xs text-on-surface-variant">
+                <p>Secretaria: {obra.secretaria}</p>
+                <p>Início: {formatDate(obra.data_inicio)}</p>
+                <p>Valor homologado: {formatCurrency(obra.valor_homologado)}</p>
               </div>
-            </Link>
-          );
-        })}
+            </div>
+          </Link>
+        ))}
       </div>
-
-      {/* ── Empty State ── */}
-      {filteredObras.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <span className="material-symbols-outlined text-on-surface-variant/30 text-6xl mb-4">
-            search_off
-          </span>
-          <p className="font-headline text-xl font-bold text-primary">
-            Nenhuma obra encontrada
-          </p>
-          <p className="font-body text-sm text-on-surface-variant mt-1">
-            Tente selecionar outro filtro de status.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

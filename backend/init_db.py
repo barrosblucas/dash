@@ -22,7 +22,7 @@ from backend.shared.database.models import (
 from backend.shared.pdf_extractor import PDFExtractor
 
 
-def popular_banco_dados():
+def popular_banco_dados() -> None:
     """Extrai dados dos PDFs e popula o banco de dados."""
     print("=" * 60)
     print("Iniciando extração de dados dos PDFs")
@@ -78,12 +78,12 @@ def popular_banco_dados():
 
                 if existing:
                     # Atualiza existente
-                    existing.valor_previsto = receita.valor_previsto
-                    existing.valor_arrecadado = receita.valor_arrecadado
-                    existing.valor_anulado = receita.valor_anulado
-                    existing.subcategoria = receita.subcategoria
-                    existing.tipo = receita.tipo.value
-                    existing.fonte = receita.fonte
+                    existing.valor_previsto = receita.valor_previsto  # type: ignore[assignment]
+                    existing.valor_arrecadado = receita.valor_arrecadado  # type: ignore[assignment]
+                    existing.valor_anulado = receita.valor_anulado  # type: ignore[assignment]
+                    existing.subcategoria = receita.subcategoria  # type: ignore[assignment]
+                    existing.tipo = receita.tipo.value  # type: ignore[assignment]
+                    existing.fonte = receita.fonte  # type: ignore[assignment]
                 else:
                     # Cria novo
                     model = ReceitaModel(
@@ -122,19 +122,19 @@ def popular_banco_dados():
                 if despesa.categoria:
                     query = query.filter(DespesaModel.categoria == despesa.categoria)
 
-                existing = query.first()
+                existing_despesa = query.first()
 
-                if existing:
+                if existing_despesa:
                     # Atualiza existente
-                    existing.valor_empenhado = despesa.valor_empenhado
-                    existing.valor_liquidado = despesa.valor_liquidado
-                    existing.valor_pago = despesa.valor_pago
-                    existing.categoria = despesa.categoria
-                    existing.subcategoria = despesa.subcategoria
-                    existing.fonte = despesa.fonte
+                    existing_despesa.valor_empenhado = despesa.valor_empenhado  # type: ignore[assignment]
+                    existing_despesa.valor_liquidado = despesa.valor_liquidado  # type: ignore[assignment]
+                    existing_despesa.valor_pago = despesa.valor_pago  # type: ignore[assignment]
+                    existing_despesa.categoria = despesa.categoria  # type: ignore[assignment]
+                    existing_despesa.subcategoria = despesa.subcategoria  # type: ignore[assignment]
+                    existing_despesa.fonte = despesa.fonte  # type: ignore[assignment]
                 else:
                     # Cria novo
-                    model = DespesaModel(
+                    despesa_model = DespesaModel(
                         ano=despesa.ano,
                         mes=despesa.mes,
                         categoria=despesa.categoria,
@@ -145,7 +145,7 @@ def popular_banco_dados():
                         valor_pago=despesa.valor_pago,
                         fonte=despesa.fonte,
                     )
-                    session.add(model)
+                    session.add(despesa_model)
                     despesas_salvas += 1
             except Exception as e:
                 print(f"  Erro ao salvar despesa: {e}")
@@ -168,7 +168,7 @@ def popular_banco_dados():
     print("=" * 60)
 
 
-def main():
+def main() -> None:
     """Função principal."""
     print("\n" + "=" * 60)
     print("Dashboard Financeiro Municipal - Inicialização")

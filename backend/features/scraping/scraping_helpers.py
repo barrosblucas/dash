@@ -60,10 +60,10 @@ def _upsert_receitas(
             .first()
         )
         if existing is not None:
-            existing.valor_previsto = r.valor_previsto
-            existing.valor_arrecadado = r.valor_arrecadado
-            existing.valor_anulado = r.valor_anulado
-            existing.fonte = r.fonte
+            existing.valor_previsto = r.valor_previsto  # type: ignore[assignment]
+            existing.valor_arrecadado = r.valor_arrecadado  # type: ignore[assignment]
+            existing.valor_anulado = r.valor_anulado  # type: ignore[assignment]
+            existing.fonte = r.fonte  # type: ignore[assignment]
             updated += 1
         else:
             session.add(
@@ -102,10 +102,10 @@ def _upsert_despesas(
             query = query.filter(DespesaModel.categoria == d.categoria)
         existing: DespesaModel | None = query.first()
         if existing is not None:
-            existing.valor_empenhado = d.valor_empenhado
-            existing.valor_liquidado = d.valor_liquidado
-            existing.valor_pago = d.valor_pago
-            existing.fonte = d.fonte
+            existing.valor_empenhado = d.valor_empenhado  # type: ignore[assignment]
+            existing.valor_liquidado = d.valor_liquidado  # type: ignore[assignment]
+            existing.valor_pago = d.valor_pago  # type: ignore[assignment]
+            existing.fonte = d.fonte  # type: ignore[assignment]
             updated += 1
         else:
             session.add(
@@ -201,11 +201,11 @@ def _finalize_log(
     updated: int,
 ) -> None:
     """Atualiza log com resultado final na mesma sessão de dados."""
-    log.status = status
-    log.records_processed = processed
-    log.records_inserted = inserted
-    log.records_updated = updated
-    log.finished_at = datetime.now()
+    log.status = status  # type: ignore[assignment]
+    log.records_processed = processed  # type: ignore[assignment]
+    log.records_inserted = inserted  # type: ignore[assignment]
+    log.records_updated = updated  # type: ignore[assignment]
+    log.finished_at = datetime.now()  # type: ignore[assignment]
     session.add(log)
     session.flush()
 

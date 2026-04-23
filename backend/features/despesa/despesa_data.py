@@ -4,6 +4,7 @@ Dashboard Financeiro - Bandeirantes MS
 """
 
 from decimal import Decimal
+from typing import cast
 
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
@@ -136,16 +137,16 @@ class SQLDespesaRepository:
     def _model_to_entity(self, model: DespesaModel) -> Despesa:
         """Converte um modelo SQLAlchemy para entidade de domínio."""
         return Despesa(
-            id=model.id,
-            ano=model.ano,
-            mes=model.mes,
-            categoria=model.categoria,
-            subcategoria=model.subcategoria,
-            tipo=TipoDespesa[model.tipo],
-            valor_empenhado=model.valor_empenhado,
-            valor_liquidado=model.valor_liquidado,
-            valor_pago=model.valor_pago,
-            fonte=model.fonte,
+            id=cast(int | None, model.id),
+            ano=cast(int, model.ano),
+            mes=cast(int, model.mes),
+            categoria=cast(str | None, model.categoria),
+            subcategoria=cast(str | None, model.subcategoria),
+            tipo=TipoDespesa[cast(str, model.tipo)],
+            valor_empenhado=cast(Decimal, model.valor_empenhado),
+            valor_liquidado=cast(Decimal, model.valor_liquidado),
+            valor_pago=cast(Decimal, model.valor_pago),
+            fonte=cast(str, model.fonte),
         )
 
     def get_totais_por_ano(
@@ -181,6 +182,13 @@ class SQLDespesaRepository:
             query = query.filter(DespesaModel.tipo == tipo_upper)
 
         resultado = query.first()
+
+        if resultado is None:
+            return (
+                Decimal("0"),
+                Decimal("0"),
+                Decimal("0"),
+            )
 
         return (
             Decimal(str(resultado.total_empenhado or 0)),
@@ -223,6 +231,13 @@ class SQLDespesaRepository:
             query = query.filter(DespesaModel.tipo == tipo_upper)
 
         resultado = query.first()
+
+        if resultado is None:
+            return (
+                Decimal("0"),
+                Decimal("0"),
+                Decimal("0"),
+            )
 
         return (
             Decimal(str(resultado.total_empenhado or 0)),

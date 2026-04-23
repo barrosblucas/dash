@@ -5,6 +5,7 @@ Fornece persistência de receitas em banco SQLite/PostgreSQL.
 """
 
 from decimal import Decimal
+from typing import cast
 
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
@@ -46,16 +47,16 @@ class SQLReceitaRepository:
             Entidade de domínio Receita.
         """
         return Receita(
-            id=model.id,
-            ano=model.ano,
-            mes=model.mes,
-            categoria=model.categoria,
-            subcategoria=model.subcategoria,
-            tipo=TipoReceita(model.tipo),
+            id=cast(int | None, model.id),
+            ano=cast(int, model.ano),
+            mes=cast(int, model.mes),
+            categoria=cast(str, model.categoria),
+            subcategoria=cast(str | None, model.subcategoria),
+            tipo=TipoReceita(cast(str, model.tipo)),
             valor_previsto=Decimal(str(model.valor_previsto)),
             valor_arrecadado=Decimal(str(model.valor_arrecadado)),
             valor_anulado=Decimal(str(model.valor_anulado)),
-            fonte=model.fonte,
+            fonte=cast(str, model.fonte),
             created_at=model.created_at.date() if model.created_at else None,
             updated_at=model.updated_at.date() if model.updated_at else None,
         )
@@ -171,15 +172,15 @@ class SQLReceitaRepository:
             raise ValueError(f"Receita não encontrada com ID: {receita.id}")
 
         # Atualiza campos
-        model.ano = receita.ano
-        model.mes = receita.mes
-        model.categoria = receita.categoria
-        model.subcategoria = receita.subcategoria
-        model.tipo = receita.tipo.value
-        model.valor_previsto = receita.valor_previsto
-        model.valor_arrecadado = receita.valor_arrecadado
-        model.valor_anulado = receita.valor_anulado
-        model.fonte = receita.fonte
+        model.ano = receita.ano  # type: ignore[assignment]
+        model.mes = receita.mes  # type: ignore[assignment]
+        model.categoria = receita.categoria  # type: ignore[assignment]
+        model.subcategoria = receita.subcategoria  # type: ignore[assignment]
+        model.tipo = receita.tipo.value  # type: ignore[assignment]
+        model.valor_previsto = receita.valor_previsto  # type: ignore[assignment]
+        model.valor_arrecadado = receita.valor_arrecadado  # type: ignore[assignment]
+        model.valor_anulado = receita.valor_anulado  # type: ignore[assignment]
+        model.fonte = receita.fonte  # type: ignore[assignment]
 
         self.session.flush()
         self.session.refresh(model)

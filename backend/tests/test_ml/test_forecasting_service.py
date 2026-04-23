@@ -5,10 +5,11 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 import pytest
+from sqlalchemy.orm import Session
 
 from backend.features.forecast.forecast_business import (
     ForecastResult,
@@ -214,7 +215,7 @@ def test_get_receitas_mensais_converte_ano_mes_para_datetime() -> None:
         SimpleNamespace(ano=2025, mes=12, valor=Decimal("123.45")),
         SimpleNamespace(ano=2026, mes=1, valor=Decimal("456.78")),
     ]
-    dados = get_receitas_mensais(_FakeDB(rows))
+    dados = get_receitas_mensais(cast(Session, _FakeDB(rows)))
 
     assert dados == [
         (datetime(2025, 12, 1), 123.45),
@@ -227,7 +228,7 @@ def test_get_despesas_mensais_converte_ano_mes_para_datetime() -> None:
         SimpleNamespace(ano=2025, mes=12, valor=Decimal("222.22")),
         SimpleNamespace(ano=2026, mes=1, valor=Decimal("333.33")),
     ]
-    dados = get_despesas_mensais(_FakeDB(rows))
+    dados = get_despesas_mensais(cast(Session, _FakeDB(rows)))
 
     assert dados == [
         (datetime(2025, 12, 1), 222.22),

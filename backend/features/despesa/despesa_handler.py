@@ -7,6 +7,8 @@ Apenas orquestração HTTP — delega para data layer.
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
@@ -53,7 +55,7 @@ async def listar_despesas(
     ),
     offset: int | None = Query(0, ge=0, description="Offset para paginação"),
     db: Session = Depends(get_db),
-):
+) -> DespesaListResponse:
     """
     Lista despesas com filtros opcionais.
 
@@ -100,8 +102,8 @@ async def listar_despesas(
         for d in despesas
     ]
 
-    page = (offset // limit) + 1 if limit else 1
-    has_next = (offset + limit) < total if limit else False
+    page = ((offset or 0) // (limit or 1)) + 1 if limit else 1
+    has_next = ((offset or 0) + (limit or 0)) < total if limit else False
 
     return DespesaListResponse(
         despesas=despesas_response,
@@ -118,7 +120,7 @@ async def listar_despesas(
 async def buscar_despesa(
     despesa_id: int,
     db: Session = Depends(get_db),
-):
+) -> DespesaResponse:
     """
     Busca uma despesa pelo seu ID.
 
@@ -150,7 +152,7 @@ async def buscar_despesa(
 @router.get(
     "/categorias/", response_model=list[str], summary="Lista categorias de despesas"
 )
-async def listar_categorias(db: Session = Depends(get_db)):
+async def listar_categorias(db: Session = Depends(get_db)) -> list[str]:
     """
     Retorna todas as categorias de despesa cadastradas.
 
@@ -170,7 +172,7 @@ async def total_despesas_ano(
         None, description="Tipo: CORRENTE, CAPITAL ou CONTINGENCIA"
     ),
     db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     """
     Calcula o total de despesas em um ano.
 
@@ -209,7 +211,7 @@ async def total_despesas_mes(
         None, description="Tipo: CORRENTE, CAPITAL ou CONTINGENCIA"
     ),
     db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     """
     Calcula o total de despesas em um mês específico.
 

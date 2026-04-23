@@ -7,11 +7,14 @@ Apenas orquestração HTTP — delega para data layer.
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from backend.features.receita.receita_data import SQLReceitaRepository
 from backend.features.receita.receita_types import (
+    Receita,
     ReceitaDetalhamentoListResponse,
     ReceitaDetalhamentoResponse,
     ReceitaListResponse,
@@ -36,7 +39,7 @@ def _parse_tipo_receita(tipo: str | None) -> TipoReceita | None:
         ) from err
 
 
-def _receita_to_response(r) -> ReceitaResponse:
+def _receita_to_response(r: Receita) -> ReceitaResponse:
     """Converte entidade Receita para schema de resposta."""
     return ReceitaResponse(
         id=r.id,
@@ -65,7 +68,7 @@ async def listar_receitas(
     limit: int | None = Query(100, ge=1, le=1000, description="Limite de resultados"),
     offset: int | None = Query(0, ge=0, description="Offset para paginação"),
     db: Session = Depends(get_db),
-):
+) -> ReceitaListResponse:
     """
     Lista receitas com filtros opcionais.
 
@@ -98,8 +101,8 @@ async def listar_receitas(
 
     receitas_response = [_receita_to_response(r) for r in receitas]
 
-    page = (offset // limit) + 1 if limit else 1
-    has_next = (offset + limit) < total if limit else False
+    page = ((offset or 0) // (limit or 1)) + 1 if limit else 1
+    has_next = ((offset or 0) + (limit or 0)) < total if limit else False
 
     return ReceitaListResponse(
         receitas=receitas_response,
@@ -118,7 +121,7 @@ async def listar_receitas(
 async def detalhamento_receitas(
     ano: int,
     db: Session = Depends(get_db),
-):
+) -> ReceitaDetalhamentoListResponse:
     """
     Retorna o detalhamento hierárquico completo das receitas para um ano.
 
@@ -163,7 +166,7 @@ async def detalhamento_receitas(
 async def buscar_receita(
     receita_id: int,
     db: Session = Depends(get_db),
-):
+) -> ReceitaResponse:
     """
     Busca uma receita pelo seu ID.
 
@@ -184,7 +187,7 @@ async def buscar_receita(
 @router.get(
     "/categorias", response_model=list[str], summary="Lista categorias de receitas"
 )
-async def listar_categorias(db: Session = Depends(get_db)):
+async def listar_categorias(db: Session = Depends(get_db)) -> list[str]:
     """
     Retorna todas as categorias de receita cadastradas.
 
@@ -202,7 +205,7 @@ async def total_receitas_ano(
     ano: int,
     tipo: str | None = Query(None, description="Tipo: CORRENTE ou CAPITAL"),
     db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     """
     Calcula o total de receitas arrecadadas em um ano.
 
@@ -233,7 +236,7 @@ async def total_receitas_mes(
     mes: int,
     tipo: str | None = Query(None, description="Tipo: CORRENTE ou CAPITAL"),
     db: Session = Depends(get_db),
-):
+) -> dict[str, Any]:
     """
     Calcula o total de receitas arrecadadas em um mês específico.
 

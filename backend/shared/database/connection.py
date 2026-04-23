@@ -8,6 +8,7 @@ import logging
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import Engine
@@ -56,7 +57,7 @@ def create_db_engine(db_path: Path | None = None) -> Engine:
 
     # Configurar SQLite para usar foreign keys
     @event.listens_for(engine, "connect")
-    def set_sqlite_pragma(dbapi_connection, connection_record):
+    def set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
         """Configura pragmas do SQLite para melhor performance."""
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys=ON")
@@ -170,11 +171,15 @@ class DatabaseManager:
             forecasts_count = session.execute(
                 text("SELECT COUNT(*) FROM forecasts")
             ).scalar()
+            users_count = session.execute(text("SELECT COUNT(*) FROM users")).scalar()
+            obras_count = session.execute(text("SELECT COUNT(*) FROM obras")).scalar()
 
             return {
                 "receitas": receitas_count or 0,
                 "despesas": despesas_count or 0,
                 "forecasts": forecasts_count or 0,
+                "users": users_count or 0,
+                "obras": obras_count or 0,
                 "db_path": str(self.db_path),
                 "db_exists": self.db_path.exists(),
             }

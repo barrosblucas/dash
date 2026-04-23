@@ -17,7 +17,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-from prophet import Prophet
+from prophet import Prophet  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
 

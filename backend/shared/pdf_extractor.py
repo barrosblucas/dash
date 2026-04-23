@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pdfplumber
 
@@ -72,9 +73,9 @@ class PDFExtractor:
                                 continue
                             cat_upper = cat.upper().strip().rstrip(".")
                             if cat_upper in ("RECEITAS CORRENTES", "RECEITA CORRENTE"):
-                                previsto_anual_correntes = previsto
+                                previsto_anual_correntes = cast(Decimal, previsto)
                             elif cat_upper in ("RECEITAS DE CAPITAL", "RECEITA DE CAPITAL"):
-                                previsto_anual_capital = previsto
+                                previsto_anual_capital = cast(Decimal, previsto)
 
         meses_com_dados = sorted(arrecadado_mensal.keys())
         if not meses_com_dados:

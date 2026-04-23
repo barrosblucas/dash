@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from io import BytesIO
+from typing import Any
 
 import pandas as pd
 
@@ -98,7 +99,7 @@ def dataframe_to_excel(
     return output
 
 
-def _adjust_column_widths(worksheet) -> None:
+def _adjust_column_widths(worksheet: Any) -> None:
     """Ajusta largura das colunas baseado no conteúdo."""
     for column in worksheet.columns:
         max_length = 0

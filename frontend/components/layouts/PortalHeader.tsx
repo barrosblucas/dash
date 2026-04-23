@@ -78,7 +78,7 @@ export default function PortalHeader() {
 
             {/* Acesso Restrito — hidden on mobile */}
             <Link
-              href="/dashboard"
+              href="/login"
               className="hidden md:flex items-center gap-2 px-6 py-3 rounded-lg
                          bg-primary text-on-primary font-headline font-bold text-sm
                          hover:bg-primary-800 transition-colors duration-200"
@@ -120,7 +120,7 @@ export default function PortalHeader() {
               </Link>
             ))}
             <Link
-              href="/dashboard"
+              href="/login"
               onClick={() => setMobileMenuOpen(false)}
               className="block mt-2 text-center px-4 py-3 rounded-lg
                          bg-primary text-on-primary font-headline font-bold text-sm"

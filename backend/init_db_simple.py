@@ -15,7 +15,7 @@ from backend.shared.database.models import DespesaModel
 from backend.shared.pdf_extractor import PDFExtractor
 
 
-def main():
+def main() -> None:
     """Popula o banco com dados de despesas."""
     print("=" * 60)
     print("Dashboard Financeiro Municipal - Populando Banco")

@@ -1,15 +1,13 @@
-"""
-Modelos SQLAlchemy para o banco de dados.
-
-Define as tabelas e relacionamentos do schema do SQLite.
-"""
+"""Modelos ORM compartilhados do banco."""
 
 from decimal import Decimal
 
 from sqlalchemy import (
+    Boolean,
     Column,
     Date,
     DateTime,
+    ForeignKey,
     Index,
     Integer,
     Numeric,
@@ -17,33 +15,15 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql import func
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class ReceitaModel(Base):
-    """
-    Modelo SQLAlchemy para a tabela de receitas.
-
-    Armazena dados de receitas municipais com valores previstos e arrecadados.
-
-    Attributes:
-        id: Chave primária auto-incremento
-        ano: Ano da receita
-        mes: Mês da receita (1-12)
-        categoria: Categoria da receita
-        subcategoria: Subcategoria da receita
-        tipo: Tipo da receita (CORRENTE ou CAPITAL)
-        valor_previsto: Valor previsto no orçamento
-        valor_arrecadado: Valor efetivamente arrecadado
-        valor_anulado: Valor anulado/estornado
-        fonte: Fonte dos dados
-        created_at: Data de criação
-        updated_at: Data da última atualização
-    """
-
     __tablename__ = "receitas"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -65,42 +45,13 @@ class ReceitaModel(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint(
-            "ano", "mes", "categoria", name="uq_receita_periodo_categoria"
-        ),
+        UniqueConstraint("ano", "mes", "categoria", name="uq_receita_periodo_categoria"),
         Index("ix_receita_ano_mes", "ano", "mes"),
         Index("ix_receita_categoria_ano", "categoria", "ano"),
     )
 
-    def __repr__(self) -> str:
-        """Representação para debug."""
-        return (
-            f"<ReceitaModel(id={self.id}, ano={self.ano}, mes={self.mes}, "
-            f"categoria='{self.categoria[:30]}...')>"
-        )
-
 
 class DespesaModel(Base):
-    """
-    Modelo SQLAlchemy para a tabela de despesas.
-
-    Armazena dados de despesas municipais com valores empenhados, liquidados e pagos.
-
-    Attributes:
-        id: Chave primária auto-incremento
-        ano: Ano da despesa
-        mes: Mês da despesa (1-12)
-        categoria: Categoria da despesa
-        subcategoria: Subcategoria da despesa
-        tipo: Tipo da despesa (CORRENTE, CAPITAL ou CONTINGENCIA)
-        valor_empenhado: Valor empenhado
-        valor_liquidado: Valor liquidado
-        valor_pago: Valor pago
-        fonte: Fonte dos dados
-        created_at: Data de criação
-        updated_at: Data da última atualização
-    """
-
     __tablename__ = "despesas"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -127,32 +78,8 @@ class DespesaModel(Base):
         Index("ix_despesa_tipo_periodo", "tipo", "ano", "mes"),
     )
 
-    def __repr__(self) -> str:
-        """Representação para debug."""
-        return (
-            f"<DespesaModel(id={self.id}, ano={self.ano}, mes={self.mes}, "
-            f"valor_empenhado={self.valor_empenhado})>"
-        )
-
 
 class ForecastModel(Base):
-    """
-    Modelo SQLAlchemy para previsões de receitas/despesas.
-
-    Armazena previsões geradas por modelos de Machine Learning.
-
-    Attributes:
-        id: Chave primária auto-incremento
-        tipo: Tipo de previsão (RECEITA ou DESPESA)
-        categoria: Categoria prevista
-        data_prevista: Data da previsão
-        yhat: Valor previsto
-        yhat_lower: Limite inferior do intervalo de confiança
-        yhat_upper: Limite superior do intervalo de confiança
-        modelo: Nome do modelo utilizado
-        created_at: Data de criação
-    """
-
     __tablename__ = "forecasts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -167,36 +94,11 @@ class ForecastModel(Base):
 
     __table_args__ = (
         Index("ix_forecast_tipo_data", "tipo", "data_prevista"),
-        UniqueConstraint(
-            "tipo", "categoria", "data_prevista", name="uq_forecast_unique"
-        ),
+        UniqueConstraint("tipo", "categoria", "data_prevista", name="uq_forecast_unique"),
     )
-
-    def __repr__(self) -> str:
-        """Representação para debug."""
-        return (
-            f"<ForecastModel(id={self.id}, tipo='{self.tipo}', "
-            f"data={self.data_prevista}, yhat={self.yhat})>"
-        )
 
 
 class MetadataETLModel(Base):
-    """
-    Modelo SQLAlchemy para metadados do processo ETL.
-
-    Rastreia execuções do pipeline de extração de dados.
-
-    Attributes:
-        id: Chave primária auto-incremento
-        arquivo: Nome do arquivo processado
-        tipo: Tipo de dado (RECEITA ou DESPESA)
-        ano: Ano dos dados
-        status: Status do processamento (SUCESSO, ERRO, PARCIAL)
-        registros_processados: Quantidade de registros processados
-        mensagem: Mensagem de erro ou detalhes
-        processed_at: Data e hora do processamento
-    """
-
     __tablename__ = "metadata_etl"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -213,35 +115,8 @@ class MetadataETLModel(Base):
         Index("ix_etl_tipo_ano", "tipo", "ano"),
     )
 
-    def __repr__(self) -> str:
-        """Representação para debug."""
-        return (
-            f"<MetadataETLModel(id={self.id}, arquivo='{self.arquivo}', "
-            f"status='{self.status}', registros={self.registros_processados})>"
-        )
-
 
 class ReceitaDetalhamentoModel(Base):
-    """
-    Modelo SQLAlchemy para detalhamento hierárquico de receitas.
-
-    Armazena o detalhamento completo extraído dos PDFs com nível de hierarquia.
-
-    Attributes:
-        id: Chave primária
-        ano: Ano de referência
-        detalhamento: Nome da categoria (ex: "IMPOSTOS SOBRE O PATRIMÔNIO")
-        nivel: Nível na hierarquia (1=RECEITAS CORRENTES, 2=subcategoria, etc.)
-        ordem: Ordem de apresentação no PDF original
-        tipo: "CORRENTE" ou "CAPITAL"
-        valor_previsto: Valor previsto anual
-        valor_arrecadado: Valor arrecadado anual
-        valor_anulado: Valor anulado anual
-        fonte: Fonte dos dados
-        created_at: Data de criação
-        updated_at: Data de atualização
-    """
-
     __tablename__ = "receita_detalhamento"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -265,35 +140,11 @@ class ReceitaDetalhamentoModel(Base):
     __table_args__ = (
         Index("ix_detalhamento_ano_nivel", "ano", "nivel"),
         Index("ix_detalhamento_ano_ordem", "ano", "ordem"),
-        UniqueConstraint(
-            "ano", "detalhamento", "ordem", name="uq_detalhamento_ano_cat_ordem"
-        ),
+        UniqueConstraint("ano", "detalhamento", "ordem", name="uq_detalhamento_ano_cat_ordem"),
     )
-
-    def __repr__(self) -> str:
-        """Representação para debug."""
-        return (
-            f"<ReceitaDetalhamentoModel(id={self.id}, ano={self.ano}, "
-            f"nivel={self.nivel}, detalhamento='{self.detalhamento[:30]}...')>"
-        )
 
 
 class ScrapingLogModel(Base):
-    """Log de execuções do scraping QualitySistemas.
-
-    Attributes:
-        id: Chave primária auto-incremento
-        data_type: Tipo de dado scraping ("receita" ou "despesa")
-        year: Ano de referência
-        status: Status da execução ("SUCCESS", "ERROR", "PARTIAL")
-        records_processed: Total de registros processados
-        records_inserted: Registros inseridos no banco
-        records_updated: Registros atualizados no banco
-        error_message: Mensagem de erro, se houver
-        started_at: Início da execução
-        finished_at: Fim da execução
-    """
-
     __tablename__ = "scraping_log"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -312,9 +163,104 @@ class ScrapingLogModel(Base):
         Index("ix_scraping_log_started", "started_at"),
     )
 
-    def __repr__(self) -> str:
-        """Representação para debug."""
-        return (
-            f"<ScrapingLogModel(id={self.id}, data_type='{self.data_type}', "
-            f"year={self.year}, status='{self.status}')>"
-        )
+
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False, unique=True, index=True)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False, default="user")
+    is_active = Column(Boolean, nullable=False, default=True)
+    token_version = Column(Integer, nullable=False, default=0)
+    last_login_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+
+class IdentityTokenModel(Base):
+    __tablename__ = "identity_tokens"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_type = Column(String(32), nullable=False)
+    jti = Column(String(64), nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    revoked_at = Column(DateTime, nullable=True)
+    consumed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+
+    __table_args__ = (
+        Index("ix_identity_tokens_user_type", "user_id", "token_type"),
+        Index("ix_identity_tokens_exp", "expires_at"),
+    )
+
+
+class ObraModel(Base):
+    __tablename__ = "obras"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    hash = Column(String(32), nullable=False, unique=True, index=True)
+    titulo = Column(String(255), nullable=False)
+    descricao = Column(Text, nullable=False)
+    status = Column(String(32), nullable=False, index=True)
+    secretaria = Column(String(255), nullable=False)
+    orgao = Column(String(255), nullable=False)
+    contrato = Column(String(255), nullable=False)
+    tipo_obra = Column(String(255), nullable=False)
+    modalidade = Column(String(255), nullable=False)
+    fonte_recurso = Column(String(255), nullable=False)
+    data_inicio = Column(Date, nullable=False)
+    previsao_termino = Column(Date, nullable=True)
+    data_termino = Column(Date, nullable=True)
+    logradouro = Column(String(255), nullable=False)
+    bairro = Column(String(255), nullable=False)
+    cep = Column(String(20), nullable=False)
+    numero = Column(String(20), nullable=False)
+    latitude = Column(Numeric(10, 7), nullable=True)
+    longitude = Column(Numeric(10, 7), nullable=True)
+    valor_orcamento = Column(Numeric(18, 2), nullable=True)
+    valor_original = Column(Numeric(18, 2), nullable=True)
+    valor_aditivo = Column(Numeric(18, 2), nullable=True)
+    valor_homologado = Column(Numeric(18, 2), nullable=True)
+    valor_contrapartida = Column(Numeric(18, 2), nullable=True)
+    valor_convenio = Column(Numeric(18, 2), nullable=True)
+    progresso_fisico = Column(Numeric(5, 2), nullable=True)
+    progresso_financeiro = Column(Numeric(5, 2), nullable=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+
+class ObraMedicaoModel(Base):
+    __tablename__ = "obra_medicoes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    obra_id = Column(Integer, ForeignKey("obras.id", ondelete="CASCADE"), nullable=False)
+    sequencia = Column(Integer, nullable=False)
+    mes_referencia = Column(Integer, nullable=False)
+    ano_referencia = Column(Integer, nullable=False)
+    valor_medicao = Column(Numeric(18, 2), nullable=False, default=Decimal("0"))
+    observacao = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("obra_id", "sequencia", name="uq_obra_medicao_sequencia"),
+        Index("ix_obra_medicoes_periodo", "ano_referencia", "mes_referencia"),
+    )

@@ -17,13 +17,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
+from backend.features.despesa.despesa_types import Despesa
+from backend.features.receita.receita_types import Receita
 from backend.shared.database.connection import db_manager, init_database
 from backend.shared.database.models import DespesaModel, ReceitaModel
 from backend.shared.pdf_extractor import PDFExtractor
 
 
-def limpar_dados(session):
+def limpar_dados(session: Session) -> None:
     """Remove todos os dados existentes para reimportação limpa."""
     print("  Limpando dados existentes...")
     session.execute(text("DELETE FROM despesas"))
@@ -32,7 +35,7 @@ def limpar_dados(session):
     print("  Dados limpos com sucesso!")
 
 
-def importar_receitas(session, receitas):
+def importar_receitas(session: Session, receitas: list[Receita]) -> int:
     """Importa receitas com valores previstos corretos."""
     print(f"\n  Importando {len(receitas)} receitas...")
     salvas = 0
@@ -57,7 +60,7 @@ def importar_receitas(session, receitas):
     return salvas
 
 
-def importar_despesas(session, despesas):
+def importar_despesas(session: Session, despesas: list[Despesa]) -> int:
     """Importa despesas com breakdown por tipo e sem duplicatas."""
     print(f"\n  Importando {len(despesas)} despesas...")
     salvas = 0
@@ -82,7 +85,7 @@ def importar_despesas(session, despesas):
     return salvas
 
 
-def verificar_dados(session):
+def verificar_dados(session: Session) -> None:
     """Verifica os dados importados contra os PDFs."""
     print("\n" + "=" * 70)
     print("VERIFICAÇÃO DOS DADOS IMPORTADOS")
@@ -154,7 +157,7 @@ def verificar_dados(session):
         )
 
 
-def main():
+def main() -> None:
     print("\n" + "=" * 70)
     print("REIMPORTAÇÃO DE DADOS - CORREÇÃO DE DIVERGÊNCIAS")
     print("Dashboard Financeiro - Bandeirantes MS")

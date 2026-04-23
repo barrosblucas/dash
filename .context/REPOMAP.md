@@ -22,9 +22,27 @@ Snapshot: 2026-04-22
 
 #### `shared/` — infraestrutura compartilhada
 - `shared/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
-- `shared/database/models.py`: modelos ORM (ReceitaModel, DespesaModel, ForecastModel, MetadataETLModel, ReceitaDetalhamentoModel, ScrapingLogModel)
+- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições)
+
+#### `alembic/` — migrations
+- `alembic.ini`: configuração do Alembic apontando para `backend.shared.database.models.Base`
+- `alembic/env.py`: ambiente de migration reutilizando a engine do projeto (`create_db_engine`)
+- `alembic/versions/`: diretório de revisions (migration inicial cobrindo todas as tabelas)
+- `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha)
+- `shared/security.py`: hash de senha Argon2, emissão/validação de tokens JWT e dependências de autenticação/autorização
 - `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
 - `shared/quality_api_client.py`: cliente HTTP assíncrono para API QualitySistemas
+
+#### `features/identity/`
+- `identity_types.py`: schemas Pydantic de autenticação, usuários e reset de senha
+- `identity_data.py`: persistência de usuários e tokens rotativos/revogáveis + bootstrap do primeiro admin
+- `identity_handler.py`: rotas `/api/v1/identity` (login, refresh, logout, me, usuários, reset de senha)
+
+#### `features/obra/`
+- `obra_types.py`: schemas Pydantic de obra e medições mensais
+- `obra_business.py`: cálculos puros de `valor_economizado` e `valor_medido_total`
+- `obra_data.py`: persistência SQLAlchemy de obras e substituição de medições
+- `obra_handler.py`: rotas `/api/v1/obras` com leitura pública e escrita admin
 
 #### `features/receita/`
 - `receita_types.py`: entidade Receita, TipoReceita, ReceitaRepository Protocol, schemas Pydantic
@@ -79,7 +97,10 @@ Snapshot: 2026-04-22
 - `api/routes/`: re-exportam de `features/*/`
 - `api/schemas_*.py`: re-exportam de `features/*/`
 - `tests/test_api/`: testes de integração das rotas
+- `tests/conftest.py`: fixtures de integração com banco temporário e bootstrap admin de teste
 - `tests/test_api/test_licitacoes.py`: testes unitários do parser HTML de licitações Quality e do proxy ComprasBR
+- `tests/test_api/test_identity.py`: testes de integração de login, refresh/logout, usuários, reset de senha e proteção de `/admin/*`
+- `tests/test_api/test_obra.py`: testes de integração do CRUD de obras e medições
 - `tests/test_etl/`: testes do pipeline ETL (preparado)
 - `tests/test_etl/test_historical_data_bootstrap_service.py`: testes unitários do bootstrap histórico (lacunas, execução, utilitários)
 - `tests/test_etl/test_receita_scraper.py`: testes unitários do parser de receitas (meses com zero e mês inválido)
@@ -103,7 +124,20 @@ Snapshot: 2026-04-22
 - `.eslintrc.js`: ESLint com next/core-web-vitals, TanStack Query plugin, import order
 - `.prettierrc` / `.prettierignore`: Prettier config
 - `app/layout.tsx`: layout raiz (theme-aware com script anti-FOIT)
+- `middleware.ts`: proteção de `/admin` por presença de cookie de refresh da sessão administrativa
 - `app/page.tsx`: portal público da transparência (página inicial)
+- `app/login/page.tsx`: tela de autenticação para acesso restrito
+- `app/api/auth/login/route.ts`: borda frontend para login contra `/api/v1/identity/login`
+- `app/api/auth/session/route.ts`: reidrata sessão administrativa via refresh token em cookie HttpOnly
+- `app/api/auth/logout/route.ts`: encerra sessão administrativa e limpa cookie de refresh
+- `app/admin/layout.tsx`: layout isolado da área administrativa
+- `app/admin/page.tsx`: landing page do painel administrativo
+- `app/admin/users/page.tsx`: listagem de usuários
+- `app/admin/users/new/page.tsx`: cadastro de usuário
+- `app/admin/users/[id]/page.tsx`: edição de usuário e reset de senha
+- `app/admin/obras/page.tsx`: listagem administrativa de obras
+- `app/admin/obras/new/page.tsx`: criação administrativa de obra
+- `app/admin/obras/[hash]/page.tsx`: edição administrativa de obra
 - `app/portal-client.tsx`: componente client do portal com hero, grid de cards e footer
 - `app/dashboard/page.tsx`: página do dashboard financeiro
 - `app/dashboard/dashboard-client.tsx`: componente client do dashboard
@@ -148,9 +182,9 @@ Snapshot: 2026-04-22
 - `app/movimento-extra/mensal-view.tsx`: view completa do modo mensal (KPIs, insights, fundos, itens, glossário)
 - `app/movimento-extra/anual-view.tsx`: view completa do modo anual (KPIs, evolução mensal, destaques)
 - `app/obras/page.tsx`: página de listagem de obras com filtros, KPIs e grid de cards
-- `app/obras/obras-client.tsx`: componente client com mock data, filtros (Todas/Em Andamento/Concluídas/Planejadas), progress bars
+- `app/obras/obras-client.tsx`: componente client com consumo real da API de obras, filtros públicos e KPIs
 - `app/obras/[id]/page.tsx`: página dinâmica de detalhe da obra
-- `app/obras/[id]/obra-detalhe-client.tsx`: detalhe com breadcrumb, hero, cronograma timeline, info cards
+- `app/obras/[id]/obra-detalhe-client.tsx`: detalhe da obra com consumo real, cards contratuais e medições mensais
 - `app/contratos/page.tsx`: placeholder — Gestão de Contratos
 - `app/diarias/page.tsx`: placeholder — Diárias e Passagens
 - `app/licitacoes/page.tsx`: placeholder — Licitações
@@ -177,9 +211,15 @@ Snapshot: 2026-04-22
 - `hooks/useExport.ts`: hook de exportação
 - `hooks/index.ts`: barrel de exports
 - `services/api.ts`: API client Axios centralizado com interceptors
+- `services/auth-service.ts`: cliente do frontend para `/api/auth/*`
+- `services/user-service.ts`: CRUD administrativo de usuários
+- `services/obra-service.ts`: leitura pública e CRUD administrativo de obras
 - `stores/filtersStore.ts`: store Zustand de filtros
+- `stores/authStore.ts`: store em memória da sessão administrativa (sem persistência do access token)
 - `stores/themeStore.ts`: store Zustand de tema (light/dark) com persistência + hook useChartThemeColors
 - `lib/constants.ts`: constantes globais (cores, endpoints, formatos, labels, meses)
+- `lib/auth-server.ts`: helpers server-side para cookie de refresh e proxy do backend de identidade
+- `lib/obra-formatters.ts`: formatação e labels da feature de obras
 - `lib/utils.ts`: utilitários gerais
 - `lib/index.ts`: barrel de exports
 - `types/api.ts`: tipos de resposta da API
@@ -189,6 +229,9 @@ Snapshot: 2026-04-22
 - `types/movimento-extra.ts`: tipos e glossário de fundos municipais (FUNDEB, FMAS, FMIS, etc.)
 - `types/licitacao.ts`: tipos para licitações (ComprasBR, dispensas Quality, unified)
 - `types/charts.ts`: tipos de gráficos
+- `types/identity.ts`: contratos TS da feature de autenticação
+- `types/user.ts`: contratos TS da feature de usuários
+- `types/obra.ts`: contratos TS da feature de obras
 - `types/index.ts`: barrel de exports
 - `public/`: assets estáticos
 

@@ -10,3 +10,6 @@ export * from './charts';
 export * from './movimento-extra';
 export * from './licitacao';
 export * from './forecast';
+export * from './identity';
+export * from './user';
+export * from './obra';

@@ -143,7 +143,7 @@ export default function PortalClient() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               {/* Left column */}
               <div className="lg:col-span-7">
-                <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/20 text-secondary-fixed font-label text-sm font-semibold tracking-wide mb-6">
+                <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/80 text-white font-label text-sm font-semibold tracking-wide mb-6">
                   BANDEIRANTES - MS
                 </span>
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Query, Request
 from sqlalchemy import func as sa_func
@@ -105,7 +105,7 @@ async def get_scraping_status(request: Request) -> ScrapingStatusResponse:
                 .first()
             )
             if latest_log is not None:
-                last_run = latest_log.started_at
+                last_run = cast(datetime, latest_log.started_at)
     except Exception:
         logger.exception("Erro ao buscar último log de scraping no banco")
 
