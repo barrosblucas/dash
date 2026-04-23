@@ -1,3 +1,34 @@
+### 2026-04-23 — fix(frontend): eliminar CORS em chamadas admin via proxy reverso
+
+**Problema:** Ao criar usuários e obras na área administrativa, o frontend exibia 
+"Não foi possível conectar ao servidor. Verifique sua conexão." O login funcionava 
+normalmente.
+
+**Causa-raiz:** O \`authService\` faz chamadas via route handlers do Next.js 
+(\`/api/auth/*\`, same-origin), enquanto \`usersService\` e \`obrasService\` 
+(entre outros) usam \`apiClient\` com \`baseURL\` apontando diretamente ao backend 
+(\`http://192.168.1.21:8000\`). Essa diferença arquitetural fazia com que operações 
+admin executassem chamadas cross-origin do browser, sujeitas a bloqueio de CORS — 
+resultando em \`error.request\` sem \`error.response\` (a mensagem de erro exibida).
+
+**Correção:**
+- \`next.config.js\`: adicionado \`rewrites()\` para proxiar \`/api/v1/:path*\` e \`/health\` 
+  ao backend via Next.js (server-side), eliminando chamadas cross-origin do browser.
+- \`lib/constants.ts\`: \`API_ENDPOINTS.base\` alterado de \`process.env.NEXT_PUBLIC_API_URL\` 
+  para string vazia, direcionando todas as chamadas \`apiClient\` ao mesmo origin 
+  (Next.js rewrites encaminha ao backend).
+
+**Arquitetura alinhada:** Agora TODAS as chamadas de API passam pelo servidor Next.js 
+(proxy reverso), consistente com o ADR-002 (route handlers como borda). O browser nunca 
+contata o backend diretamente — elimina CORS, simplifica configuração e oculta a URL 
+do backend do client.
+
+**Arquivos alterados:**
+- \`frontend/next.config.js\`
+- \`frontend/lib/constants.ts\`
+
+**Classificação:** \`borda_externa\` (mudança na borda de comunicação frontend↔backend)
+
 # Changelog 2026-04-23
 
 ## Configurado

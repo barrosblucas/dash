@@ -36,7 +36,23 @@ const nextConfig = {
     ];
   },
 
-  // Redirecionamentos (removido redirect / → /dashboard, agora / é o portal público)
+  // Proxy reverso: all /api/v1/* calls go through the Next.js server
+  // to eliminate cross-origin requests from the browser (CORS issues).
+  // The browser never contacts the backend directly — the Next.js server
+  // forwards the request server-side, just like /api/auth/* does for identity.
+  async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${backendUrl}/api/v1/:path*`,
+      },
+      {
+        source: '/health',
+        destination: `${backendUrl}/health`,
+      },
+    ];
+  },
 
   // Otimizações experimentais
   experimental: {

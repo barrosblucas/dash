@@ -365,7 +365,10 @@ export const CHART_CONFIG = {
 // ============================================
 
 export const API_ENDPOINTS = {
-  base: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+  // Empty base — all /api/v1/* requests go through Next.js rewrites (same-origin).
+  // The server-side auth helper (callIdentityBackend) still reads
+  // NEXT_PUBLIC_API_URL directly for its own backend calls.
+  base: '',
   
   receitas: {
     list: '/api/v1/receitas',
