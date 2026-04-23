@@ -13,6 +13,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    Time,
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase
@@ -45,7 +46,9 @@ class ReceitaModel(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("ano", "mes", "categoria", name="uq_receita_periodo_categoria"),
+        UniqueConstraint(
+            "ano", "mes", "categoria", name="uq_receita_periodo_categoria"
+        ),
         Index("ix_receita_ano_mes", "ano", "mes"),
         Index("ix_receita_categoria_ano", "categoria", "ano"),
     )
@@ -94,7 +97,9 @@ class ForecastModel(Base):
 
     __table_args__ = (
         Index("ix_forecast_tipo_data", "tipo", "data_prevista"),
-        UniqueConstraint("tipo", "categoria", "data_prevista", name="uq_forecast_unique"),
+        UniqueConstraint(
+            "tipo", "categoria", "data_prevista", name="uq_forecast_unique"
+        ),
     )
 
 
@@ -140,7 +145,9 @@ class ReceitaDetalhamentoModel(Base):
     __table_args__ = (
         Index("ix_detalhamento_ano_nivel", "ano", "nivel"),
         Index("ix_detalhamento_ano_ordem", "ano", "ordem"),
-        UniqueConstraint("ano", "detalhamento", "ordem", name="uq_detalhamento_ano_cat_ordem"),
+        UniqueConstraint(
+            "ano", "detalhamento", "ordem", name="uq_detalhamento_ano_cat_ordem"
+        ),
     )
 
 
@@ -188,7 +195,9 @@ class IdentityTokenModel(Base):
     __tablename__ = "identity_tokens"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     token_type = Column(String(32), nullable=False)
     jti = Column(String(64), nullable=False, unique=True, index=True)
     expires_at = Column(DateTime, nullable=False)
@@ -246,7 +255,9 @@ class ObraMedicaoModel(Base):
     __tablename__ = "obra_medicoes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    obra_id = Column(Integer, ForeignKey("obras.id", ondelete="CASCADE"), nullable=False)
+    obra_id = Column(
+        Integer, ForeignKey("obras.id", ondelete="CASCADE"), nullable=False
+    )
     sequencia = Column(Integer, nullable=False)
     mes_referencia = Column(Integer, nullable=False)
     ano_referencia = Column(Integer, nullable=False)
@@ -263,4 +274,93 @@ class ObraMedicaoModel(Base):
     __table_args__ = (
         UniqueConstraint("obra_id", "sequencia", name="uq_obra_medicao_sequencia"),
         Index("ix_obra_medicoes_periodo", "ano_referencia", "mes_referencia"),
+    )
+
+
+class SaudeUnidadeModel(Base):
+    __tablename__ = "saude_unidades"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), nullable=False, index=True)
+    unit_type = Column(String(120), nullable=False, index=True)
+    address = Column(String(255), nullable=False)
+    neighborhood = Column(String(120), nullable=True, index=True)
+    phone = Column(String(40), nullable=True)
+    latitude = Column(Numeric(10, 7), nullable=True)
+    longitude = Column(Numeric(10, 7), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True, index=True)
+    external_id = Column(Integer, nullable=True, unique=True, index=True)
+    source = Column(String(60), nullable=False, default="manual")
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (Index("ix_saude_unidades_tipo_ativo", "unit_type", "is_active"),)
+
+
+class SaudeUnidadeHorarioModel(Base):
+    __tablename__ = "saude_unidade_horarios"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    unit_id = Column(
+        Integer,
+        ForeignKey("saude_unidades.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    day_of_week = Column(String(20), nullable=False)
+    opens_at = Column(Time, nullable=True)
+    closes_at = Column(Time, nullable=True)
+    is_closed = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("unit_id", "day_of_week", name="uq_saude_unidade_horario_dia"),
+        Index("ix_saude_unidade_horarios_unit", "unit_id", "day_of_week"),
+    )
+
+
+class SaudeSnapshotModel(Base):
+    __tablename__ = "saude_snapshots"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    resource = Column(String(80), nullable=False, index=True)
+    scope_year = Column(Integer, nullable=True, index=True)
+    payload_json = Column(Text, nullable=False)
+    item_count = Column(Integer, nullable=False, default=0)
+    source_url = Column(String(255), nullable=True)
+    synced_at = Column(DateTime, nullable=False, index=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+
+class SaudeSyncLogModel(Base):
+    __tablename__ = "saude_sync_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    trigger_type = Column(String(20), nullable=False)
+    status = Column(String(20), nullable=False, index=True)
+    started_at = Column(DateTime, nullable=False, index=True)
+    finished_at = Column(DateTime, nullable=True)
+    resources_json = Column(Text, nullable=False)
+    years_json = Column(Text, nullable=False)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+
+    __table_args__ = (
+        Index("ix_saude_sync_logs_started_status", "started_at", "status"),
     )

@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     bootstrap_admin_email: str | None = None
     bootstrap_admin_password: str | None = None
     password_reset_base_url: str = "http://localhost:3000/reset-password"
+    saude_esaude_base_url: str = (
+        "https://bandeirantes.esaude.genesiscloud.tec.br/publico/saude-transparente"
+    )
+    saude_esaude_timeout_seconds: float = 30.0
+    saude_sync_interval_hours: int = 6
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -40,12 +45,16 @@ class Settings(BaseSettings):
             raw_value = value.strip()
             if raw_value.startswith("[") and raw_value.endswith("]"):
                 stripped = raw_value[1:-1]
-                origins = [item.strip().strip('"').strip("'") for item in stripped.split(",")]
+                origins = [
+                    item.strip().strip('"').strip("'") for item in stripped.split(",")
+                ]
             else:
                 origins = [item.strip() for item in raw_value.split(",")]
             origins = [item for item in origins if item]
         else:
-            raise ValueError("cors_origins deve ser lista ou string separada por vírgula")
+            raise ValueError(
+                "cors_origins deve ser lista ou string separada por vírgula"
+            )
 
         if any(origin == "*" for origin in origins):
             raise ValueError("cors_origins não pode conter '*' quando há credenciais")

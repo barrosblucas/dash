@@ -31,6 +31,7 @@ from backend.features.movimento_extra.movimento_extra_handler import (
 )
 from backend.features.obra.obra_handler import router as obra_router
 from backend.features.receita.receita_handler import router as receitas_router
+from backend.features.saude.saude_handler import router as saude_router
 from backend.features.scraping.historical_data_bootstrap_service import (
     HistoricalDataBootstrapService,
 )
@@ -47,7 +48,7 @@ settings = get_settings()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator:
     """
     Gerenciador do ciclo de vida da aplicação.
 
@@ -77,9 +78,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         raise
 
     try:
-        bootstrap_result = (
-            HistoricalDataBootstrapService().bootstrap_missing_years()
-        )
+        bootstrap_result = HistoricalDataBootstrapService().bootstrap_missing_years()
         if bootstrap_result.executed:
             logger.info(
                 "Bootstrap histórico executado. "
@@ -97,6 +96,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             logger.info("Bootstrap histórico não necessário")
     except Exception:
         logger.exception("Falha no bootstrap histórico de dados")
+
+    saude_scheduler = None
+    try:
+        from backend.features.saude.saude_scheduler import SaudeScheduler
+
+        saude_scheduler = SaudeScheduler()
+        saude_scheduler.start()
+        app.state.saude_scheduler = saude_scheduler
+        logger.info("Scheduler de saúde integrado ao lifespan")
+    except Exception:
+        logger.exception("Falha ao iniciar scheduler de saúde — modo sem scheduler")
 
     # Inicia scheduler de scraping
     scheduler = None
@@ -117,6 +127,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Finalização
     if scheduler is not None:
         scheduler.stop()
+    if saude_scheduler is not None:
+        saude_scheduler.stop()
     logger.info("Dashboard Financeiro Municipal API encerrada")
 
 
@@ -185,6 +197,7 @@ app.include_router(movimento_extra_router, prefix="/api/v1")
 app.include_router(licitacoes_router, prefix="/api/v1")
 app.include_router(identity_router, prefix="/api/v1")
 app.include_router(obra_router, prefix="/api/v1")
+app.include_router(saude_router, prefix="/api/v1")
 
 
 # Endpoint de health check

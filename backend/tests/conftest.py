@@ -34,6 +34,29 @@ class FakeScrapingScheduler:
         }
 
 
+class FakeSaudeScheduler:
+    def start(self) -> None:
+        return None
+
+    def stop(self) -> None:
+        return None
+
+    def get_status(self) -> dict[str, object]:
+        return {"running": False, "last_run_result": None, "next_run_time": None}
+
+    async def trigger_manual(self, payload: object) -> dict[str, object]:
+        return {
+            "status": "success",
+            "years": [],
+            "resources": [],
+            "synced_resources": 0,
+            "failed_resources": 0,
+            "errors": [],
+            "started_at": "2026-04-23T00:00:00",
+            "finished_at": "2026-04-23T00:00:00",
+        }
+
+
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[TestClient]:
     monkeypatch.setenv("BOOTSTRAP_ADMIN_NAME", "Admin Root")
@@ -44,12 +67,14 @@ def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[TestClie
 
     test_db_manager = DatabaseManager(tmp_path / "test.db")
 
+    from backend.features.saude import saude_scheduler
     from backend.features.scraping import scraping_handler, scraping_scheduler
     from backend.shared.database import connection
 
     monkeypatch.setattr(connection, "db_manager", test_db_manager)
     monkeypatch.setattr(scraping_handler, "db_manager", test_db_manager)
     monkeypatch.setattr(scraping_scheduler, "ScrapingScheduler", FakeScrapingScheduler)
+    monkeypatch.setattr(saude_scheduler, "SaudeScheduler", FakeSaudeScheduler)
 
     import backend.api.main as main_module
 

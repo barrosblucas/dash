@@ -20,6 +20,15 @@ const mainNavCards = [
     offset: false,
   },
   {
+    title: 'Saúde Transparente',
+    description: 'Medicamentos, perfil epidemiológico, procedimentos e mapa das unidades de saúde.',
+    icon: 'local_hospital',
+    href: '/saude',
+    accent: 'secondary' as const,
+    cta: 'Acessar Saúde',
+    offset: false,
+  },
+  {
     title: 'Obras Públicas',
     description: 'Status, investimentos e prazos de todas as construções e reformas em andamento.',
     icon: 'architecture',

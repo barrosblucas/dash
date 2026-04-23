@@ -1,3 +1,26 @@
+### 2026-04-23 — feat(backend): entregar V1 de Saúde Transparente no FastAPI
+
+**Classificação:** `borda_externa`
+
+**Adicionado:**
+- feature `backend/features/saude/` com contratos Pydantic, ACL HTTP do E-Saúde, persistência SQLAlchemy, orquestração de sync/importação e scheduler APScheduler a cada 6h
+- endpoints públicos `/api/v1/saude/*` para medicamentos em estoque, medicamentos dispensados, perfil epidemiológico, perfil demográfico, procedimentos por tipo, unidades, horários e `sync-status`
+- endpoints administrativos `/api/v1/saude/admin/*` para CRUD de unidades, atualização de horários, importação inicial do E-Saúde e trigger manual de sync
+- novas tabelas SQLite `saude_unidades`, `saude_unidade_horarios`, `saude_snapshots` e `saude_sync_logs` com migration Alembic `7b6610d4f1c2_add_saude_transparente_v1.py`
+
+**Alterado:**
+- `backend/api/main.py` agora registra o router de saúde e inicia o scheduler da feature no lifespan sem quebrar os testes
+- `backend/shared/settings.py` recebeu settings seguros para base URL, timeout e intervalo de sync do E-Saúde
+- `backend/tests/conftest.py` ganhou fake scheduler da feature para manter o ciclo de testes isolado de chamadas externas
+
+**Testes:**
+- novos testes de integração `backend/tests/test_api/test_saude.py`
+- novos testes unitários `backend/tests/test_etl/test_saude_scheduler.py`
+- validação backend completa verde: `ruff check . && mypy . && pytest`
+
+**Limitação conhecida:**
+- o chart público `quantidade-de-atendimento-por-sexo` do E-Saúde retorna `404`; no V1, o backend deriva `por_sexo` a partir dos quantitativos canônicos para manter o dashboard integrável
+
 ### 2026-04-23 — fix(frontend): eliminar CORS em chamadas admin via proxy reverso
 
 **Problema:** Ao criar usuários e obras na área administrativa, o frontend exibia 
@@ -116,3 +139,25 @@ do backend do client.
 - `# type: ignore[assignment]` em escritas ORM mascara eventuais bugs reais de tipo; mitigado pelo fato de que entidades são validadas por Pydantic antes de chegarem ao repositório
 - Scripts `init_db.py` e `reimport_data.py` não possuem cobertura de teste automatizado; as mudanças foram puramente de tipo/rename, sem alteração de lógica
 - Prophet continua sem stubs; o bypass `# type: ignore[import-untyped]` permanece enquanto não houver stubs oficiais
+
+### 2026-04-23 — feat(frontend): entregar V1 de Saúde Transparente no portal e no admin
+
+**Classificação:** `borda_externa`
+
+**Adicionado:**
+- contratos TypeScript da feature `saude` em `frontend/types/saude.ts` e client HTTP dedicado em `frontend/services/saude-service.ts`
+- páginas públicas `/saude`, `/saude/medicamentos`, `/saude/perfil-epidemiologico`, `/saude/procedimentos` e `/saude/unidades`
+- página administrativa `/admin/saude/unidades` com listagem, cadastro/edição inline, horários por dia, importação do E-Saúde e trigger manual de sync
+- mapa Leaflet client-only (`leaflet` + `react-leaflet`) com markers, popup com horários e botão de geolocalização do usuário
+- testes unitários para helpers da feature e normalização do service de saúde
+
+**Alterado:**
+- `Sidebar.tsx`, `PortalHeader.tsx`, `portal-client.tsx` e `AdminShell.tsx` agora expõem navegação para Saúde Transparente
+- home do portal ganhou card de acesso para Saúde sem quebrar a malha visual existente
+
+**Validação:**
+- frontend verde com `npm run lint && npm run type-check && npm run test && npm run build`
+
+**Limitações conhecidas:**
+- a página pública de unidades depende dos horários cadastrados no backend por unidade; quando ausentes, o popup mostra estado vazio
+- o build continua emitindo avisos legados de `metadataBase` não configurado, sem relação com a feature de saúde

@@ -37,7 +37,8 @@ dashboard/
 │   │   │   └── historical_data_bootstrap_service.py
 │   │   ├── export/           # Contexto de exportação
 │   │   ├── identity/         # Contexto de identidade/admin
-│   │   └── obra/             # Contexto de obras públicas
+│   │   ├── obra/             # Contexto de obras públicas
+│   │   └── saude/            # Contexto de Saúde Transparente (snapshots E-Saúde + CRUD de unidades)
 │   ├── shared/               # Infraestrutura compartilhada entre features
 │   │   ├── database/
 │   │   │   ├── connection.py # Engine SQLAlchemy, session factory, DatabaseManager
@@ -127,6 +128,7 @@ O backend é organizado em bounded contexts verticais dentro de `features/`. Cad
 | Export | `features/export/` | types, handler, business |
 | Identity | `features/identity/` | types, handler, data |
 | Obra | `features/obra/` | types, handler, data, business |
+| Saúde | `features/saude/` | types, handler, data, business, adapter, scheduler |
 
 ### Regra de adição de feature
 

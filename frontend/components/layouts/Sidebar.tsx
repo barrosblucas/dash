@@ -21,6 +21,7 @@ const navigation: NavItem[] = [
   { name: 'Previsões', href: '/forecast', icon: 'insights' },
   { name: 'Comparativo', href: '/comparativo', icon: 'compare_arrows' },
   { name: 'Mov. Extra', href: '/movimento-extra', icon: 'account_balance' },
+  { name: 'Saúde', href: '/saude', icon: 'health_and_safety' },
   { name: 'Obras', href: '/obras', icon: 'construction' },
   { name: 'Licitações', href: '/avisos-licitacoes', icon: 'gavel' },
   { name: 'Relatórios', href: '/relatorios', icon: 'description' },

@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-04-22
+Snapshot: 2026-04-23
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -17,21 +17,22 @@ Snapshot: 2026-04-22
 
 ### Arquitetura: Vertical Bounded Contexts (feature-first)
 
-- `api/main.py`: aplicação FastAPI com prefixo `/api/v1`, lifespan, CORS e exception handler global — importa routers dos features
+- `api/main.py`: aplicação FastAPI com prefixo `/api/v1`, lifespan, CORS e exception handler global — importa routers dos features e integra os schedulers de scraping e saúde
 - `api/schemas.py`: schemas Pydantic base (`HealthCheckResponse`, `ErrorResponse`)
 
 #### `shared/` — infraestrutura compartilhada
 - `shared/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
-- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições)
+- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, unidades de saúde, horários, snapshots de saúde, logs de sync de saúde)
 
 #### `alembic/` — migrations
 - `alembic.ini`: configuração do Alembic apontando para `backend.shared.database.models.Base`
 - `alembic/env.py`: ambiente de migration reutilizando a engine do projeto (`create_db_engine`)
-- `alembic/versions/`: diretório de revisions (migration inicial cobrindo todas as tabelas)
+- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente)
 - `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha)
 - `shared/security.py`: hash de senha Argon2, emissão/validação de tokens JWT e dependências de autenticação/autorização
 - `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
 - `shared/quality_api_client.py`: cliente HTTP assíncrono para API QualitySistemas
+- `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha, base URL/timeout/intervalo do E-Saúde)
 
 #### `features/identity/`
 - `identity_types.py`: schemas Pydantic de autenticação, usuários e reset de senha
@@ -92,6 +93,14 @@ Snapshot: 2026-04-22
 - `export_handler.py`: endpoints de exportação (Excel para receitas, despesas, KPIs)
 - `export_business.py`: lógica de domínio — conversão para DataFrame, geração Excel, formatação
 
+#### `features/saude/`
+- `saude_types.py`: contratos Pydantic para dashboards, sync e CRUD de unidades/horários
+- `saude_adapter.py`: ACL HTTP para os endpoints públicos do E-Saúde (`medicamentos-tabela`, `buscar-dados-quantitativos`, charts e localização)
+- `saude_data.py`: persistência SQLAlchemy de unidades, horários, snapshots genéricos por recurso/ano e logs de sincronização
+- `saude_business.py`: orquestração de sync/importação e transformação dos payloads externos em contratos do portal
+- `saude_handler.py`: rotas `/api/v1/saude` públicas e administrativas (`admin/unidades`, `admin/sync`, `sync-status`)
+- `saude_scheduler.py`: APScheduler periódico (6h) para sincronizar snapshots do Saúde Transparente
+
 #### Camadas legadas (removidas)
 - `domain/`, `infrastructure/`, `services/`, `etl/`: **removidos** — re-exports backward-compat eliminados após migração completa para features/
 - `api/routes/`: re-exportam de `features/*/`
@@ -101,10 +110,12 @@ Snapshot: 2026-04-22
 - `tests/test_api/test_licitacoes.py`: testes unitários do parser HTML de licitações Quality e do proxy ComprasBR
 - `tests/test_api/test_identity.py`: testes de integração de login, refresh/logout, usuários, reset de senha e proteção de `/admin/*`
 - `tests/test_api/test_obra.py`: testes de integração do CRUD de obras e medições
+- `tests/test_api/test_saude.py`: testes de integração do CRUD/importação de unidades, sync manual e endpoints públicos de saúde
 - `tests/test_etl/`: testes do pipeline ETL (preparado)
 - `tests/test_etl/test_historical_data_bootstrap_service.py`: testes unitários do bootstrap histórico (lacunas, execução, utilitários)
 - `tests/test_etl/test_receita_scraper.py`: testes unitários do parser de receitas (meses com zero e mês inválido)
 - `tests/test_etl/test_scraping_scheduler.py`: testes unitários do scheduler de scraping e sincronização de PDF
+- `tests/test_etl/test_saude_scheduler.py`: testes unitários do scheduler da feature saúde
 - `tests/test_etl/test_expense_pdf_sync_service.py`: testes unitários da sincronização de PDF de despesas
 - `tests/test_etl/test_quality_api_client.py`: testes unitários do contrato de URL do cliente Quality para despesas
 - `tests/test_ml/`: testes dos modelos de ML (preparado)
@@ -138,6 +149,7 @@ Snapshot: 2026-04-22
 - `app/admin/obras/page.tsx`: listagem administrativa de obras
 - `app/admin/obras/new/page.tsx`: criação administrativa de obra
 - `app/admin/obras/[hash]/page.tsx`: edição administrativa de obra
+- `app/admin/saude/unidades/page.tsx`: página administrativa única para CRUD de unidades de saúde, horários, importação e sync manual
 - `app/portal-client.tsx`: componente client do portal com hero, grid de cards e footer
 - `app/dashboard/page.tsx`: página do dashboard financeiro
 - `app/dashboard/dashboard-client.tsx`: componente client do dashboard
@@ -156,6 +168,11 @@ Snapshot: 2026-04-22
 - `components/layouts/DashboardLayout.tsx`: layout wrapper com sidebar fixa (md+) e drawer mobile animado
 - `components/layouts/PortalHeader.tsx`: header público com nav links, theme toggle, "Acesso Restrito"
 - `components/layouts/PortalFooter.tsx`: footer com grid 4 colunas + copyright
+- `components/saude/SaudeSyncBadge.tsx`: badge reutilizável de última sincronização para a feature saúde
+- `components/saude/SaudeStateBlock.tsx`: estados de loading/erro/empty da feature saúde
+- `components/saude/SaudeUnitsMap.tsx`: mapa Leaflet client-only com markers, popup e geolocalização opcional
+- `components/admin/saude/SaudeUnitsAdminPage.tsx`: shell administrativa da V1 de saúde
+- `components/admin/saude/saude-units-form-helpers.ts`: helpers de formulário/horários para CRUD admin de saúde
 - `components/receitas/ReceitaDetalhamentoTable.tsx`: tabela hierárquica de detalhamento de receitas com expand/collapse
 - `components/ui/`: componentes base (shared)
 - `app/receitas/page.tsx`: página de receitas municipais
@@ -185,6 +202,16 @@ Snapshot: 2026-04-22
 - `app/obras/obras-client.tsx`: componente client com consumo real da API de obras, filtros públicos e KPIs
 - `app/obras/[id]/page.tsx`: página dinâmica de detalhe da obra
 - `app/obras/[id]/obra-detalhe-client.tsx`: detalhe da obra com consumo real, cards contratuais e medições mensais
+- `app/saude/page.tsx`: landing page pública da Saúde Transparente
+- `app/saude/saude-client.tsx`: resumo de sync, atalhos e logs recentes da feature saúde
+- `app/saude/medicamentos/page.tsx`: página pública de medicamentos
+- `app/saude/medicamentos/medicamentos-client.tsx`: estoque paginado + ranking/series mensais de dispensação
+- `app/saude/perfil-epidemiologico/page.tsx`: página pública de perfil epidemiológico
+- `app/saude/perfil-epidemiologico/perfil-epidemiologico-client.tsx`: quantitativos, sexo e recorte demográfico anual
+- `app/saude/procedimentos/page.tsx`: página pública de procedimentos
+- `app/saude/procedimentos/procedimentos-client.tsx`: gráfico e tabela de procedimentos por tipo
+- `app/saude/unidades/page.tsx`: página pública de unidades de saúde
+- `app/saude/unidades/unidades-client.tsx`: filtros, contagem e integração dinâmica com mapa Leaflet
 - `app/contratos/page.tsx`: placeholder — Gestão de Contratos
 - `app/diarias/page.tsx`: placeholder — Diárias e Passagens
 - `app/licitacoes/page.tsx`: placeholder — Licitações
@@ -214,12 +241,14 @@ Snapshot: 2026-04-22
 - `services/auth-service.ts`: cliente do frontend para `/api/auth/*`
 - `services/user-service.ts`: CRUD administrativo de usuários
 - `services/obra-service.ts`: leitura pública e CRUD administrativo de obras
+- `services/saude-service.ts`: consumo dos endpoints públicos e administrativos da feature saúde
 - `stores/filtersStore.ts`: store Zustand de filtros
 - `stores/authStore.ts`: store em memória da sessão administrativa (sem persistência do access token)
 - `stores/themeStore.ts`: store Zustand de tema (light/dark) com persistência + hook useChartThemeColors
 - `lib/constants.ts`: constantes globais (cores, endpoints, formatos, labels, meses)
 - `lib/auth-server.ts`: helpers server-side para cookie de refresh e proxy do backend de identidade
 - `lib/obra-formatters.ts`: formatação e labels da feature de obras
+- `lib/saude-utils.ts`: labels, horários, sync badge e helpers da feature saúde
 - `lib/utils.ts`: utilitários gerais
 - `lib/index.ts`: barrel de exports
 - `types/api.ts`: tipos de resposta da API
@@ -232,6 +261,7 @@ Snapshot: 2026-04-22
 - `types/identity.ts`: contratos TS da feature de autenticação
 - `types/user.ts`: contratos TS da feature de usuários
 - `types/obra.ts`: contratos TS da feature de obras
+- `types/saude.ts`: contratos TS da feature saúde espelhando os schemas Pydantic do backend
 - `types/index.ts`: barrel de exports
 - `public/`: assets estáticos
 

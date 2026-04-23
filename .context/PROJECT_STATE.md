@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-22 (atualizado pós-reformulação visual completa do frontend)
+Snapshot: 2026-04-23 (atualizado com a entrega V1 de Saúde Transparente)
 
 ## Status geral
 
@@ -19,7 +19,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Endpoints de scraping (status do scheduler, trigger manual, histórico de execuções)
 - [x] Bounded context `identity` com login, refresh rotativo, logout, `me`, gestão de usuários e reset de senha
 - [x] Bounded context `obra` com CRUD completo, hash público, medições mensais filhas e cálculo de valores derivados
+- [x] Bounded context `saude` com snapshots/cache do E-Saúde, CRUD admin de unidades e endpoints internos para dashboards iniciais de Saúde Transparente
 - [x] Scheduler de scraping periódico (APScheduler, 10 min) com primeira execução imediata no startup
+- [x] Scheduler periódico de Saúde Transparente (APScheduler, 6h) com sync do ano atual e anterior
 - [x] Serviço de scraping QualitySistemas com upsert de receitas, despesas e detalhamento
 - [x] Sincronização de PDF de despesas com contrato real do portal (RelatorioPdf retorna path + download subsequente do binário)
 - [x] Bootstrap histórico idempotente no startup da API para preencher anos ausentes do banco com base nos PDFs locais
@@ -32,7 +34,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
 - [x] Detalhamento hierárquico de receitas com extração por indentação de PDF
 - [x] Forecasting com Prophet + fallback para projeção linear
-- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, usuários, tokens de identidade, obras, medições)
+- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, usuários, tokens de identidade, obras, medições, unidades de saúde, horários, snapshots e logs de sync de saúde)
 - [x] CORS parametrizado via settings com lista explícita de origens permitidas
 - [x] Endpoints administrativos de banco protegidos por autenticação admin
 
@@ -78,6 +80,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Gestão de usuários no frontend administrativo (listagem, cadastro, edição e reset de senha)
 - [x] CRUD administrativo de obras com edição completa de metadados e medições mensais dinâmicas
 - [x] Portal público de obras consumindo API real em `/obras` e `/obras/[id]`, sem mocks locais
+- [x] Saúde Transparente V1 no frontend com páginas públicas, mapa Leaflet, service/tipos dedicados e administração de unidades em `/admin/saude/unidades`
 
 ### Frontend — Reformulação Visual Completa v2 (2026-04-22)
 - [x] **Reformulação completa do frontend** seguindo templates HTML de referência (`design_system/`)
@@ -152,6 +155,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - `notebooks/` vazio — sem notebooks de exploração
 - Alembic migrations configurado e migration inicial gerada cobrindo todas as tabelas existentes (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, scraping_log, users, identity_tokens, obras, obra_medicoes)
 - `forecast_business.py` ainda importa modelos ORM via repositório ao invés de usar abstração pura
+- Chart público `quantidade-de-atendimento-por-sexo` do E-Saúde retorna `404`; o V1 expõe `por_sexo` derivado dos quantitativos canônicos enquanto o recurso externo não estabiliza
 
 ### Type checking (mypy)
 
@@ -168,6 +172,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 6. ~~Implementar testes automatizados no frontend (vitest)~~ ✅ Concluído em 2026-04-23
 7. ~~Limpar débito técnico `mypy` nos módulos legados~~ ✅ Concluído em 2026-04-23
 8. Extrair lógica de negócio restante dos handlers para `*_business.py`
+9. Expandir Saúde Transparente para dashboards restantes (vacinação, transporte, atenção primária, hospitalar) além da V1 já publicada no frontend
 9. ~~Consolidar ícones restantes do lucide-react para Material Symbols~~ ✅ Concluído em 2026-04-21
 
 ## Ambiente

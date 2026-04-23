@@ -12,6 +12,7 @@ const adminNavigation = [
   { href: '/admin', label: 'Painel', icon: 'shield_person' },
   { href: '/admin/users', label: 'Usuários', icon: 'group' },
   { href: '/admin/obras', label: 'Obras', icon: 'construction' },
+  { href: '/admin/saude/unidades', label: 'Saúde', icon: 'local_hospital' },
 ] as const;
 
 interface AdminShellProps {

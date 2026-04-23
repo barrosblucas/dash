@@ -14,6 +14,7 @@ interface NavItem {
 const portalNav: NavItem[] = [
   { name: 'Início', href: '/' },
   { name: 'Painel Financeiro', href: '/dashboard' },
+  { name: 'Saúde Transparente', href: '/saude' },
   { name: 'Obras Públicas', href: '/obras' },
   { name: 'Transparência', href: '/transparencia' },
   { name: 'Serviços', href: '/servicos' },
