@@ -56,6 +56,23 @@
   - `next/navigation` e `next/link` mockados para isolamento dos componentes client
   - Validação final: `npm run lint && npm run type-check && npm run test && npm run build` — **todos verdes**
 
+## Alterado
+- **Reformulação visual da página de cadastro/edição de obras (`ObraForm.tsx` + `AdminFields.tsx`)**
+  - Problema: campos de formulário ficavam "apagados" porque `baseFieldClassName` usava `bg-surface-container-low` sem borda, mesclando visualmente com o fundo do card do formulário (`bg-surface-container-low`)
+  - Solução em `frontend/components/admin/forms/AdminFields.tsx`:
+    - Fundo dos campos alterado para `bg-surface-container-lowest` para criar elevação
+    - Adicionada borda sutil `border-outline/40` com hover `border-outline/60`
+    - Adicionado `focus:border-primary` para destaque no foco
+    - Adicionado `placeholder:text-on-surface-variant/50` para futuros placeholders
+  - Solução em `frontend/components/admin/obras/ObraForm.tsx`:
+    - Formulário reorganizado em seções temáticas com ícones e títulos: *Informações básicas*, *Localização e progresso*, *Valores financeiros*, *Medições mensais*
+    - Cada seção envolvida em card interno (`bg-surface-container-lowest`) criando hierarquia visual clara
+    - Botões de ação aprimorados com ícones (`save`, `delete`, `add`, `sync`) e estado hover
+    - Adicionado botão "Cancelar" ao lado do botão de submit
+    - Campo "Valor economizado" reposicionado dentro da seção financeira
+    - Cards de medição receberam borda `border-outline/20` e fundo `bg-surface` para melhor separação entre itens
+  - Validação: `npm run lint && npm run type-check && npm run build` — todos verdes
+
 ## Corrigido
 - **Ambiente virtual do backend com dependências faltantes**
   - Sintoma: `ImportError: email-validator is not installed` ao iniciar a aplicação (`backend/shared/security.py` também falhava com `No module named 'jwt'`)

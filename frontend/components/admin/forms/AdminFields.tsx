@@ -19,7 +19,7 @@ function FieldShell({ label, children, hint }: FieldShellProps) {
 }
 
 const baseFieldClassName =
-  'w-full rounded-xl bg-surface-container-low px-4 py-3 text-sm text-on-surface outline-none transition focus:ring-2 focus:ring-primary/20';
+  'w-full rounded-xl border border-outline/40 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none transition placeholder:text-on-surface-variant/50 hover:border-outline/60 focus:border-primary focus:ring-2 focus:ring-primary/20';
 
 interface InputFieldProps {
   label: string;
