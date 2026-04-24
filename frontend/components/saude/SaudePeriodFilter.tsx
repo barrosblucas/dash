@@ -1,8 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
-
-import { formatDateInputValue, saudeYearOptions } from '@/lib/saude-utils';
+import { saudeYearOptions } from '@/lib/saude-utils';
 
 interface SaudePeriodFilterProps {
   year: number;
@@ -23,23 +21,6 @@ export default function SaudePeriodFilter({
   onEndDateChange,
   showYear = true,
 }: SaudePeriodFilterProps) {
-  const currentYear = new Date().getFullYear();
-
-  useEffect(() => {
-    if (!showYear) {
-      return;
-    }
-
-    const newStart = formatDateInputValue(new Date(year, 0, 1));
-    const newEnd =
-      year === currentYear
-        ? formatDateInputValue(new Date())
-        : formatDateInputValue(new Date(year, 11, 31));
-
-    onStartDateChange(newStart);
-    onEndDateChange(newEnd);
-  }, [year, showYear, currentYear, onStartDateChange, onEndDateChange]);
-
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       {showYear && (

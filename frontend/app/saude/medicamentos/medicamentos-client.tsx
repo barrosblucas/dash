@@ -41,7 +41,7 @@ export default function MedicamentosClient() {
   return (
     <div className="space-y-6">
       <SaudePageHeader
-        eyebrow="US-01"
+        eyebrow="Estoque público"
         title="Estoque público de medicamentos"
         description="Consulta operacional por estabelecimento com destaque visual para itens abaixo do mínimo. Os indicadores de farmácia agora ficam em um painel separado."
         badgeValue={<SaudeSyncBadge value={stockQuery.data?.last_synced_at} />}

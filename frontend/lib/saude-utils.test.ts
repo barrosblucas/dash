@@ -6,9 +6,12 @@ import {
   formatScheduleSummary,
   formatSyncLogLabel,
   formatTrendSummary,
+  getSaudeDemographicColor,
+  getSaudePeriodRange,
   getTopLabel,
   getLatestSync,
   getSaudeDayLabel,
+  getYearFromDateInput,
   parseSyncLogList,
 } from '@/lib/saude-utils';
 
@@ -94,5 +97,28 @@ describe('saude-utils', () => {
 
   it('formata data para campo input type=date', () => {
     expect(formatDateInputValue(new Date('2026-04-23T10:00:00Z'))).toBe('2026-04-23');
+  });
+
+  it('monta o intervalo padrão do ano respeitando a data de referência', () => {
+    expect(getSaudePeriodRange(2026, new Date('2026-04-24T10:00:00Z'))).toEqual({
+      startDate: '2026-01-01',
+      endDate: '2026-04-24',
+    });
+
+    expect(getSaudePeriodRange(2025, new Date('2026-04-24T10:00:00Z'))).toEqual({
+      startDate: '2025-01-01',
+      endDate: '2025-12-31',
+    });
+  });
+
+  it('extrai o ano a partir do valor do input de data', () => {
+    expect(getYearFromDateInput('2016-01-01')).toBe(2016);
+    expect(getYearFromDateInput('')).toBeNull();
+  });
+
+  it('atribui cores distintas para categorias demográficas comuns', () => {
+    expect(getSaudeDemographicColor('Feminino', 0)).toBe('#ec4899');
+    expect(getSaudeDemographicColor('Masculino', 1)).toBe('#3b82f6');
+    expect(getSaudeDemographicColor('Criança', 2)).toBe('#22c55e');
   });
 });

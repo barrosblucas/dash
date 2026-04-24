@@ -1,3 +1,39 @@
+### 2026-04-24 — fix(frontend): período estável e saúde com melhor legibilidade
+
+**Classificação:** `mudanca_mecanica`
+
+**Contexto:** Os dashboards públicos de saúde precisavam trocar período sem "piscar" a tela, o perfil epidemiológico precisava de cores mais discrimináveis e o gráfico de procedimentos por especialidade precisava de mais respiro entre os rótulos. Também havia códigos US-xx expostos no módulo.
+
+**Alterado:**
+- `frontend/app/saude/farmacia/farmacia-client.tsx`
+- `frontend/app/saude/vacinacao/vacinacao-client.tsx`
+- `frontend/app/saude/visitas-domiciliares/visitas-domiciliares-client.tsx`
+- `frontend/app/saude/atencao-primaria/atencao-primaria-client.tsx`
+- `frontend/app/saude/saude-bucal/saude-bucal-client.tsx`
+  - consultas agora usam `placeholderData: keepPreviousData` para manter o conteúdo anterior enquanto o novo período carrega
+  - o ano passa a acompanhar o período selecionado quando o usuário altera a data inicial
+  - o período padrão continua sendo calculado pelo ano selecionado
+
+- `frontend/app/saude/perfil-epidemiologico/perfil-epidemiologico-client.tsx`
+  - cores passam a variar por categoria demográfica para facilitar leitura visual
+  - adicionada uma legenda visual de apoio com os valores por categoria
+
+- `frontend/app/saude/atencao-primaria/atencao-primaria-client.tsx`
+  - aumentou o espaço do gráfico "Procedimentos por especialidade" para evitar sobreposição dos rótulos
+
+- `frontend/app/saude/*`
+  - remoção dos códigos `US-xx` dos olhos de página e dos badges da navegação da saúde
+
+- `frontend/lib/saude-utils.ts`
+  - helpers compartilhados para intervalo de período, extração de ano e cor por categoria demográfica
+
+**Validação:**
+- `cd frontend && npm run test -- saude-utils.test.ts` — verde
+- `cd frontend && npm run lint && npm run type-check && npm run build` — verde
+- `cd frontend && npm run test` — verde
+
+---
+
 ### 2026-04-24 — feat(backend): filtros de período dinâmicos nos endpoints públicos de saúde
 
 **Classificação:** `borda_externa`
@@ -93,4 +129,3 @@
 - `cd backend && ../venv/bin/ruff check .` — verde (1 fix automático em teste pré-existente)
 - `cd backend && ../venv/bin/mypy backend/features/saude/` — apenas erros pré-existentes de stubs faltantes (fastapi, pydantic, httpx)
 - `cd backend && ../venv/bin/pytest backend/tests/test_api/test_saude.py` — verde
-

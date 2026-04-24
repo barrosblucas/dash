@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
@@ -46,6 +46,7 @@ export default function VisitasDomiciliaresClient() {
 
   const visitsQuery = useQuery({
     queryKey: ['saude', 'visitas-domiciliares', startDate, endDate],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       saudeService.getHomeVisitsDashboard({
         start_date: startDate || undefined,
@@ -68,7 +69,7 @@ export default function VisitasDomiciliaresClient() {
   return (
     <div className="space-y-6">
       <SaudePageHeader
-        eyebrow="US-04"
+        eyebrow="Atenção territorial"
         title="Visitas domiciliares e atenção territorial"
         description="Quatro blocos independentes mostram os principais motivos de visita e os recortes assistenciais enviados pela fonte externa."
         badgeValue={<SaudeSyncBadge value={visitsQuery.data?.last_synced_at} />}

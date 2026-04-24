@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-24 (atualizado com filtros de período dinâmicos nos endpoints de saúde)
+Snapshot: 2026-04-24 (atualizado com filtros de período dinâmicos nos endpoints de saúde e transições visuais estáveis no frontend)
 
 ## Status geral
 
@@ -83,6 +83,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Portal público de obras consumindo API real em `/obras` e `/obras/[id]`, sem mocks locais
 - [x] Saúde Transparente expandida no frontend com páginas públicas de medicamentos, farmácia, vacinação, visitas domiciliares, perfil epidemiológico, atenção primária, saúde bucal, hospital, procedimentos e unidades, além da administração de unidades em `/admin/saude/unidades`
 - [x] Filtros de período (`start_date`/`end_date`) integrados nos clientes frontend de atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal via componente `SaudePeriodFilter` reutilizável
+- [x] Troca de período nos dashboards de saúde preserva o conteúdo anterior durante o carregamento e sincroniza o ano com a data inicial selecionada
 
 ### Frontend — Reformulação Visual Completa v2 (2026-04-22)
 - [x] **Reformulação completa do frontend** seguindo templates HTML de referência (`design_system/`)

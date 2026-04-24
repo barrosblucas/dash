@@ -54,76 +54,120 @@ export const saudeSyncResourceOptions = [
 
 export const saudeYearOptions = [...PERIODO_DADOS.anos].reverse();
 
+export const getSaudePeriodRange = (year: number, referenceDate = new Date()) => {
+  const currentYear = referenceDate.getFullYear();
+
+  return {
+    startDate: formatDateInputValue(new Date(year, 0, 1)),
+    endDate:
+      year === currentYear
+        ? formatDateInputValue(referenceDate)
+        : formatDateInputValue(new Date(year, 11, 31)),
+  };
+};
+
+export const getYearFromDateInput = (value: string) => {
+  const parsed = new Date(`${value}T00:00:00`);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed.getFullYear();
+};
+
+const demographicPalette = {
+  feminine: '#ec4899',
+  masculine: '#3b82f6',
+  child: '#22c55e',
+  elder: '#f59e0b',
+  pregnancy: '#a855f7',
+} as const;
+
+const demographicFallbackColors = ['#0f4c81', '#22c55e', '#f59e0b', '#06b6d4', '#a855f7', '#ef4444'];
+
+export const getSaudeDemographicColor = (label: string, index: number) => {
+  const normalized = label.toLowerCase();
+
+  if (normalized.includes('femin')) {
+    return demographicPalette.feminine;
+  }
+
+  if (normalized.includes('mascul')) {
+    return demographicPalette.masculine;
+  }
+
+  if (normalized.includes('crian') || normalized.includes('infantil')) {
+    return demographicPalette.child;
+  }
+
+  if (normalized.includes('idos') || normalized.includes('elder')) {
+    return demographicPalette.elder;
+  }
+
+  if (normalized.includes('gest') || normalized.includes('gravidez')) {
+    return demographicPalette.pregnancy;
+  }
+
+  return demographicFallbackColors[index % demographicFallbackColors.length];
+};
+
 export const saudeFeatureCards = [
   {
     href: '/saude/medicamentos',
     title: 'Medicamentos',
     description: 'Estoque por estabelecimento com alerta de reposição e visão operacional da rede.',
     icon: 'medication',
-    badge: 'US-01',
   },
   {
     href: '/saude/farmacia',
     title: 'Farmácia',
     description: 'Atendimentos e dispensações mensais separados do estoque público.',
     icon: 'vaccines',
-    badge: 'US-10',
   },
   {
     href: '/saude/vacinacao',
     title: 'Vacinação',
     description: 'Cobertura anual, série mensal e ranking das vacinas mais aplicadas.',
     icon: 'immunology',
-    badge: 'US-03',
   },
   {
     href: '/saude/visitas-domiciliares',
     title: 'Visitas domiciliares',
     description: 'Motivos, acompanhamento, busca ativa e controle vetorial em quatro recortes.',
     icon: 'home_health',
-    badge: 'US-04',
   },
   {
     href: '/saude/perfil-epidemiologico',
     title: 'Perfil epidemiológico',
     description: 'Contadores assistenciais com tendência opcional e distribuição real por sexo.',
     icon: 'monitor_heart',
-    badge: 'US-05',
   },
   {
     href: '/saude/atencao-primaria',
     title: 'Atenção primária',
     description: 'Produção mensal, procedimentos por especialidade e atendimentos por CBO.',
     icon: 'stethoscope',
-    badge: 'US-07',
   },
   {
     href: '/saude/saude-bucal',
     title: 'Saúde bucal',
     description: 'Atendimentos odontológicos por mês com leitura rápida do período.',
     icon: 'dentistry',
-    badge: 'US-08',
   },
   {
     href: '/saude/hospital',
     title: 'Hospital',
     description: 'Censo de leitos, internações, procedimentos e permanência com blocos explícitos de indisponibilidade.',
     icon: 'local_hospital',
-    badge: 'US-09',
   },
   {
     href: '/saude/procedimentos',
     title: 'Procedimentos',
     description: 'Painel complementar da V1 com distribuição consolidada por tipo.',
     icon: 'analytics',
-    badge: 'US-12',
   },
   {
     href: '/saude/unidades',
     title: 'Unidades',
     description: 'Mapa público com contatos, horários e navegação espacial das unidades.',
     icon: 'location_on',
-    badge: 'US-14',
   },
 ] as const;
 

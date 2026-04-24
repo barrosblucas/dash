@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
@@ -9,23 +9,35 @@ import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude
 import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { formatDateInputValue, saudeYearOptions } from '@/lib/saude-utils';
+import { getSaudePeriodRange, getYearFromDateInput, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
-const currentYear = new Date().getFullYear();
+const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
 
 export default function FarmaciaClient() {
   const [year, setYear] = useState(saudeYearOptions[0]);
-  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(saudeYearOptions[0], 0, 1)));
-  const [endDate, setEndDate] = useState(
-    saudeYearOptions[0] === currentYear
-      ? formatDateInputValue(new Date())
-      : formatDateInputValue(new Date(saudeYearOptions[0], 11, 31))
-  );
+  const [startDate, setStartDate] = useState(defaultPeriod.startDate);
+  const [endDate, setEndDate] = useState(defaultPeriod.endDate);
+
+  const handleYearChange = (nextYear: number) => {
+    setYear(nextYear);
+    const period = getSaudePeriodRange(nextYear);
+    setStartDate(period.startDate);
+    setEndDate(period.endDate);
+  };
+
+  const handleStartDateChange = (date: string) => {
+    setStartDate(date);
+    const nextYear = getYearFromDateInput(date);
+    if (nextYear !== null) {
+      setYear(nextYear);
+    }
+  };
 
   const pharmacyQuery = useQuery({
     queryKey: ['saude', 'farmacia', year, startDate, endDate],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       saudeService.getPharmacyDashboard({
         year,
@@ -48,7 +60,7 @@ export default function FarmaciaClient() {
   return (
     <div className="space-y-6">
       <SaudePageHeader
-        eyebrow="US-10"
+        eyebrow="Atendimentos farmacêuticos"
         title="Histórico de atendimentos da farmácia"
         description="Painel separado do estoque para comparar atendimentos de medicamentos e dispensações mensais."
         badgeValue={<SaudeSyncBadge value={pharmacyQuery.data?.last_synced_at} />}
@@ -57,8 +69,8 @@ export default function FarmaciaClient() {
             year={year}
             startDate={startDate}
             endDate={endDate}
-            onYearChange={setYear}
-            onStartDateChange={setStartDate}
+            onYearChange={handleYearChange}
+            onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
           />
         }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
@@ -9,23 +9,35 @@ import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude
 import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { formatDateInputValue, saudeYearOptions } from '@/lib/saude-utils';
+import { getSaudePeriodRange, getYearFromDateInput, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
-const currentYear = new Date().getFullYear();
+const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
 
 export default function SaudeBucalClient() {
   const [year, setYear] = useState(saudeYearOptions[0]);
-  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(saudeYearOptions[0], 0, 1)));
-  const [endDate, setEndDate] = useState(
-    saudeYearOptions[0] === currentYear
-      ? formatDateInputValue(new Date())
-      : formatDateInputValue(new Date(saudeYearOptions[0], 11, 31))
-  );
+  const [startDate, setStartDate] = useState(defaultPeriod.startDate);
+  const [endDate, setEndDate] = useState(defaultPeriod.endDate);
+
+  const handleYearChange = (nextYear: number) => {
+    setYear(nextYear);
+    const period = getSaudePeriodRange(nextYear);
+    setStartDate(period.startDate);
+    setEndDate(period.endDate);
+  };
+
+  const handleStartDateChange = (date: string) => {
+    setStartDate(date);
+    const nextYear = getYearFromDateInput(date);
+    if (nextYear !== null) {
+      setYear(nextYear);
+    }
+  };
 
   const oralHealthQuery = useQuery({
     queryKey: ['saude', 'saude-bucal', year, startDate, endDate],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       saudeService.getOralHealthDashboard({
         year,
@@ -45,7 +57,7 @@ export default function SaudeBucalClient() {
   return (
     <div className="space-y-6">
       <SaudePageHeader
-        eyebrow="US-08"
+        eyebrow="Saúde bucal"
         title="Atendimentos odontológicos da rede"
         description="Série mensal focada em saúde bucal, com total consolidado do período selecionado."
         badgeValue={<SaudeSyncBadge value={oralHealthQuery.data?.last_synced_at} />}
@@ -54,8 +66,8 @@ export default function SaudeBucalClient() {
             year={year}
             startDate={startDate}
             endDate={endDate}
-            onYearChange={setYear}
-            onStartDateChange={setStartDate}
+            onYearChange={handleYearChange}
+            onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
           />
         }

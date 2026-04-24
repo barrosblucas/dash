@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
@@ -9,24 +9,36 @@ import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude
 import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { formatDateInputValue, getTopLabel, saudeYearOptions } from '@/lib/saude-utils';
+import { getSaudePeriodRange, getYearFromDateInput, getTopLabel, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
 const chartColors = ['#0f4c81', '#22c55e', '#06b6d4', '#f59e0b', '#a855f7'];
-const currentYear = new Date().getFullYear();
+const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
 
 export default function VacinacaoClient() {
   const [year, setYear] = useState(saudeYearOptions[0]);
-  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(saudeYearOptions[0], 0, 1)));
-  const [endDate, setEndDate] = useState(
-    saudeYearOptions[0] === currentYear
-      ? formatDateInputValue(new Date())
-      : formatDateInputValue(new Date(saudeYearOptions[0], 11, 31))
-  );
+  const [startDate, setStartDate] = useState(defaultPeriod.startDate);
+  const [endDate, setEndDate] = useState(defaultPeriod.endDate);
+
+  const handleYearChange = (nextYear: number) => {
+    setYear(nextYear);
+    const period = getSaudePeriodRange(nextYear);
+    setStartDate(period.startDate);
+    setEndDate(period.endDate);
+  };
+
+  const handleStartDateChange = (date: string) => {
+    setStartDate(date);
+    const nextYear = getYearFromDateInput(date);
+    if (nextYear !== null) {
+      setYear(nextYear);
+    }
+  };
 
   const vaccinationQuery = useQuery({
     queryKey: ['saude', 'vacinacao', year, startDate, endDate],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       saudeService.getVaccinationDashboard({
         year,
@@ -48,7 +60,7 @@ export default function VacinacaoClient() {
   return (
     <div className="space-y-6">
       <SaudePageHeader
-        eyebrow="US-03"
+        eyebrow="Imunização"
         title="Cobertura vacinal do município"
         description="Série mensal de vacinas aplicadas, ranking do período e total anual para leitura rápida da cobertura."
         badgeValue={<SaudeSyncBadge value={vaccinationQuery.data?.last_synced_at} />}
@@ -57,8 +69,8 @@ export default function VacinacaoClient() {
             year={year}
             startDate={startDate}
             endDate={endDate}
-            onYearChange={setYear}
-            onStartDateChange={setStartDate}
+            onYearChange={handleYearChange}
+            onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
           />
         }

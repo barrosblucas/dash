@@ -43,7 +43,7 @@ export default function HospitalClient() {
   return (
     <div className="space-y-6">
       <SaudePageHeader
-        eyebrow="US-09"
+        eyebrow="Assistência hospitalar"
         title="Capacidade e produção hospitalar"
         description="Leitura consolidada do censo de leitos, internações, permanência e procedimentos hospitalares. Quando a fonte externa não envia um bloco, o painel deixa isso explícito."
         badgeValue={<SaudeSyncBadge value={hospitalQuery.data?.last_synced_at} />}

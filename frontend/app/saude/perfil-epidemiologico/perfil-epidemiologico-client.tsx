@@ -7,11 +7,9 @@ import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
 import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude/SaudePageSection';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { formatTrendSummary, getTrendAccent, getTrendIcon } from '@/lib/saude-utils';
+import { formatTrendSummary, getSaudeDemographicColor, getTrendAccent, getTrendIcon } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
-
-const chartColors = ['#0f4c81', '#22c55e', '#f59e0b', '#06b6d4'];
 
 export default function PerfilEpidemiologicoClient() {
   const epidemiologicalQuery = useQuery({
@@ -39,7 +37,7 @@ export default function PerfilEpidemiologicoClient() {
   return (
     <div className="space-y-6">
       <SaudePageHeader
-        eyebrow="US-05"
+        eyebrow="Perfil assistencial"
         title="Perfil epidemiológico do atendimento municipal"
         description="Contadores assistenciais com leitura imediata do momento da rede e distribuição real de atendimentos por sexo."
         badgeValue={<SaudeSyncBadge value={epidemiologicalQuery.data?.last_synced_at} />}
@@ -65,20 +63,36 @@ export default function PerfilEpidemiologicoClient() {
         description="Leitura direta da distribuição de atendimento registrada na fonte externa."
       >
         {sexDistribution.length ? (
-          <div className="h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={sexDistribution}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
-                <XAxis dataKey="label" tick={{ fill: 'currentColor', fontSize: 12 }} />
-                <YAxis tick={{ fill: 'currentColor', fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="value" radius={[10, 10, 0, 0]}>
-                  {sexDistribution.map((entry, index) => (
-                    <Cell key={entry.label} fill={chartColors[index % chartColors.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {sexDistribution.map((item, index) => (
+                <div key={item.label} className="flex items-center gap-3 rounded-2xl bg-surface-container-lowest px-4 py-3">
+                  <span
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: getSaudeDemographicColor(item.label, index) }}
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-primary">{item.label}</p>
+                    <p className="text-xs text-on-surface-variant">{formatNumber(item.value, { decimals: 0 })}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="h-[320px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={sexDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
+                  <XAxis dataKey="label" tick={{ fill: 'currentColor', fontSize: 12 }} />
+                  <YAxis tick={{ fill: 'currentColor', fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" radius={[10, 10, 0, 0]}>
+                    {sexDistribution.map((entry, index) => (
+                      <Cell key={entry.label} fill={getSaudeDemographicColor(entry.label, index)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         ) : (
           <SaudeStateBlock

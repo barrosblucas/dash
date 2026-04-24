@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
@@ -9,24 +9,35 @@ import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude
 import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { formatDateInputValue, getTopLabel } from '@/lib/saude-utils';
+import { getSaudePeriodRange, getYearFromDateInput, getTopLabel, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
-const currentYear = new Date().getFullYear();
-const defaultYear = currentYear;
+const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
 
 export default function AtencaoPrimariaClient() {
-  const [year, setYear] = useState(defaultYear);
-  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(defaultYear, 0, 1)));
-  const [endDate, setEndDate] = useState(
-    defaultYear === currentYear
-      ? formatDateInputValue(new Date())
-      : formatDateInputValue(new Date(defaultYear, 11, 31))
-  );
+  const [year, setYear] = useState(saudeYearOptions[0]);
+  const [startDate, setStartDate] = useState(defaultPeriod.startDate);
+  const [endDate, setEndDate] = useState(defaultPeriod.endDate);
+
+  const handleYearChange = (nextYear: number) => {
+    setYear(nextYear);
+    const period = getSaudePeriodRange(nextYear);
+    setStartDate(period.startDate);
+    setEndDate(period.endDate);
+  };
+
+  const handleStartDateChange = (date: string) => {
+    setStartDate(date);
+    const nextYear = getYearFromDateInput(date);
+    if (nextYear !== null) {
+      setYear(nextYear);
+    }
+  };
 
   const primaryCareQuery = useQuery({
     queryKey: ['saude', 'atencao-primaria', year, startDate, endDate],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       saudeService.getPrimaryCareDashboard({
         year,
@@ -49,7 +60,7 @@ export default function AtencaoPrimariaClient() {
   return (
     <div className="space-y-6">
       <SaudePageHeader
-        eyebrow="US-07"
+        eyebrow="Produção assistencial"
         title="Atendimentos da atenção primária"
         description="Produção mensal, procedimentos por especialidade e leitura por CBO com filtro por ano e data inicial."
         badgeValue={<SaudeSyncBadge value={primaryCareQuery.data?.last_synced_at} />}
@@ -58,8 +69,8 @@ export default function AtencaoPrimariaClient() {
             year={year}
             startDate={startDate}
             endDate={endDate}
-            onYearChange={setYear}
-            onStartDateChange={setStartDate}
+            onYearChange={handleYearChange}
+            onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
           />
         }
@@ -105,12 +116,23 @@ export default function AtencaoPrimariaClient() {
         </SaudePanel>
 
         <SaudePanel title="Procedimentos por especialidade" description="Ranking agregado para entender a carga assistencial por especialidade.">
-          <div className="h-[320px]">
+          <div className="h-[420px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={primaryCareQuery.data?.procedures_by_specialty ?? []} layout="vertical" margin={{ left: 24 }}>
+              <BarChart
+                data={primaryCareQuery.data?.procedures_by_specialty ?? []}
+                layout="vertical"
+                margin={{ top: 12, right: 24, bottom: 12, left: 40 }}
+                barCategoryGap="30%"
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
                 <XAxis type="number" tick={{ fill: 'currentColor', fontSize: 12 }} />
-                <YAxis type="category" dataKey="label" width={120} tick={{ fill: 'currentColor', fontSize: 12 }} />
+                <YAxis
+                  type="category"
+                  dataKey="label"
+                  width={180}
+                  tick={{ fill: 'currentColor', fontSize: 12 }}
+                  tickMargin={12}
+                />
                 <Tooltip />
                 <Bar dataKey="value" fill="#22c55e" radius={[0, 10, 10, 0]} />
               </BarChart>
