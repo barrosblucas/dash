@@ -211,3 +211,34 @@
 - `cd frontend && npm run build` — verde
 
 ---
+
+
+### 2026-04-24 — fix(frontend): cores diferenciadas nos valores do perfil epidemiológico
+
+**Classificação:** `mudanca_mecanica`
+
+**Contexto:** Os cards de métricas quantitativas do perfil epidemiológico exibiam todos os valores na mesma cor (`text-tertiary`), dificultando a distinção visual entre categorias demográficas e clínicas (Mulheres, Crianças, Idosos, Homens, Gestantes, Hipertensos, Diabéticos, etc.).
+
+**Alterado:**
+- `frontend/components/saude/SaudePageSection.tsx`
+  - `SaudeMetricCard`: nova prop opcional `valueColor?: string`
+  - quando `valueColor` é fornecida, aplica `style={{ color: valueColor }}` ao valor, sobrescrevendo a cor do `tone`
+  - mantém compatibilidade total com todos os consumidores existentes
+
+- `frontend/app/saude/perfil-epidemiologico/perfil-epidemiologico-client.tsx`
+  - iteração de `quantitativeMetrics` agora recebe `index` no `map`
+  - cada `SaudeMetricCard` recebe `valueColor={getSaudeDemographicColor(item.label, index)}`
+  - reutiliza a função existente `getSaudeDemographicColor` (`lib/saude-utils.ts`) que já mapeia:
+    - Mulheres → rosa (`#ec4899`)
+    - Homens → azul (`#3b82f6`)
+    - Crianças → verde (`#22c55e`)
+    - Idosos → âmbar (`#f59e0b`)
+    - Gestantes → roxo (`#a855f7`)
+    - demais categorias → cores do fallback palette (`#0f4c81`, `#22c55e`, `#f59e0b`, `#06b6d4`, `#a855f7`, `#ef4444`)
+
+**Validação:**
+- `cd frontend && npm run lint` — verde
+- `cd frontend && npm run type-check` — verde
+- `cd frontend && npm run build` — verde
+
+---

@@ -25,6 +25,7 @@ interface SaudeMetricCardProps {
   value: string;
   supportingText?: string;
   tone?: 'default' | 'success' | 'warning' | 'info';
+  valueColor?: string;
   icon?: string;
 }
 
@@ -95,6 +96,7 @@ export function SaudeMetricCard({
   value,
   supportingText,
   tone = 'default',
+  valueColor,
   icon,
 }: SaudeMetricCardProps) {
   return (
@@ -107,7 +109,7 @@ export function SaudeMetricCard({
           </span>
         ) : null}
       </div>
-      <p className={cn('mt-3 font-headline text-3xl font-bold', metricToneClass[tone])}>{value}</p>
+      <p className={cn('mt-3 font-headline text-3xl font-bold', !valueColor && metricToneClass[tone])} style={valueColor ? { color: valueColor } : undefined}>{value}</p>
       {supportingText ? <p className="mt-2 text-sm leading-6 text-on-surface-variant">{supportingText}</p> : null}
     </div>
   );

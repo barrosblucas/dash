@@ -46,7 +46,7 @@ export default function PerfilEpidemiologicoClient() {
       <SaudeFeatureNav />
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {quantitativeMetrics.map((item) => (
+        {quantitativeMetrics.map((item, index) => (
           <SaudeMetricCard
             key={item.label}
             label={item.label}
@@ -54,6 +54,7 @@ export default function PerfilEpidemiologicoClient() {
             supportingText={formatTrendSummary(item.trend)}
             icon={getTrendIcon(item.trend?.direction)}
             tone={item.trend?.direction === 'down' ? 'warning' : item.trend?.direction === 'up' ? 'success' : 'info'}
+            valueColor={getSaudeDemographicColor(item.label, index)}
           />
         ))}
       </section>
