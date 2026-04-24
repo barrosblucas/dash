@@ -53,16 +53,18 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
 
   // Estado local do modo comparativo
   const [modoComparativo, setModoComparativo] = useState(false);
+  const [anoBase, setAnoBase] = useState(anoSelecionado);
   const [anoComparativo, setAnoComparativo] = useState(anoSelecionado - 1);
 
-  const isComparing = modoComparativo && anoComparativo >= MIN_YEAR && anoComparativo !== anoSelecionado;
+  const anoAtivo = modoComparativo ? anoBase : anoSelecionado;
+  const isComparing = modoComparativo && anoComparativo >= MIN_YEAR && anoComparativo !== anoBase;
 
   const AXIS_CFG = { axisLine: false, tickLine: false, tick: { fill: chartColors.textMuted, fontSize: 12 } };
   const LEGEND_CFG = { wrapperStyle: { fontSize: 12, color: chartColors.textMuted }, iconType: 'circle' as const, iconSize: 8 };
 
   const { data: current, isLoading: loadingCur, error } = useQuery({
-    queryKey: ['kpis', 'mensal', 'combined', anoSelecionado, isComparing],
-    queryFn: () => fetchMonthlyKPIs(anoSelecionado),
+    queryKey: ['kpis', 'mensal', 'combined', anoAtivo, isComparing],
+    queryFn: () => fetchMonthlyKPIs(anoAtivo),
     staleTime: 5 * 60 * 1000, gcTime: 10 * 60 * 1000,
   });
   const { data: compareData, isLoading: loadingComp } = useQuery({
@@ -108,8 +110,8 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
 
   const pieData: PieSlice[] = isComparing
     ? [
-        { name: `Receitas ${anoSelecionado}`, value: totRev, color: REVENUE_PRIMARY },
-        { name: `Despesas ${anoSelecionado}`, value: totDesp, color: EXPENSE_PRIMARY },
+        { name: `Receitas ${anoAtivo}`, value: totRev, color: REVENUE_PRIMARY },
+        { name: `Despesas ${anoAtivo}`, value: totDesp, color: EXPENSE_PRIMARY },
         { name: `Receitas ${anoComparativo}`, value: compTotRev, color: COMP_REV },
         { name: `Despesas ${anoComparativo}`, value: compTotDesp, color: COMP_DESP },
       ]
@@ -147,7 +149,7 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
     <Tooltip content={<CTT />} /><Legend {...LEGEND_CFG} />
   </>);
 
-  const curN = (b: string) => `${b} ${anoSelecionado}`;
+  const curN = (b: string) => `${b} ${anoAtivo}`;
   const compN = (b: string) => `${b} ${anoComparativo}`;
   const margin = CHART_CONFIG.defaults.margin;
 
@@ -214,8 +216,8 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
   };
 
   const subtitle = isComparing
-    ? `Visão consolidada — ${anoSelecionado} vs ${anoComparativo}`
-    : `Visão consolidada — ${anoSelecionado}`;
+    ? `Visão consolidada — ${anoAtivo} vs ${anoComparativo}`
+    : `Visão consolidada — ${anoAtivo}`;
 
   return (
     <div className={`chart-container ${className}`}>
@@ -226,8 +228,8 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="hidden sm:flex items-center gap-3 text-label-md">
-            <Badge label={`Rec ${anoSelecionado}:`} value={totRev} color={REVENUE_PRIMARY} />
-            <Badge label={`Desp ${anoSelecionado}:`} value={totDesp} color={EXPENSE_PRIMARY} />
+            <Badge label={`Rec ${anoAtivo}:`} value={totRev} color={REVENUE_PRIMARY} />
+            <Badge label={`Desp ${anoAtivo}:`} value={totDesp} color={EXPENSE_PRIMARY} />
             {isComparing && (<>
               <Badge label={`Rec ${anoComparativo}:`} value={compTotRev} color={COMP_REV} />
               <Badge label={`Desp ${anoComparativo}:`} value={compTotDesp} color={COMP_DESP} />
@@ -237,7 +239,11 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
           {/* ── Toggle comparativo ── */}
           <button
             type="button"
-            onClick={() => setModoComparativo((v) => !v)}
+            onClick={() => {
+              const next = !modoComparativo;
+              if (next) setAnoBase(anoSelecionado);
+              setModoComparativo(next);
+            }}
             className={`
               inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-label-md font-medium
               transition-colors duration-200 border
@@ -254,30 +260,64 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
             {modoComparativo ? 'Comparando' : 'Comparar'}
           </button>
 
-          {/* ── Seletor de ano comparativo ── */}
+          {/* ── Seletores de ano (modo comparativo) ── */}
           {modoComparativo && (
-            <div className="relative">
-              <select
-                value={anoComparativo}
-                onChange={(e) => setAnoComparativo(Number(e.target.value))}
-                className="
-                  appearance-none bg-surface-container-low
-                  rounded-lg px-3 py-1.5 pr-8 text-label-md font-medium text-on-surface
-                  border border-border-default hover:border-border-hover
-                  focus:outline-none focus:ring-2 focus:ring-primary/30
-                  transition-colors duration-200
-                "
-              >
-                {anos
-                  .filter((a) => a !== anoSelecionado)
-                  .map((ano) => (
+            <>
+              {/* Ano base */}
+              <div className="relative">
+                <select
+                  value={anoBase}
+                  onChange={(e) => {
+                    const novo = Number(e.target.value);
+                    setAnoBase(novo);
+                    if (anoComparativo === novo) {
+                      const fallback = anos.find((a) => a !== novo) ?? novo - 1;
+                      setAnoComparativo(fallback);
+                    }
+                  }}
+                  className="
+                    appearance-none bg-surface-container-low
+                    rounded-lg px-3 py-1.5 pr-8 text-label-md font-medium text-on-surface
+                    border border-border-default hover:border-border-hover
+                    focus:outline-none focus:ring-2 focus:ring-primary/30
+                    transition-colors duration-200
+                  "
+                >
+                  {anos.map((ano) => (
                     <option key={ano} value={ano}>{ano}</option>
                   ))}
-              </select>
-              <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" style={{ fontSize: 14 }}>
-                expand_more
-              </span>
-            </div>
+                </select>
+                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" style={{ fontSize: 14 }}>
+                  expand_more
+                </span>
+              </div>
+
+              <span className="text-label-md text-on-surface-variant">vs</span>
+
+              {/* Ano comparativo */}
+              <div className="relative">
+                <select
+                  value={anoComparativo}
+                  onChange={(e) => setAnoComparativo(Number(e.target.value))}
+                  className="
+                    appearance-none bg-surface-container-low
+                    rounded-lg px-3 py-1.5 pr-8 text-label-md font-medium text-on-surface
+                    border border-border-default hover:border-border-hover
+                    focus:outline-none focus:ring-2 focus:ring-primary/30
+                    transition-colors duration-200
+                  "
+                >
+                  {anos
+                    .filter((a) => a !== anoBase)
+                    .map((ano) => (
+                      <option key={ano} value={ano}>{ano}</option>
+                    ))}
+                </select>
+                <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" style={{ fontSize: 14 }}>
+                  expand_more
+                </span>
+              </div>
+            </>
           )}
 
           <ChartTypeSelector value={chartType} onChange={setChartType} />
