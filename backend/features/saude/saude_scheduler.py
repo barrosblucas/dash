@@ -13,8 +13,8 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 from backend.features.saude.saude_business import SaudeSyncService
 from backend.features.saude.saude_data import SQLSaudeRepository
+from backend.features.saude.saude_resource_catalog import DEFAULT_SYNC_RESOURCES
 from backend.features.saude.saude_types import (
-    SaudeSnapshotResource,
     SaudeSyncRequest,
     SaudeSyncTriggerType,
 )
@@ -73,7 +73,7 @@ class SaudeScheduler:
             logger.exception("Erro ao executar sync manual de saúde")
             started_at = datetime.now(UTC).replace(tzinfo=None)
             years = payload.years or [started_at.year, started_at.year - 1]
-            resources = payload.resources or list(SaudeSnapshotResource)
+            resources = payload.resources or DEFAULT_SYNC_RESOURCES
             return {
                 "status": "error",
                 "years": years,

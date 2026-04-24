@@ -36,7 +36,7 @@ class ESaudeClient:
         self._timeout = httpx.Timeout(settings.saude_esaude_timeout_seconds)
 
     async def fetch_quantitativos(self) -> dict[str, Any]:
-        payload = await self._get_json("/buscar-dados-quantitativos")
+        payload = await self.fetch_public_payload("buscar-dados-quantitativos")
         if not isinstance(payload, dict):
             raise SaudeExternalAPIError(
                 "Payload inválido em buscar-dados-quantitativos"
@@ -47,13 +47,15 @@ class ESaudeClient:
         self, search: str | None = None
     ) -> dict[str, Any]:
         params = {"search": search} if search else None
-        payload = await self._get_json("/medicamentos-tabela", params=params)
+        payload = await self.fetch_public_payload("medicamentos-tabela", params=params)
         if not isinstance(payload, dict):
             raise SaudeExternalAPIError("Payload inválido em medicamentos-tabela")
         return payload
 
     async def fetch_localizacao_unidades(self) -> list[dict[str, Any]]:
-        payload = await self._get_json("/consultar-servicos-de-saude/localizacao")
+        payload = await self.fetch_public_payload(
+            "consultar-servicos-de-saude/localizacao"
+        )
         if not isinstance(payload, list):
             raise SaudeExternalAPIError(
                 "Payload inválido em consultar-servicos-de-saude/localizacao"
@@ -61,7 +63,7 @@ class ESaudeClient:
         return [item for item in payload if isinstance(item, dict)]
 
     async def fetch_unidade_horarios(self, unidade_id: int) -> dict[str, Any]:
-        payload = await self._get_json(f"/unidades/{unidade_id}/horarios")
+        payload = await self.fetch_public_payload(f"unidades/{unidade_id}/horarios")
         if not isinstance(payload, dict):
             raise SaudeExternalAPIError("Payload inválido em unidades/{id}/horarios")
         return payload
@@ -70,11 +72,22 @@ class ESaudeClient:
         self, resource: str, year: int | None = None
     ) -> dict[str, Any]:
         params = {"ano": str(year)} if year is not None else None
-        payload = await self._get_json(
-            f"/buscar-dados-do-chart/{resource}", params=params
+        payload = await self.fetch_public_payload(
+            f"buscar-dados-do-chart/{resource}",
+            params=params,
         )
         if not isinstance(payload, dict):
             raise SaudeExternalAPIError(f"Payload inválido no chart {resource}")
+        return payload
+
+    async def fetch_public_payload(
+        self,
+        resource_path: str,
+        params: dict[str, str] | None = None,
+    ) -> Any:
+        payload = await self._get_json(f"/{resource_path}", params=params)
+        if payload is None:
+            raise SaudeExternalAPIError(f"Payload vazio em {resource_path}")
         return payload
 
     async def _get_json(

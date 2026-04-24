@@ -148,24 +148,17 @@ class SQLSaudeRepository:
         scope_year: int | None = None,
         source_url: str | None = None,
     ) -> SaudeSnapshotModel:
-        existing = self.get_snapshot_model(resource, scope_year)
         payload_json = json.dumps(payload, ensure_ascii=False)
         item_count = _infer_item_count(payload)
-        if existing is None:
-            existing = SaudeSnapshotModel(
-                resource=resource.value,
-                scope_year=scope_year,
-                payload_json=payload_json,
-                item_count=item_count,
-                synced_at=synced_at,
-                source_url=source_url,
-            )
-            self.session.add(existing)
-        else:
-            cast(Any, existing).payload_json = payload_json
-            cast(Any, existing).item_count = item_count
-            cast(Any, existing).synced_at = synced_at
-            cast(Any, existing).source_url = source_url
+        existing = SaudeSnapshotModel(
+            resource=resource.value,
+            scope_year=scope_year,
+            payload_json=payload_json,
+            item_count=item_count,
+            synced_at=synced_at,
+            source_url=source_url,
+        )
+        self.session.add(existing)
         self.session.flush()
         self.session.refresh(existing)
         return existing
@@ -195,11 +188,39 @@ class SQLSaudeRepository:
         return json.loads(str(model.payload_json)), cast(datetime, model.synced_at)
 
     def list_snapshot_models(self) -> list[SaudeSnapshotModel]:
-        return list(
+        rows = list(
             self.session.query(SaudeSnapshotModel)
             .order_by(
-                SaudeSnapshotModel.synced_at.desc(), SaudeSnapshotModel.resource.asc()
+                SaudeSnapshotModel.synced_at.desc(),
+                SaudeSnapshotModel.resource.asc(),
+                SaudeSnapshotModel.id.desc(),
             )
+            .all()
+        )
+        latest_by_scope: dict[tuple[str, int | None], SaudeSnapshotModel] = {}
+        for row in rows:
+            key = (cast(str, row.resource), cast(int | None, row.scope_year))
+            if key not in latest_by_scope:
+                latest_by_scope[key] = row
+        return list(latest_by_scope.values())
+
+    def list_snapshot_history(
+        self,
+        resource: SaudeSnapshotResource,
+        scope_year: int | None = None,
+        *,
+        limit: int = 10,
+    ) -> list[SaudeSnapshotModel]:
+        query = self.session.query(SaudeSnapshotModel).filter(
+            SaudeSnapshotModel.resource == resource.value
+        )
+        if scope_year is None:
+            query = query.filter(SaudeSnapshotModel.scope_year.is_(None))
+        else:
+            query = query.filter(SaudeSnapshotModel.scope_year == scope_year)
+        return list(
+            query.order_by(SaudeSnapshotModel.synced_at.desc(), SaudeSnapshotModel.id.desc())
+            .limit(limit)
             .all()
         )
 

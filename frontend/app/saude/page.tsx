@@ -6,7 +6,7 @@ import SaudeClient from './saude-client';
 
 export const metadata: Metadata = {
   title: 'Saúde Transparente',
-  description: 'Indicadores públicos, estoque de medicamentos, procedimentos e unidades de saúde.',
+  description: 'Painéis públicos de vacinação, farmácia, hospital, atenção primária e demais recortes da rede de saúde.',
 };
 
 export default function SaudePage() {

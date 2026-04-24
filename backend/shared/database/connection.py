@@ -47,12 +47,16 @@ def create_db_engine(db_path: Path | None = None) -> Engine:
     # URL de conexão SQLite
     database_url = f"sqlite:///{db_path}"
 
-    # Cria a engine com configurações otimizadas
     engine = create_engine(
         database_url,
-        echo=False,  # Logs SQL em desenvolvimento
+        echo=False,
         future=True,
-        connect_args={"check_same_thread": False},  # Necessário para SQLite
+        pool_size=5,
+        max_overflow=10,
+        connect_args={
+            "check_same_thread": False,
+            "timeout": 30,
+        },
     )
 
     # Configurar SQLite para usar foreign keys

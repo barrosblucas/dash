@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  formatDateInputValue,
   formatLastSyncedLabel,
   formatScheduleSummary,
   formatSyncLogLabel,
+  formatTrendSummary,
+  getTopLabel,
   getLatestSync,
   getSaudeDayLabel,
   parseSyncLogList,
@@ -64,5 +67,32 @@ describe('saude-utils', () => {
 
   it('gera fallback quando sincronização está indisponível', () => {
     expect(formatLastSyncedLabel(null)).toBe('Sincronização indisponível');
+  });
+
+  it('formata resumo de tendência com prioridade para label', () => {
+    expect(
+      formatTrendSummary({
+        direction: 'up',
+        label: 'Crescimento consistente no trimestre',
+        delta: 12,
+      })
+    ).toBe('Crescimento consistente no trimestre');
+
+    expect(formatTrendSummary({ direction: 'stable', delta: null })).toBe('Tendência estável');
+    expect(formatTrendSummary(null)).toBe('Sem tendência histórica');
+  });
+
+  it('retorna o rótulo de maior valor em um ranking', () => {
+    expect(
+      getTopLabel([
+        { label: 'Vacina A', value: 10 },
+        { label: 'Vacina B', value: 18 },
+      ])
+    ).toBe('Vacina B');
+    expect(getTopLabel([])).toBe('Sem dados');
+  });
+
+  it('formata data para campo input type=date', () => {
+    expect(formatDateInputValue(new Date('2026-04-23T10:00:00Z'))).toBe('2026-04-23');
   });
 });

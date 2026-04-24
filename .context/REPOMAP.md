@@ -95,10 +95,18 @@ Snapshot: 2026-04-23
 
 #### `features/saude/`
 - `saude_types.py`: contratos Pydantic para dashboards, sync e CRUD de unidades/horários
-- `saude_adapter.py`: ACL HTTP para os endpoints públicos do E-Saúde (`medicamentos-tabela`, `buscar-dados-quantitativos`, charts e localização)
+- `saude_adapter.py`: ACL HTTP para os endpoints públicos do E-Saúde (`medicamentos-tabela`, `buscar-dados-quantitativos`, charts, hospital e localização)
 - `saude_data.py`: persistência SQLAlchemy de unidades, horários, snapshots genéricos por recurso/ano e logs de sincronização
-- `saude_business.py`: orquestração de sync/importação e transformação dos payloads externos em contratos do portal
-- `saude_handler.py`: rotas `/api/v1/saude` públicas e administrativas (`admin/unidades`, `admin/sync`, `sync-status`)
+- `saude_resource_catalog.py`: catálogo dos recursos sincronizados e escopos anuais/defaults do sync
+- `saude_sync.py`: orquestração de sync/importação de unidades e composição dos parâmetros por recurso
+- `saude_snapshot_mapper.py`: normalização de charts/snapshots, tendência epidemiológica e censo hospitalar
+- `saude_public_handler.py`: dashboards públicos (`medicamentos`, `vacinacao`, `visitas-domiciliares`, `perfil-epidemiologico`, `atencao-primaria`, `saude-bucal`, `hospital`, `farmacia`, `perfil-demografico`, `procedimentos-tipo`)
+- `saude_units_handler.py`: endpoints públicos auxiliares (`unidades`, `horarios`, `sync-status`)
+- `saude_admin_handler.py`: endpoints administrativos (`admin/unidades`, `importar-esaude`, `admin/sync`)
+- `saude_public_live.py`: fallbacks live para filtros não cobertos por snapshot (`start_date`, `estabelecimento_id`)
+- `saude_public_support.py`: helpers HTTP compartilhados das rotas de saúde
+- `saude_unit_import.py`: normalização de payloads importados de unidades e horários
+- `saude_business.py`: camada de compatibilidade para imports antigos da feature
 - `saude_scheduler.py`: APScheduler periódico (6h) para sincronizar snapshots do Saúde Transparente
 
 #### Camadas legadas (removidas)
@@ -110,7 +118,8 @@ Snapshot: 2026-04-23
 - `tests/test_api/test_licitacoes.py`: testes unitários do parser HTML de licitações Quality e do proxy ComprasBR
 - `tests/test_api/test_identity.py`: testes de integração de login, refresh/logout, usuários, reset de senha e proteção de `/admin/*`
 - `tests/test_api/test_obra.py`: testes de integração do CRUD de obras e medições
-- `tests/test_api/test_saude.py`: testes de integração do CRUD/importação de unidades, sync manual e endpoints públicos de saúde
+- `tests/test_api/test_saude.py`: testes de integração do CRUD/importação de unidades, sync manual e contratos públicos originais de saúde
+- `tests/test_api/test_saude_dashboards.py`: testes de integração dos dashboards públicos expandidos e dos fallbacks live por `start_date`/`estabelecimento_id`
 - `tests/test_etl/`: testes do pipeline ETL (preparado)
 - `tests/test_etl/test_historical_data_bootstrap_service.py`: testes unitários do bootstrap histórico (lacunas, execução, utilitários)
 - `tests/test_etl/test_receita_scraper.py`: testes unitários do parser de receitas (meses com zero e mês inválido)
@@ -170,6 +179,8 @@ Snapshot: 2026-04-23
 - `components/layouts/PortalFooter.tsx`: footer com grid 4 colunas + copyright
 - `components/saude/SaudeSyncBadge.tsx`: badge reutilizável de última sincronização para a feature saúde
 - `components/saude/SaudeStateBlock.tsx`: estados de loading/erro/empty da feature saúde
+- `components/saude/SaudePageSection.tsx`: kit visual compartilhado da feature (`SaudePageHeader`, `SaudePanel`, `SaudeMetricCard`, `SaudeUnavailablePanel`, `SaudeFeatureCard`)
+- `components/saude/SaudeFeatureNav.tsx`: navegação contextual entre os painéis públicos da Saúde Transparente
 - `components/saude/SaudeUnitsMap.tsx`: mapa Leaflet client-only com markers, popup e geolocalização opcional
 - `components/admin/saude/SaudeUnitsAdminPage.tsx`: shell administrativa da V1 de saúde
 - `components/admin/saude/saude-units-form-helpers.ts`: helpers de formulário/horários para CRUD admin de saúde
@@ -203,11 +214,24 @@ Snapshot: 2026-04-23
 - `app/obras/[id]/page.tsx`: página dinâmica de detalhe da obra
 - `app/obras/[id]/obra-detalhe-client.tsx`: detalhe da obra com consumo real, cards contratuais e medições mensais
 - `app/saude/page.tsx`: landing page pública da Saúde Transparente
-- `app/saude/saude-client.tsx`: resumo de sync, atalhos e logs recentes da feature saúde
+- `app/saude/saude-client.tsx`: landing pública com grade ampliada de painéis da Saúde Transparente
 - `app/saude/medicamentos/page.tsx`: página pública de medicamentos
-- `app/saude/medicamentos/medicamentos-client.tsx`: estoque paginado + ranking/series mensais de dispensação
+- `app/saude/medicamentos/medicamentos-client.tsx`: estoque paginado por estabelecimento com alerta de itens abaixo do mínimo
+- `app/saude/farmacia/page.tsx`: página pública de farmácia
+- `app/saude/farmacia/farmacia-client.tsx`: atendimentos e dispensações mensais de medicamentos com filtro por ano
+- `app/saude/vacinacao/page.tsx`: página pública de vacinação
+- `app/saude/vacinacao/vacinacao-client.tsx`: vacinas aplicadas por mês, ranking e total anual
+- `app/saude/visitas-domiciliares/page.tsx`: página pública de visitas domiciliares
+- `app/saude/visitas-domiciliares/visitas-domiciliares-client.tsx`: quatro gráficos para motivos, acompanhamento, busca ativa e controle vetorial
 - `app/saude/perfil-epidemiologico/page.tsx`: página pública de perfil epidemiológico
-- `app/saude/perfil-epidemiologico/perfil-epidemiologico-client.tsx`: quantitativos, sexo e recorte demográfico anual
+- `app/saude/perfil-epidemiologico/perfil-epidemiologico-client.tsx`: quantitativos com tendência opcional e distribuição por sexo
+- `app/saude/atencao-primaria/page.tsx`: página pública de atenção primária
+- `app/saude/atencao-primaria/atencao-primaria-client.tsx`: produção mensal, procedimentos por especialidade e atendimentos por CBO com filtro por data
+- `app/saude/saude-bucal/page.tsx`: página pública de saúde bucal
+- `app/saude/saude-bucal/saude-bucal-client.tsx`: série mensal odontológica e total do período
+- `app/saude/hospital/page.tsx`: página pública hospitalar
+- `app/saude/hospital/hospital-client.tsx`: censo de leitos, movimento, internações, procedimentos e blocos explícitos de indisponibilidade
+- `app/saude/hospital/hospital-client.test.tsx`: cobertura dos estados hospitalares indisponíveis
 - `app/saude/procedimentos/page.tsx`: página pública de procedimentos
 - `app/saude/procedimentos/procedimentos-client.tsx`: gráfico e tabela de procedimentos por tipo
 - `app/saude/unidades/page.tsx`: página pública de unidades de saúde
@@ -241,14 +265,14 @@ Snapshot: 2026-04-23
 - `services/auth-service.ts`: cliente do frontend para `/api/auth/*`
 - `services/user-service.ts`: CRUD administrativo de usuários
 - `services/obra-service.ts`: leitura pública e CRUD administrativo de obras
-- `services/saude-service.ts`: consumo dos endpoints públicos e administrativos da feature saúde
+- `services/saude-service.ts`: consumo dos endpoints públicos e administrativos da feature saúde, incluindo vacinação, visitas, APS, saúde bucal, hospital e farmácia
 - `stores/filtersStore.ts`: store Zustand de filtros
 - `stores/authStore.ts`: store em memória da sessão administrativa (sem persistência do access token)
 - `stores/themeStore.ts`: store Zustand de tema (light/dark) com persistência + hook useChartThemeColors
 - `lib/constants.ts`: constantes globais (cores, endpoints, formatos, labels, meses)
 - `lib/auth-server.ts`: helpers server-side para cookie de refresh e proxy do backend de identidade
 - `lib/obra-formatters.ts`: formatação e labels da feature de obras
-- `lib/saude-utils.ts`: labels, horários, sync badge e helpers da feature saúde
+- `lib/saude-utils.ts`: labels, navegação, sync badge, tendência e helpers da feature saúde
 - `lib/utils.ts`: utilitários gerais
 - `lib/index.ts`: barrel de exports
 - `types/api.ts`: tipos de resposta da API
@@ -261,7 +285,7 @@ Snapshot: 2026-04-23
 - `types/identity.ts`: contratos TS da feature de autenticação
 - `types/user.ts`: contratos TS da feature de usuários
 - `types/obra.ts`: contratos TS da feature de obras
-- `types/saude.ts`: contratos TS da feature saúde espelhando os schemas Pydantic do backend
+- `types/saude.ts`: contratos TS da feature saúde espelhando os schemas Pydantic do backend, incluindo os novos dashboards públicos
 - `types/index.ts`: barrel de exports
 - `public/`: assets estáticos
 

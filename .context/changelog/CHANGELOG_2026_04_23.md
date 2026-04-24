@@ -161,3 +161,69 @@ do backend do client.
 **Limitações conhecidas:**
 - a página pública de unidades depende dos horários cadastrados no backend por unidade; quando ausentes, o popup mostra estado vazio
 - o build continua emitindo avisos legados de `metadataBase` não configurado, sem relação com a feature de saúde
+
+### 2026-04-23 — refactor(frontend): separar dados operacionais da Saúde Transparente entre público e admin
+
+**Classificação:** `mudanca_mecanica`
+
+**Contexto:** A página pública de Saúde Transparente exibia seções operacionais (status da rotina, snapshots recentes, logs recentes) que são informações de gestão, não de transparência pública.
+
+**Alterado:**
+- `frontend/app/saude/saude-client.tsx`: removidas seções de status da rotina (Sincronizando agora, Próxima execução, Snapshots disponíveis), Snapshots recentes e Logs recentes. Página pública agora exibe apenas hero e cards de navegação (Medicamentos, Perfil epidemiológico, Procedimentos, Unidades).
+- `frontend/components/admin/AdminHomePage.tsx`: adicionado card de navegação "Saúde Transparente" e seção completa de monitoramento da sincronização com status da rotina, snapshots recentes e logs recentes.
+
+**Adicionado:**
+- `frontend/components/admin/AdminSaudeSyncPanel.tsx`: client component com painel de status da rotina (Sincronizando agora, Próxima execução, Snapshots disponíveis), lista de Snapshots recentes e Logs recentes — antes na página pública, agora exclusivo do admin.
+
+**Validação:**
+- `npm run lint && npm run type-check && npm run build` — todos verdes
+
+### 2026-04-23 — feat(backend): expandir Saúde Transparente para vacinação, visitas, atenção primária, bucal, hospital e farmácia
+
+**Classificação:** `borda_externa`
+
+**Adicionado:**
+- novos contratos públicos do backend em `/api/v1/saude/vacinacao`, `/visitas-domiciliares`, `/atencao-primaria`, `/saude-bucal`, `/hospital` e `/farmacia`
+- novos snapshots sincronizados para vacinação, visitas domiciliares, atendimento por sexo, atenção primária, saúde bucal e hospital
+- histórico real de snapshots para permitir tendência honesta em `perfil-epidemiologico`
+- testes de integração dedicados para os dashboards novos e para os fallbacks live de `start_date` e `estabelecimento_id`
+
+**Alterado:**
+- feature `backend/features/saude/` refatorada em módulos menores (`saude_public_handler`, `saude_units_handler`, `saude_admin_handler`, `saude_sync`, `saude_snapshot_mapper`, `saude_public_live`, `saude_public_support`, `saude_unit_import`, `saude_resource_catalog`) para respeitar o hard limit de 400 linhas
+- `/api/v1/saude/perfil-epidemiologico` agora usa o snapshot real de `quantidade-de-atendimento-por-sexo` e só retorna tendência quando existe histórico real
+- `/api/v1/saude/medicamentos-dispensados` mantido compatível, enquanto `/api/v1/saude/farmacia` reaproveita os snapshots de farmácia já existentes
+- `sync-status` passou a listar apenas o snapshot mais recente por recurso/escopo, mesmo mantendo histórico no banco
+
+**Validação:**
+- `cd backend && ../venv/bin/ruff check .` — verde
+- `cd backend && ../venv/bin/pytest` — verde
+- `cd backend && ../venv/bin/mypy .` — falha por débito pré-existente em `backend/scripts/seed_admin.py`
+
+**Limitações conhecidas:**
+- o backend expõe `hospital` com os recursos hoje disponíveis no E-Saúde e sinaliza `internacoes_por_mes`, `internacoes_por_cid` e `media_permanencia` em `recursos_indisponiveis`, porque esses endpoints seguem retornando `404`
+
+### 2026-04-23 — feat(frontend): expandir Saúde Transparente para vacinação, visitas, APS, saúde bucal, hospital e farmácia
+
+**Classificação:** `borda_externa`
+
+**Adicionado:**
+- novas páginas públicas `frontend/app/saude/vacinacao`, `visitas-domiciliares`, `atencao-primaria`, `saude-bucal`, `hospital` e `farmacia`
+- componentes compartilhados da feature em `frontend/components/saude/SaudePageSection.tsx` e `SaudeFeatureNav.tsx` para unificar hero, cards, painéis e navegação contextual
+- teste de renderização `frontend/app/saude/hospital/hospital-client.test.tsx` cobrindo estados explícitos de indisponibilidade hospitalar
+
+**Alterado:**
+- `frontend/app/saude/saude-client.tsx` agora expõe a navegação ampliada da Saúde Transparente e separa farmácia de medicamentos
+- `frontend/app/saude/medicamentos/medicamentos-client.tsx` foi enxugado para estoque público; dispensação mensal migrou para `/saude/farmacia`
+- `frontend/app/saude/perfil-epidemiologico/perfil-epidemiologico-client.tsx` passou a consumir tendência opcional nos quantitativos e focar no gráfico real por sexo
+- `frontend/services/saude-service.ts`, `frontend/types/saude.ts` e `frontend/lib/saude-utils.ts` foram expandidos para os novos contratos HTTP da feature
+- testes de `saude-service` e `saude-utils` ampliados para os contratos e helpers novos
+
+**Validação:**
+- `cd frontend && npm run lint`
+- `cd frontend && npm run test`
+- `cd frontend && npm run build`
+- `cd frontend && npm run type-check` (executado após o build para regenerar `.next/types`, já que a configuração do projeto inclui esses artefatos)
+
+**Limitações conhecidas:**
+- o filtro hospitalar por estabelecimento usa `estabelecimento_id` numérico porque o contrato atual não expõe catálogo/lista de estabelecimentos
+- a forma exata do objeto de tendência em `perfil-epidemiologico` precisa continuar alinhada ao backend caso ele refine esse payload além de `direction/label/delta`

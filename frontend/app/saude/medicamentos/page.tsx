@@ -6,7 +6,7 @@ import MedicamentosClient from './medicamentos-client';
 
 export const metadata: Metadata = {
   title: 'Saúde | Medicamentos',
-  description: 'Estoque público e ranking de medicamentos dispensados.',
+  description: 'Estoque público de medicamentos por estabelecimento com alertas de reposição.',
 };
 
 export default function MedicamentosPage() {

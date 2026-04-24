@@ -25,9 +25,23 @@ class SaudeSnapshotResource(StrEnum):
     MEDICAMENTOS_DISPENSADOS_MENSAL = "medicamentos_dispensados_mensal"
     MEDICAMENTOS_ATENDIMENTOS_MENSAL = "medicamentos_atendimentos_mensal"
     QUANTITATIVOS = "quantitativos"
+    ATENDIMENTOS_POR_SEXO = "atendimentos_por_sexo"
     PESSOAS_FISICAS_JURIDICAS = "pessoas_fisicas_juridicas"
     PESSOAS_POR_MES = "pessoas_por_mes"
     PROCEDIMENTOS_POR_TIPO = "procedimentos_por_tipo"
+    VACINAS_POR_MES = "vacinas_por_mes"
+    VACINAS_RANKING = "vacinas_ranking"
+    VISITAS_MOTIVOS = "visitas_motivos"
+    VISITAS_ACOMPANHAMENTO = "visitas_acompanhamento"
+    VISITAS_BUSCA_ATIVA = "visitas_busca_ativa"
+    VISITAS_CONTROLE_VETORIAL = "visitas_controle_vetorial"
+    ATENCAO_PRIMARIA_ATENDIMENTOS_MENSAL = "atencao_primaria_atendimentos_mensal"
+    ATENCAO_PRIMARIA_PROCEDIMENTOS = "atencao_primaria_procedimentos"
+    ATENCAO_PRIMARIA_CBO = "atencao_primaria_cbo"
+    SAUDE_BUCAL_ATENDIMENTOS_MENSAL = "saude_bucal_atendimentos_mensal"
+    HOSPITAL_CENSO = "hospital_censo"
+    HOSPITAL_PROCEDIMENTOS = "hospital_procedimentos"
+    HOSPITAL_ATENDIMENTOS_MENSAL = "hospital_atendimentos_mensal"
 
 
 class SaudeSyncTriggerType(StrEnum):
@@ -145,9 +159,25 @@ class SaudeLabelValueItem(BaseModel):
     value: int
 
 
+class SaudeTrendDirection(StrEnum):
+    UP = "up"
+    DOWN = "down"
+    STABLE = "stable"
+
+
+class SaudeLabelValueTrendItem(SaudeLabelValueItem):
+    trend: SaudeTrendDirection | None = None
+    previous_value: int | None = None
+
+
 class SaudeMonthlySeriesItem(BaseModel):
     label: str
     value: int
+
+
+class SaudeSeriesItem(BaseModel):
+    label: str
+    points: list[SaudeMonthlySeriesItem]
 
 
 class SaudeMedicamentosDispensadosResponse(BaseModel):
@@ -158,8 +188,69 @@ class SaudeMedicamentosDispensadosResponse(BaseModel):
 
 
 class SaudePerfilEpidemiologicoResponse(BaseModel):
-    quantitativos: list[SaudeLabelValueItem]
+    quantitativos: list[SaudeLabelValueTrendItem]
     por_sexo: list[SaudeLabelValueItem]
+    last_synced_at: datetime | None
+
+
+class SaudeVacinacaoResponse(BaseModel):
+    aplicadas_por_mes: list[SaudeMonthlySeriesItem]
+    ranking_vacinas: list[SaudeLabelValueItem]
+    total_aplicadas: int
+    last_synced_at: datetime | None
+
+
+class SaudeVisitasDomiciliaresResponse(BaseModel):
+    motivos_visita: list[SaudeLabelValueItem]
+    acompanhamento: list[SaudeLabelValueItem]
+    busca_ativa: list[SaudeLabelValueItem]
+    controle_vetorial: list[SaudeLabelValueItem]
+    last_synced_at: datetime | None
+
+
+class SaudeAtencaoPrimariaResponse(BaseModel):
+    year: int
+    start_date: str
+    atendimentos_por_mes: list[SaudeMonthlySeriesItem]
+    procedimentos_por_especialidade: list[SaudeLabelValueItem]
+    atendimentos_por_cbo: list[SaudeLabelValueItem]
+    last_synced_at: datetime | None
+
+
+class SaudeBucalResponse(BaseModel):
+    year: int
+    atendimentos_por_mes: list[SaudeMonthlySeriesItem]
+    total_atendimentos: int
+    last_synced_at: datetime | None
+
+
+class SaudeHospitalCensoResponse(BaseModel):
+    total_leitos: int | None
+    ocupados: int | None
+    livres: int | None
+    taxa_ocupacao: float | None
+    raw: dict[str, object]
+
+
+class SaudeHospitalResponse(BaseModel):
+    estabelecimento_id: int | None
+    censo: SaudeHospitalCensoResponse | None
+    procedimentos_realizados: list[SaudeLabelValueItem]
+    total_procedimentos: int
+    atendimentos_por_mes: list[SaudeMonthlySeriesItem]
+    internacoes_por_mes: list[SaudeMonthlySeriesItem]
+    internacoes_por_cid: list[SaudeLabelValueItem]
+    media_permanencia: list[SaudeLabelValueItem]
+    recursos_indisponiveis: list[str]
+    last_synced_at: datetime | None
+
+
+class SaudeFarmaciaResponse(BaseModel):
+    year: int
+    atendimentos_por_mes: list[SaudeMonthlySeriesItem]
+    medicamentos_dispensados_por_mes: list[SaudeMonthlySeriesItem]
+    total_atendimentos: int
+    total_dispensados: int
     last_synced_at: datetime | None
 
 

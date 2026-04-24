@@ -22,20 +22,32 @@ export interface SaudeLabelValueItem {
   value: number;
 }
 
+export type SaudeTrendDirection = 'up' | 'down' | 'stable';
+
+export interface SaudeTrendInfo {
+  direction: SaudeTrendDirection;
+  label?: string | null;
+  delta?: number | null;
+}
+
+export interface SaudeQuantitativeItem extends SaudeLabelValueItem {
+  trend?: SaudeTrendInfo | null;
+}
+
 export interface SaudeMonthlySeriesItem {
   label: string;
   value: number;
 }
 
-export interface SaudeMedicamentosDispensadosResponse {
-  ranking: SaudeLabelValueItem[];
-  series_mensal_dispensacao: SaudeMonthlySeriesItem[];
-  series_mensal_atendimentos: SaudeMonthlySeriesItem[];
+export interface SaudeVacinacaoResponse {
+  applied_by_month: SaudeMonthlySeriesItem[];
+  top_applied: SaudeLabelValueItem[];
+  total_applied: number;
   last_synced_at: string | null;
 }
 
 export interface SaudePerfilEpidemiologicoResponse {
-  quantitativos: SaudeLabelValueItem[];
+  quantitativos: SaudeQuantitativeItem[];
   por_sexo: SaudeLabelValueItem[];
   last_synced_at: string | null;
 }
@@ -46,8 +58,56 @@ export interface SaudePerfilDemograficoResponse {
   last_synced_at: string | null;
 }
 
+export interface SaudeVisitasDomiciliaresResponse {
+  motives: SaudeLabelValueItem[];
+  follow_up: SaudeLabelValueItem[];
+  active_search: SaudeLabelValueItem[];
+  vector_control: SaudeLabelValueItem[];
+  last_synced_at: string | null;
+}
+
+export interface SaudeAtencaoPrimariaResponse {
+  attendances_by_month: SaudeMonthlySeriesItem[];
+  procedures_by_specialty: SaudeLabelValueItem[];
+  attendances_by_cbo: SaudeLabelValueItem[];
+  last_synced_at: string | null;
+}
+
+export interface SaudeSaudeBucalResponse {
+  attendances_by_month: SaudeMonthlySeriesItem[];
+  total_attendances: number;
+  last_synced_at: string | null;
+}
+
 export interface SaudeProcedimentosTipoResponse {
   items: SaudeLabelValueItem[];
+  last_synced_at: string | null;
+}
+
+export interface SaudeHospitalCenso {
+  total_leitos: number | null;
+  ocupados: number | null;
+  livres: number | null;
+  taxa_ocupacao: number | null;
+}
+
+export interface SaudeHospitalResponse {
+  censo: SaudeHospitalCenso | null;
+  attendances_by_month: SaudeMonthlySeriesItem[];
+  procedures: SaudeLabelValueItem[];
+  total_procedures: number;
+  internacoes_by_month: SaudeMonthlySeriesItem[];
+  internacoes_by_cid: SaudeLabelValueItem[];
+  average_stay_by_month: SaudeMonthlySeriesItem[];
+  unavailable_resources: string[];
+  last_synced_at: string | null;
+}
+
+export interface SaudeFarmaciaResponse {
+  attendances_by_month: SaudeMonthlySeriesItem[];
+  dispensed_by_month: SaudeMonthlySeriesItem[];
+  total_attendances: number;
+  total_dispensed: number;
   last_synced_at: string | null;
 }
 
@@ -105,9 +165,23 @@ export type SaudeSnapshotResource =
   | 'medicamentos_dispensados_mensal'
   | 'medicamentos_atendimentos_mensal'
   | 'quantitativos'
+  | 'atendimentos_por_sexo'
   | 'pessoas_fisicas_juridicas'
   | 'pessoas_por_mes'
-  | 'procedimentos_por_tipo';
+  | 'procedimentos_por_tipo'
+  | 'vacinas_por_mes'
+  | 'vacinas_ranking'
+  | 'visitas_motivos'
+  | 'visitas_acompanhamento'
+  | 'visitas_busca_ativa'
+  | 'visitas_controle_vetorial'
+  | 'atencao_primaria_atendimentos_mensal'
+  | 'atencao_primaria_procedimentos'
+  | 'atencao_primaria_cbo'
+  | 'saude_bucal_atendimentos_mensal'
+  | 'hospital_censo'
+  | 'hospital_procedimentos'
+  | 'hospital_atendimentos_mensal';
 
 export type SaudeSyncTriggerType = 'manual' | 'scheduled';
 

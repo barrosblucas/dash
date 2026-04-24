@@ -6,7 +6,7 @@ import PerfilEpidemiologicoClient from './perfil-epidemiologico-client';
 
 export const metadata: Metadata = {
   title: 'Saúde | Perfil epidemiológico',
-  description: 'Perfil epidemiológico e demográfico do atendimento municipal.',
+  description: 'Contadores epidemiológicos com tendência opcional e distribuição por sexo.',
 };
 
 export default function PerfilEpidemiologicoPage() {

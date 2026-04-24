@@ -1,11 +1,14 @@
 import { apiClient } from '@/services/api';
 import type {
   SaudeImportResponse,
-  SaudeMedicamentosDispensadosResponse,
+  SaudeAtencaoPrimariaResponse,
+  SaudeFarmaciaResponse,
+  SaudeHospitalResponse,
   SaudeMedicationStockResponse,
   SaudePerfilDemograficoResponse,
   SaudePerfilEpidemiologicoResponse,
   SaudeProcedimentosTipoResponse,
+  SaudeSaudeBucalResponse,
   SaudeSyncRequest,
   SaudeSyncResponse,
   SaudeSyncStatusResponse,
@@ -14,10 +17,90 @@ import type {
   SaudeUnitRecord,
   SaudeUnitScheduleResponse,
   SaudeUnitUpdateRequest,
+  SaudeVacinacaoResponse,
+  SaudeVisitasDomiciliaresResponse,
 } from '@/types/saude';
 
 const SAUDE_ENDPOINT = '/api/v1/saude';
 const SAUDE_ADMIN_ENDPOINT = `${SAUDE_ENDPOINT}/admin`;
+
+type SaudeRawTrendDirection = 'up' | 'down' | 'stable';
+
+interface SaudeRawLabelValueItem {
+  label: string;
+  value: number;
+}
+
+interface SaudeRawTrendItem extends SaudeRawLabelValueItem {
+  trend: SaudeRawTrendDirection | null;
+  previous_value: number | null;
+}
+
+interface SaudeRawMonthlySeriesItem {
+  label: string;
+  value: number;
+}
+
+interface SaudeRawVacinacaoResponse {
+  aplicadas_por_mes: SaudeRawMonthlySeriesItem[];
+  ranking_vacinas: SaudeRawLabelValueItem[];
+  total_aplicadas: number;
+  last_synced_at: string | null;
+}
+
+interface SaudeRawVisitasDomiciliaresResponse {
+  motivos_visita: SaudeRawLabelValueItem[];
+  acompanhamento: SaudeRawLabelValueItem[];
+  busca_ativa: SaudeRawLabelValueItem[];
+  controle_vetorial: SaudeRawLabelValueItem[];
+  last_synced_at: string | null;
+}
+
+interface SaudeRawPerfilEpidemiologicoResponse {
+  quantitativos: SaudeRawTrendItem[];
+  por_sexo: SaudeRawLabelValueItem[];
+  last_synced_at: string | null;
+}
+
+interface SaudeRawAtencaoPrimariaResponse {
+  atendimentos_por_mes: SaudeRawMonthlySeriesItem[];
+  procedimentos_por_especialidade: SaudeRawLabelValueItem[];
+  atendimentos_por_cbo: SaudeRawLabelValueItem[];
+  last_synced_at: string | null;
+}
+
+interface SaudeRawSaudeBucalResponse {
+  atendimentos_por_mes: SaudeRawMonthlySeriesItem[];
+  total_atendimentos: number;
+  last_synced_at: string | null;
+}
+
+interface SaudeRawHospitalCenso {
+  total_leitos: number | null;
+  ocupados: number | null;
+  livres: number | null;
+  taxa_ocupacao: number | null;
+}
+
+interface SaudeRawHospitalResponse {
+  censo: SaudeRawHospitalCenso | null;
+  procedimentos_realizados: SaudeRawLabelValueItem[];
+  total_procedimentos: number;
+  atendimentos_por_mes: SaudeRawMonthlySeriesItem[];
+  internacoes_por_mes: SaudeRawMonthlySeriesItem[];
+  internacoes_por_cid: SaudeRawLabelValueItem[];
+  media_permanencia: SaudeRawMonthlySeriesItem[];
+  recursos_indisponiveis: string[];
+  last_synced_at: string | null;
+}
+
+interface SaudeRawFarmaciaResponse {
+  atendimentos_por_mes: SaudeRawMonthlySeriesItem[];
+  medicamentos_dispensados_por_mes: SaudeRawMonthlySeriesItem[];
+  total_atendimentos: number;
+  total_dispensados: number;
+  last_synced_at: string | null;
+}
 
 const toNumber = (value: number | string | null | undefined): number | null => {
   if (value === null || value === undefined || value === '') {
@@ -43,6 +126,84 @@ const normalizeUnits = (response: SaudeUnitListResponse): SaudeUnitListResponse 
   items: response.items.map(normalizeUnit),
 });
 
+const mapVaccinationDashboard = (
+  response: SaudeRawVacinacaoResponse
+): SaudeVacinacaoResponse => ({
+  applied_by_month: response.aplicadas_por_mes,
+  top_applied: response.ranking_vacinas,
+  total_applied: response.total_aplicadas,
+  last_synced_at: response.last_synced_at,
+});
+
+const mapHomeVisitsDashboard = (
+  response: SaudeRawVisitasDomiciliaresResponse
+): SaudeVisitasDomiciliaresResponse => ({
+  motives: response.motivos_visita,
+  follow_up: response.acompanhamento,
+  active_search: response.busca_ativa,
+  vector_control: response.controle_vetorial,
+  last_synced_at: response.last_synced_at,
+});
+
+const mapTrend = (item: SaudeRawTrendItem) => ({
+  ...item,
+  trend: item.trend
+    ? {
+        direction: item.trend,
+        delta: item.previous_value !== null ? item.value - item.previous_value : null,
+      }
+    : null,
+});
+
+const mapEpidemiologicalProfile = (
+  response: SaudeRawPerfilEpidemiologicoResponse
+): SaudePerfilEpidemiologicoResponse => ({
+  quantitativos: response.quantitativos.map(mapTrend),
+  por_sexo: response.por_sexo,
+  last_synced_at: response.last_synced_at,
+});
+
+const mapPrimaryCareDashboard = (
+  response: SaudeRawAtencaoPrimariaResponse
+): SaudeAtencaoPrimariaResponse => ({
+  attendances_by_month: response.atendimentos_por_mes,
+  procedures_by_specialty: response.procedimentos_por_especialidade,
+  attendances_by_cbo: response.atendimentos_por_cbo,
+  last_synced_at: response.last_synced_at,
+});
+
+const mapOralHealthDashboard = (
+  response: SaudeRawSaudeBucalResponse
+): SaudeSaudeBucalResponse => ({
+  attendances_by_month: response.atendimentos_por_mes,
+  total_attendances: response.total_atendimentos,
+  last_synced_at: response.last_synced_at,
+});
+
+const mapHospitalDashboard = (
+  response: SaudeRawHospitalResponse
+): SaudeHospitalResponse => ({
+  censo: response.censo,
+  attendances_by_month: response.atendimentos_por_mes,
+  procedures: response.procedimentos_realizados,
+  total_procedures: response.total_procedimentos,
+  internacoes_by_month: response.internacoes_por_mes,
+  internacoes_by_cid: response.internacoes_por_cid,
+  average_stay_by_month: response.media_permanencia,
+  unavailable_resources: response.recursos_indisponiveis,
+  last_synced_at: response.last_synced_at,
+});
+
+const mapPharmacyDashboard = (
+  response: SaudeRawFarmaciaResponse
+): SaudeFarmaciaResponse => ({
+  attendances_by_month: response.atendimentos_por_mes,
+  dispensed_by_month: response.medicamentos_dispensados_por_mes,
+  total_attendances: response.total_atendimentos,
+  total_dispensed: response.total_dispensados,
+  last_synced_at: response.last_synced_at,
+});
+
 export const saudeService = {
   getMedicationStock: (params?: {
     search?: string;
@@ -51,13 +212,22 @@ export const saudeService = {
     page_size?: number;
   }) => apiClient.get<SaudeMedicationStockResponse>(`${SAUDE_ENDPOINT}/medicamentos-estoque`, { params }),
 
-  getDispensedMedications: (year: number) =>
-    apiClient.get<SaudeMedicamentosDispensadosResponse>(`${SAUDE_ENDPOINT}/medicamentos-dispensados`, {
-      params: { year },
-    }),
+  getVaccinationDashboard: async (year: number) =>
+    mapVaccinationDashboard(
+      await apiClient.get<SaudeRawVacinacaoResponse>(`${SAUDE_ENDPOINT}/vacinacao`, {
+        params: { year },
+      })
+    ),
 
-  getEpidemiologicalProfile: () =>
-    apiClient.get<SaudePerfilEpidemiologicoResponse>(`${SAUDE_ENDPOINT}/perfil-epidemiologico`),
+  getHomeVisitsDashboard: async () =>
+    mapHomeVisitsDashboard(
+      await apiClient.get<SaudeRawVisitasDomiciliaresResponse>(`${SAUDE_ENDPOINT}/visitas-domiciliares`)
+    ),
+
+  getEpidemiologicalProfile: async () =>
+    mapEpidemiologicalProfile(
+      await apiClient.get<SaudeRawPerfilEpidemiologicoResponse>(`${SAUDE_ENDPOINT}/perfil-epidemiologico`)
+    ),
 
   getDemographicProfile: (year: number) =>
     apiClient.get<SaudePerfilDemograficoResponse>(`${SAUDE_ENDPOINT}/perfil-demografico`, {
@@ -66,6 +236,34 @@ export const saudeService = {
 
   getProcedureTypes: () =>
     apiClient.get<SaudeProcedimentosTipoResponse>(`${SAUDE_ENDPOINT}/procedimentos-tipo`),
+
+  getPrimaryCareDashboard: async (params: { year: number; start_date?: string }) =>
+    mapPrimaryCareDashboard(
+      await apiClient.get<SaudeRawAtencaoPrimariaResponse>(`${SAUDE_ENDPOINT}/atencao-primaria`, {
+        params,
+      })
+    ),
+
+  getOralHealthDashboard: async (year: number) =>
+    mapOralHealthDashboard(
+      await apiClient.get<SaudeRawSaudeBucalResponse>(`${SAUDE_ENDPOINT}/saude-bucal`, {
+        params: { year },
+      })
+    ),
+
+  getHospitalDashboard: async (params?: { estabelecimento_id?: number }) =>
+    mapHospitalDashboard(
+      await apiClient.get<SaudeRawHospitalResponse>(`${SAUDE_ENDPOINT}/hospital`, {
+        params,
+      })
+    ),
+
+  getPharmacyDashboard: async (year: number) =>
+    mapPharmacyDashboard(
+      await apiClient.get<SaudeRawFarmaciaResponse>(`${SAUDE_ENDPOINT}/farmacia`, {
+        params: { year },
+      })
+    ),
 
   listUnits: async (params?: { tipo?: string; search?: string }) => {
     const response = await apiClient.get<SaudeUnitListResponse>(`${SAUDE_ENDPOINT}/unidades`, { params });
