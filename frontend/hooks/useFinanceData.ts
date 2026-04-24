@@ -5,7 +5,7 @@
 
 import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
 import { receitasApi, despesasApi, kpisApi } from '@/services/api';
-import { QUERY_KEYS } from '@/lib/constants';
+import { QUERY_KEYS, PERIODO_DADOS } from '@/lib/constants';
 import type { ReceitaDetalhamentoListResponse } from '@/types/receita';
 
 // Tipos de resposta da API
@@ -294,7 +294,7 @@ export function useKPIsAnuais(
   options?: Omit<UseQueryOptions<KPIsResponse>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<KPIsResponse> {
   return useQuery({
-    queryKey: QUERY_KEYS.dashboard.comparativo([ano_inicio || 2016, ano_fim || 2026]),
+    queryKey: QUERY_KEYS.dashboard.comparativo([ano_inicio || PERIODO_DADOS.ano_inicio, ano_fim || PERIODO_DADOS.ano_fim]),
     queryFn: () => kpisApi.getYearlyKPIs(ano_inicio, ano_fim),
     ...options,
   });

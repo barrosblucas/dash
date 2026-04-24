@@ -19,9 +19,9 @@ export const MUNICIPIO = {
 
 // Período de dados disponíveis
 export const PERIODO_DADOS = {
-  ano_inicio: 2016,
+  ano_inicio: 2013,
   ano_fim: 2026,
-  anos: Array.from({ length: 11 }, (_, i) => 2016 + i),
+  anos: Array.from({ length: 14 }, (_, i) => 2013 + i),
 } as const;
 
 // ============================================

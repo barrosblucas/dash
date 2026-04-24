@@ -15,7 +15,7 @@ import { motion } from 'framer-motion';
 
 import Icon from '@/components/ui/Icon';
 import { formatCurrency } from '@/lib/utils';
-import { COLORS, CHART_CONFIG } from '@/lib/constants';
+import { COLORS, CHART_CONFIG, PERIODO_DADOS } from '@/lib/constants';
 import { useDashboardFilters } from '@/stores/filtersStore';
 import { useChartThemeColors } from '@/stores/themeStore';
 import { ForecastSectionProps } from '@/types/forecast';
@@ -52,7 +52,7 @@ export default function ForecastSection({
 
   const { data: kpisAnuaisResponse, isLoading: isLoadingYearly, error: yearlyError } = useQuery({
     queryKey: ['kpis', 'anual', 'forecast', currentYear - 1],
-    queryFn: () => fetchYearlyKPIs(2016, currentYear - 1),
+    queryFn: () => fetchYearlyKPIs(PERIODO_DADOS.ano_inicio, currentYear - 1),
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });

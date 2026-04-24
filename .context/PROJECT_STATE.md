@@ -123,12 +123,11 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Avisos de Licitações reformulados: calendário mensal/semanal, lista paginada, modal elegante
 
 ### Dados
-- [x] Receitas: ~160 registros (2013–2026) extraídos de PDFs
-- [x] Receitas detalhamento: 1.498 itens hierárquicos (2013–2026) extraídos de PDFs
-- [x] Despesas: ~250 registros (2013–2026) extraídos de PDFs
+- [x] Receitas: 160 registros (12/mês para 2013–2025 via PDF; 4 registros de 2026 via API QualitySistemas)
+- [x] Receitas detalhamento: 1.858 itens hierárquicos (2013–2025 via PDF; 459 de 2026 via API QualitySistemas)
+- [x] Despesas: 460 registros (2013–2025 via PDF; 4 registros de 2026 via API QualitySistemas)
 - [x] Forecasts: pendente de geração
 - [x] Metadata ETL: controle de processamento
-
 ## Débito técnico conhecido
 
 ### Gates de governança (violadores)

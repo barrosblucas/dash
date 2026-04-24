@@ -129,3 +129,62 @@
 - `cd backend && ../venv/bin/ruff check .` — verde (1 fix automático em teste pré-existente)
 - `cd backend && ../venv/bin/mypy backend/features/saude/` — apenas erros pré-existentes de stubs faltantes (fastapi, pydantic, httpx)
 - `cd backend && ../venv/bin/pytest backend/tests/test_api/test_saude.py` — verde
+
+
+### 2026-04-24 — fix(backend): recarga de dados históricos de receitas e despesas após zeramento do SQLite
+
+**Classificação:** `mudanca_mecanica`
+
+**Contexto:** O banco SQLite foi zerado e precisava ser reabastecido com os dados municipais de receitas e despesas. Os dados históricos (2013-2025) vêm dos PDFs oficiais da prefeitura; os dados de 2026 vêm da API QualitySistemas.
+
+**Alterado:**
+- `backend/features/scraping/historical_data_bootstrap_service.py`
+  - `bootstrap_missing_years()` executado manualmente com `data_root` apontando para a raiz do projeto (`/home/thanos/dashboard`)
+  - Corrigido o caminho de busca dos PDFs: o construtor padrão usava `backend/` como raiz em vez do diretório do projeto
+
+**Executado:**
+- Bootstrap histórico para receitas, despesas e detalhamento dos anos 2013-2025
+- Scraping da API QualitySistemas para o ano de 2026
+
+**Resultado da carga:**
+- Receitas: 160 registros (12 por ano, 2013-2025 + 4 de 2026)
+- Despesas: 460 registros (34-36 por ano, 2013-2025 + 4 de 2026)
+- Detalhamento de receitas: 1.858 registros (2013-2025 do PDF + 459 de 2026 da API)
+
+**Validação:**
+- `GET /api/v1/receitas?ano=2025` — responde com 12 registros
+- `GET /api/v1/despesas?ano=2024` — responde com 36 registros
+- `GET /api/v1/receitas?ano=2026` — responde com 4 registros (fonte: SCRAPING_2026)
+- Health check retorna `database: connected`
+- API reiniciada e operacional na porta 8000
+
+---
+
+
+### 2026-04-24 — fix(frontend): corrigir ano inicial dos dados de 2016 para 2013
+
+**Classificação:** `mudanca_mecanica`
+
+**Contexto:** O frontend tinha o ano inicial de dados hardcoded como 2016 em múltiplos arquivos, mas o banco possui dados desde 2013. Isso fazia com que os seletores de ano, filtros e gráficos de forecast não exibissem os anos 2013-2015.
+
+**Alterado:**
+- `frontend/lib/constants.ts`
+  - `PERIODO_DADOS.ano_inicio`: 2016 → 2013
+  - `PERIODO_DADOS.anos`: ajustado para 14 anos (2013-2026)
+- `frontend/stores/filtersStore.ts`
+  - `useAnosDisponiveis()`: loop hardcoded de 2016 → 2013
+- `frontend/app/forecast/forecast-client.tsx`
+  - Query de KPIs anuais: `ano_inicio=2016` → `PERIODO_DADOS.ano_inicio`
+  - `enabled`: `trendEndYear >= 2016` → `PERIODO_DADOS.ano_inicio`
+  - `availableYears`: cálculo baseado em `PERIODO_DADOS.ano_inicio`
+- `frontend/components/dashboard/ForecastSection.tsx`
+  - `fetchYearlyKPIs(2016, ...)`: substituído por `PERIODO_DADOS.ano_inicio`
+- `frontend/hooks/useFinanceData.ts`
+  - Fallback de `ano_inicio` no `useKPIsAnuais`: 2016 → `PERIODO_DADOS.ano_inicio`
+
+**Validação:**
+- `cd frontend && npm run lint` — verde
+- `cd frontend && npm run type-check` — verde
+- `cd frontend && npm run build` — verde
+
+---

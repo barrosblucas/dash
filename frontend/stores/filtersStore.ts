@@ -125,7 +125,7 @@ export const useDashboardFilters = create<FiltrosDashboard & DashboardFiltersAct
 export function useAnosDisponiveis() {
   const anoAtual = new Date().getFullYear();
   const anos = [];
-  for (let ano = 2016; ano <= anoAtual + 1; ano++) {
+  for (let ano = 2013; ano <= anoAtual + 1; ano++) {
     anos.push(ano);
   }
   return anos;

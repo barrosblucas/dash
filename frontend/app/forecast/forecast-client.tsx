@@ -10,7 +10,7 @@ import ForecastSection from '@/components/dashboard/ForecastSection';
 import { useDashboardFilters } from '@/stores/filtersStore';
 import apiClient from '@/services/api';
 import { formatCurrency } from '@/lib/utils';
-
+import { PERIODO_DADOS } from '@/lib/constants';
 // --- Tipos ---
 
 interface KPIAnual {
@@ -100,14 +100,14 @@ export default function ForecastClient() {
 
   const { data: kpisResponse, isLoading: kpisLoading } = useQuery({
     queryKey: ['kpis', 'anual', 'forecast-page', trendEndYear],
-    queryFn: () => apiClient.get<KPIsResponse>(`/api/v1/kpis/anual?ano_inicio=2016&ano_fim=${trendEndYear}`),
-    enabled: trendEndYear >= 2016,
+    queryFn: () => apiClient.get<KPIsResponse>(`/api/v1/kpis/anual?ano_inicio=${PERIODO_DADOS.ano_inicio}&ano_fim=${trendEndYear}`),
+    enabled: trendEndYear >= PERIODO_DADOS.ano_inicio,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
 
   const trendMetrics = kpisResponse?.kpis_anuais ? computeTrendMetrics(kpisResponse.kpis_anuais) : null;
-  const availableYears = Array.from({ length: currentYear - 2016 + 1 }, (_, i) => currentYear - i);
+  const availableYears = Array.from({ length: currentYear - PERIODO_DADOS.ano_inicio + 1 }, (_, i) => currentYear - i);
   const forecastViewKey = `${projectionMode}-${anoSelecionado}-${yearsToProject}-${mostrarProjecao}`;
 
   return (
