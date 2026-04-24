@@ -40,6 +40,8 @@ export interface SaudeMonthlySeriesItem {
 }
 
 export interface SaudeVacinacaoResponse {
+  start_date: string | null;
+  end_date: string | null;
   applied_by_month: SaudeMonthlySeriesItem[];
   top_applied: SaudeLabelValueItem[];
   total_applied: number;
@@ -59,6 +61,8 @@ export interface SaudePerfilDemograficoResponse {
 }
 
 export interface SaudeVisitasDomiciliaresResponse {
+  start_date: string | null;
+  end_date: string | null;
   motives: SaudeLabelValueItem[];
   follow_up: SaudeLabelValueItem[];
   active_search: SaudeLabelValueItem[];
@@ -67,6 +71,7 @@ export interface SaudeVisitasDomiciliaresResponse {
 }
 
 export interface SaudeAtencaoPrimariaResponse {
+  end_date: string;
   attendances_by_month: SaudeMonthlySeriesItem[];
   procedures_by_specialty: SaudeLabelValueItem[];
   attendances_by_cbo: SaudeLabelValueItem[];
@@ -74,6 +79,8 @@ export interface SaudeAtencaoPrimariaResponse {
 }
 
 export interface SaudeSaudeBucalResponse {
+  start_date: string | null;
+  end_date: string | null;
   attendances_by_month: SaudeMonthlySeriesItem[];
   total_attendances: number;
   last_synced_at: string | null;
@@ -104,8 +111,11 @@ export interface SaudeHospitalResponse {
 }
 
 export interface SaudeFarmaciaResponse {
+  start_date: string | null;
+  end_date: string | null;
   attendances_by_month: SaudeMonthlySeriesItem[];
   dispensed_by_month: SaudeMonthlySeriesItem[];
+  top_medicamentos: SaudeLabelValueItem[];
   total_attendances: number;
   total_dispensed: number;
   last_synced_at: string | null;

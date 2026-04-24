@@ -1,12 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
 import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude/SaudePageSection';
+import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
+import { formatDateInputValue } from '@/lib/saude-utils';
 import { formatNumber, getChartColor } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 import type { SaudeLabelValueItem } from '@/types/saude';
@@ -35,10 +38,19 @@ const chartSections: Array<{ key: 'motives' | 'follow_up' | 'active_search' | 'v
     },
   ];
 
+const currentYear = new Date().getFullYear();
+
 export default function VisitasDomiciliaresClient() {
+  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(currentYear, 0, 1)));
+  const [endDate, setEndDate] = useState(formatDateInputValue(new Date()));
+
   const visitsQuery = useQuery({
-    queryKey: ['saude', 'visitas-domiciliares'],
-    queryFn: saudeService.getHomeVisitsDashboard,
+    queryKey: ['saude', 'visitas-domiciliares', startDate, endDate],
+    queryFn: () =>
+      saudeService.getHomeVisitsDashboard({
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
+      }),
   });
 
   if (visitsQuery.isLoading) {
@@ -60,6 +72,17 @@ export default function VisitasDomiciliaresClient() {
         title="Visitas domiciliares e atenção territorial"
         description="Quatro blocos independentes mostram os principais motivos de visita e os recortes assistenciais enviados pela fonte externa."
         badgeValue={<SaudeSyncBadge value={visitsQuery.data?.last_synced_at} />}
+        actions={
+          <SaudePeriodFilter
+            year={currentYear}
+            startDate={startDate}
+            endDate={endDate}
+            onYearChange={() => {}}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            showYear={false}
+          />
+        }
       />
 
       <SaudeFeatureNav />

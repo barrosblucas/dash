@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-23 (atualizado com a entrega V1 de Saúde Transparente)
+Snapshot: 2026-04-24 (atualizado com filtros de período dinâmicos nos endpoints de saúde)
 
 ## Status geral
 
@@ -20,6 +20,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Bounded context `identity` com login, refresh rotativo, logout, `me`, gestão de usuários e reset de senha
 - [x] Bounded context `obra` com CRUD completo, hash público, medições mensais filhas e cálculo de valores derivados
 - [x] Bounded context `saude` com snapshots/cache do E-Saúde, CRUD admin de unidades e dashboards públicos de medicamentos, vacinação, visitas domiciliares, perfil epidemiológico, atenção primária, saúde bucal, hospital, farmácia, perfil demográfico e procedimentos
+- [x] Filtros de período dinâmicos (`start_date`/`end_date`) nos endpoints públicos de saúde: atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal (com fallback local para APIs que ignoram filtro)
 - [x] Scheduler de scraping periódico (APScheduler, 10 min) com primeira execução imediata no startup
 - [x] Scheduler periódico de Saúde Transparente (APScheduler, 6h) com sync dos snapshots públicos disponíveis do ano atual e anterior
 - [x] Serviço de scraping QualitySistemas com upsert de receitas, despesas e detalhamento
@@ -81,6 +82,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] CRUD administrativo de obras com edição completa de metadados e medições mensais dinâmicas
 - [x] Portal público de obras consumindo API real em `/obras` e `/obras/[id]`, sem mocks locais
 - [x] Saúde Transparente expandida no frontend com páginas públicas de medicamentos, farmácia, vacinação, visitas domiciliares, perfil epidemiológico, atenção primária, saúde bucal, hospital, procedimentos e unidades, além da administração de unidades em `/admin/saude/unidades`
+- [x] Filtros de período (`start_date`/`end_date`) integrados nos clientes frontend de atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal via componente `SaudePeriodFilter` reutilizável
 
 ### Frontend — Reformulação Visual Completa v2 (2026-04-22)
 - [x] **Reformulação completa do frontend** seguindo templates HTML de referência (`design_system/`)

@@ -60,13 +60,15 @@ describe('saude-service', () => {
 
   it('consulta vacinação com parâmetro year', async () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
+      start_date: null,
+      end_date: null,
       aplicadas_por_mes: [],
       ranking_vacinas: [],
       total_aplicadas: 0,
       last_synced_at: null,
     });
 
-    await saudeService.getVaccinationDashboard(2026);
+    await saudeService.getVaccinationDashboard({ year: 2026 });
 
     expect(apiClient.get).toHaveBeenCalledWith('/api/v1/saude/vacinacao', {
       params: { year: 2026 },
@@ -75,6 +77,7 @@ describe('saude-service', () => {
 
   it('consulta atenção primária com ano e data inicial', async () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
+      end_date: '2025-12-31',
       atendimentos_por_mes: [],
       procedimentos_por_especialidade: [],
       atendimentos_por_cbo: [],
@@ -110,14 +113,17 @@ describe('saude-service', () => {
 
   it('consulta farmácia com ano selecionado', async () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
+      start_date: null,
+      end_date: null,
       atendimentos_por_mes: [],
       medicamentos_dispensados_por_mes: [],
+      top_medicamentos: [],
       total_atendimentos: 0,
       total_dispensados: 0,
       last_synced_at: null,
     });
 
-    await saudeService.getPharmacyDashboard(2024);
+    await saudeService.getPharmacyDashboard({ year: 2024 });
 
     expect(apiClient.get).toHaveBeenCalledWith('/api/v1/saude/farmacia', {
       params: { year: 2024 },

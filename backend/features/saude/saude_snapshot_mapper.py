@@ -177,6 +177,53 @@ def sum_values(items: Sequence[SaudeMonthlySeriesItem | SaudeLabelValueItem]) ->
     return sum(item.value for item in items)
 
 
+def filter_monthly_series_by_date_range(
+    items: list[SaudeMonthlySeriesItem],
+    start_date: datetime,
+    end_date: datetime,
+) -> list[SaudeMonthlySeriesItem]:
+    """Filtra série mensal por label que contém ano/mês dentro do range."""
+    filtered: list[SaudeMonthlySeriesItem] = []
+    for item in items:
+        item_date = _parse_monthly_label(item.label)
+        if item_date is not None and start_date <= item_date <= end_date:
+            filtered.append(item)
+    return filtered
+
+
+def _parse_monthly_label(label: str) -> datetime | None:
+    """Tenta extrair ano e mês de labels como 'Jan/2024' ou '2024-01'."""
+    import re
+
+    # formato 'Jan/2024' ou '01/2024'
+    slash_match = re.search(r"(\d{2})/(\d{4})", label)
+    if slash_match:
+        month = int(slash_match.group(1))
+        year = int(slash_match.group(2))
+        try:
+            return datetime(year, month, 1)
+        except ValueError:
+            return None
+    # formato '2024-01'
+    dash_match = re.search(r"(\d{4})-(\d{2})", label)
+    if dash_match:
+        year = int(dash_match.group(1))
+        month = int(dash_match.group(2))
+        try:
+            return datetime(year, month, 1)
+        except ValueError:
+            return None
+    # formato que contém apenas o ano (ex: '2024') — assume janeiro
+    year_only_match = re.search(r"(\d{4})", label)
+    if year_only_match:
+        year = int(year_only_match.group(1))
+        try:
+            return datetime(year, 1, 1)
+        except ValueError:
+            return None
+    return None
+
+
 def _quantitativos_payload(payload: Any) -> dict[str, Any]:
     quantitativos = payload.get("quantitativos") if isinstance(payload, dict) else None
     return quantitativos if isinstance(quantitativos, dict) else {}

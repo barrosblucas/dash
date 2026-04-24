@@ -1,28 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
 import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude/SaudePageSection';
+import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { formatDateInputValue, getTopLabel, saudeYearOptions } from '@/lib/saude-utils';
+import { formatDateInputValue, getTopLabel } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
-export default function AtencaoPrimariaClient() {
-  const [year, setYear] = useState(saudeYearOptions[0]);
-  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(saudeYearOptions[0], 0, 1)));
+const currentYear = new Date().getFullYear();
+const defaultYear = currentYear;
 
-  useEffect(() => {
-    setStartDate(formatDateInputValue(new Date(year, 0, 1)));
-  }, [year]);
+export default function AtencaoPrimariaClient() {
+  const [year, setYear] = useState(defaultYear);
+  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(defaultYear, 0, 1)));
+  const [endDate, setEndDate] = useState(
+    defaultYear === currentYear
+      ? formatDateInputValue(new Date())
+      : formatDateInputValue(new Date(defaultYear, 11, 31))
+  );
 
   const primaryCareQuery = useQuery({
-    queryKey: ['saude', 'atencao-primaria', year, startDate],
-    queryFn: () => saudeService.getPrimaryCareDashboard({ year, start_date: startDate || undefined }),
+    queryKey: ['saude', 'atencao-primaria', year, startDate, endDate],
+    queryFn: () =>
+      saudeService.getPrimaryCareDashboard({
+        year,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
+      }),
   });
 
   if (primaryCareQuery.isLoading) {
@@ -44,25 +54,14 @@ export default function AtencaoPrimariaClient() {
         description="Produção mensal, procedimentos por especialidade e leitura por CBO com filtro por ano e data inicial."
         badgeValue={<SaudeSyncBadge value={primaryCareQuery.data?.last_synced_at} />}
         actions={
-          <div className="grid gap-3 sm:grid-cols-2">
-            <select
-              value={year}
-              onChange={(event) => setYear(Number(event.target.value))}
-              className="rounded-2xl border border-outline/20 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none focus:border-primary"
-            >
-              {saudeYearOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-              className="rounded-2xl border border-outline/20 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none focus:border-primary"
-            />
-          </div>
+          <SaudePeriodFilter
+            year={year}
+            startDate={startDate}
+            endDate={endDate}
+            onYearChange={setYear}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+          />
         }
       />
 

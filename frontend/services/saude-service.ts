@@ -42,6 +42,8 @@ interface SaudeRawMonthlySeriesItem {
 }
 
 interface SaudeRawVacinacaoResponse {
+  start_date: string | null;
+  end_date: string | null;
   aplicadas_por_mes: SaudeRawMonthlySeriesItem[];
   ranking_vacinas: SaudeRawLabelValueItem[];
   total_aplicadas: number;
@@ -49,6 +51,8 @@ interface SaudeRawVacinacaoResponse {
 }
 
 interface SaudeRawVisitasDomiciliaresResponse {
+  start_date: string | null;
+  end_date: string | null;
   motivos_visita: SaudeRawLabelValueItem[];
   acompanhamento: SaudeRawLabelValueItem[];
   busca_ativa: SaudeRawLabelValueItem[];
@@ -63,6 +67,7 @@ interface SaudeRawPerfilEpidemiologicoResponse {
 }
 
 interface SaudeRawAtencaoPrimariaResponse {
+  end_date: string;
   atendimentos_por_mes: SaudeRawMonthlySeriesItem[];
   procedimentos_por_especialidade: SaudeRawLabelValueItem[];
   atendimentos_por_cbo: SaudeRawLabelValueItem[];
@@ -70,6 +75,8 @@ interface SaudeRawAtencaoPrimariaResponse {
 }
 
 interface SaudeRawSaudeBucalResponse {
+  start_date: string | null;
+  end_date: string | null;
   atendimentos_por_mes: SaudeRawMonthlySeriesItem[];
   total_atendimentos: number;
   last_synced_at: string | null;
@@ -95,8 +102,11 @@ interface SaudeRawHospitalResponse {
 }
 
 interface SaudeRawFarmaciaResponse {
+  start_date: string | null;
+  end_date: string | null;
   atendimentos_por_mes: SaudeRawMonthlySeriesItem[];
   medicamentos_dispensados_por_mes: SaudeRawMonthlySeriesItem[];
+  top_medicamentos: SaudeRawLabelValueItem[];
   total_atendimentos: number;
   total_dispensados: number;
   last_synced_at: string | null;
@@ -129,6 +139,8 @@ const normalizeUnits = (response: SaudeUnitListResponse): SaudeUnitListResponse 
 const mapVaccinationDashboard = (
   response: SaudeRawVacinacaoResponse
 ): SaudeVacinacaoResponse => ({
+  start_date: response.start_date,
+  end_date: response.end_date,
   applied_by_month: response.aplicadas_por_mes,
   top_applied: response.ranking_vacinas,
   total_applied: response.total_aplicadas,
@@ -138,6 +150,8 @@ const mapVaccinationDashboard = (
 const mapHomeVisitsDashboard = (
   response: SaudeRawVisitasDomiciliaresResponse
 ): SaudeVisitasDomiciliaresResponse => ({
+  start_date: response.start_date,
+  end_date: response.end_date,
   motives: response.motivos_visita,
   follow_up: response.acompanhamento,
   active_search: response.busca_ativa,
@@ -166,6 +180,7 @@ const mapEpidemiologicalProfile = (
 const mapPrimaryCareDashboard = (
   response: SaudeRawAtencaoPrimariaResponse
 ): SaudeAtencaoPrimariaResponse => ({
+  end_date: response.end_date,
   attendances_by_month: response.atendimentos_por_mes,
   procedures_by_specialty: response.procedimentos_por_especialidade,
   attendances_by_cbo: response.atendimentos_por_cbo,
@@ -175,6 +190,8 @@ const mapPrimaryCareDashboard = (
 const mapOralHealthDashboard = (
   response: SaudeRawSaudeBucalResponse
 ): SaudeSaudeBucalResponse => ({
+  start_date: response.start_date,
+  end_date: response.end_date,
   attendances_by_month: response.atendimentos_por_mes,
   total_attendances: response.total_atendimentos,
   last_synced_at: response.last_synced_at,
@@ -197,8 +214,11 @@ const mapHospitalDashboard = (
 const mapPharmacyDashboard = (
   response: SaudeRawFarmaciaResponse
 ): SaudeFarmaciaResponse => ({
+  start_date: response.start_date,
+  end_date: response.end_date,
   attendances_by_month: response.atendimentos_por_mes,
   dispensed_by_month: response.medicamentos_dispensados_por_mes,
+  top_medicamentos: response.top_medicamentos,
   total_attendances: response.total_atendimentos,
   total_dispensed: response.total_dispensados,
   last_synced_at: response.last_synced_at,
@@ -212,16 +232,18 @@ export const saudeService = {
     page_size?: number;
   }) => apiClient.get<SaudeMedicationStockResponse>(`${SAUDE_ENDPOINT}/medicamentos-estoque`, { params }),
 
-  getVaccinationDashboard: async (year: number) =>
+  getVaccinationDashboard: async (params: { year: number; start_date?: string; end_date?: string }) =>
     mapVaccinationDashboard(
       await apiClient.get<SaudeRawVacinacaoResponse>(`${SAUDE_ENDPOINT}/vacinacao`, {
-        params: { year },
+        params,
       })
     ),
 
-  getHomeVisitsDashboard: async () =>
+  getHomeVisitsDashboard: async (params?: { start_date?: string; end_date?: string }) =>
     mapHomeVisitsDashboard(
-      await apiClient.get<SaudeRawVisitasDomiciliaresResponse>(`${SAUDE_ENDPOINT}/visitas-domiciliares`)
+      await apiClient.get<SaudeRawVisitasDomiciliaresResponse>(`${SAUDE_ENDPOINT}/visitas-domiciliares`, {
+        params,
+      })
     ),
 
   getEpidemiologicalProfile: async () =>
@@ -237,17 +259,17 @@ export const saudeService = {
   getProcedureTypes: () =>
     apiClient.get<SaudeProcedimentosTipoResponse>(`${SAUDE_ENDPOINT}/procedimentos-tipo`),
 
-  getPrimaryCareDashboard: async (params: { year: number; start_date?: string }) =>
+  getPrimaryCareDashboard: async (params: { year: number; start_date?: string; end_date?: string }) =>
     mapPrimaryCareDashboard(
       await apiClient.get<SaudeRawAtencaoPrimariaResponse>(`${SAUDE_ENDPOINT}/atencao-primaria`, {
         params,
       })
     ),
 
-  getOralHealthDashboard: async (year: number) =>
+  getOralHealthDashboard: async (params: { year: number; start_date?: string; end_date?: string }) =>
     mapOralHealthDashboard(
       await apiClient.get<SaudeRawSaudeBucalResponse>(`${SAUDE_ENDPOINT}/saude-bucal`, {
-        params: { year },
+        params,
       })
     ),
 
@@ -258,10 +280,10 @@ export const saudeService = {
       })
     ),
 
-  getPharmacyDashboard: async (year: number) =>
+  getPharmacyDashboard: async (params: { year: number; start_date?: string; end_date?: string }) =>
     mapPharmacyDashboard(
       await apiClient.get<SaudeRawFarmaciaResponse>(`${SAUDE_ENDPOINT}/farmacia`, {
-        params: { year },
+        params,
       })
     ),
 

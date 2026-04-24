@@ -6,20 +6,33 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
 import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude/SaudePageSection';
+import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { getTopLabel, saudeYearOptions } from '@/lib/saude-utils';
+import { formatDateInputValue, getTopLabel, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
 const chartColors = ['#0f4c81', '#22c55e', '#06b6d4', '#f59e0b', '#a855f7'];
+const currentYear = new Date().getFullYear();
 
 export default function VacinacaoClient() {
   const [year, setYear] = useState(saudeYearOptions[0]);
+  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(saudeYearOptions[0], 0, 1)));
+  const [endDate, setEndDate] = useState(
+    saudeYearOptions[0] === currentYear
+      ? formatDateInputValue(new Date())
+      : formatDateInputValue(new Date(saudeYearOptions[0], 11, 31))
+  );
 
   const vaccinationQuery = useQuery({
-    queryKey: ['saude', 'vacinacao', year],
-    queryFn: () => saudeService.getVaccinationDashboard(year),
+    queryKey: ['saude', 'vacinacao', year, startDate, endDate],
+    queryFn: () =>
+      saudeService.getVaccinationDashboard({
+        year,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
+      }),
   });
 
   if (vaccinationQuery.isLoading) {
@@ -40,17 +53,14 @@ export default function VacinacaoClient() {
         description="Série mensal de vacinas aplicadas, ranking do período e total anual para leitura rápida da cobertura."
         badgeValue={<SaudeSyncBadge value={vaccinationQuery.data?.last_synced_at} />}
         actions={
-          <select
-            value={year}
-            onChange={(event) => setYear(Number(event.target.value))}
-            className="rounded-2xl border border-outline/20 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none focus:border-primary"
-          >
-            {saudeYearOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <SaudePeriodFilter
+            year={year}
+            startDate={startDate}
+            endDate={endDate}
+            onYearChange={setYear}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+          />
         }
       />
 
@@ -58,9 +68,9 @@ export default function VacinacaoClient() {
 
       <section className="grid gap-4 md:grid-cols-3">
         <SaudeMetricCard
-          label={`Vacinas aplicadas em ${year}`}
+          label="Total do período"
           value={formatNumber(vaccinationQuery.data?.total_applied ?? 0, { decimals: 0 })}
-          supportingText="Total consolidado informado pela fonte externa."
+          supportingText={`Consolidado entre ${startDate} e ${endDate}.`}
           tone="success"
           icon="immunology"
         />
@@ -96,10 +106,10 @@ export default function VacinacaoClient() {
         <SaudePanel title="Vacinas mais aplicadas" description="Ranking do período para identificar os imunizantes com maior volume.">
           <div className="h-[320px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topApplied} layout="vertical" margin={{ left: 24 }}>
+              <BarChart data={topApplied} layout="vertical" margin={{ left: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
                 <XAxis type="number" tick={{ fill: 'currentColor', fontSize: 12 }} />
-                <YAxis type="category" dataKey="label" width={120} tick={{ fill: 'currentColor', fontSize: 12 }} />
+                <YAxis type="category" dataKey="label" width={180} tick={{ fill: 'currentColor', fontSize: 12 }} />
                 <Tooltip />
                 <Bar dataKey="value" radius={[0, 10, 10, 0]}>
                   {topApplied.map((entry, index) => (

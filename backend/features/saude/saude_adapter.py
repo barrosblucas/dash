@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import date
 from typing import Any
 
 import httpx
@@ -72,6 +73,36 @@ class ESaudeClient:
         self, resource: str, year: int | None = None
     ) -> dict[str, Any]:
         params = {"ano": str(year)} if year is not None else None
+        payload = await self.fetch_public_payload(
+            f"buscar-dados-do-chart/{resource}",
+            params=params,
+        )
+        if not isinstance(payload, dict):
+            raise SaudeExternalAPIError(f"Payload inválido no chart {resource}")
+        return payload
+
+    async def fetch_chart_by_date_range(
+        self,
+        resource: str,
+        start_date: date,
+        end_date: date,
+    ) -> dict[str, Any]:
+        params = {
+            "data_de_inicio": start_date.isoformat(),
+            "data_de_fim": end_date.isoformat(),
+        }
+        payload = await self.fetch_public_payload(
+            f"buscar-dados-do-chart/{resource}",
+            params=params,
+        )
+        if not isinstance(payload, dict):
+            raise SaudeExternalAPIError(f"Payload inválido no chart {resource}")
+        return payload
+
+    async def fetch_chart_by_year(
+        self, resource: str, year: int
+    ) -> dict[str, Any]:
+        params = {"ano": str(year)}
         payload = await self.fetch_public_payload(
             f"buscar-dados-do-chart/{resource}",
             params=params,

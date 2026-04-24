@@ -1,5 +1,4 @@
 import asyncio
-import sys
 from backend.etl.scrapers.quality_api_client import QualityAPIClient
 
 async def main():

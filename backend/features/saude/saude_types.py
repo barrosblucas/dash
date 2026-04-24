@@ -194,6 +194,8 @@ class SaudePerfilEpidemiologicoResponse(BaseModel):
 
 
 class SaudeVacinacaoResponse(BaseModel):
+    start_date: str | None
+    end_date: str | None
     aplicadas_por_mes: list[SaudeMonthlySeriesItem]
     ranking_vacinas: list[SaudeLabelValueItem]
     total_aplicadas: int
@@ -201,6 +203,8 @@ class SaudeVacinacaoResponse(BaseModel):
 
 
 class SaudeVisitasDomiciliaresResponse(BaseModel):
+    start_date: str | None
+    end_date: str | None
     motivos_visita: list[SaudeLabelValueItem]
     acompanhamento: list[SaudeLabelValueItem]
     busca_ativa: list[SaudeLabelValueItem]
@@ -211,6 +215,7 @@ class SaudeVisitasDomiciliaresResponse(BaseModel):
 class SaudeAtencaoPrimariaResponse(BaseModel):
     year: int
     start_date: str
+    end_date: str
     atendimentos_por_mes: list[SaudeMonthlySeriesItem]
     procedimentos_por_especialidade: list[SaudeLabelValueItem]
     atendimentos_por_cbo: list[SaudeLabelValueItem]
@@ -219,6 +224,8 @@ class SaudeAtencaoPrimariaResponse(BaseModel):
 
 class SaudeBucalResponse(BaseModel):
     year: int
+    start_date: str | None
+    end_date: str | None
     atendimentos_por_mes: list[SaudeMonthlySeriesItem]
     total_atendimentos: int
     last_synced_at: datetime | None
@@ -247,8 +254,11 @@ class SaudeHospitalResponse(BaseModel):
 
 class SaudeFarmaciaResponse(BaseModel):
     year: int
+    start_date: str | None
+    end_date: str | None
     atendimentos_por_mes: list[SaudeMonthlySeriesItem]
     medicamentos_dispensados_por_mes: list[SaudeMonthlySeriesItem]
+    top_medicamentos: list[SaudeLabelValueItem]
     total_atendimentos: int
     total_dispensados: int
     last_synced_at: datetime | None

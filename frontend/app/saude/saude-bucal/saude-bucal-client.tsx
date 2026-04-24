@@ -6,18 +6,32 @@ import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YA
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
 import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude/SaudePageSection';
+import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { saudeYearOptions } from '@/lib/saude-utils';
+import { formatDateInputValue, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
+const currentYear = new Date().getFullYear();
+
 export default function SaudeBucalClient() {
   const [year, setYear] = useState(saudeYearOptions[0]);
+  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(saudeYearOptions[0], 0, 1)));
+  const [endDate, setEndDate] = useState(
+    saudeYearOptions[0] === currentYear
+      ? formatDateInputValue(new Date())
+      : formatDateInputValue(new Date(saudeYearOptions[0], 11, 31))
+  );
 
   const oralHealthQuery = useQuery({
-    queryKey: ['saude', 'saude-bucal', year],
-    queryFn: () => saudeService.getOralHealthDashboard(year),
+    queryKey: ['saude', 'saude-bucal', year, startDate, endDate],
+    queryFn: () =>
+      saudeService.getOralHealthDashboard({
+        year,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
+      }),
   });
 
   if (oralHealthQuery.isLoading) {
@@ -36,17 +50,14 @@ export default function SaudeBucalClient() {
         description="Série mensal focada em saúde bucal, com total consolidado do período selecionado."
         badgeValue={<SaudeSyncBadge value={oralHealthQuery.data?.last_synced_at} />}
         actions={
-          <select
-            value={year}
-            onChange={(event) => setYear(Number(event.target.value))}
-            className="rounded-2xl border border-outline/20 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none focus:border-primary"
-          >
-            {saudeYearOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <SaudePeriodFilter
+            year={year}
+            startDate={startDate}
+            endDate={endDate}
+            onYearChange={setYear}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+          />
         }
       />
 

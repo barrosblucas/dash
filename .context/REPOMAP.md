@@ -101,6 +101,7 @@ Snapshot: 2026-04-23
 - `saude_sync.py`: orquestração de sync/importação de unidades e composição dos parâmetros por recurso
 - `saude_snapshot_mapper.py`: normalização de charts/snapshots, tendência epidemiológica e censo hospitalar
 - `saude_public_handler.py`: dashboards públicos (`medicamentos`, `vacinacao`, `visitas-domiciliares`, `perfil-epidemiologico`, `atencao-primaria`, `saude-bucal`, `hospital`, `farmacia`, `perfil-demografico`, `procedimentos-tipo`)
+- `saude_public_builders.py`: builders de resposta para handlers públicos de saúde (farmácia, visitas, medicamentos-estoque)
 - `saude_units_handler.py`: endpoints públicos auxiliares (`unidades`, `horarios`, `sync-status`)
 - `saude_admin_handler.py`: endpoints administrativos (`admin/unidades`, `importar-esaude`, `admin/sync`)
 - `saude_public_live.py`: fallbacks live para filtros não cobertos por snapshot (`start_date`, `estabelecimento_id`)
@@ -181,6 +182,7 @@ Snapshot: 2026-04-23
 - `components/saude/SaudeStateBlock.tsx`: estados de loading/erro/empty da feature saúde
 - `components/saude/SaudePageSection.tsx`: kit visual compartilhado da feature (`SaudePageHeader`, `SaudePanel`, `SaudeMetricCard`, `SaudeUnavailablePanel`, `SaudeFeatureCard`)
 - `components/saude/SaudeFeatureNav.tsx`: navegação contextual entre os painéis públicos da Saúde Transparente
+- `components/saude/SaudePeriodFilter.tsx`: filtro reutilizável de período (ano + data início/fim) para dashboards de saúde
 - `components/saude/SaudeUnitsMap.tsx`: mapa Leaflet client-only com markers, popup e geolocalização opcional
 - `components/admin/saude/SaudeUnitsAdminPage.tsx`: shell administrativa da V1 de saúde
 - `components/admin/saude/saude-units-form-helpers.ts`: helpers de formulário/horários para CRUD admin de saúde

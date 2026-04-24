@@ -6,18 +6,32 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
 import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude/SaudePageSection';
+import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { saudeYearOptions } from '@/lib/saude-utils';
+import { formatDateInputValue, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
+const currentYear = new Date().getFullYear();
+
 export default function FarmaciaClient() {
   const [year, setYear] = useState(saudeYearOptions[0]);
+  const [startDate, setStartDate] = useState(formatDateInputValue(new Date(saudeYearOptions[0], 0, 1)));
+  const [endDate, setEndDate] = useState(
+    saudeYearOptions[0] === currentYear
+      ? formatDateInputValue(new Date())
+      : formatDateInputValue(new Date(saudeYearOptions[0], 11, 31))
+  );
 
   const pharmacyQuery = useQuery({
-    queryKey: ['saude', 'farmacia', year],
-    queryFn: () => saudeService.getPharmacyDashboard(year),
+    queryKey: ['saude', 'farmacia', year, startDate, endDate],
+    queryFn: () =>
+      saudeService.getPharmacyDashboard({
+        year,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
+      }),
   });
 
   if (pharmacyQuery.isLoading) {
@@ -28,6 +42,9 @@ export default function FarmaciaClient() {
     return <SaudeStateBlock type="error" title="Falha ao carregar farmácia" description={pharmacyQuery.error.message} />;
   }
 
+  const topMedicamentos = pharmacyQuery.data?.top_medicamentos ?? [];
+  const totalTopMedicamentos = topMedicamentos.reduce((sum, item) => sum + item.value, 0);
+
   return (
     <div className="space-y-6">
       <SaudePageHeader
@@ -36,17 +53,14 @@ export default function FarmaciaClient() {
         description="Painel separado do estoque para comparar atendimentos de medicamentos e dispensações mensais."
         badgeValue={<SaudeSyncBadge value={pharmacyQuery.data?.last_synced_at} />}
         actions={
-          <select
-            value={year}
-            onChange={(event) => setYear(Number(event.target.value))}
-            className="rounded-2xl border border-outline/20 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none focus:border-primary"
-          >
-            {saudeYearOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <SaudePeriodFilter
+            year={year}
+            startDate={startDate}
+            endDate={endDate}
+            onYearChange={setYear}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+          />
         }
       />
 
@@ -95,6 +109,36 @@ export default function FarmaciaClient() {
                 <Bar dataKey="value" fill="#22c55e" radius={[10, 10, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </SaudePanel>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <SaudePanel title="Medicamentos com mais saídas" description="TOP 10 medicamentos com maior volume de dispensação no período.">
+          <div className="space-y-4">
+            {topMedicamentos.slice(0, 10).map((item) => {
+              const percent =
+                totalTopMedicamentos > 0 ? (item.value / totalTopMedicamentos) * 100 : 0;
+              return (
+                <div key={item.label} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-on-surface">{item.label}</span>
+                    <span className="text-on-surface-variant">
+                      {formatNumber(item.value, { decimals: 0 })} ({formatNumber(percent, { decimals: 1 })}%)
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-surface-container-highest">
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{ width: `${Math.min(percent, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {topMedicamentos.length === 0 && (
+              <SaudeStateBlock type="empty" title="Sem dados de medicamentos" />
+            )}
           </div>
         </SaudePanel>
       </section>
