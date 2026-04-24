@@ -9,9 +9,9 @@ import {
 
 import ChartTypeSelector, { type ChartTypeOption } from '@/components/ui/ChartTypeSelector';
 import { formatCurrency } from '@/lib/utils';
-import { CHART_CONFIG, MESES_ABREV, API_ENDPOINTS } from '@/lib/constants';
+import { CHART_CONFIG, MESES_ABREV, API_ENDPOINTS, PERIODO_DADOS } from '@/lib/constants';
 import apiClient from '@/services/api';
-import { useDashboardFilters } from '@/stores/filtersStore';
+import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
 import { useChartThemeColors } from '@/stores/themeStore';
 
 // ── Tipos ─────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ interface KPIsResponse {
   kpis_mensais: KPIsMensal[] | null;
   kpis_anuais: Array<{ ano: number; total_receitas: number; total_despesas: number; saldo: number }> | null;
 }
-interface ChartRow { name: string; receitas: number; despesas: number; receitas_anterior?: number; despesas_anterior?: number }
+interface ChartRow { name: string; receitas: number; despesas: number; receitas_comp?: number; despesas_comp?: number }
 interface PieSlice { name: string; value: number; color: string }
 interface TooltipPayload { dataKey: string; value: number; color: string; name?: string }
 
@@ -34,17 +34,12 @@ const fetchMonthlyKPIs = (ano: number): Promise<KPIsResponse> =>
 
 const FORMAT_Y = (v: number) => formatCurrency(v, { compact: true, showSymbol: false });
 const ANIM = CHART_CONFIG.animation.duration;
-const MIN_YEAR = 2013;
+const MIN_YEAR = PERIODO_DADOS.ano_inicio;
 
 const REVENUE_PRIMARY = '#006c47';
 const EXPENSE_PRIMARY = '#ba1a1a';
-const PREV_REV = '#8acfae';
-const PREV_DESP = '#eea99e';
-
-const DKL: Record<string, (y: number) => string> = {
-  receitas: (y) => `Receitas ${y}`, despesas: (y) => `Despesas ${y}`,
-  receitas_anterior: (y) => `Receitas ${y - 1}`, despesas_anterior: (y) => `Despesas ${y - 1}`,
-};
+const COMP_REV = '#8acfae';
+const COMP_DESP = '#eea99e';
 
 // ── Componente ────────────────────────────────────────────────
 
@@ -52,9 +47,15 @@ interface Props { height?: number; className?: string }
 
 export default function CombinedOverviewChart({ height = 320, className = '' }: Props) {
   const [chartType, setChartType] = useState<ChartTypeOption>('bar');
-  const { anoSelecionado, compararComAnoAnterior } = useDashboardFilters();
+  const { anoSelecionado } = useDashboardFilters();
+  const anos = useAnosDisponiveis();
   const chartColors = useChartThemeColors();
-  const isComparing = compararComAnoAnterior && anoSelecionado - 1 >= MIN_YEAR;
+
+  // Estado local do modo comparativo
+  const [modoComparativo, setModoComparativo] = useState(false);
+  const [anoComparativo, setAnoComparativo] = useState(anoSelecionado - 1);
+
+  const isComparing = modoComparativo && anoComparativo >= MIN_YEAR && anoComparativo !== anoSelecionado;
 
   const AXIS_CFG = { axisLine: false, tickLine: false, tick: { fill: chartColors.textMuted, fontSize: 12 } };
   const LEGEND_CFG = { wrapperStyle: { fontSize: 12, color: chartColors.textMuted }, iconType: 'circle' as const, iconSize: 8 };
@@ -64,13 +65,13 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
     queryFn: () => fetchMonthlyKPIs(anoSelecionado),
     staleTime: 5 * 60 * 1000, gcTime: 10 * 60 * 1000,
   });
-  const { data: previous, isLoading: loadingPrev } = useQuery({
-    queryKey: ['kpis', 'mensal', 'combined', anoSelecionado - 1],
-    queryFn: () => fetchMonthlyKPIs(anoSelecionado - 1),
+  const { data: compareData, isLoading: loadingComp } = useQuery({
+    queryKey: ['kpis', 'mensal', 'combined', anoComparativo],
+    queryFn: () => fetchMonthlyKPIs(anoComparativo),
     enabled: isComparing, staleTime: 5 * 60 * 1000, gcTime: 10 * 60 * 1000,
   });
 
-  if (loadingCur || (isComparing && loadingPrev)) return (
+  if (loadingCur || (isComparing && loadingComp)) return (
     <div className={`chart-container ${className}`}>
       <div className="mb-4">
         <h3 className="text-title-md font-display text-on-surface">Receitas x Despesas</h3>
@@ -89,35 +90,33 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
     </div>
   );
 
-  const prevMap = new Map<number, KPIsMensal>();
-  if (isComparing && previous?.kpis_mensais) previous.kpis_mensais.forEach((k) => prevMap.set(k.mes, k));
+  const compMap = new Map<number, KPIsMensal>();
+  if (isComparing && compareData?.kpis_mensais) compareData.kpis_mensais.forEach((k) => compMap.set(k.mes, k));
 
   const chartData: ChartRow[] = current.kpis_mensais.map((k) => {
-    const p = prevMap.get(k.mes);
+    const c = compMap.get(k.mes);
     return {
       name: MESES_ABREV[k.mes - 1] || `${k.mes}`, receitas: +k.total_receitas, despesas: +k.total_despesas,
-      ...(isComparing && p ? { receitas_anterior: +p.total_receitas, despesas_anterior: +p.total_despesas } : {}),
+      ...(isComparing && c ? { receitas_comp: +c.total_receitas, despesas_comp: +c.total_despesas } : {}),
     };
   });
 
   const totRev = current.receitas_total;
   const totDesp = current.despesas_total;
-  const prevTotRev = previous?.receitas_total ?? 0;
-  const prevTotDesp = previous?.despesas_total ?? 0;
+  const compTotRev = compareData?.receitas_total ?? 0;
+  const compTotDesp = compareData?.despesas_total ?? 0;
 
   const pieData: PieSlice[] = isComparing
     ? [
         { name: `Receitas ${anoSelecionado}`, value: totRev, color: REVENUE_PRIMARY },
         { name: `Despesas ${anoSelecionado}`, value: totDesp, color: EXPENSE_PRIMARY },
-        { name: `Receitas ${anoSelecionado - 1}`, value: prevTotRev, color: PREV_REV },
-        { name: `Despesas ${anoSelecionado - 1}`, value: prevTotDesp, color: PREV_DESP },
+        { name: `Receitas ${anoComparativo}`, value: compTotRev, color: COMP_REV },
+        { name: `Despesas ${anoComparativo}`, value: compTotDesp, color: COMP_DESP },
       ]
     : [
         { name: 'Total Receitas', value: totRev, color: REVENUE_PRIMARY },
         { name: 'Total Despesas', value: totDesp, color: EXPENSE_PRIMARY },
       ];
-
-  const resolveLabel = (key: string) => DKL[key]?.(anoSelecionado) ?? key;
 
   const CTT = ({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }) => {
     if (!active || !payload?.length) return null;
@@ -126,7 +125,7 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
         <p className="text-label-md text-on-surface-variant mb-1.5 font-medium">{label}</p>
         <div className="space-y-1">{payload.map((e) => (
           <p key={e.dataKey} className="text-body-sm font-semibold" style={{ color: e.color }}>
-            {resolveLabel(e.dataKey)}: {formatCurrency(e.value)}
+            {e.name}: {formatCurrency(e.value)}
           </p>
         ))}</div>
       </div>
@@ -149,7 +148,7 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
   </>);
 
   const curN = (b: string) => `${b} ${anoSelecionado}`;
-  const prvN = (b: string) => `${b} ${anoSelecionado - 1}`;
+  const compN = (b: string) => `${b} ${anoComparativo}`;
   const margin = CHART_CONFIG.defaults.margin;
 
   const renderChart = () => {
@@ -160,8 +159,8 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
             {chartBase}
             <Bar dataKey="receitas" name={curN('Receitas')} fill={REVENUE_PRIMARY} radius={[4,4,0,0]} animationDuration={ANIM} />
             <Bar dataKey="despesas" name={curN('Despesas')} fill={EXPENSE_PRIMARY} radius={[4,4,0,0]} animationDuration={ANIM} />
-            {isComparing && <><Bar dataKey="receitas_anterior" name={prvN('Receitas')} fill={PREV_REV} fillOpacity={0.5} radius={[4,4,0,0]} animationDuration={ANIM} />
-            <Bar dataKey="despesas_anterior" name={prvN('Despesas')} fill={PREV_DESP} fillOpacity={0.5} radius={[4,4,0,0]} animationDuration={ANIM} /></>}
+            {isComparing && <><Bar dataKey="receitas_comp" name={compN('Receitas')} fill={COMP_REV} fillOpacity={0.6} radius={[4,4,0,0]} animationDuration={ANIM} />
+            <Bar dataKey="despesas_comp" name={compN('Despesas')} fill={COMP_DESP} fillOpacity={0.6} radius={[4,4,0,0]} animationDuration={ANIM} /></>}
           </BarChart>
         </ResponsiveContainer>);
       case 'line': return (
@@ -172,10 +171,10 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
               dot={{ r: 3, fill: REVENUE_PRIMARY }} activeDot={{ r: 5 }} animationDuration={ANIM} />
             <Line type="monotone" dataKey="despesas" name={curN('Despesas')} stroke={EXPENSE_PRIMARY} strokeWidth={2}
               dot={{ r: 3, fill: EXPENSE_PRIMARY }} activeDot={{ r: 5 }} animationDuration={ANIM} />
-            {isComparing && <><Line type="monotone" dataKey="receitas_anterior" name={prvN('Receitas')} stroke={PREV_REV} strokeWidth={2}
-              strokeDasharray="5 5" dot={{ r: 3, fill: PREV_REV }} activeDot={{ r: 5 }} animationDuration={ANIM} />
-            <Line type="monotone" dataKey="despesas_anterior" name={prvN('Despesas')} stroke={PREV_DESP} strokeWidth={2}
-              strokeDasharray="5 5" dot={{ r: 3, fill: PREV_DESP }} activeDot={{ r: 5 }} animationDuration={ANIM} /></>}
+            {isComparing && <><Line type="monotone" dataKey="receitas_comp" name={compN('Receitas')} stroke={COMP_REV} strokeWidth={2}
+              strokeDasharray="5 5" dot={{ r: 3, fill: COMP_REV }} activeDot={{ r: 5 }} animationDuration={ANIM} />
+            <Line type="monotone" dataKey="despesas_comp" name={compN('Despesas')} stroke={COMP_DESP} strokeWidth={2}
+              strokeDasharray="5 5" dot={{ r: 3, fill: COMP_DESP }} activeDot={{ r: 5 }} animationDuration={ANIM} /></>}
           </LineChart>
         </ResponsiveContainer>);
       case 'area': return (
@@ -194,10 +193,10 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
             {chartBase}
             <Area type="monotone" dataKey="receitas" name={curN('Receitas')} stroke={REVENUE_PRIMARY} strokeWidth={2} fill="url(#combinedRevGrad)" animationDuration={ANIM} />
             <Area type="monotone" dataKey="despesas" name={curN('Despesas')} stroke={EXPENSE_PRIMARY} strokeWidth={2} fill="url(#combinedExpGrad)" animationDuration={ANIM} />
-            {isComparing && <><Area type="monotone" dataKey="receitas_anterior" name={prvN('Receitas')} stroke={PREV_REV}
-              strokeWidth={2} strokeDasharray="5 5" fill={PREV_REV} fillOpacity={0.1} animationDuration={ANIM} />
-            <Area type="monotone" dataKey="despesas_anterior" name={prvN('Despesas')} stroke={PREV_DESP}
-              strokeWidth={2} strokeDasharray="5 5" fill={PREV_DESP} fillOpacity={0.1} animationDuration={ANIM} /></>}
+            {isComparing && <><Area type="monotone" dataKey="receitas_comp" name={compN('Receitas')} stroke={COMP_REV}
+              strokeWidth={2} strokeDasharray="5 5" fill={COMP_REV} fillOpacity={0.1} animationDuration={ANIM} />
+            <Area type="monotone" dataKey="despesas_comp" name={compN('Despesas')} stroke={COMP_DESP}
+              strokeWidth={2} strokeDasharray="5 5" fill={COMP_DESP} fillOpacity={0.1} animationDuration={ANIM} /></>}
           </AreaChart>
         </ResponsiveContainer>);
       case 'pie': return (
@@ -215,7 +214,7 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
   };
 
   const subtitle = isComparing
-    ? `Visão consolidada — ${anoSelecionado} vs ${anoSelecionado - 1}`
+    ? `Visão consolidada — ${anoSelecionado} vs ${anoComparativo}`
     : `Visão consolidada — ${anoSelecionado}`;
 
   return (
@@ -225,15 +224,62 @@ export default function CombinedOverviewChart({ height = 320, className = '' }: 
           <h3 className="text-title-md font-display text-on-surface">Receitas x Despesas</h3>
           <p className="text-body-sm text-on-surface-variant">{subtitle}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="hidden sm:flex items-center gap-3 text-label-md">
             <Badge label={`Rec ${anoSelecionado}:`} value={totRev} color={REVENUE_PRIMARY} />
             <Badge label={`Desp ${anoSelecionado}:`} value={totDesp} color={EXPENSE_PRIMARY} />
             {isComparing && (<>
-              <Badge label={`Rec ${anoSelecionado-1}:`} value={prevTotRev} color={PREV_REV} />
-              <Badge label={`Desp ${anoSelecionado-1}:`} value={prevTotDesp} color={PREV_DESP} />
+              <Badge label={`Rec ${anoComparativo}:`} value={compTotRev} color={COMP_REV} />
+              <Badge label={`Desp ${anoComparativo}:`} value={compTotDesp} color={COMP_DESP} />
             </>)}
           </div>
+
+          {/* ── Toggle comparativo ── */}
+          <button
+            type="button"
+            onClick={() => setModoComparativo((v) => !v)}
+            className={`
+              inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-label-md font-medium
+              transition-colors duration-200 border
+              ${modoComparativo
+                ? 'bg-primary-container/20 text-primary border-primary/30'
+                : 'bg-surface-container-low text-on-surface-variant border-transparent hover:bg-surface-container'
+              }
+            `}
+            title={modoComparativo ? 'Desativar comparativo' : 'Ativar comparativo'}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+              {modoComparativo ? 'compare' : 'compare_arrows'}
+            </span>
+            {modoComparativo ? 'Comparando' : 'Comparar'}
+          </button>
+
+          {/* ── Seletor de ano comparativo ── */}
+          {modoComparativo && (
+            <div className="relative">
+              <select
+                value={anoComparativo}
+                onChange={(e) => setAnoComparativo(Number(e.target.value))}
+                className="
+                  appearance-none bg-surface-container-low
+                  rounded-lg px-3 py-1.5 pr-8 text-label-md font-medium text-on-surface
+                  border border-border-default hover:border-border-hover
+                  focus:outline-none focus:ring-2 focus:ring-primary/30
+                  transition-colors duration-200
+                "
+              >
+                {anos
+                  .filter((a) => a !== anoSelecionado)
+                  .map((ano) => (
+                    <option key={ano} value={ano}>{ano}</option>
+                  ))}
+              </select>
+              <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none" style={{ fontSize: 14 }}>
+                expand_more
+              </span>
+            </div>
+          )}
+
           <ChartTypeSelector value={chartType} onChange={setChartType} />
         </div>
       </div>
