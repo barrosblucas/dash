@@ -188,3 +188,26 @@
 - `cd frontend && npm run build` — verde
 
 ---
+
+### 2026-04-24 — feat(frontend): comparativo selecionável entre quaisquer anos no gráfico Receitas x Despesas
+
+**Classificação:** `mudanca_mecanica`
+
+**Contexto:** O modo comparativo do gráfico Receitas x Despesas só permitia comparar o ano selecionado no dashboard com o ano anterior. Agora o usuário pode comparar qualquer par de anos (ex: 2015 vs 2019, 2017 vs 2025).
+
+**Alterado:**
+- `frontend/components/charts/CombinedOverviewChart.tsx`
+  - Adicionado estado local `anoBase` independente do `anoSelecionado` global
+  - Quando comparativo está ativo, dois seletores: "ano base" e "ano comparativo" com "vs" entre eles
+  - Seletor comparativo filtra o ano base para evitar duplicatas
+  - `anoAtivo = modoComparativo ? anoBase : anoSelecionado` define o ano principal da query
+  - Toggle "Comparar" inicializa `anoBase` a partir do `anoSelecionado` atual
+  - Subtítulo, badges, tooltips e legendas refletem os anos corretos
+  - Por padrão o comparativo está desligado, mostrando apenas o ano do dashboard
+
+**Validação:**
+- `cd frontend && npm run lint` — verde
+- `cd frontend && npm run type-check` — verde
+- `cd frontend && npm run build` — verde
+
+---
