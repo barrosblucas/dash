@@ -22,12 +22,12 @@ Snapshot: 2026-04-23
 
 #### `shared/` — infraestrutura compartilhada
 - `shared/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
-- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, unidades de saúde, horários, snapshots de saúde, logs de sync de saúde)
+- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, unidades de saúde, horários, snapshots de saúde, logs de sync de saúde, despesa_breakdown, quality_sync_state, quality_unidade_gestora)
 
 #### `alembic/` — migrations
 - `alembic.ini`: configuração do Alembic apontando para `backend.shared.database.models.Base`
 - `alembic/env.py`: ambiente de migration reutilizando a engine do projeto (`create_db_engine`)
-- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente)
+- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora)
 - `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha)
 - `shared/security.py`: hash de senha Argon2, emissão/validação de tokens JWT e dependências de autenticação/autorização
 - `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
@@ -52,10 +52,10 @@ Snapshot: 2026-04-23
 - `receita_scraper.py`: parser de receitas QualitySistemas JSON → entidades
 
 #### `features/despesa/`
-- `despesa_types.py`: entidade Despesa, TipoDespesa, schemas Pydantic
-- `despesa_handler.py`: endpoints HTTP de despesas (delega para data layer)
-- `despesa_data.py`: repositório SQL de despesas (SQLRepesaRepository) — queries de listagem, totais, categorias
-- `despesa_scraper.py`: parser de despesas QualitySistemas JSON → entidades
+- `despesa_types.py`: entidade Despesa, TipoDespesa, schemas Pydantic; novos schemas `DespesaBreakdownResponse`, `DespesaBreakdownListResponse`, `DespesaBreakdownTotalsResponse`
+- `despesa_handler.py`: endpoints HTTP de despesas (listagem, totais, categorias, breakdown por órgão/função/elemento)
+- `despesa_data.py`: repositório SQL de despesas (`SQLRepesaRepository`, `SQLDespesaBreakdownRepository`) — queries de listagem, totais, categorias e breakdown
+- `despesa_scraper.py`: parser de despesas QualitySistemas JSON → entidades; dataclass `DespesaBreakdown` e parsers `parse_despesas_orgao`, `parse_despesas_funcao`, `parse_despesas_elemento`
 
 #### `features/forecast/`
 - `forecast_types.py`: schemas Pydantic de forecasting (ForecastPoint, ForecastResponse)
@@ -80,11 +80,11 @@ Snapshot: 2026-04-23
 - `movimento_extra_business.py`: lógica de domínio — agrupamento por fundos, insights, totais
 
 #### `features/scraping/`
-- `scraping_types.py`: schemas Pydantic de scraping (status, trigger, histórico)
+- `scraping_types.py`: schemas Pydantic de scraping (status, trigger, histórico); `ScrapingTriggerRequest` expandido com flag `run_historical`
 - `scraping_handler.py`: endpoints de controle do scraping
-- `scraping_orchestrator.py`: orquestração do scraping QualitySistemas
-- `scraping_helpers.py`: helpers de persistência e logging para scraping
-- `scraping_scheduler.py`: scheduler APScheduler para scraping periódico (10 min)
+- `scraping_orchestrator.py`: orquestração do scraping QualitySistemas; métodos `run_full_scraping`, `run_historical_bootstrap`, `scrape_despesas_breakdown`, `scrape_unidades_gestoras` com detecção de mudança por hash SHA-256
+- `scraping_helpers.py`: helpers de persistência e logging para scraping; `_replace_breakdown_for_year`, `_upsert_sync_state`, `_get_sync_state_hash`, `_is_year_fully_synced`, `_replace_unidades_gestoras`
+- `scraping_scheduler.py`: scheduler APScheduler para scraping periódico (10 min); ano dinâmico, bootstrap histórico no startup, job de full scraping
 - `expense_pdf_sync_service.py`: sincronização do PDF de despesas
 - `historical_data_bootstrap_service.py`: bootstrap idempotente de anos históricos
 

@@ -364,3 +364,10 @@ class SaudeSyncLogModel(Base):
     __table_args__ = (
         Index("ix_saude_sync_logs_started_status", "started_at", "status"),
     )
+
+
+from backend.shared.database.quality_models import (  # noqa: E402, F401
+    DespesaBreakdownModel,
+    QualitySyncStateModel,
+    QualityUnidadeGestoraModel,
+)

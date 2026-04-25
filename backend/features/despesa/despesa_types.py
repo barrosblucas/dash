@@ -158,3 +158,34 @@ class DespesaFilterParams(BaseModel):
         None, ge=1, le=1000, description="Limite de resultados"
     )
     offset: int | None = Field(None, ge=0, description="Offset para paginação")
+
+
+class DespesaBreakdownResponse(BaseModel):
+    """Schema de resposta para breakdown de despesa."""
+    id: int | None = None
+    ano: int = Field(..., description="Ano de referência")
+    mes: int = Field(..., ge=1, le=12, description="Mês (1-12)")
+    breakdown_type: str = Field(..., description="Tipo: ORGAO, FUNCAO ou ELEMENTO")
+    item_label: str = Field(..., description="Descrição do item")
+    valor: Decimal = Field(..., description="Valor monetário")
+    fonte: str = Field(default="QUALITY_API", description="Fonte dos dados")
+
+    class Config:
+        from_attributes = True
+        json_encoders = {Decimal: lambda v: float(v)}
+
+
+class DespesaBreakdownListResponse(BaseModel):
+    """Schema de resposta para lista de breakdown."""
+    breakdown_type: str
+    ano: int
+    data: list[DespesaBreakdownResponse]
+    total: int
+
+
+class DespesaBreakdownTotalsResponse(BaseModel):
+    """Schema de resposta para totais de breakdown por item."""
+    breakdown_type: str
+    ano: int
+    items: list[dict]
+    total_items: int

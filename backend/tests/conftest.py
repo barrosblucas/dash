@@ -2,12 +2,32 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
+
+
+def pytest_sessionstart(session: pytest.Session) -> None:
+    gate_script = Path(session.config.rootdir) / ".." / "scripts" / "check_file_length.py"
+    if not gate_script.exists():
+        return
+    result = subprocess.run(
+        [sys.executable, str(gate_script)],
+        capture_output=True,
+        text=True,
+        cwd=str(gate_script.parent.parent),
+    )
+    if result.returncode != 0:
+        print(result.stdout)
+        pytest.exit(
+            "Gate de tamanho de arquivo falhou. Refatore antes de prosseguir.",
+            returncode=1,
+        )
 
 from backend.shared.database.connection import DatabaseManager
 from backend.shared.settings import get_settings

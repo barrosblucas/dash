@@ -83,3 +83,29 @@ def patch_db_session(monkeypatch: pytest.MonkeyPatch) -> None:
         "backend.features.scraping.scraping_orchestrator.db_manager.get_session",
         _fake_session_context,
     )
+
+
+@pytest.fixture
+def patch_sync_state(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Patch sync state helpers para evitar I/O de banco."""
+    monkeypatch.setattr(
+        "backend.features.scraping.scraping_orchestrator._get_sync_state_hash",
+        lambda session, key, ano: None,
+    )
+    monkeypatch.setattr(
+        "backend.features.scraping.scraping_orchestrator._upsert_sync_state",
+        lambda session, key, ano, hash_val, count, status: None,
+    )
+
+
+@pytest.fixture
+def patch_scraping_logs(monkeypatch: pytest.MonkeyPatch, log_capture: LogCapture) -> None:
+    """Patch logging helpers do scraping para captura em testes."""
+    monkeypatch.setattr(
+        "backend.features.scraping.scraping_orchestrator._create_log",
+        log_capture.create_log,
+    )
+    monkeypatch.setattr(
+        "backend.features.scraping.scraping_orchestrator._finalize_log",
+        log_capture.finalize_log,
+    )

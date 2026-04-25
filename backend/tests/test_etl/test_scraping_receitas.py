@@ -133,6 +133,14 @@ async def test_scrape_receitas_2026_usa_replace_por_ano(
         "backend.features.scraping.scraping_orchestrator._finalize_log",
         fake_finalize_log,
     )
+    monkeypatch.setattr(
+        "backend.features.scraping.scraping_orchestrator._get_sync_state_hash",
+        lambda session, key, ano: None,
+    )
+    monkeypatch.setattr(
+        "backend.features.scraping.scraping_orchestrator._upsert_sync_state",
+        lambda session, key, ano, hash_val, count, status: None,
+    )
 
     result = await service.scrape_receitas(2026)
 

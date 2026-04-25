@@ -24,7 +24,6 @@ from backend.features.scraping.expense_pdf_sync_service import (
 logger = logging.getLogger(__name__)
 
 # Constantes de configuração
-_DEFAULT_YEAR: int = 2026
 _SCRAPE_INTERVAL_MINUTES: int = 10
 _MISFIRE_GRACE_SECONDS: int = 60
 
@@ -52,6 +51,7 @@ class ScrapingScheduler:
         )
         self._last_run_result: dict[str, Any] | None = None
         self._expense_pdf_sync_service = ExpensePDFSyncService()
+        self._historical_bootstrap_done: bool = False
 
     def start(self) -> None:
         """Inicia o scheduler com job recorrente de scraping."""
@@ -61,6 +61,12 @@ class ScrapingScheduler:
             next_run_time=datetime.now(),
             id="scrape_recurring",
             name="scraping_periodico",
+            replace_existing=True,
+        )
+        self._scheduler.add_job(
+            self.historical_bootstrap_job,
+            id="historical_bootstrap",
+            name="bootstrap_historico",
             replace_existing=True,
         )
         self._scheduler.start()
@@ -81,10 +87,11 @@ class ScrapingScheduler:
         Instancia o serviço, executa o scraping para o ano padrão
         e armazena o resultado. Exceções nunca propagam para o scheduler.
         """
+        default_year = datetime.now().year
         try:
-            pdf_sync_result = await self._sync_expenses_pdf(_DEFAULT_YEAR)
+            pdf_sync_result = await self._sync_expenses_pdf(default_year)
             scraping_service = self._create_scraping_service()
-            result = await scraping_service.run_scraping(year=_DEFAULT_YEAR)
+            result = await scraping_service.run_full_scraping(year=default_year)
             result["despesas_pdf_sync"] = pdf_sync_result.to_dict()
 
             if not pdf_sync_result.success:
@@ -93,19 +100,57 @@ class ScrapingScheduler:
             self._last_run_result = result
             logger.info(
                 "Scraping concluído — ano=%d resultado=%s",
-                _DEFAULT_YEAR,
+                default_year,
                 _summarize_result(result),
             )
         except Exception:
             self._last_run_result = {"status": "error"}
             logger.exception(
                 "Erro durante execução do scraping — ano=%d",
-                _DEFAULT_YEAR,
+                default_year,
             )
 
+    async def historical_bootstrap_job(self) -> None:
+        """Executa o bootstrap histórico uma única vez."""
+        if self._historical_bootstrap_done:
+            return
+        try:
+            scraping_service = self._create_scraping_service()
+            result = await scraping_service.run_historical_bootstrap()
+            self._historical_bootstrap_done = True
+            self._last_run_result = result
+            logger.info(
+                "Bootstrap histórico concluído — anos=%s",
+                result.get("years_processed", []),
+            )
+        except Exception:
+            logger.exception("Erro durante bootstrap histórico")
+
+    async def trigger_historical_bootstrap(self) -> dict[str, Any]:
+        """Dispara bootstrap histórico manualmente."""
+        try:
+            scraping_service = self._create_scraping_service()
+            result = await scraping_service.run_historical_bootstrap()
+            self._historical_bootstrap_done = True
+            self._last_run_result = result
+            logger.info(
+                "Bootstrap histórico manual concluído — anos=%s",
+                result.get("years_processed", []),
+            )
+            return cast(dict[str, Any], result)
+        except Exception:
+            logger.exception("Erro no bootstrap histórico manual")
+            return {
+                "status": "error",
+                "years_processed": [],
+                "errors": ["Erro no bootstrap histórico"],
+            }
+
     async def trigger_manual(
-        self, year: int = _DEFAULT_YEAR, data_type: str = "all"
+        self, year: int | None = None, data_type: str = "all"
     ) -> dict[str, Any]:
+        if year is None:
+            year = datetime.now().year
         """Dispara scraping manualmente e retorna o resultado.
 
         Args:

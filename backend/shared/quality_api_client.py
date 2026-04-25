@@ -163,6 +163,74 @@ class QualityAPIClient:
         logger.warning("Resposta inesperada de despesas por natureza: %s", type(data))
         return {}
 
+    async def fetch_despesas_orgao(
+        self, year: int, unidade_gestora: int = 0
+    ) -> dict[str, Any]:
+        """Busca despesas por órgão (valores mensais por órgão)."""
+        endpoint = "Orgao"
+        params = {
+            "entity": _ENTITY_SLUG,
+            "unidadeGestora": str(unidade_gestora),
+            "ano": str(year),
+        }
+        data = await self._get_json(
+            _BASE_DESPESAS_URL, endpoint, params, _HEADERS_DESPESAS
+        )
+        if isinstance(data, dict):
+            return data
+        logger.warning("Resposta inesperada de despesas por órgão: %s", type(data))
+        return {}
+
+    async def fetch_despesas_funcao(
+        self, year: int, unidade_gestora: int = 0
+    ) -> dict[str, Any]:
+        """Busca despesas por função (valores mensais por função)."""
+        endpoint = "Funcao"
+        params = {
+            "entity": _ENTITY_SLUG,
+            "unidadeGestora": str(unidade_gestora),
+            "ano": str(year),
+        }
+        data = await self._get_json(
+            _BASE_DESPESAS_URL, endpoint, params, _HEADERS_DESPESAS
+        )
+        if isinstance(data, dict):
+            return data
+        logger.warning("Resposta inesperada de despesas por função: %s", type(data))
+        return {}
+
+    async def fetch_despesas_elemento(
+        self, year: int, unidade_gestora: int = 0
+    ) -> dict[str, Any]:
+        """Busca despesas por elemento (valores mensais por elemento de despesa)."""
+        endpoint = "ElementoDespesa"
+        params = {
+            "entity": _ENTITY_SLUG,
+            "unidadeGestora": str(unidade_gestora),
+            "ano": str(year),
+        }
+        data = await self._get_json(
+            _BASE_DESPESAS_URL, endpoint, params, _HEADERS_DESPESAS
+        )
+        if isinstance(data, dict):
+            return data
+        logger.warning("Resposta inesperada de despesas por elemento: %s", type(data))
+        return {}
+
+    async def fetch_unidades_gestoras(self) -> list[dict[str, Any]]:
+        """Busca catálogo de unidades gestoras do portal."""
+        endpoint = "BuscaDadosUnidadeGestora"
+        params = {
+            "entity": _ENTITY_SLUG,
+        }
+        data = await self._get_json(
+            _BASE_DESPESAS_URL, endpoint, params, _HEADERS_DESPESAS
+        )
+        if isinstance(data, list):
+            return data
+        logger.warning("Resposta inesperada de unidades gestoras: %s", type(data))
+        return []
+
     async def _get_json(
         self,
         base_url: str,

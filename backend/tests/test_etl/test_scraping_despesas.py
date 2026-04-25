@@ -19,6 +19,8 @@ async def test_scrape_despesas_usa_fallback_pdf_quando_api_vazia(
     service: ScrapingService,
     log_capture: LogCapture,
     patch_db_session: None,
+    patch_sync_state: None,
+    patch_scraping_logs: None,
 ) -> None:
     fallback_despesa = _build_despesa()
     fallback_called: list[int] = []
@@ -56,14 +58,6 @@ async def test_scrape_despesas_usa_fallback_pdf_quando_api_vazia(
         "backend.features.scraping.scraping_orchestrator._replace_despesas_for_year",
         fake_replace_despesas_for_year,
     )
-    monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator._create_log",
-        log_capture.create_log,
-    )
-    monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator._finalize_log",
-        log_capture.finalize_log,
-    )
 
     result = await service.scrape_despesas(2026)
 
@@ -82,6 +76,8 @@ async def test_scrape_despesas_retorna_no_data_e_nao_replace_quando_sem_fonte(
     service: ScrapingService,
     log_capture: LogCapture,
     patch_db_session: None,
+    patch_sync_state: None,
+    patch_scraping_logs: None,
 ) -> None:
     async def fake_fetch_despesas_annual(year: int) -> dict[str, Any]:
         return {}
@@ -112,14 +108,6 @@ async def test_scrape_despesas_retorna_no_data_e_nao_replace_quando_sem_fonte(
         "backend.features.scraping.scraping_orchestrator._replace_despesas_for_year",
         fail_if_replace_called,
     )
-    monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator._create_log",
-        log_capture.create_log,
-    )
-    monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator._finalize_log",
-        log_capture.finalize_log,
-    )
 
     result = await service.scrape_despesas(2026)
 
@@ -141,6 +129,8 @@ async def test_scrape_despesas_nao_usa_fallback_quando_api_tem_dados(
     service: ScrapingService,
     log_capture: LogCapture,
     patch_db_session: None,
+    patch_sync_state: None,
+    patch_scraping_logs: None,
 ) -> None:
     async def fake_fetch_despesas_annual(year: int) -> dict[str, Any]:
         return {
@@ -187,14 +177,6 @@ async def test_scrape_despesas_nao_usa_fallback_quando_api_tem_dados(
         "backend.features.scraping.scraping_orchestrator._replace_despesas_for_year",
         fake_replace_despesas_for_year,
     )
-    monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator._create_log",
-        log_capture.create_log,
-    )
-    monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator._finalize_log",
-        log_capture.finalize_log,
-    )
 
     result = await service.scrape_despesas(2026)
 
@@ -212,6 +194,8 @@ async def test_scrape_despesas_ignora_natureza_sem_annual_e_usa_pdf(
     service: ScrapingService,
     log_capture: LogCapture,
     patch_db_session: None,
+    patch_sync_state: None,
+    patch_scraping_logs: None,
 ) -> None:
     async def fake_fetch_despesas_annual(year: int) -> dict[str, Any]:
         return {}
@@ -283,14 +267,6 @@ async def test_scrape_despesas_ignora_natureza_sem_annual_e_usa_pdf(
         "backend.features.scraping.scraping_orchestrator._replace_despesas_for_year",
         fake_replace_despesas_for_year,
     )
-    monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator._create_log",
-        log_capture.create_log,
-    )
-    monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator._finalize_log",
-        log_capture.finalize_log,
-    )
 
     result = await service.scrape_despesas(2026)
 
@@ -306,6 +282,7 @@ async def test_scrape_despesas_2026_usa_replace_por_ano(
     monkeypatch: pytest.MonkeyPatch,
     service: ScrapingService,
     patch_db_session: None,
+    patch_sync_state: None,
 ) -> None:
     async def fake_fetch_despesas_annual(year: int) -> dict[str, Any]:
         return {"quantidadeRegistro": 1}

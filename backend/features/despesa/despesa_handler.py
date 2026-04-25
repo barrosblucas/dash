@@ -12,8 +12,14 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from backend.features.despesa.despesa_data import SQLDespesaRepository
+from backend.features.despesa.despesa_data import (
+    SQLDespesaBreakdownRepository,
+    SQLDespesaRepository,
+)
 from backend.features.despesa.despesa_types import (
+    DespesaBreakdownListResponse,
+    DespesaBreakdownResponse,
+    DespesaBreakdownTotalsResponse,
     DespesaListResponse,
     DespesaResponse,
     TipoDespesa,
@@ -241,3 +247,125 @@ async def total_despesas_mes(
         "total_liquidado": float(total_liq),
         "total_pago": float(total_pago),
     }
+
+
+_VALID_BREAKDOWN_TYPES = {"ORGAO", "FUNCAO", "ELEMENTO"}
+
+
+@router.get(
+    "/breakdown/{breakdown_type}/{ano}",
+    response_model=DespesaBreakdownListResponse,
+    summary="Lista breakdown de despesas (órgão/função/elemento)",
+)
+async def listar_breakdown(
+    breakdown_type: str,
+    ano: int,
+    mes: int | None = Query(None, ge=1, le=12, description="Filtrar por mês"),
+    db: Session = Depends(get_db),
+) -> DespesaBreakdownListResponse:
+    """
+    Lista dados de breakdown de despesas por tipo e ano.
+
+    Tipos disponíveis: ORGAO, FUNCAO, ELEMENTO
+
+    Os dados são servidos do SQLite interno (populados pelo scraper).
+
+    Example:
+        GET /api/v1/despesas/breakdown/ORGAO/2025
+        GET /api/v1/despesas/breakdown/FUNCAO/2023?mes=6
+    """
+    bt_upper = breakdown_type.upper()
+    if bt_upper not in _VALID_BREAKDOWN_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Tipo inválido: {breakdown_type}. Use ORGAO, FUNCAO ou ELEMENTO.",
+        )
+
+    if ano < 2013 or ano > 2030:
+        raise HTTPException(status_code=400, detail="Ano deve estar entre 2013 e 2030")
+
+    repo = SQLDespesaBreakdownRepository(db)
+    data = repo.list_by_type_and_year(bt_upper, ano, mes)
+
+    breakdown_responses = [
+        DespesaBreakdownResponse(
+            id=d["id"],
+            ano=d["ano"],
+            mes=d["mes"],
+            breakdown_type=d["breakdown_type"],
+            item_label=d["item_label"],
+            valor=d["valor"],
+            fonte=d["fonte"],
+        )
+        for d in data
+    ]
+
+    return DespesaBreakdownListResponse(
+        breakdown_type=bt_upper,
+        ano=ano,
+        data=breakdown_responses,
+        total=len(breakdown_responses),
+    )
+
+
+@router.get(
+    "/breakdown/{breakdown_type}/{ano}/totais",
+    response_model=DespesaBreakdownTotalsResponse,
+    summary="Totais de breakdown por item (agregado anual)",
+)
+async def totais_breakdown(
+    breakdown_type: str,
+    ano: int,
+    db: Session = Depends(get_db),
+) -> DespesaBreakdownTotalsResponse:
+    """
+    Retorna totais agregados por item para um tipo de breakdown e ano.
+
+    Example:
+        GET /api/v1/despesas/breakdown/ORGAO/2025/totais
+    """
+    bt_upper = breakdown_type.upper()
+    if bt_upper not in _VALID_BREAKDOWN_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Tipo inválido: {breakdown_type}. Use ORGAO, FUNCAO ou ELEMENTO.",
+        )
+
+    if ano < 2013 or ano > 2030:
+        raise HTTPException(status_code=400, detail="Ano deve estar entre 2013 e 2030")
+
+    repo = SQLDespesaBreakdownRepository(db)
+    items = repo.get_totals_by_item(bt_upper, ano)
+
+    return DespesaBreakdownTotalsResponse(
+        breakdown_type=bt_upper,
+        ano=ano,
+        items=items,
+        total_items=len(items),
+    )
+
+
+@router.get(
+    "/breakdown/{breakdown_type}/anos",
+    response_model=list[int],
+    summary="Anos disponíveis para breakdown",
+)
+async def anos_disponiveis_breakdown(
+    breakdown_type: str,
+    db: Session = Depends(get_db),
+) -> list[int]:
+    """
+    Retorna anos com dados disponíveis para um tipo de breakdown.
+
+    Example:
+        GET /api/v1/despesas/breakdown/ORGAO/anos
+    """
+    bt_upper = breakdown_type.upper()
+    if bt_upper not in _VALID_BREAKDOWN_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Tipo inválido: {breakdown_type}. Use ORGAO, FUNCAO ou ELEMENTO.",
+        )
+
+    repo = SQLDespesaBreakdownRepository(db)
+    return repo.get_available_years(bt_upper)

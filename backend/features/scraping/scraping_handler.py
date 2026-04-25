@@ -148,26 +148,45 @@ async def trigger_scraping(
         )
 
     logger.info(
-        "Trigger manual de scraping — year=%d data_type=%s",
+        "Trigger manual de scraping — year=%d data_type=%s run_historical=%s",
         payload.year,
         payload.data_type,
+        payload.run_historical,
     )
 
-    result: dict[str, Any] = await scheduler.trigger_manual(
+    if payload.run_historical:
+        result = await scheduler.trigger_historical_bootstrap()
+        status_val = result.get("status", "unknown")
+        message = (
+            f"Bootstrap histórico concluído: "
+            f"{result.get('total_years', 0)} anos processados"
+        )
+        errors = result.get("errors", [])
+        return ScrapingTriggerResponse(
+            status=status_val,
+            message=message,
+            receitas_processed=0,
+            despesas_processed=0,
+            errors=errors,
+            historical_years_processed=result.get("years_processed", []),
+        )
+
+    manual_result: dict[str, Any] = await scheduler.trigger_manual(
         year=payload.year,
         data_type=payload.data_type,
     )
 
-    status_val = result.get("status", "unknown")
-    message = _build_trigger_message(payload.year, payload.data_type, result)
-    errors = result.get("errors", [])
+    status_val = manual_result.get("status", "unknown")
+    message = _build_trigger_message(payload.year, payload.data_type, manual_result)
+    errors = manual_result.get("errors", [])
 
     return ScrapingTriggerResponse(
         status=status_val,
         message=message,
-        receitas_processed=result.get("receitas_processed", 0),
-        despesas_processed=result.get("despesas_processed", 0),
+        receitas_processed=manual_result.get("receitas_processed", 0),
+        despesas_processed=manual_result.get("despesas_processed", 0),
         errors=errors,
+        historical_years_processed=[],
     )
 
 

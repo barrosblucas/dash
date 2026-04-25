@@ -13,6 +13,11 @@ import logging
 from decimal import Decimal
 from typing import Any
 
+from backend.features.despesa.despesa_breakdown_scraper import (
+    MESES_KEYS,
+    DespesaBreakdownScraper,
+    _parse_brazilian_currency,
+)
 from backend.features.despesa.despesa_types import Despesa, TipoDespesa
 
 logger = logging.getLogger(__name__)
@@ -33,23 +38,8 @@ MESES_MAP: dict[str, int] = {
     "DEZEMBRO": 12,
 }
 
-MESES_KEYS: list[str] = [
-    "janeiro",
-    "fevereiro",
-    "marco",
-    "abril",
-    "maio",
-    "junho",
-    "julho",
-    "agosto",
-    "setembro",
-    "outubro",
-    "novembro",
-    "dezembro",
-]
 
-
-class DespesaScraper:
+class DespesaScraper(DespesaBreakdownScraper):
     """Extrai entidades Despesa de payloads JSON do QualitySistemas.
 
     Métodos públicos:
@@ -279,52 +269,7 @@ class DespesaScraper:
         return despesas
 
 
-def _parse_brazilian_currency(value: str | float | None) -> Decimal:
-    """Converte valor monetário brasileiro para Decimal.
-
-    Formatos aceitos:
-        - "1.234.567,89" → Decimal("1234567.89")
-        - "500,00" → Decimal("500.00")
-        - "-1.000,50" → Decimal("-1000.50")
-        - 1234.56 (float) → Decimal("1234.56")
-        - None / "" / " " → Decimal("0")
-
-    Args:
-        value: Valor em formato brasileiro, numérico, ou ausente.
-
-    Returns:
-        Decimal correspondente, ou ``Decimal("0")`` para valores vazios.
-    """
-    if value is None:
-        return Decimal("0")
-
-    if isinstance(value, int | float):
-        return Decimal(str(value))
-
-    if not isinstance(value, str) or not value.strip():
-        return Decimal("0")
-
-    valor_limpo = value.strip()
-
-    # Detectar sinal negativo
-    negativo = valor_limpo.startswith("-")
-    if negativo:
-        valor_limpo = valor_limpo[1:].strip()
-
-    # Remover separador de milhar (.) e trocar decimal (,) por (.)
-    valor_limpo = valor_limpo.replace(".", "").replace(",", ".")
-
-    if not valor_limpo or valor_limpo == ".":
-        return Decimal("0")
-
-    try:
-        resultado = Decimal(valor_limpo)
-    except Exception:
-        logger.debug("Falha ao parsear valor monetário '%s'", value)
-        return Decimal("0")
-
-    return -resultado if negativo else resultado
-
+# --- Funções auxiliares ---
 
 def _classificar_tipo_despesa(descricao: str) -> TipoDespesa:
     """Classifica a natureza da despesa pela descrição.

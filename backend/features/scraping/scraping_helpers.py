@@ -5,15 +5,20 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import and_, delete
 from sqlalchemy.orm import Session
 
+from backend.features.despesa.despesa_breakdown_scraper import DespesaBreakdown
 from backend.features.despesa.despesa_types import Despesa
 from backend.features.receita.receita_types import Receita
 from backend.shared.database.connection import db_manager
 from backend.shared.database.models import (
+    DespesaBreakdownModel,
     DespesaModel,
+    QualitySyncStateModel,
+    QualityUnidadeGestoraModel,
     ReceitaDetalhamentoModel,
     ReceitaModel,
     ScrapingLogModel,
@@ -168,6 +173,148 @@ def _replace_despesas_for_year(
     session.execute(delete(DespesaModel).where(DespesaModel.ano == year))
     session.flush()
     return _upsert_despesas(session, despesas, year)
+
+
+def _replace_breakdown_for_year(
+    session: Session, breakdowns: list[DespesaBreakdown], year: int, breakdown_type: str
+) -> int:
+    """Substitui todo o breakdown de um tipo/ano e reinsere. Retorna count inseridos."""
+    session.execute(
+        delete(DespesaBreakdownModel).where(
+            and_(
+                DespesaBreakdownModel.ano == year,
+                DespesaBreakdownModel.breakdown_type == breakdown_type,
+            )
+        )
+    )
+    session.flush()
+    for b in breakdowns:
+        if b.breakdown_type != breakdown_type:
+            continue
+        session.add(
+            DespesaBreakdownModel(
+                ano=b.ano,
+                mes=b.mes,
+                breakdown_type=b.breakdown_type,
+                item_label=b.item_label,
+                valor=b.valor,
+                fonte=b.fonte,
+            )
+        )
+    session.flush()
+    return len([b for b in breakdowns if b.breakdown_type == breakdown_type])
+
+
+def _upsert_sync_state(
+    session: Session,
+    dataset_key: str,
+    ano: int,
+    payload_hash: str,
+    item_count: int,
+    status: str,
+) -> QualitySyncStateModel:
+    """Cria ou atualiza estado de sincronização com hash."""
+    now = datetime.now()
+    existing: QualitySyncStateModel | None = (
+        session.query(QualitySyncStateModel)
+        .filter(
+            and_(
+                QualitySyncStateModel.dataset_key == dataset_key,
+                QualitySyncStateModel.ano == ano,
+            )
+        )
+        .first()
+    )
+    if existing is not None:
+        existing.payload_hash = payload_hash  # type: ignore[assignment]
+        existing.item_count = item_count  # type: ignore[assignment]
+        existing.status = status  # type: ignore[assignment]
+        existing.last_checked_at = now  # type: ignore[assignment]
+        if status == "SUCCESS":
+            existing.last_changed_at = now  # type: ignore[assignment]
+        session.flush()
+        return existing
+
+    entry = QualitySyncStateModel(
+        dataset_key=dataset_key,
+        ano=ano,
+        payload_hash=payload_hash,
+        item_count=item_count,
+        status=status,
+        last_checked_at=now,
+        last_changed_at=now if status == "SUCCESS" else None,
+    )
+    session.add(entry)
+    session.flush()
+    return entry
+
+
+def _get_sync_state_hash(
+    session: Session, dataset_key: str, ano: int
+) -> str | None:
+    """Retorna hash do último sync state, ou None se não existe."""
+    existing: QualitySyncStateModel | None = (
+        session.query(QualitySyncStateModel)
+        .filter(
+            and_(
+                QualitySyncStateModel.dataset_key == dataset_key,
+                QualitySyncStateModel.ano == ano,
+            )
+        )
+        .first()
+    )
+    return existing.payload_hash if existing else None  # type: ignore[return-value]
+
+
+def _is_year_fully_synced(session: Session, year: int) -> bool:
+    """Verifica se todos os datasets de um ano estão sincronizados.
+
+    Considera sincronizado quando o status é SUCCESS (dados gravados)
+    ou NO_CHANGE (dados conferidos e inalterados desde a última gravação).
+    """
+    _SYNCED_STATUSES = {"SUCCESS", "NO_CHANGE"}
+    datasets = [
+        "receitas",
+        "despesas",
+        "despesas_orgao",
+        "despesas_funcao",
+        "despesas_elemento",
+    ]
+    for ds in datasets:
+        state: QualitySyncStateModel | None = (
+            session.query(QualitySyncStateModel)
+            .filter(
+                and_(
+                    QualitySyncStateModel.dataset_key == ds,
+                    QualitySyncStateModel.ano == year,
+                )
+            )
+            .first()
+        )
+        if state is None or state.status not in _SYNCED_STATUSES:
+            return False
+    return True
+
+
+def _replace_unidades_gestoras(
+    session: Session, unidades: list[dict[str, Any]],
+) -> int:
+    """Replace completo das unidades gestoras. Retorna count inseridos."""
+    session.execute(delete(QualityUnidadeGestoraModel))
+    session.flush()
+    for u in unidades:
+        session.add(
+            QualityUnidadeGestoraModel(
+                codigo_entidade=u.get("codigoEntidade", 0),
+                nome_entidade=u.get("nomeEntidade", ""),
+                tipo_entidade=u.get("tipoEntidade"),
+                cnpj_entidade=u.get("cnpjEntidade"),
+                tipo_unidade_gestora=u.get("tipoUnidadeGestora"),
+                fonte="QUALITY_API",
+            )
+        )
+    session.flush()
+    return len(unidades)
 
 
 # ------------------------------------------------------------------

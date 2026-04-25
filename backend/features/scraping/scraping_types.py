@@ -24,6 +24,7 @@ class ScrapingTriggerRequest(BaseModel):
 
     year: int = 2026
     data_type: str = "all"  # "receitas", "despesas", "all"
+    run_historical: bool = False
 
 
 class ScrapingTriggerResponse(BaseModel):
@@ -34,6 +35,7 @@ class ScrapingTriggerResponse(BaseModel):
     receitas_processed: int = 0
     despesas_processed: int = 0
     errors: list[str] = []
+    historical_years_processed: list[int] = []
 
 
 class ScrapingLogResponse(BaseModel):

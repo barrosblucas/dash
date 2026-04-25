@@ -33,7 +33,8 @@ def test_load_despesas_from_pdf_retorna_dados_do_extractor(
             return FakeResult()
 
     monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator.PDFExtractor", FakeExtractor
+        "backend.features.scraping.historical_api_bootstrap_service.PDFExtractor",
+        FakeExtractor,
     )
 
     despesas = service._load_despesas_from_pdf(2026)
@@ -51,7 +52,7 @@ def test_load_despesas_from_pdf_retorna_vazio_em_excecao(
             raise RuntimeError("falha")
 
     monkeypatch.setattr(
-        "backend.features.scraping.scraping_orchestrator.PDFExtractor",
+        "backend.features.scraping.historical_api_bootstrap_service.PDFExtractor",
         BrokenExtractor,
     )
 

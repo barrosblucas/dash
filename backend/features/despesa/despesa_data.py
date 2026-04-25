@@ -10,7 +10,7 @@ from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
 from backend.features.despesa.despesa_types import Despesa, TipoDespesa
-from backend.shared.database.models import DespesaModel
+from backend.shared.database.models import DespesaBreakdownModel, DespesaModel
 
 
 class SQLDespesaRepository:
@@ -251,6 +251,91 @@ class SQLDespesaRepository:
             self.db.query(DespesaModel.categoria)
             .distinct()
             .order_by(DespesaModel.categoria)
+            .all()
+        )
+        return [r[0] for r in results if r[0]]
+
+
+class SQLDespesaBreakdownRepository:
+    """Repositório de breakdown de despesas (órgão/função/elemento) usando SQLAlchemy."""
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def list_by_type_and_year(
+        self,
+        breakdown_type: str,
+        ano: int,
+        mes: int | None = None,
+    ) -> list[dict]:
+        """Lista breakdown por tipo e ano, opcionalmente filtrado por mês.
+
+        Returns list of dicts with: id, ano, mes, breakdown_type, item_label, valor, fonte
+        """
+        query = self.db.query(DespesaBreakdownModel).filter(
+            and_(
+                DespesaBreakdownModel.breakdown_type == breakdown_type,
+                DespesaBreakdownModel.ano == ano,
+            )
+        )
+        if mes is not None:
+            query = query.filter(DespesaBreakdownModel.mes == mes)
+
+        query = query.order_by(DespesaBreakdownModel.item_label, DespesaBreakdownModel.mes)
+        models = query.all()
+
+        return [
+            {
+                "id": m.id,
+                "ano": m.ano,
+                "mes": m.mes,
+                "breakdown_type": m.breakdown_type,
+                "item_label": m.item_label,
+                "valor": float(m.valor) if m.valor else 0.0,
+                "fonte": m.fonte,
+            }
+            for m in models
+        ]
+
+    def get_totals_by_item(
+        self,
+        breakdown_type: str,
+        ano: int,
+    ) -> list[dict]:
+        """Retorna totais por item_label para um tipo e ano (agregado de todos os meses).
+
+        Returns list of dicts: { item_label, total_valor }
+        """
+        query = self.db.query(
+            DespesaBreakdownModel.item_label,
+            func.sum(DespesaBreakdownModel.valor).label("total_valor"),
+        ).filter(
+            and_(
+                DespesaBreakdownModel.breakdown_type == breakdown_type,
+                DespesaBreakdownModel.ano == ano,
+            )
+        ).group_by(
+            DespesaBreakdownModel.item_label
+        ).order_by(
+            func.sum(DespesaBreakdownModel.valor).desc()
+        )
+
+        results = query.all()
+        return [
+            {
+                "item_label": r.item_label,
+                "total_valor": float(r.total_valor) if r.total_valor else 0.0,
+            }
+            for r in results
+        ]
+
+    def get_available_years(self, breakdown_type: str) -> list[int]:
+        """Retorna anos disponíveis para um tipo de breakdown."""
+        results = (
+            self.db.query(DespesaBreakdownModel.ano)
+            .filter(DespesaBreakdownModel.breakdown_type == breakdown_type)
+            .distinct()
+            .order_by(DespesaBreakdownModel.ano.desc())
             .all()
         )
         return [r[0] for r in results if r[0]]

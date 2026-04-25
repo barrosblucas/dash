@@ -17,26 +17,25 @@ def test_start_configura_intervalo_de_dez_minutos_e_execucao_imediata(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     scheduler = ScrapingScheduler()
-    captured: dict[str, Any] = {}
+    captured: list[dict[str, Any]] = []
 
-    def fake_add_job(func: Any, trigger: IntervalTrigger, **kwargs: Any) -> None:
-        captured["func"] = func
-        captured["trigger"] = trigger
-        captured["kwargs"] = kwargs
+    def fake_add_job(func: Any, trigger: IntervalTrigger | None = None, **kwargs: Any) -> None:
+        captured.append({"func": func, "trigger": trigger, "kwargs": kwargs})
 
     def fake_start() -> None:
-        captured["started"] = True
+        captured.append({"started": True})
 
     monkeypatch.setattr(scheduler._scheduler, "add_job", fake_add_job)
     monkeypatch.setattr(scheduler._scheduler, "start", fake_start)
 
     scheduler.start()
 
-    assert captured["started"] is True
-    assert isinstance(captured["trigger"], IntervalTrigger)
-    assert captured["trigger"].interval.total_seconds() == 600
-    assert captured["kwargs"]["id"] == "scrape_recurring"
-    assert captured["kwargs"]["next_run_time"] is not None
+    assert any(call.get("started") is True for call in captured)
+    recurring_call = next(call for call in captured if "trigger" in call)
+    assert isinstance(recurring_call["trigger"], IntervalTrigger)
+    assert recurring_call["trigger"].interval.total_seconds() == 600
+    assert recurring_call["kwargs"]["id"] == "scrape_recurring"
+    assert recurring_call["kwargs"]["next_run_time"] is not None
 
 
 @pytest.mark.asyncio
@@ -69,6 +68,12 @@ async def test_scrape_job_anexa_status_de_sincronizacao_pdf(
                 "total_updated": 0,
                 "errors": [],
             }
+
+        async def run_full_scraping(
+            self,
+            year: int = 2026,
+        ) -> dict[str, Any]:
+            return await self.run_scraping(year=year, data_type="all")
 
     monkeypatch.setattr(scheduler, "_sync_expenses_pdf", fake_sync_expenses_pdf)
     monkeypatch.setattr(
@@ -121,6 +126,12 @@ async def test_trigger_manual_sincroniza_pdf_apenas_para_despesas_ou_all(
                 "errors": [],
             }
 
+        async def run_full_scraping(
+            self,
+            year: int = 2026,
+        ) -> dict[str, Any]:
+            return await self.run_scraping(year=year, data_type="all")
+
     monkeypatch.setattr(scheduler, "_sync_expenses_pdf", fake_sync_expenses_pdf)
     monkeypatch.setattr(
         scheduler,
@@ -168,6 +179,12 @@ async def test_trigger_manual_agrega_erro_quando_sync_pdf_falha(
                 "total_updated": 0,
                 "errors": [],
             }
+
+        async def run_full_scraping(
+            self,
+            year: int = 2026,
+        ) -> dict[str, Any]:
+            return await self.run_scraping(year=year, data_type="all")
 
     monkeypatch.setattr(scheduler, "_sync_expenses_pdf", fake_sync_expenses_pdf)
     monkeypatch.setattr(

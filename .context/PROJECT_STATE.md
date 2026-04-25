@@ -29,13 +29,17 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Sincronização do ano 2026 com prioridade de API (replace por ano para evitar valores antigos persistidos)
 - [x] Estratégia de despesas 2026 ajustada para priorizar `BuscaDadosAnual` (fonte canônica de empenhado/liquidado/pago) e usar PDF como fallback quando o anual indisponível
 - [x] Validação estrutural do fallback PDF de despesas (não substitui arquivo local quando o download vier sem páginas válidas)
+- [x] Bootstrap histórico 2013–2025 para breakdown de despesas (órgao, função, elemento) via API QualitySistemas no startup
+- [x] Detecção de mudança por hash SHA-256 para anos ≥2026 em `quality_sync_state` (evita reprocessamento quando dados não mudaram)
+- [x] Endpoints de breakdown de despesas: `GET /api/v1/despesas/breakdown/{type}/{ano}`, `GET /api/v1/despesas/breakdown/{type}/{ano}/totais`, `GET /api/v1/despesas/breakdown/{type}/anos`
+- [x] Sincronização de unidades gestoras via `fetch_unidades_gestoras` e persistência em `quality_unidade_gestora`
 - [x] Schemas Pydantic para todas as bordas
 - [x] Proxy routes para licitações: ComprasBR (JSON paginado) e Quality (scraping HTML de dispensas)
 - [x] Entidades de domínio com validação (Receita, Despesa)
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
 - [x] Detalhamento hierárquico de receitas com extração por indentação de PDF
 - [x] Forecasting com Prophet + fallback para projeção linear
-- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, usuários, tokens de identidade, obras, medições, unidades de saúde, horários, snapshots e logs de sync de saúde)
+- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, usuários, tokens de identidade, obras, medições, unidades de saúde, horários, snapshots e logs de sync de saúde, despesa_breakdown, quality_sync_state, quality_unidade_gestora)
 - [x] CORS parametrizado via settings com lista explícita de origens permitidas
 - [x] Endpoints administrativos de banco protegidos por autenticação admin
 
@@ -126,6 +130,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Receitas: 160 registros (12/mês para 2013–2025 via PDF; 4 registros de 2026 via API QualitySistemas)
 - [x] Receitas detalhamento: 1.858 itens hierárquicos (2013–2025 via PDF; 459 de 2026 via API QualitySistemas)
 - [x] Despesas: 460 registros (2013–2025 via PDF; 4 registros de 2026 via API QualitySistemas)
+- [x] Despesas breakdown: 3.204 registros (órgão, função, elemento; 2013–2025 via API QualitySistemas com bootstrap histórico)
 - [x] Forecasts: pendente de geração
 - [x] Metadata ETL: controle de processamento
 ## Débito técnico conhecido
@@ -191,4 +196,5 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - Scripts: `bash dev.sh` (menu) ou `bash start.sh` (inicialização rápida)
 - API URL no frontend local/dev: `NEXT_PUBLIC_API_URL=http://localhost:8000`
 - API URL no frontend de produção: `https://dashboard.bandeirantesms.app.br`
-- Endpoints de scraping: `GET /api/v1/scraping/status`, `POST /api/v1/scraping/trigger`, `GET /api/v1/scraping/history`
+- Endpoints de scraping: `GET /api/v1/scraping/status`, `POST /api/v1/scraping/trigger` (com `run_historical`), `GET /api/v1/scraping/history`
+- Endpoints de breakdown de despesas: `GET /api/v1/despesas/breakdown/{type}/{ano}`, `GET /api/v1/despesas/breakdown/{type}/{ano}/totais`, `GET /api/v1/despesas/breakdown/{type}/anos`
