@@ -274,6 +274,9 @@ class ReceitaDetalhamentoListResponse(BaseModel):
     """Schema de resposta para lista de detalhamento de um ano."""
 
     ano: int = Field(..., description="Ano de referência")
+    mes_selecionado: int | None = Field(
+        None, description="Mês selecionado (1-12), ou None para anual"
+    )
     itens: list[ReceitaDetalhamentoResponse] = Field(
         ..., description="Lista de itens do detalhamento"
     )

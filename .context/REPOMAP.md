@@ -27,7 +27,7 @@ Snapshot: 2026-04-23
 #### `alembic/` — migrations
 - `alembic.ini`: configuração do Alembic apontando para `backend.shared.database.models.Base`
 - `alembic/env.py`: ambiente de migration reutilizando a engine do projeto (`create_db_engine`)
-- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora)
+- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento)
 - `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha)
 - `shared/security.py`: hash de senha Argon2, emissão/validação de tokens JWT e dependências de autenticação/autorização
 - `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
@@ -192,6 +192,7 @@ Snapshot: 2026-04-23
 - `app/receitas/receitas-client.tsx`: componente client da página de receitas
 - `app/despesas/page.tsx`: página de despesas municipais
 - `app/despesas/despesas-client.tsx`: componente client da página de despesas
+- `app/despesas/DespesaBreakdownTable.tsx`: componente de breakdown por categoria (Natureza, Função, Órgão, Elemento)
 - `app/forecast/page.tsx`: página de previsões financeiras
 - `app/forecast/forecast-client.tsx`: componente client da página de previsões
 - `app/comparativo/page.tsx`: página de comparativo anual

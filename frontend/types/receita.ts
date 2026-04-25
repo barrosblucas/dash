@@ -181,4 +181,5 @@ export interface ReceitaDetalhamentoListResponse {
   ano: number;
   itens: ReceitaDetalhamento[];
   total_itens: number;
+  mes_selecionado: number | null;
 }

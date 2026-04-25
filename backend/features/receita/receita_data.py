@@ -4,6 +4,7 @@ Implementação do repositório de receitas usando SQLAlchemy.
 Fornece persistência de receitas em banco SQLite/PostgreSQL.
 """
 
+import json
 from decimal import Decimal
 from typing import cast
 
@@ -285,11 +286,41 @@ class SQLReceitaRepository:
 
         return query.scalar() or 0
 
+    @staticmethod
+    def _normalize_detalhamento(itens: list[dict]) -> list[dict]:
+        """Normaliza níveis: remove duplicatas consecutivas e remapeia para contíguos."""
+        if not itens:
+            return []
+
+        # Remove duplicatas consecutivas (filho com mesma descrição/valores do pai)
+        remover = {
+            i + 1
+            for i in range(len(itens) - 1)
+            if (
+                itens[i]["nivel"] == itens[i + 1]["nivel"] - 1
+                and itens[i]["detalhamento"] == itens[i + 1]["detalhamento"]
+                and itens[i]["valor_arrecadado"] == itens[i + 1]["valor_arrecadado"]
+                and itens[i]["valor_previsto"] == itens[i + 1]["valor_previsto"]
+            )
+        }
+        filtrados = [itens[i] for i in range(len(itens)) if i not in remover]
+
+        # Mapeia níveis únicos ordenados para valores contíguos a partir de 1
+        niveis_unicos = sorted({item["nivel"] for item in filtrados})
+        mapa = {orig: novo for novo, orig in enumerate(niveis_unicos, start=1)}
+
+        return [{**item, "nivel": mapa[item["nivel"]]} for item in filtrados]
+
     def list_detalhamento_by_ano(
         self,
         ano: int,
+        mes: int | None = None,
     ) -> list[dict]:
         """Retorna detalhamento hierárquico de receitas para um ano.
+
+        Args:
+            ano: Ano de referência.
+            mes: Mês opcional (1-12). Se None ou 0, retorna totais anuais.
 
         Returns:
             Lista de dicionários com campos do modelo ReceitaDetalhamentoModel.
@@ -303,8 +334,24 @@ class SQLReceitaRepository:
             .all()
         )
 
-        return [
-            {
+        month_keys = [
+            "janeiro",
+            "fevereiro",
+            "marco",
+            "abril",
+            "maio",
+            "junho",
+            "julho",
+            "agosto",
+            "setembro",
+            "outubro",
+            "novembro",
+            "dezembro",
+        ]
+
+        itens: list[dict] = []
+        for m in modelos:
+            item: dict = {
                 "id": m.id,
                 "ano": m.ano,
                 "detalhamento": m.detalhamento,
@@ -316,5 +363,29 @@ class SQLReceitaRepository:
                 "valor_anulado": m.valor_anulado,
                 "fonte": m.fonte,
             }
-            for m in modelos
-        ]
+
+            if mes is not None and 1 <= mes <= 12:
+                mes_key = month_keys[mes - 1]
+
+                if m.valores_mensais:
+                    try:
+                        valores_mensais = json.loads(cast(str, m.valores_mensais))
+                        valor_mensal = valores_mensais.get(mes_key)
+                        if valor_mensal is not None:
+                            item["valor_arrecadado"] = Decimal(str(valor_mensal))
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+
+                if m.valores_anulados_mensais:
+                    try:
+                        valores_anulados = json.loads(
+                            cast(str, m.valores_anulados_mensais)
+                        )
+                        valor_anulado_mensal = valores_anulados.get(mes_key)
+                        if valor_anulado_mensal is not None:
+                            item["valor_anulado"] = Decimal(str(valor_anulado_mensal))
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+
+            itens.append(item)
+        return self._normalize_detalhamento(itens)

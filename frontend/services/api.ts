@@ -159,6 +159,13 @@ interface DespesaTotalAnoResponse {
   total_pago: number;
 }
 
+export interface DespesaBreakdownTotalsResponse {
+  breakdown_type: string;
+  ano: number;
+  items: Array<{ item_label: string; total_valor: number }>;
+  total_items: number;
+}
+
 // Serviços específicos da API
 export const receitasApi = {
   list: async (params?: {
@@ -193,9 +200,10 @@ export const receitasApi = {
     return apiClient.get<string[]>(url);
   },
 
-  getDetalhamento: async (ano: number): Promise<ReceitaDetalhamentoListResponse> => {
+  getDetalhamento: async (ano: number, mes?: number): Promise<ReceitaDetalhamentoListResponse> => {
     return apiClient.get<ReceitaDetalhamentoListResponse>(
-      `/api/v1/receitas/detalhamento/${ano}`
+      `/api/v1/receitas/detalhamento/${ano}`,
+      { params: mes ? { mes } : undefined }
     );
   },
 };
@@ -226,6 +234,12 @@ export const despesasApi = {
   totalByMonth: async (ano: number, mes: number, tipo?: string) => {
     const url = API_ENDPOINTS.despesas.list.replace('/api/v1/despesas', `/api/v1/despesas/total/mes/${ano}/${mes}`);
     return apiClient.get(url, { params: { tipo } });
+  },
+
+  getBreakdownTotals: async (breakdownType: string, ano: number): Promise<DespesaBreakdownTotalsResponse> => {
+    return apiClient.get<DespesaBreakdownTotalsResponse>(
+      `/api/v1/despesas/breakdown/${breakdownType}/${ano}/totais`
+    );
   },
 };
 

@@ -58,6 +58,12 @@ class DespesaBreakdownScraper:
         """Converte payload de ElementoDespesa em entidades DespesaBreakdown."""
         return self._parse_breakdown(data, year, "ELEMENTO")
 
+    def parse_despesas_natureza(
+        self, data: dict[str, Any], year: int
+    ) -> list[DespesaBreakdown]:
+        """Converte payload de NaturezaDespesa em entidades DespesaBreakdown."""
+        return self._parse_breakdown(data, year, "NATUREZA")
+
     def _parse_breakdown(
         self, data: dict[str, Any], year: int, breakdown_type: str
     ) -> list[DespesaBreakdown]:

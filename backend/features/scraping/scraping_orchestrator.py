@@ -10,6 +10,7 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from backend.features.despesa.despesa_breakdown_scraper import DespesaBreakdownScraper
 from backend.features.despesa.despesa_scraper import DespesaScraper
 from backend.features.despesa.despesa_types import Despesa
 from backend.features.receita.receita_scraper import ReceitaScraper
@@ -250,6 +251,11 @@ class ScrapingService:
                 "elemento",
                 self._api.fetch_despesas_elemento,
                 self._despesa_parser.parse_despesas_elemento,
+            ),
+            (
+                "natureza",
+                self._api.fetch_despesas_natureza,
+                DespesaBreakdownScraper().parse_despesas_natureza,
             ),
         ]
 

@@ -31,6 +31,8 @@ class ReceitaDetalhamento:
     valor_previsto: Decimal
     valor_arrecadado: Decimal
     valor_anulado: Decimal = field(default=Decimal("0"))
+    valores_mensais: dict[str, Decimal] | None = field(default=None)
+    valores_anulados_mensais: dict[str, Decimal] | None = field(default=None)
     fonte: str = "PDF"
     id: int | None = None
 

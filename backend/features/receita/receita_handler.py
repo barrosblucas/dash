@@ -120,6 +120,9 @@ async def listar_receitas(
 )
 async def detalhamento_receitas(
     ano: int,
+    mes: int | None = Query(
+        None, ge=0, le=12, description="Mês (1-12). 0 ou ausente = anual"
+    ),
     db: Session = Depends(get_db),
 ) -> ReceitaDetalhamentoListResponse:
     """
@@ -130,12 +133,13 @@ async def detalhamento_receitas(
 
     Example:
         GET /api/v1/receitas/detalhamento/2023
+        GET /api/v1/receitas/detalhamento/2023?mes=6
     """
     if ano < 2013 or ano > 2030:
         raise HTTPException(status_code=400, detail="Ano deve estar entre 2013 e 2030")
 
     repo = SQLReceitaRepository(db)
-    itens_raw = repo.list_detalhamento_by_ano(ano)
+    itens_raw = repo.list_detalhamento_by_ano(ano, mes if mes else None)
 
     itens = [
         ReceitaDetalhamentoResponse(
@@ -155,6 +159,7 @@ async def detalhamento_receitas(
 
     return ReceitaDetalhamentoListResponse(
         ano=ano,
+        mes_selecionado=mes if mes else None,
         itens=itens,
         total_itens=len(itens),
     )

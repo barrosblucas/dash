@@ -89,7 +89,9 @@ class DespesaScraper(DespesaBreakdownScraper):
         )
         return despesas
 
-    def parse_despesas_natureza(self, data: dict[str, Any], year: int) -> list[Despesa]:
+    def parse_despesas_natureza(  # type: ignore[override]
+        self, data: dict[str, Any], year: int
+    ) -> list[Despesa]:
         """Converte o payload de NaturezaDespesa em entidades Despesa.
 
         Cada combinação (natureza, mês) gera uma Despesa. Os três valores

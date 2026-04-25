@@ -240,6 +240,14 @@ class ReceitaScraper:
             valor_arrecadado = _sum_monthly_values(item, _MONTH_KEYS)
             valor_anulado = self._sum_anulado_monthly(item)
 
+            valores_mensais = {
+                key: _safe_decimal(item.get(key)) for key in _MONTH_KEYS
+            }
+            valores_anulados_mensais = {
+                key: _safe_decimal(item.get(f"{_ANULADO_PREFIX}{key}"))
+                for key in _MONTH_KEYS
+            }
+
             detalhamentos.append(
                 ReceitaDetalhamento(
                     ano=year,
@@ -250,6 +258,8 @@ class ReceitaScraper:
                     valor_previsto=valor_previsto,
                     valor_arrecadado=valor_arrecadado,
                     valor_anulado=valor_anulado,
+                    valores_mensais=valores_mensais,
+                    valores_anulados_mensais=valores_anulados_mensais,
                     fonte=f"SCRAPING_{year}",
                 )
             )

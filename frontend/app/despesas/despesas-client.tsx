@@ -11,6 +11,8 @@ import { useDashboardFilters, useAnosDisponiveis } from '@/stores/filtersStore';
 import { formatCurrency } from '@/lib/utils';
 import { MESES } from '@/lib/constants';
 
+import DespesaBreakdownTable from './DespesaBreakdownTable';
+
 const PAGE_SIZE = 15;
 const TIPO_OPTIONS = [
   { value: 'TODOS', label: 'Todas' },
@@ -279,6 +281,9 @@ export default function DespesasClient() {
           </>
         )}
       </section>
+
+      {/* Breakdown Section */}
+      <DespesaBreakdownTable ano={anoSelecionado} />
     </div>
   );
 }

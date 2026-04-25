@@ -133,6 +133,16 @@ class ReceitaDetalhamentoModel(Base):
     valor_previsto = Column(Numeric(18, 2), nullable=False, default=Decimal("0"))
     valor_arrecadado = Column(Numeric(18, 2), nullable=False, default=Decimal("0"))
     valor_anulado = Column(Numeric(18, 2), nullable=False, default=Decimal("0"))
+    valores_mensais = Column(
+        Text,
+        nullable=True,
+        comment='JSON: {"janeiro": "123.45", "fevereiro": "234.56", ...}',
+    )
+    valores_anulados_mensais = Column(
+        Text,
+        nullable=True,
+        comment='JSON: {"janeiro": "0", "fevereiro": "10.50", ...}',
+    )
     fonte = Column(String(100), nullable=False, default="PDF")
     created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
     updated_at = Column(

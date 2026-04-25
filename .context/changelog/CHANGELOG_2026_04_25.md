@@ -120,3 +120,39 @@
 - `mypy features/receita/receita_scraper.py` — pass
 - `pytest tests/test_etl/test_scraping_receitas.py` — 1 passed
 - `pytest tests/test_etl/test_scraping_scheduler.py` — 4 passed
+
+
+## Added (continuação — Tasks 01/02/03)
+
+### Despesas — Seletor de Detalhamento por Categoria (Task 01)
+- Nova seção "Detalhamento por Categoria" na página de despesas com 4 abas: Natureza de Despesa, Função, Órgão, Elemento de Despesa
+- Componente `DespesaBreakdownTable` extraído em arquivo próprio para manter `despesas-client.tsx` abaixo do limite de 400 linhas
+- Backend: tipo de breakdown `NATUREZA` adicionado ao handler, scraper e orchestrator
+- Hook `useDespesasBreakdownTotais` + API `getBreakdownTotais` no frontend
+
+### Receitas — Seletor de Mês no Detalhamento Hierárquico (Task 02)
+- Seletor de mês (Anual | Janeiro | Fevereiro | ... | Dezembro) adicionado abaixo de "X itens registrados"
+- Default é "Anual" (soma de todos os meses)
+- Colunas `valores_mensais` e `valores_anulados_mensais` (JSON) adicionadas ao modelo `ReceitaDetalhamentoModel`
+- Scraper armazena valores mensais individuais em JSON
+- Endpoint `/api/v1/receitas/detalhamento/{ano}` aceita parâmetro `mes` (1-12)
+- KPIs ajustados para refletir período correto quando mês está selecionado
+- Migration Alembic: `686fd3aaaeb2`
+
+### Receitas — Correção da Hierarquia do Detalhamento (Task 03)
+- Normalização de níveis hierárquicos no `list_detalhamento_by_ano`: remove gaps (ex.: 5→7) e duplicatas consecutivas
+- Algoritmo robusto: mapeia níveis únicos ordenados para valores contíguos
+
+## Changed (Tasks 01/02/03)
+- `receita_data.py`: método `_normalize_detalhamento` + suporte a `mes`
+- `receita_handler.py`: parâmetro `mes` + campo `mes_selecionado`
+- `receita_scraper.py`: armazena mensais em JSON
+- `despesa_handler.py`: `NATUREZA` adicionado aos tipos válidos
+- `despesa_breakdown_scraper.py`: método `parse_despesas_natureza`
+- `scraping_orchestrator.py`: natureza no pipeline de breakdown
+- `scraping_helpers.py`: persistir novos campos JSON
+
+## Validação (Tasks 01/02/03)
+- Backend: ruff ✓, mypy ✓, pytest 94 passed ✓
+- Frontend: lint ✓, type-check ✓
+- Gate de tamanho: todos arquivos abaixo de 400 linhas ✓

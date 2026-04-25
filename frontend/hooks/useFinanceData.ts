@@ -5,6 +5,7 @@
 
 import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query';
 import { receitasApi, despesasApi, kpisApi } from '@/services/api';
+import type { DespesaBreakdownTotalsResponse } from '@/services/api';
 import { QUERY_KEYS, PERIODO_DADOS } from '@/lib/constants';
 import type { ReceitaDetalhamentoListResponse } from '@/types/receita';
 
@@ -184,11 +185,12 @@ export function useReceitasCategorias(
  */
 export function useReceitasDetalhamento(
   ano: number,
+  mes?: number,
   options?: Omit<UseQueryOptions<ReceitaDetalhamentoListResponse>, 'queryKey' | 'queryFn'>
 ): UseQueryResult<ReceitaDetalhamentoListResponse> {
   return useQuery({
-    queryKey: [...QUERY_KEYS.receitas.all, 'detalhamento', ano],
-    queryFn: () => receitasApi.getDetalhamento(ano),
+    queryKey: [...QUERY_KEYS.receitas.all, 'detalhamento', ano, mes],
+    queryFn: () => receitasApi.getDetalhamento(ano, mes),
     enabled: !!ano,
     ...options,
   });
@@ -248,6 +250,22 @@ export function useDespesasTotalAno(
     queryKey: [...QUERY_KEYS.despesas.all, 'total', 'ano', ano, tipo],
     queryFn: () => despesasApi.totalByYear(ano, tipo),
     enabled: !!ano,
+    ...options,
+  });
+}
+
+/**
+ * Hook para breakdown de despesas por categoria
+ */
+export function useDespesasBreakdownTotais(
+  breakdownType: string,
+  ano: number,
+  options?: Omit<UseQueryOptions<DespesaBreakdownTotalsResponse>, 'queryKey' | 'queryFn'>
+): UseQueryResult<DespesaBreakdownTotalsResponse> {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.despesas.all, 'breakdown', breakdownType, ano],
+    queryFn: () => despesasApi.getBreakdownTotals(breakdownType, ano),
+    enabled: !!ano && !!breakdownType,
     ...options,
   });
 }

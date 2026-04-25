@@ -249,7 +249,7 @@ async def total_despesas_mes(
     }
 
 
-_VALID_BREAKDOWN_TYPES = {"ORGAO", "FUNCAO", "ELEMENTO"}
+_VALID_BREAKDOWN_TYPES = {"ORGAO", "FUNCAO", "ELEMENTO", "NATUREZA"}
 
 
 @router.get(
@@ -266,7 +266,7 @@ async def listar_breakdown(
     """
     Lista dados de breakdown de despesas por tipo e ano.
 
-    Tipos disponíveis: ORGAO, FUNCAO, ELEMENTO
+    Tipos disponíveis: ORGAO, FUNCAO, ELEMENTO, NATUREZA
 
     Os dados são servidos do SQLite interno (populados pelo scraper).
 
@@ -278,7 +278,7 @@ async def listar_breakdown(
     if bt_upper not in _VALID_BREAKDOWN_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"Tipo inválido: {breakdown_type}. Use ORGAO, FUNCAO ou ELEMENTO.",
+            detail=f"Tipo inválido: {breakdown_type}. Use ORGAO, FUNCAO, ELEMENTO ou NATUREZA.",
         )
 
     if ano < 2013 or ano > 2030:
@@ -328,7 +328,7 @@ async def totais_breakdown(
     if bt_upper not in _VALID_BREAKDOWN_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"Tipo inválido: {breakdown_type}. Use ORGAO, FUNCAO ou ELEMENTO.",
+            detail=f"Tipo inválido: {breakdown_type}. Use ORGAO, FUNCAO, ELEMENTO ou NATUREZA.",
         )
 
     if ano < 2013 or ano > 2030:
@@ -364,7 +364,7 @@ async def anos_disponiveis_breakdown(
     if bt_upper not in _VALID_BREAKDOWN_TYPES:
         raise HTTPException(
             status_code=400,
-            detail=f"Tipo inválido: {breakdown_type}. Use ORGAO, FUNCAO ou ELEMENTO.",
+            detail=f"Tipo inválido: {breakdown_type}. Use ORGAO, FUNCAO, ELEMENTO ou NATUREZA.",
         )
 
     repo = SQLDespesaBreakdownRepository(db)

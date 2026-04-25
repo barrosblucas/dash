@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -150,6 +151,12 @@ def _replace_detalhamento(
                 valor_previsto=d.valor_previsto,
                 valor_arrecadado=d.valor_arrecadado,
                 valor_anulado=d.valor_anulado,
+                valores_mensais=json.dumps(d.valores_mensais, default=str)
+                if d.valores_mensais is not None
+                else None,
+                valores_anulados_mensais=json.dumps(d.valores_anulados_mensais, default=str)
+                if d.valores_anulados_mensais is not None
+                else None,
                 fonte=d.fonte,
             )
         )
