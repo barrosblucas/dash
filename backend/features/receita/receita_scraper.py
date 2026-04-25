@@ -85,6 +85,34 @@ def _safe_decimal(value: Any) -> Decimal:
     return Decimal("0")
 
 
+def _safe_int(value: Any, default: int = 0) -> int:
+    """Converte um valor qualquer em int de forma segura.
+
+    Trata: None, string vazia, string com número, tipos numéricos.
+    Retorna *default* para qualquer entrada inválida.
+    """
+    if value is None:
+        return default
+
+    if isinstance(value, int):
+        return value
+
+    if isinstance(value, float):
+        return int(value)
+
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return default
+        try:
+            return int(stripped)
+        except (ValueError, TypeError):
+            logger.debug("Valor int inválido ignorado: '%s'", stripped)
+            return default
+
+    return default
+
+
 def _detect_tipo_from_descricao(descricao: str) -> str:
     """Detecta se o item é CORRENTE ou CAPITAL pela descrição."""
     return "CAPITAL" if "CAPITAL" in descricao.upper() else "CORRENTE"
@@ -205,7 +233,7 @@ class ReceitaScraper:
                 continue
 
             descricao = _clean_descricao(descricao_raw)
-            nivel = int(item.get("nivel", 0))
+            nivel = _safe_int(item.get("nivel", 0))
             tipo = _detect_tipo_from_descricao(descricao)
             valor_previsto = _safe_decimal(item.get("previsao"))
 

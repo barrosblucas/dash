@@ -106,3 +106,17 @@
 - `mypy tests/test_etl/test_scraping_sync_state.py` — pass
 - `pytest tests/test_etl/test_scraping_sync_state.py` — 5/5 pass
 - Nota: `pytest` executado com `--rootdir=tests/test_etl` para contornar gate de tamanho de arquivo pré-existente (4 arquivos de produção acima de 400 linhas).
+
+## Correções (continuação)
+
+### Backend — ValueError ao converter "nivel" vazio no scraping de receitas
+- **Fixed** `ValueError: invalid literal for int() with base 10: ''` em `parse_revenue_detailing` durante scraping de receitas (anos 2022 e 2023).
+  - Causa: `int(item.get("nivel", 0))` — a chave `"nivel"` existia no dict com valor `''` (string vazia), impedindo o default `0` de ser usado.
+  - Solução: adicionada função `_safe_int` (mesmo padrão de `_safe_decimal` já existente) e substituída a chamada direta a `int()` por `_safe_int()`.
+  - Arquivos: `backend/features/receita/receita_scraper.py`
+
+## Validação (fix receita_scraper)
+- `ruff check features/receita/receita_scraper.py` — pass
+- `mypy features/receita/receita_scraper.py` — pass
+- `pytest tests/test_etl/test_scraping_receitas.py` — 1 passed
+- `pytest tests/test_etl/test_scraping_scheduler.py` — 4 passed
