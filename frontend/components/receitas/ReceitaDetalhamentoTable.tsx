@@ -17,10 +17,15 @@ const INDENT_MAP: Record<number, string> = {
   3: 'pl-[4.5rem]',
   4: 'pl-[6.5rem]',
   5: 'pl-[8.5rem]',
+  6: 'pl-[10.5rem]',
+  7: 'pl-[12.5rem]',
+  8: 'pl-[14.5rem]',
+  9: 'pl-[16.5rem]',
+  10: 'pl-[18.5rem]',
 };
 
 function getIndent(nivel: number): string {
-  return INDENT_MAP[nivel] ?? 'pl-[8.5rem]';
+  return INDENT_MAP[nivel] ?? 'pl-[18.5rem]';
 }
 
 /* ── Cor do % de execução ── */
@@ -54,11 +59,14 @@ export default function ReceitaDetalhamentoTable({ itens }: ReceitaDetalhamentoT
   const isVisible = useCallback(
     (index: number): boolean => {
       if (itens[index].nivel === 1) return true;
+      // Walk backwards looking for ancestors at each level from (nivel-1) down to 1
       let targetNivel = itens[index].nivel - 1;
       for (let i = index - 1; i >= 0; i--) {
-        if (itens[i].nivel === targetNivel) {
+        if (itens[i].nivel <= targetNivel) {
+          // Found an ancestor. Check if it's expanded.
           if (!expandedIds.has(itens[i].id)) return false;
-          targetNivel--;
+          // Move to the next ancestor level up
+          targetNivel = itens[i].nivel - 1;
           if (targetNivel === 0) break;
         }
       }

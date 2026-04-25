@@ -156,3 +156,43 @@
 - Backend: ruff ✓, mypy ✓, pytest 94 passed ✓
 - Frontend: lint ✓, type-check ✓
 - Gate de tamanho: todos arquivos abaixo de 400 linhas ✓
+
+## Correções (continuação)
+
+### Backend — Hierarquia do Detalhamento de Receitas (correção de raiz)
+- **Fixed** itens de receitas apareciam no nível 1 em vez de nível 6 (ex.: IPTU - Principal).
+  - **Causa raiz:** a tabela `receita_detalhamento` armazena níveis com **gaps** dentro de subárvores. Exemplo: IPTU pai no nível 5, filhos diretos no nível 7 (pula o 6). A normalização anterior (`_normalize_detalhamento`) fazia apenas **remapeamento global** dos níveis únicos, que era uma no-op porque todos os níveis 1-10 existiam em algum lugar do dataset. Consequência: o frontend `isVisible` não encontrava o pai esperado no nível 6 e caía no `return true`, tornando itens profundos visíveis sem seus ancestrais.
+  - **Solução backend:** substituída a normalização global por **recomputação baseada em pilha** que usa os níveis originais para reconstruir a profundidade real na árvore. O novo nível de cada item é `len(pilha) + 1`, garantindo contiguidade local independente de gaps no banco. Além disso, a detecção de duplicatas consecutivas passou a usar comparação **case-insensitive** (`upper()`), removendo filhos duplicados com caixa diferente (ex.: "IMPOSTO..." pai vs "Imposto..." filho). Resultado: 37 duplicatas removidas do dataset 2025.
+  - **Solução frontend:** expandido `INDENT_MAP` de 5 para 10 níveis (`pl-3` até `pl-[18.5rem]`). Hardening do `isVisible`: busca ancestral com `<= targetNivel` em vez de `=== targetNivel`, tornando a lógica de visibilidade robusta a gaps.
+  - **Arquivos:** `backend/features/receita/receita_data.py`, `frontend/components/receitas/ReceitaDetalhamentoTable.tsx`
+  - **Comparativo API vs Banco vs Referência (IPTU 2025):**
+    | Campo | Referência (PDF) | Banco/API (atual) |
+    |---|---|---|
+    | IPTU - Principal previsto | 700.000,00 | 700.000,00 ✓ |
+    | IPTU - Principal arrecadado | 22.566,82 | 437.542,12 (anual total Quality API vs PDF parcial) |
+    | IPTU - Principal nível | 6 | ~~7~~ → **6** ✓ |
+    | Hierarquia | contígua | gaps removidos ✓ |
+
+## Validação (hierarquia detalhamento)
+- Backend: `ruff check .` — pass (3 erros pré-existentes em `features/saude/saude_public_builders.py` e `scripts/seed_admin.py`)
+- Backend: `mypy .` — pass (5 erros pré-existentes)
+- Backend: `pytest` — **94 passed** ✓
+- Frontend: `npm run lint` — sem erros ✓
+- Frontend: `npm run type-check` — sem erros nos arquivos alterados (erros pré-existentes em testes com vitest/leaflet ausentes)
+- Frontend: `npm run build` — build bloqueado por `leaflet` não instalado (pré-existente, fora do escopo)
+
+## Correções (continuação)
+
+### Backend — OperationalError: no such column: receita_detalhamento.valores_mensais
+- **Fixed** `sqlalchemy.exc.OperationalError` ao acessar `GET /api/v1/receitas/detalhamento/{ano}` (2025, 2026).
+  - Causa: a migration Alembic `686fd3aaaeb2` (adição de `valores_mensais` e `valores_anulados_mensais`) nunca foi aplicada ao banco `database/dashboard.db`. O banco foi criado via `Base.metadata.create_all()` com o schema anterior e não possuía tabela `alembic_version`.
+  - Solução: adicionadas as 2 colunas faltantes via `ALTER TABLE receita_detalhamento ADD COLUMN valores_mensais TEXT` e `ALTER TABLE receita_detalhamento ADD COLUMN valores_anulados_mensais TEXT`. Os valores ficarão NULL até a próxima execução do scraper popular os dados mensais via Quality API.
+  - Sem alteração em código-fonte — correção operacional no banco de dados.
+  - Após corrigir o schema, resetado `quality_sync_state` para receitas 2025/2026 e re-executado `ScrapingService.scrape_receitas()` para popular `valores_mensais` e `valores_anulados_mensais` com dados mensais da API Quality.
+  - Resultado: 2025 → 499 registros com mensais, 2026 → 459 registros com mensais.
+
+### Backend — Despesa Breakdown NATUREZA faltando para anos históricos (2013-2025)
+- **Fixed** "Nenhum dado encontrado para o filtro selecionado" no Detalhamento por Categoria de despesas para anos ≤ 2025.
+  - Causa: o tipo de breakdown `NATUREZA` só havia sido scrapeado para 2026; os anos 2013-2025 nunca receberam dados de natureza no `despesa_breakdown`, embora os outros tipos (ORGAO, FUNCAO, ELEMENTO) estivessem presentes.
+  - Solução: executado `ScrapingService.scrape_despesas_breakdown()` para 2013-2025. Os tipos já existentes foram ignorados (NO_CHANGE via hash); apenas NATUREZA foi processado — 36 registros por ano, totalizando 468 novos registros.
+  - Sem alteração em código-fonte — correção operacional via scraper.

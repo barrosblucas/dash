@@ -38,15 +38,7 @@ class SQLReceitaRepository:
         self.session = session
 
     def _to_entity(self, model: ReceitaModel) -> Receita:
-        """
-        Converte modelo SQLAlchemy para entidade de domínio.
-
-        Args:
-            model: Modelo SQLAlchemy.
-
-        Returns:
-            Entidade de domínio Receita.
-        """
+        """Converte modelo SQLAlchemy para entidade de domínio."""
         return Receita(
             id=cast(int | None, model.id),
             ano=cast(int, model.ano),
@@ -63,15 +55,7 @@ class SQLReceitaRepository:
         )
 
     def _to_model(self, entity: Receita) -> ReceitaModel:
-        """
-        Converte entidade de domínio para modelo SQLAlchemy.
-
-        Args:
-            entity: Entidade de domínio.
-
-        Returns:
-            Modelo SQLAlchemy ReceitaModel.
-        """
+        """Converte entidade de domínio para modelo SQLAlchemy."""
         return ReceitaModel(
             id=entity.id,
             ano=entity.ano,
@@ -288,28 +272,48 @@ class SQLReceitaRepository:
 
     @staticmethod
     def _normalize_detalhamento(itens: list[dict]) -> list[dict]:
-        """Normaliza níveis: remove duplicatas consecutivas e remapeia para contíguos."""
+        """Normaliza níveis: remove duplicatas consecutivas e recomputa níveis contíguos via pilha."""
         if not itens:
             return []
 
         # Remove duplicatas consecutivas (filho com mesma descrição/valores do pai)
-        remover = {
-            i + 1
-            for i in range(len(itens) - 1)
+        # Comparação case-insensitive para cobrir diferenças de caixa no scraper
+        remover: set[int] = set()
+        for i in range(len(itens) - 1):
+            filho = itens[i + 1]
+            pai = itens[i]
             if (
-                itens[i]["nivel"] == itens[i + 1]["nivel"] - 1
-                and itens[i]["detalhamento"] == itens[i + 1]["detalhamento"]
-                and itens[i]["valor_arrecadado"] == itens[i + 1]["valor_arrecadado"]
-                and itens[i]["valor_previsto"] == itens[i + 1]["valor_previsto"]
-            )
-        }
+                pai["nivel"] == filho["nivel"] - 1
+                and pai["detalhamento"].upper() == filho["detalhamento"].upper()
+                and pai["valor_arrecadado"] == filho["valor_arrecadado"]
+                and pai["valor_previsto"] == filho["valor_previsto"]
+            ):
+                remover.add(i + 1)
         filtrados = [itens[i] for i in range(len(itens)) if i not in remover]
 
-        # Mapeia níveis únicos ordenados para valores contíguos a partir de 1
-        niveis_unicos = sorted({item["nivel"] for item in filtrados})
-        mapa = {orig: novo for novo, orig in enumerate(niveis_unicos, start=1)}
+        if not filtrados:
+            return []
 
-        return [{**item, "nivel": mapa[item["nivel"]]} for item in filtrados]
+        # Recomputa níveis usando pilha para garantir contiguidade local.
+        # A pilha rastreia o nível original de cada ancestral; o novo nível
+        # é determinado pela profundidade real na árvore, não pelo valor armazenado.
+        resultado: list[dict] = []
+        pilha: list[int] = []  # níveis originais dos ancestrais
+
+        for item in filtrados:
+            nivel_original = item["nivel"]
+
+            # Remove da pilha ancestrais que estão no mesmo nível ou mais profundo
+            while pilha and pilha[-1] >= nivel_original:
+                pilha.pop()
+
+            # Novo nível = profundidade da pilha + 1 (contíguo, sem gaps)
+            novo_nivel = len(pilha) + 1
+            pilha.append(nivel_original)
+
+            resultado.append({**item, "nivel": novo_nivel})
+
+        return resultado
 
     def list_detalhamento_by_ano(
         self,
