@@ -41,16 +41,13 @@ class SaudeSyncService:
         years = _resolve_years(request.years)
         resources = request.resources or DEFAULT_SYNC_RESOURCES
         started_at = _utc_now_naive()
-        log = repo.create_sync_log(
-            trigger_type=trigger_type,
-            status="running",
-            started_at=started_at,
-            resources=resources,
-            years=years,
-        )
 
+        # Coleta todos os payloads antes de abrir transacao de persistencia
+        # para evitar manter lock do SQLite durante I/O de rede.
+        payloads_to_persist: list[
+            tuple[SaudeSnapshotResource, int | None, Any, str]
+        ] = []
         errors: list[str] = []
-        synced_resources = 0
         for resource in resources:
             if is_year_scoped(resource):
                 scope_years: list[int | None] = [int(item) for item in years]
@@ -59,23 +56,40 @@ class SaudeSyncService:
             for scope_year in scope_years:
                 try:
                     payload = await self.fetch_resource_payload(resource, scope_year)
-                    repo.replace_snapshot(
-                        resource=resource,
-                        payload=payload,
-                        synced_at=_utc_now_naive(),
-                        scope_year=scope_year,
-                        source_url=resource_source_url(resource, scope_year),
+                    payloads_to_persist.append(
+                        (
+                            resource,
+                            scope_year,
+                            payload,
+                            resource_source_url(resource, scope_year),
+                        )
                     )
-                    synced_resources += 1
                 except SaudeExternalAPIError as exc:
                     errors.append(sync_error_label(resource, scope_year, exc))
 
         finished_at = _utc_now_naive()
         status = (
-            "success"
-            if not errors
-            else ("partial" if synced_resources > 0 else "error")
+            "success" if not errors else ("partial" if payloads_to_persist else "error")
         )
+
+        # Persistencia em transacao unica e curta (sem await no meio)
+        synced_resources = 0
+        log = repo.create_sync_log(
+            trigger_type=trigger_type,
+            status="running",
+            started_at=started_at,
+            resources=resources,
+            years=years,
+        )
+        for resource, scope_year, payload, source_url in payloads_to_persist:
+            repo.replace_snapshot(
+                resource=resource,
+                payload=payload,
+                synced_at=finished_at,
+                scope_year=scope_year,
+                source_url=source_url,
+            )
+            synced_resources += 1
         repo.update_sync_log(
             log,
             status=status,
@@ -184,7 +198,9 @@ def sync_error_label(
     scope_year: int | None,
     exc: SaudeExternalAPIError,
 ) -> str:
-    label = f"{resource.value}:{scope_year}" if scope_year is not None else resource.value
+    label = (
+        f"{resource.value}:{scope_year}" if scope_year is not None else resource.value
+    )
     return f"{label}: {exc.message}"
 
 

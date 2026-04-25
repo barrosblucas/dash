@@ -157,8 +157,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - `notebooks/` vazio — sem notebooks de exploração
 - Alembic migrations configurado e migration inicial gerada cobrindo todas as tabelas existentes (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, scraping_log, users, identity_tokens, obras, obra_medicoes)
 - `forecast_business.py` ainda importa modelos ORM via repositório ao invés de usar abstração pura
-- `backend/features/scraping/scraping_helpers.py` — `_create_log` unificado na sessão de dados para eliminar `database is locked` no SQLite (2026-04-25)
-- `backend/features/saude/saude_resource_catalog.py` — endpoint obsoleto `quantidade-de-atendimento-por-sexo` removido do sync padrão após 404 permanente (2026-04-25)
+- `backend/features/scraping/scraping_helpers.py` — `_create_log` unificado na sessao de dados para eliminar `database is locked` no SQLite (2026-04-25)
+- `backend/features/saude/saude_sync.py` — transacao de sync refatorada para coletar payloads async ANTES de persistir, eliminando a causa raiz de lock prolongado no SQLite (2026-04-25)
+- `backend/features/saude/saude_resource_catalog.py` — endpoint obsoleto `quantidade-de-atendimento-por-sexo` removido do sync padrao apos 404 permanente (2026-04-25)
 
 ### Type checking (mypy)
 
