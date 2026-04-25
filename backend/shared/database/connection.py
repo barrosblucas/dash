@@ -13,6 +13,7 @@ from typing import Any
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from .models import Base
 
@@ -51,11 +52,10 @@ def create_db_engine(db_path: Path | None = None) -> Engine:
         database_url,
         echo=False,
         future=True,
-        pool_size=5,
-        max_overflow=10,
+        poolclass=NullPool,
         connect_args={
             "check_same_thread": False,
-            "timeout": 30,
+            "timeout": 60,
         },
     )
 

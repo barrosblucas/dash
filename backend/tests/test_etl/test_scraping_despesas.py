@@ -333,7 +333,7 @@ async def test_scrape_despesas_2026_usa_replace_por_ano(
         upsert_called = True
         return 0, 0
 
-    def fake_create_log(data_type: str, year: int) -> Any:
+    def fake_create_log(session: object, data_type: str, year: int) -> Any:
         return SimpleNamespace(started_at=datetime.now())
 
     def fake_finalize_log(

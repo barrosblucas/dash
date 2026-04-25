@@ -20,6 +20,7 @@ pandas-stubs==2.2.3.241126
 numpy==2.1.2
 
 # Machine Learning
+cmdstanpy>=1.0.4,<1.1
 prophet==1.1.6
 scikit-learn==1.5.2
 

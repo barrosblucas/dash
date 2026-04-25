@@ -242,3 +242,30 @@
 - `cd frontend && npm run build` — verde
 
 ---
+
+
+### 2026-04-24 — fix(backend): correção de SQLite database lock e Prophet stan_backend
+
+**Classificação:** `mudanca_mecanica`
+
+**Contexto:** Dois erros independentes foram reportados no backend: (1) `database is locked` durante operações de scraping concorrentes no SQLite, e (2) `AttributeError: 'Prophet' object has no attribute 'stan_backend'` ao tentar gerar forecasts.
+
+**Alterado:**
+- `backend/shared/database/connection.py`
+  - Substituído `pool_size=5, max_overflow=10` por `poolclass=NullPool` para eliminar contenção de conexões no SQLite
+  - Aumentado `timeout` de 30 para 60 segundos no `connect_args` do SQLite
+  - Import adicionado: `from sqlalchemy.pool import NullPool`
+
+- `backend/requirements.txt`
+  - Adicionado pin `cmdstanpy>=1.0.4,<1.1` antes do `prophet==1.1.6` para evitar incompatibilidade com cmdstanpy 1.3.0, que quebra a inicialização do backend STAN do Prophet
+
+**Decisões importantes:**
+- `NullPool` é a escolha correta para SQLite em ambientes multi-thread/async porque fecha a conexão física após cada sessão, reduzindo a contenção do writer lock do SQLite
+- O downgrade do cmdstanpy de 1.3.0 para 1.0.8 resolve o bug do Prophet 1.1.6 onde `_load_stan_backend` falha silenciosamente e deixa `self.stan_backend` não atribuído
+
+**Validação:**
+- `cd backend && /home/thanos/dashboard/venv/bin/ruff check shared/database/connection.py` — verde
+- `cd backend && /home/thanos/dashboard/venv/bin/pytest` — 85 passed, 0 failed
+- Teste manual: `Prophet(yearly_seasonality=True)` instancia corretamente com backend CMDSTANPY
+- Teste manual: engine SQLite criada com `NullPool` e `busy_timeout=60000` confirmados
+

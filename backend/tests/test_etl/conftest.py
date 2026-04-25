@@ -53,7 +53,7 @@ class LogCapture:
     def __init__(self) -> None:
         self.captured: dict[str, Any] = {}
 
-    def create_log(self, data_type: str, year: int) -> Any:
+    def create_log(self, session: object, data_type: str, year: int) -> Any:
         return SimpleNamespace(started_at=datetime.now())
 
     def finalize_log(

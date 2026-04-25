@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from backend.features.despesa.despesa_scraper import DespesaScraper
 from backend.features.despesa.despesa_types import Despesa
@@ -97,7 +97,7 @@ class ScrapingService:
 
     async def scrape_receitas(self, year: int) -> ScrapingResult:
         """Pipeline de receitas: fetch → parse → upsert receitas + replace detalhamento."""
-        log = _create_log("receitas", year)
+        started_at = datetime.now()
         try:
             raw_monthly = await self._api.fetch_revenue_monthly(year)
             raw_detail = await self._api.fetch_revenue_detailing(year)
@@ -110,6 +110,7 @@ class ScrapingService:
                 )
 
             with db_manager.get_session() as session:
+                log = _create_log(session, "receitas", year)
                 if year == _REALTIME_API_YEAR:
                     ins, upd = _replace_receitas_for_year(session, receitas, year)
                 else:
@@ -132,12 +133,12 @@ class ScrapingService:
         except Exception as exc:
             msg = f"Erro scraping receitas {year}: {exc}"
             logger.error(msg, exc_info=True)
-            _try_log_error("receitas", year, msg, cast(datetime, log.started_at))
+            _try_log_error("receitas", year, msg, started_at)
             return ScrapingResult(False, "receitas", year, 0, 0, 0, [msg])
 
     async def scrape_despesas(self, year: int) -> ScrapingResult:
         """Pipeline de despesas: fetch → parse → merge → upsert. API vazia = warning, não erro."""
-        log = _create_log("despesas", year)
+        started_at = datetime.now()
         try:
             raw_annual = await self._api.fetch_despesas_annual(year)
             raw_natureza = await self._api.fetch_despesas_natureza(year)
@@ -170,10 +171,12 @@ class ScrapingService:
                 )
                 logger.warning(message)
                 with db_manager.get_session() as session:
+                    log = _create_log(session, "despesas", year)
                     _finalize_log(session, log, "NO_DATA", 0, 0, 0)
                 return ScrapingResult(False, "despesas", year, 0, 0, 0, [message])
 
             with db_manager.get_session() as session:
+                log = _create_log(session, "despesas", year)
                 if year == _REALTIME_API_YEAR:
                     ins, upd = _replace_despesas_for_year(session, merged, year)
                 else:
@@ -185,7 +188,7 @@ class ScrapingService:
         except Exception as exc:
             msg = f"Erro scraping despesas {year}: {exc}"
             logger.error(msg, exc_info=True)
-            _try_log_error("despesas", year, msg, cast(datetime, log.started_at))
+            _try_log_error("despesas", year, msg, started_at)
             return ScrapingResult(False, "despesas", year, 0, 0, 0, [msg])
 
     def _load_despesas_from_pdf(self, year: int) -> list[Despesa]:

@@ -80,7 +80,7 @@ async def test_scrape_receitas_2026_usa_replace_por_ano(
         assert detalhes_data == detalhes
         return 1
 
-    def fake_create_log(data_type: str, year: int) -> Any:
+    def fake_create_log(session: object, data_type: str, year: int) -> Any:
         return SimpleNamespace(started_at=datetime.now())
 
     def fake_finalize_log(

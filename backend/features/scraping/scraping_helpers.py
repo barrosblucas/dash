@@ -175,8 +175,8 @@ def _replace_despesas_for_year(
 # ------------------------------------------------------------------
 
 
-def _create_log(data_type: str, year: int) -> ScrapingLogModel:
-    """Cria registro de log RUNNING em sessão própria."""
+def _create_log(session: Session, data_type: str, year: int) -> ScrapingLogModel:
+    """Cria registro de log RUNNING na sessão de dados fornecida."""
     entry = ScrapingLogModel(
         data_type=data_type,
         year=year,
@@ -186,9 +186,7 @@ def _create_log(data_type: str, year: int) -> ScrapingLogModel:
         records_updated=0,
         started_at=datetime.now(),
     )
-    with db_manager.get_session() as session:
-        session.add(entry)
-        session.flush()
+    session.add(entry)
     return entry
 
 
@@ -206,7 +204,6 @@ def _finalize_log(
     log.records_inserted = inserted  # type: ignore[assignment]
     log.records_updated = updated  # type: ignore[assignment]
     log.finished_at = datetime.now()  # type: ignore[assignment]
-    session.add(log)
     session.flush()
 
 

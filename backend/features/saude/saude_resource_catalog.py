@@ -117,7 +117,6 @@ DEFAULT_SYNC_RESOURCES: list[SaudeSnapshotResource] = [
     SaudeSnapshotResource.MEDICAMENTOS_DISPENSADOS_MENSAL,
     SaudeSnapshotResource.MEDICAMENTOS_ATENDIMENTOS_MENSAL,
     SaudeSnapshotResource.QUANTITATIVOS,
-    SaudeSnapshotResource.ATENDIMENTOS_POR_SEXO,
     SaudeSnapshotResource.PESSOAS_FISICAS_JURIDICAS,
     SaudeSnapshotResource.PESSOAS_POR_MES,
     SaudeSnapshotResource.PROCEDIMENTOS_POR_TIPO,
