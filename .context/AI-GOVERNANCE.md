@@ -137,7 +137,7 @@ Exemplos esperados:
 8. Entidades de domínio (`domain/entities/`) não dependem de infraestrutura
 9. Services de domínio (`domain/services/`) não importam diretamente de `infrastructure/` — usam interfaces de repositório
 10. **Context-Mode é o padrão obrigatório**: toda operação de leitura, execução e busca deve preferir ferramentas `ctx_*` quando houver equivalente. Ferramentas clássicas (`bash`, `read`, `grep`) podem ser usadas quando o context-mode não oferece equivalente direto ou quando a operação é trivialmente pequena, mas a escolha deve ser consciente e documentada no raciocínio.
-
+11. **Ativação de venv dentro do Context-Mode**: quando o projeto usa ambiente virtual (`backend/venv/`), comandos de validação (pytest, ruff, mypy) devem ser invocados **dentro do `ctx_batch_execute`**, ativando o venv inline via `bash -c 'source venv/bin/activate && ...'`. Não é justificativa para sair do context-mode o fato de o binário não estar no PATH global.
 ## Taxonomia de mudança
 
 - `regra_de_negocio`: muda regra/invariante/cálculo de domínio (ex: fórmula de previsão, lógica de rateio de despesas)
@@ -154,7 +154,7 @@ Exemplos esperados:
 
 ### Backend (Python)
 ```bash
-cd backend && ruff check . && ruff format --check . && mypy . && pytest
+cd backend && bash -c 'source venv/bin/activate && ruff check . && ruff format --check . && mypy . && pytest'
 ```
 
 ### Frontend (TypeScript)
