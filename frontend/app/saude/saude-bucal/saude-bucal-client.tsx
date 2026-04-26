@@ -9,27 +9,29 @@ import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude
 import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { getSaudePeriodRange, getYearFromDateInput, saudeYearOptions } from '@/lib/saude-utils';
+import { getSaudePeriodRange, getYearFromDateInput, maxDate, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
+const MIN_START_DATE = '2025-05-01';
 const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
 
 export default function SaudeBucalClient() {
   const [year, setYear] = useState(saudeYearOptions[0]);
-  const [startDate, setStartDate] = useState(defaultPeriod.startDate);
+  const [startDate, setStartDate] = useState(maxDate(defaultPeriod.startDate, MIN_START_DATE));
   const [endDate, setEndDate] = useState(defaultPeriod.endDate);
 
   const handleYearChange = (nextYear: number) => {
     setYear(nextYear);
     const period = getSaudePeriodRange(nextYear);
-    setStartDate(period.startDate);
+    setStartDate(maxDate(period.startDate, MIN_START_DATE));
     setEndDate(period.endDate);
   };
 
   const handleStartDateChange = (date: string) => {
-    setStartDate(date);
-    const nextYear = getYearFromDateInput(date);
+    const clamped = maxDate(date, MIN_START_DATE);
+    setStartDate(clamped);
+    const nextYear = getYearFromDateInput(clamped);
     if (nextYear !== null) {
       setYear(nextYear);
     }
@@ -69,6 +71,7 @@ export default function SaudeBucalClient() {
             onYearChange={handleYearChange}
             onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
+            minStartDate="2025-05-01"
           />
         }
       />

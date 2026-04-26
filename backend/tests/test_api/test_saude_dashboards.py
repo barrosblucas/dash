@@ -365,7 +365,7 @@ def test_saude_dashboards_fallback_live_para_start_date_e_estabelecimento(
 
     atencao_primaria = client.get("/api/v1/saude/atencao-primaria", params={"year": 2026, "start_date": "2026-02-01"})
     assert atencao_primaria.status_code == 200
-    assert atencao_primaria.json()["atendimentos_por_cbo"][0]["label"] == "Técnico"
+    assert atencao_primaria.json()["atendimentos_por_cbo"][0]["label"] == "Padrão"
 
     hospital = client.get("/api/v1/saude/hospital", params={"estabelecimento_id": 77})
     assert hospital.status_code == 200

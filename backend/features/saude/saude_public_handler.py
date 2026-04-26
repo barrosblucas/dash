@@ -135,29 +135,18 @@ async def get_vacinacao(
     db: Session = Depends(get_db),
 ) -> SaudeVacinacaoResponse:
     repo = SQLSaudeRepository(db)
+    structured = build_structured_vacinacao_response(repo, year=year, start_date=start_date, end_date=end_date)
+    if structured:
+        return structured
     if start_date is not None and end_date is not None:
-        mensal_payload, mensal_synced = await load_chart_payload(
-            repo,
-            SaudeSnapshotResource.VACINAS_POR_MES,
-            year=year,
-        )
-        ranking_payload, ranking_synced = await load_vacinacao_ranking(
-            repo,
-            start_date,
-            end_date,
-        )
+        mensal_payload, mensal_synced = await load_chart_payload(repo, SaudeSnapshotResource.VACINAS_POR_MES, year=year)
+        ranking_payload, ranking_synced = await load_vacinacao_ranking(repo, start_date, end_date)
     else:
-        structured = build_structured_vacinacao_response(repo, year=year, start_date=start_date, end_date=end_date)
-        if structured:
-            return structured
-        mensal_payload, mensal_synced = repo.get_snapshot_payload(
-            SaudeSnapshotResource.VACINAS_POR_MES,
-            year,
-        )
-        ranking_payload, ranking_synced = repo.get_snapshot_payload(
-            SaudeSnapshotResource.VACINAS_RANKING
-        )
+        mensal_payload, mensal_synced = repo.get_snapshot_payload(SaudeSnapshotResource.VACINAS_POR_MES, year)
+        ranking_payload, ranking_synced = repo.get_snapshot_payload(SaudeSnapshotResource.VACINAS_RANKING)
     mensal = chart_to_monthly_series_items(mensal_payload, year=year)
+    if start_date is not None and end_date is not None:
+        mensal = filter_monthly_series_by_date_range(mensal, datetime(start_date.year, start_date.month, start_date.day), datetime(end_date.year, end_date.month, end_date.day))
     return SaudeVacinacaoResponse(
         start_date=start_date.isoformat() if start_date else None,
         end_date=end_date.isoformat() if end_date else None,
@@ -230,32 +219,22 @@ async def get_atencao_primaria(
     effective_start_date = start_date or date(year, 1, 1)
     effective_end_date = end_date or date(year, 12, 31)
     repo = SQLSaudeRepository(db)
-    if start_date is None and end_date is None:
-        structured = build_structured_atencao_primaria_response(
-            repo, year=year, effective_start_date=effective_start_date, effective_end_date=effective_end_date
-        )
-        if structured:
-            return structured
-    mensal_payload, mensal_synced = await load_chart_payload(
-        repo,
-        SaudeSnapshotResource.ATENCAO_PRIMARIA_ATENDIMENTOS_MENSAL,
-        year=year,
+    structured = build_structured_atencao_primaria_response(
+        repo, year=year, effective_start_date=effective_start_date, effective_end_date=effective_end_date
     )
-    procedimentos_payload, procedimentos_synced = await load_atencao_primaria_procedimentos(
-        repo,
-        effective_start_date,
-        effective_end_date,
-    )
-    cbo_payload, cbo_synced = await load_atencao_primaria_cbo(
-        repo,
-        year=year,
-        start_date=effective_start_date,
-    )
+    if structured:
+        return structured
+    mensal_payload, mensal_synced = await load_chart_payload(repo, SaudeSnapshotResource.ATENCAO_PRIMARIA_ATENDIMENTOS_MENSAL, year=year)
+    procedimentos_payload, procedimentos_synced = await load_atencao_primaria_procedimentos(repo, effective_start_date, effective_end_date)
+    cbo_payload, cbo_synced = await load_atencao_primaria_cbo(repo, year=year, start_date=effective_start_date)
+    atendimentos_mensal = chart_to_monthly_series_items(mensal_payload, year=year)
+    if start_date is not None and end_date is not None:
+        atendimentos_mensal = filter_monthly_series_by_date_range(atendimentos_mensal, datetime(effective_start_date.year, effective_start_date.month, effective_start_date.day), datetime(effective_end_date.year, effective_end_date.month, effective_end_date.day))
     return SaudeAtencaoPrimariaResponse(
         year=year,
         start_date=effective_start_date.isoformat(),
         end_date=effective_end_date.isoformat(),
-        atendimentos_por_mes=chart_to_monthly_series_items(mensal_payload, year=year),
+        atendimentos_por_mes=atendimentos_mensal,
         procedimentos_por_especialidade=chart_to_label_value_items(procedimentos_payload),
         atendimentos_por_cbo=chart_to_label_value_items(cbo_payload),
         last_synced_at=max_synced_at(mensal_synced, procedimentos_synced, cbo_synced),

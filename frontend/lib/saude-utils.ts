@@ -268,6 +268,8 @@ export const getTopLabel = (items: SaudeLabelValueItem[]) => {
   return items.reduce((top, item) => (item.value > top.value ? item : top)).label;
 };
 
+export const maxDate = (a: string, b: string) => (a > b ? a : b);
+
 export const formatDateInputValue = (value: Date) => {
   const year = value.getFullYear();
   const month = `${value.getMonth() + 1}`.padStart(2, '0');

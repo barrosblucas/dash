@@ -54,6 +54,20 @@ def max_synced_from_rows(*rows: list) -> datetime | None:
     return max(timestamps) if timestamps else None
 
 
+def _filter_by_dates(
+    series: list[SaudeMonthlySeriesItem],
+    start_date: date | None,
+    end_date: date | None,
+) -> list[SaudeMonthlySeriesItem]:
+    if start_date is None or end_date is None:
+        return series
+    return filter_monthly_series_by_date_range(
+        series,
+        datetime(start_date.year, start_date.month, start_date.day),
+        datetime(end_date.year, end_date.month, end_date.day),
+    )
+
+
 def build_structured_medicamentos_estoque_response(
     repo: SQLSaudeRepository,
     *,
@@ -120,7 +134,7 @@ def build_structured_vacinacao_response(
     ranking_rows = repo.list_vacinacao_rows(ano=year, dataset="ranking")
     if not mensal_rows and not ranking_rows:
         return None
-    mensal = rows_to_monthly_series(mensal_rows)
+    mensal = _filter_by_dates(rows_to_monthly_series(mensal_rows), start_date, end_date)
     return SaudeVacinacaoResponse(
         start_date=start_date.isoformat() if start_date else None,
         end_date=end_date.isoformat() if end_date else None,
@@ -143,11 +157,12 @@ def build_structured_atencao_primaria_response(
     cbo_rows = repo.list_atencao_primaria_rows(ano=year, dataset="cbo")
     if not mensal_rows and not procedimentos_rows and not cbo_rows:
         return None
+    mensal = _filter_by_dates(rows_to_monthly_series(mensal_rows), effective_start_date, effective_end_date)
     return SaudeAtencaoPrimariaResponse(
         year=year,
         start_date=effective_start_date.isoformat(),
         end_date=effective_end_date.isoformat(),
-        atendimentos_por_mes=rows_to_monthly_series(mensal_rows),
+        atendimentos_por_mes=mensal,
         procedimentos_por_especialidade=rows_to_label_value(procedimentos_rows),
         atendimentos_por_cbo=rows_to_label_value(cbo_rows),
         last_synced_at=max_synced_from_rows(mensal_rows, procedimentos_rows, cbo_rows),
@@ -164,13 +179,7 @@ def build_structured_saude_bucal_response(
     bucal_rows = repo.list_bucal_rows(ano=year)
     if not bucal_rows:
         return None
-    mensal = rows_to_monthly_series(bucal_rows)
-    if start_date is not None and end_date is not None:
-        mensal = filter_monthly_series_by_date_range(
-            mensal,
-            datetime(start_date.year, start_date.month, start_date.day),
-            datetime(end_date.year, end_date.month, end_date.day),
-        )
+    mensal = _filter_by_dates(rows_to_monthly_series(bucal_rows), start_date, end_date)
     return SaudeBucalResponse(
         year=year,
         start_date=start_date.isoformat() if start_date else None,
@@ -193,21 +202,8 @@ def build_structured_farmacia_response(
     atendimentos_rows = repo.list_farmacia_rows(ano=year, dataset="atendimentos_mensal")
     if not ranking_rows and not dispensados_rows and not atendimentos_rows:
         return None
-    atendimentos_por_mes = rows_to_monthly_series(atendimentos_rows)
-    medicamentos_dispensados_por_mes = rows_to_monthly_series(dispensados_rows)
-    if start_date is not None and end_date is not None:
-        effective_start = start_date or date(year, 1, 1)
-        effective_end = end_date or date(year, 12, 31)
-        atendimentos_por_mes = filter_monthly_series_by_date_range(
-            atendimentos_por_mes,
-            datetime(effective_start.year, effective_start.month, effective_start.day),
-            datetime(effective_end.year, effective_end.month, effective_end.day),
-        )
-        medicamentos_dispensados_por_mes = filter_monthly_series_by_date_range(
-            medicamentos_dispensados_por_mes,
-            datetime(effective_start.year, effective_start.month, effective_start.day),
-            datetime(effective_end.year, effective_end.month, effective_end.day),
-        )
+    atendimentos_por_mes = _filter_by_dates(rows_to_monthly_series(atendimentos_rows), start_date, end_date)
+    medicamentos_dispensados_por_mes = _filter_by_dates(rows_to_monthly_series(dispensados_rows), start_date, end_date)
     return SaudeFarmaciaResponse(
         year=year,
         start_date=start_date.isoformat() if start_date else None,
@@ -280,17 +276,8 @@ async def build_farmacia_response(
         year=series_year,
     )
 
-    if start_date is not None and end_date is not None:
-        atendimentos_por_mes = filter_monthly_series_by_date_range(
-            atendimentos_por_mes,
-            datetime(effective_start.year, effective_start.month, effective_start.day),
-            datetime(effective_end.year, effective_end.month, effective_end.day),
-        )
-        medicamentos_dispensados_por_mes = filter_monthly_series_by_date_range(
-            medicamentos_dispensados_por_mes,
-            datetime(effective_start.year, effective_start.month, effective_start.day),
-            datetime(effective_end.year, effective_end.month, effective_end.day),
-        )
+    atendimentos_por_mes = _filter_by_dates(atendimentos_por_mes, effective_start, effective_end)
+    medicamentos_dispensados_por_mes = _filter_by_dates(medicamentos_dispensados_por_mes, effective_start, effective_end)
 
     return SaudeFarmaciaResponse(
         year=year,

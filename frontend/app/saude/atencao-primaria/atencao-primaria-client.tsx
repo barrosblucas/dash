@@ -9,27 +9,29 @@ import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude
 import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { getSaudePeriodRange, getYearFromDateInput, getTopLabel, saudeYearOptions } from '@/lib/saude-utils';
+import { getSaudePeriodRange, getYearFromDateInput, getTopLabel, maxDate, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
+const MIN_START_DATE = '2020-01-01';
 const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
 
 export default function AtencaoPrimariaClient() {
   const [year, setYear] = useState(saudeYearOptions[0]);
-  const [startDate, setStartDate] = useState(defaultPeriod.startDate);
+  const [startDate, setStartDate] = useState(maxDate(defaultPeriod.startDate, MIN_START_DATE));
   const [endDate, setEndDate] = useState(defaultPeriod.endDate);
 
   const handleYearChange = (nextYear: number) => {
     setYear(nextYear);
     const period = getSaudePeriodRange(nextYear);
-    setStartDate(period.startDate);
+    setStartDate(maxDate(period.startDate, MIN_START_DATE));
     setEndDate(period.endDate);
   };
 
   const handleStartDateChange = (date: string) => {
-    setStartDate(date);
-    const nextYear = getYearFromDateInput(date);
+    const clamped = maxDate(date, MIN_START_DATE);
+    setStartDate(clamped);
+    const nextYear = getYearFromDateInput(clamped);
     if (nextYear !== null) {
       setYear(nextYear);
     }
@@ -72,6 +74,7 @@ export default function AtencaoPrimariaClient() {
             onYearChange={handleYearChange}
             onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
+            minStartDate="2020-01-01"
           />
         }
       />
@@ -140,6 +143,20 @@ export default function AtencaoPrimariaClient() {
           </div>
         </SaudePanel>
       </section>
+
+      <SaudePanel title="Atendimentos por categoria" description="Distribuição por categoria profissional (CBO) no período selecionado.">
+        <div className="h-[340px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={primaryCareQuery.data?.attendances_by_cbo ?? []} layout="vertical" margin={{ left: 40 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
+              <XAxis type="number" tick={{ fill: 'currentColor', fontSize: 12 }} />
+              <YAxis type="category" dataKey="label" width={220} tick={{ fill: 'currentColor', fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="value" fill="#a855f7" radius={[0, 10, 10, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </SaudePanel>
 
       <SaudePanel title="Atendimentos por CBO da especialidade" description="Recorte por ocupação para visualizar onde a demanda está concentrada.">
         <div className="h-[340px]">

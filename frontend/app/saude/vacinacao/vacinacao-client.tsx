@@ -9,28 +9,30 @@ import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude
 import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { getSaudePeriodRange, getYearFromDateInput, getTopLabel, saudeYearOptions } from '@/lib/saude-utils';
+import { getSaudePeriodRange, getYearFromDateInput, getTopLabel, maxDate, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
+const MIN_START_DATE = '2019-11-01';
 const chartColors = ['#0f4c81', '#22c55e', '#06b6d4', '#f59e0b', '#a855f7'];
 const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
 
 export default function VacinacaoClient() {
   const [year, setYear] = useState(saudeYearOptions[0]);
-  const [startDate, setStartDate] = useState(defaultPeriod.startDate);
+  const [startDate, setStartDate] = useState(maxDate(defaultPeriod.startDate, MIN_START_DATE));
   const [endDate, setEndDate] = useState(defaultPeriod.endDate);
 
   const handleYearChange = (nextYear: number) => {
     setYear(nextYear);
     const period = getSaudePeriodRange(nextYear);
-    setStartDate(period.startDate);
+    setStartDate(maxDate(period.startDate, MIN_START_DATE));
     setEndDate(period.endDate);
   };
 
   const handleStartDateChange = (date: string) => {
-    setStartDate(date);
-    const nextYear = getYearFromDateInput(date);
+    const clamped = maxDate(date, MIN_START_DATE);
+    setStartDate(clamped);
+    const nextYear = getYearFromDateInput(clamped);
     if (nextYear !== null) {
       setYear(nextYear);
     }
@@ -72,6 +74,7 @@ export default function VacinacaoClient() {
             onYearChange={handleYearChange}
             onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
+            minStartDate="2019-11-01"
           />
         }
       />
