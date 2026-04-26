@@ -115,6 +115,27 @@
   - Solução: adicionada função `_safe_int` (mesmo padrão de `_safe_decimal` já existente) e substituída a chamada direta a `int()` por `_safe_int()`.
   - Arquivos: `backend/features/receita/receita_scraper.py`
 
+## Correções (continuação)
+
+### Backend — Saúde (Farmácia respeita intervalos de datas)
+- **Fixed** `build_farmacia_response` carregava `atendimentos` e `dispensados` por snapshot/ano mesmo quando `start_date`/`end_date` estavam presentes, ignorando o range solicitado.
+  - Causa: `atendimentos` usava `load_chart_payload(..., year=year)` (que fallback para snapshot do ano) e `dispensados` usava `repo.get_snapshot_payload(...)` fixo.
+  - Solução: quando `start_date` e `end_date` são informados, ambas as séries mensais (`MEDICAMENTOS_ATENDIMENTOS_MENSAL` e `MEDICAMENTOS_DISPENSADOS_MENSAL`) agora usam `load_chart_payload(..., start_date=..., end_date=...)` para buscar payload live no intervalo exato. O caminho por snapshot é mantido quando apenas `year` é usado.
+  - Arquivos: `backend/features/saude/saude_public_builders.py`
+  - Teste de regressão: `backend/tests/test_api/test_saude_farmacia.py` — `test_farmacia_respeita_range_de_datas_cross_year` cobre range cruzando 2025-2026 e prova que dados vêm do payload live para ambas as séries.
+
+### Backend — Saúde (Farmácia cross-year e labels por extenso)
+- **Fixed** range cross-year (`start_date`/`end_date`) descartava meses do ano seguinte porque `chart_to_monthly_series_items` ainda aplicava filtro por `year` antes do recorte de intervalo.
+  - Causa: `build_farmacia_response` passava `year=year` para `chart_to_monthly_series_items` mesmo no branch de range, fazendo labels como `Janeiro de 2026` serem removidos prematuramente.
+  - Solução: no branch de range, `chart_to_monthly_series_items` é chamado sem `year`, deixando `filter_monthly_series_by_date_range` fazer o recorte final com base na data parseada do label.
+  - Arquivos: `backend/features/saude/saude_public_builders.py`
+- **Fixed** `filter_monthly_series_by_date_range` não reconhecia labels mensais por extenso em português (ex.: `Janeiro de 2026`).
+  - Causa: `_parse_monthly_label` só suportava formatos numéricos (`01/2025`, `2025-01`).
+  - Solução: adicionado parser para formato `Mês de Ano` com dicionário de meses em PT-BR.
+  - Arquivos: `backend/features/saude/saude_snapshot_mapper.py`
+- **Updated** teste de regressão `test_farmacia_respeita_range_de_datas_cross_year` para usar labels por extenso no payload live e validar presença de meses de 2025 e 2026, além dos totais completos.
+  - Arquivo: `backend/tests/test_api/test_saude_farmacia.py`
+
 ## Validação (fix receita_scraper)
 - `ruff check features/receita/receita_scraper.py` — pass
 - `mypy features/receita/receita_scraper.py` — pass

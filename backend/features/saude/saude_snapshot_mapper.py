@@ -191,10 +191,38 @@ def filter_monthly_series_by_date_range(
     return filtered
 
 
+_MONTHS_PT = {
+    "janeiro": 1,
+    "fevereiro": 2,
+    "março": 3,
+    "marco": 3,
+    "abril": 4,
+    "maio": 5,
+    "junho": 6,
+    "julho": 7,
+    "agosto": 8,
+    "setembro": 9,
+    "outubro": 10,
+    "novembro": 11,
+    "dezembro": 12,
+}
+
+
 def _parse_monthly_label(label: str) -> datetime | None:
-    """Tenta extrair ano e mês de labels como 'Jan/2024' ou '2024-01'."""
+    """Tenta extrair ano e mês de labels como 'Jan/2024', '2024-01' ou 'Janeiro de 2024'."""
     import re
 
+    # formato 'Janeiro de 2024' ou 'Fevereiro de 2025'
+    ext_match = re.search(r"([a-zA-ZçÇ]+)\s+de\s+(\d{4})", label, re.IGNORECASE)
+    if ext_match:
+        month_name = ext_match.group(1).lower()
+        year = int(ext_match.group(2))
+        month = _MONTHS_PT.get(month_name)
+        if month:
+            try:
+                return datetime(year, month, 1)
+            except ValueError:
+                return None
     # formato 'Jan/2024' ou '01/2024'
     slash_match = re.search(r"(\d{2})/(\d{4})", label)
     if slash_match:

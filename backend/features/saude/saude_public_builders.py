@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Any
 
 from backend.features.saude.saude_data import SQLSaudeRepository
 from backend.features.saude.saude_public_live import (
@@ -48,7 +47,14 @@ async def build_farmacia_response(
         atendimentos_payload, atendimentos_synced = await load_chart_payload(
             repo,
             SaudeSnapshotResource.MEDICAMENTOS_ATENDIMENTOS_MENSAL,
-            year=year,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        dispensados_payload, dispensados_synced = await load_chart_payload(
+            repo,
+            SaudeSnapshotResource.MEDICAMENTOS_DISPENSADOS_MENSAL,
+            start_date=start_date,
+            end_date=end_date,
         )
         ranking_payload, ranking_synced = await load_farmacia_ranking(
             repo,
@@ -60,18 +66,18 @@ async def build_farmacia_response(
             SaudeSnapshotResource.MEDICAMENTOS_ATENDIMENTOS_MENSAL,
             year,
         )
+        dispensados_payload, dispensados_synced = repo.get_snapshot_payload(
+            SaudeSnapshotResource.MEDICAMENTOS_DISPENSADOS_MENSAL
+        )
         ranking_payload, ranking_synced = repo.get_snapshot_payload(
             SaudeSnapshotResource.MEDICAMENTOS_RANKING
         )
 
-    dispensados_payload, dispensados_synced = repo.get_snapshot_payload(
-        SaudeSnapshotResource.MEDICAMENTOS_DISPENSADOS_MENSAL
-    )
-
-    atendimentos_por_mes = chart_to_monthly_series_items(atendimentos_payload, year=year)
+    series_year = None if (start_date is not None and end_date is not None) else year
+    atendimentos_por_mes = chart_to_monthly_series_items(atendimentos_payload, year=series_year)
     medicamentos_dispensados_por_mes = chart_to_monthly_series_items(
         dispensados_payload,
-        year=year,
+        year=series_year,
     )
 
     if start_date is not None and end_date is not None:
