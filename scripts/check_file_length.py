@@ -48,6 +48,7 @@ LIMITS: dict[str, int] = {
 # Arquivos específicos com limite diferente (exceções documentadas)
 SPECIFIC_LIMITS: dict[str, int] = {
     "frontend/lib/constants.ts": 500,
+    "backend/shared/database/models.py": 600,  # governance-exception: file-length — débito técnico documentado, refatoração pendente
 }
 
 EXCEPTION_PATTERN = re.compile(

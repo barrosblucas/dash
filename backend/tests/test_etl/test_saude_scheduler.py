@@ -13,7 +13,7 @@ from backend.features.saude.saude_scheduler import SaudeScheduler
 from backend.features.saude.saude_types import SaudeSyncRequest
 
 
-def test_start_configura_intervalo_de_seis_horas(
+def test_start_configura_intervalo_de_dez_minutos(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     scheduler = SaudeScheduler()
@@ -34,7 +34,7 @@ def test_start_configura_intervalo_de_seis_horas(
 
     assert captured["started"] is True
     assert isinstance(captured["trigger"], IntervalTrigger)
-    assert captured["trigger"].interval.total_seconds() == 21600
+    assert captured["trigger"].interval.total_seconds() == 600  # 10 minutos
     assert captured["kwargs"]["id"] == "saude_sync_recurring"
 
 

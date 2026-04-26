@@ -134,3 +134,15 @@ DEFAULT_SYNC_RESOURCES: list[SaudeSnapshotResource] = [
     SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS,
     SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL,
 ]
+
+SNAPSHOT_ONLY_RESOURCES: set[SaudeSnapshotResource] = {
+    SaudeSnapshotResource.PESSOAS_FISICAS_JURIDICAS,
+    SaudeSnapshotResource.PESSOAS_POR_MES,
+    SaudeSnapshotResource.VISITAS_MOTIVOS,
+    SaudeSnapshotResource.VISITAS_ACOMPANHAMENTO,
+    SaudeSnapshotResource.VISITAS_BUSCA_ATIVA,
+    SaudeSnapshotResource.VISITAS_CONTROLE_VETORIAL,
+    SaudeSnapshotResource.HOSPITAL_CENSO,
+    SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS,
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL,
+}

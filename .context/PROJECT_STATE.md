@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-24 (atualizado com filtros de período dinâmicos nos endpoints de saúde e transições visuais estáveis no frontend)
+Snapshot: 2026-04-26 (structured data layer da saúde, sync ETL com upsert overwrite e scheduler ajustado para 10 minutos)
 
 ## Status geral
 
@@ -22,7 +22,8 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Bounded context `saude` com snapshots/cache do E-Saúde, CRUD admin de unidades e dashboards públicos de medicamentos, vacinação, visitas domiciliares, perfil epidemiológico, atenção primária, saúde bucal, hospital, farmácia, perfil demográfico e procedimentos
 - [x] Filtros de período dinâmicos (`start_date`/`end_date`) nos endpoints públicos de saúde: atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal (com fallback local para APIs que ignoram filtro)
 - [x] Scheduler de scraping periódico (APScheduler, 10 min) com primeira execução imediata no startup
-- [x] Scheduler periódico de Saúde Transparente (APScheduler, 6h) com sync dos snapshots públicos disponíveis do ano atual e anterior
+- [x] Scheduler periódico de Saúde Transparente (APScheduler, 10 min) com sync dos snapshots públicos disponíveis do ano atual e anterior
+- [x] Structured data layer do bounded context `saude` com 7 tabelas de domínio (medicamentos, farmácia, vacinação, epidemiológico, atenção primária, saúde bucal, procedimentos) populadas via ETL de upsert overwrite a cada sync
 - [x] Serviço de scraping QualitySistemas com upsert de receitas, despesas e detalhamento
 - [x] Sincronização de PDF de despesas com contrato real do portal (RelatorioPdf retorna path + download subsequente do binário)
 - [x] Bootstrap histórico idempotente no startup da API para preencher anos ausentes do banco com base nos PDFs locais

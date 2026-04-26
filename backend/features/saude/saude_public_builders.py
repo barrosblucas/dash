@@ -25,12 +25,212 @@ from backend.features.saude.saude_snapshot_mapper import (
     sum_values,
 )
 from backend.features.saude.saude_types import (
+    SaudeAtencaoPrimariaResponse,
+    SaudeBucalResponse,
     SaudeFarmaciaResponse,
+    SaudeLabelValueItem,
+    SaudeMedicamentosDispensadosResponse,
     SaudeMedicationItem,
     SaudeMedicationStockResponse,
+    SaudeMonthlySeriesItem,
+    SaudeProcedimentosTipoResponse,
     SaudeSnapshotResource,
+    SaudeVacinacaoResponse,
     SaudeVisitasDomiciliaresResponse,
 )
+
+
+def rows_to_monthly_series(rows: list) -> list[SaudeMonthlySeriesItem]:
+    return [SaudeMonthlySeriesItem(label=r.label, value=r.quantidade) for r in rows]
+
+
+def rows_to_label_value(rows: list) -> list[SaudeLabelValueItem]:
+    return [SaudeLabelValueItem(label=r.label, value=getattr(r, "quantidade", getattr(r, "valor", 0))) for r in rows]
+
+
+def max_synced_from_rows(*rows: list) -> datetime | None:
+    """Extract max synced_at from structured row lists."""
+    timestamps = [r.synced_at for sublist in rows for r in sublist if hasattr(r, "synced_at") and r.synced_at is not None]
+    return max(timestamps) if timestamps else None
+
+
+def build_structured_medicamentos_estoque_response(
+    repo: SQLSaudeRepository,
+    *,
+    search: str | None,
+    estabelecimento: str | None,
+    page: int,
+    page_size: int,
+) -> SaudeMedicationStockResponse | None:
+    medicamentos = repo.list_medicamentos(search=search, estabelecimento=estabelecimento)
+    if not medicamentos:
+        return None
+    synced = repo.get_medicamentos_synced_at()
+    items = [
+        SaudeMedicationItem(
+            product_name=m.product_name,
+            unit=m.unit,
+            in_stock=m.in_stock,
+            minimum_stock=m.minimum_stock,
+            department=m.department,
+            establishment=m.establishment,
+            below_minimum=below_minimum(m.in_stock, m.minimum_stock),
+        )
+        for m in medicamentos
+    ]
+    start = (page - 1) * page_size
+    end = start + page_size
+    return SaudeMedicationStockResponse(
+        items=items[start:end],
+        total=len(items),
+        page=page,
+        page_size=page_size,
+        total_abaixo_minimo=sum(1 for i in items if i.below_minimum),
+        last_synced_at=synced,
+    )
+
+
+def build_structured_medicamentos_dispensados_response(
+    repo: SQLSaudeRepository,
+    *,
+    year: int,
+) -> SaudeMedicamentosDispensadosResponse | None:
+    ranking_rows = repo.list_farmacia_rows(ano=year, dataset="ranking")
+    dispensados_rows = repo.list_farmacia_rows(ano=year, dataset="dispensados_mensal")
+    atendimentos_rows = repo.list_farmacia_rows(ano=year, dataset="atendimentos_mensal")
+    if not ranking_rows and not dispensados_rows and not atendimentos_rows:
+        return None
+    synced = max_synced_from_rows(ranking_rows, dispensados_rows, atendimentos_rows)
+    return SaudeMedicamentosDispensadosResponse(
+        ranking=rows_to_label_value(ranking_rows),
+        series_mensal_dispensacao=rows_to_monthly_series(dispensados_rows),
+        series_mensal_atendimentos=rows_to_monthly_series(atendimentos_rows),
+        last_synced_at=synced,
+    )
+
+
+def build_structured_vacinacao_response(
+    repo: SQLSaudeRepository,
+    *,
+    year: int,
+    start_date: date | None,
+    end_date: date | None,
+) -> SaudeVacinacaoResponse | None:
+    mensal_rows = repo.list_vacinacao_rows(ano=year, dataset="mensal")
+    ranking_rows = repo.list_vacinacao_rows(ano=year, dataset="ranking")
+    if not mensal_rows and not ranking_rows:
+        return None
+    mensal = rows_to_monthly_series(mensal_rows)
+    return SaudeVacinacaoResponse(
+        start_date=start_date.isoformat() if start_date else None,
+        end_date=end_date.isoformat() if end_date else None,
+        aplicadas_por_mes=mensal,
+        ranking_vacinas=rows_to_label_value(ranking_rows),
+        total_aplicadas=sum_values(mensal),
+        last_synced_at=max_synced_from_rows(mensal_rows, ranking_rows),
+    )
+
+
+def build_structured_atencao_primaria_response(
+    repo: SQLSaudeRepository,
+    *,
+    year: int,
+    effective_start_date: date,
+    effective_end_date: date,
+) -> SaudeAtencaoPrimariaResponse | None:
+    mensal_rows = repo.list_atencao_primaria_rows(ano=year, dataset="atendimentos_mensal")
+    procedimentos_rows = repo.list_atencao_primaria_rows(ano=year, dataset="procedimentos")
+    cbo_rows = repo.list_atencao_primaria_rows(ano=year, dataset="cbo")
+    if not mensal_rows and not procedimentos_rows and not cbo_rows:
+        return None
+    return SaudeAtencaoPrimariaResponse(
+        year=year,
+        start_date=effective_start_date.isoformat(),
+        end_date=effective_end_date.isoformat(),
+        atendimentos_por_mes=rows_to_monthly_series(mensal_rows),
+        procedimentos_por_especialidade=rows_to_label_value(procedimentos_rows),
+        atendimentos_por_cbo=rows_to_label_value(cbo_rows),
+        last_synced_at=max_synced_from_rows(mensal_rows, procedimentos_rows, cbo_rows),
+    )
+
+
+def build_structured_saude_bucal_response(
+    repo: SQLSaudeRepository,
+    *,
+    year: int,
+    start_date: date | None,
+    end_date: date | None,
+) -> SaudeBucalResponse | None:
+    bucal_rows = repo.list_bucal_rows(ano=year)
+    if not bucal_rows:
+        return None
+    mensal = rows_to_monthly_series(bucal_rows)
+    if start_date is not None and end_date is not None:
+        mensal = filter_monthly_series_by_date_range(
+            mensal,
+            datetime(start_date.year, start_date.month, start_date.day),
+            datetime(end_date.year, end_date.month, end_date.day),
+        )
+    return SaudeBucalResponse(
+        year=year,
+        start_date=start_date.isoformat() if start_date else None,
+        end_date=end_date.isoformat() if end_date else None,
+        atendimentos_por_mes=mensal,
+        total_atendimentos=sum_values(mensal),
+        last_synced_at=max_synced_from_rows(bucal_rows),
+    )
+
+
+def build_structured_farmacia_response(
+    repo: SQLSaudeRepository,
+    *,
+    year: int,
+    start_date: date | None,
+    end_date: date | None,
+) -> SaudeFarmaciaResponse | None:
+    ranking_rows = repo.list_farmacia_rows(ano=year, dataset="ranking")
+    dispensados_rows = repo.list_farmacia_rows(ano=year, dataset="dispensados_mensal")
+    atendimentos_rows = repo.list_farmacia_rows(ano=year, dataset="atendimentos_mensal")
+    if not ranking_rows and not dispensados_rows and not atendimentos_rows:
+        return None
+    atendimentos_por_mes = rows_to_monthly_series(atendimentos_rows)
+    medicamentos_dispensados_por_mes = rows_to_monthly_series(dispensados_rows)
+    if start_date is not None and end_date is not None:
+        effective_start = start_date or date(year, 1, 1)
+        effective_end = end_date or date(year, 12, 31)
+        atendimentos_por_mes = filter_monthly_series_by_date_range(
+            atendimentos_por_mes,
+            datetime(effective_start.year, effective_start.month, effective_start.day),
+            datetime(effective_end.year, effective_end.month, effective_end.day),
+        )
+        medicamentos_dispensados_por_mes = filter_monthly_series_by_date_range(
+            medicamentos_dispensados_por_mes,
+            datetime(effective_start.year, effective_start.month, effective_start.day),
+            datetime(effective_end.year, effective_end.month, effective_end.day),
+        )
+    return SaudeFarmaciaResponse(
+        year=year,
+        start_date=start_date.isoformat() if start_date else None,
+        end_date=end_date.isoformat() if end_date else None,
+        atendimentos_por_mes=atendimentos_por_mes,
+        medicamentos_dispensados_por_mes=medicamentos_dispensados_por_mes,
+        top_medicamentos=rows_to_label_value(ranking_rows),
+        total_atendimentos=sum_values(atendimentos_por_mes),
+        total_dispensados=sum_values(medicamentos_dispensados_por_mes),
+        last_synced_at=max_synced_from_rows(ranking_rows, dispensados_rows, atendimentos_rows),
+    )
+
+
+def build_structured_procedimentos_tipo_response(
+    repo: SQLSaudeRepository,
+) -> SaudeProcedimentosTipoResponse | None:
+    proc_rows = repo.list_procedimentos_rows()
+    if not proc_rows:
+        return None
+    return SaudeProcedimentosTipoResponse(
+        items=rows_to_label_value(proc_rows),
+        last_synced_at=max_synced_from_rows(proc_rows),
+    )
 
 
 async def build_farmacia_response(

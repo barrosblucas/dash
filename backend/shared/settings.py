@@ -32,7 +32,7 @@ class Settings(BaseSettings):
         "https://bandeirantes.esaude.genesiscloud.tec.br/publico/saude-transparente"
     )
     saude_esaude_timeout_seconds: float = 30.0
-    saude_sync_interval_hours: int = 6
+    saude_sync_interval_minutes: int = 10
 
     @field_validator("cors_origins", mode="before")
     @classmethod

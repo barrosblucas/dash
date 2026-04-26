@@ -11,7 +11,16 @@ from backend.features.saude.saude_data import SQLSaudeRepository
 from backend.features.saude.saude_public_builders import (
     build_farmacia_response,
     build_medicamentos_estoque_response,
+    build_structured_atencao_primaria_response,
+    build_structured_farmacia_response,
+    build_structured_medicamentos_dispensados_response,
+    build_structured_medicamentos_estoque_response,
+    build_structured_procedimentos_tipo_response,
+    build_structured_saude_bucal_response,
+    build_structured_vacinacao_response,
     build_visitas_domiciliares_response,
+    max_synced_from_rows,
+    rows_to_label_value,
 )
 from backend.features.saude.saude_public_live import (
     history_payload,
@@ -37,12 +46,14 @@ from backend.features.saude.saude_types import (
     SaudeBucalResponse,
     SaudeFarmaciaResponse,
     SaudeHospitalResponse,
+    SaudeLabelValueTrendItem,
     SaudeMedicamentosDispensadosResponse,
     SaudeMedicationStockResponse,
     SaudePerfilDemograficoResponse,
     SaudePerfilEpidemiologicoResponse,
     SaudeProcedimentosTipoResponse,
     SaudeSnapshotResource,
+    SaudeTrendDirection,
     SaudeVacinacaoResponse,
     SaudeVisitasDomiciliaresResponse,
 )
@@ -66,6 +77,11 @@ async def get_medicamentos_estoque(
     db: Session = Depends(get_db),
 ) -> SaudeMedicationStockResponse:
     repo = SQLSaudeRepository(db)
+    structured = build_structured_medicamentos_estoque_response(
+        repo, search=search, estabelecimento=estabelecimento, page=page, page_size=page_size
+    )
+    if structured:
+        return structured
     return build_medicamentos_estoque_response(
         repo,
         search=search,
@@ -84,6 +100,9 @@ async def get_medicamentos_dispensados(
     db: Session = Depends(get_db),
 ) -> SaudeMedicamentosDispensadosResponse:
     repo = SQLSaudeRepository(db)
+    structured = build_structured_medicamentos_dispensados_response(repo, year=year)
+    if structured:
+        return structured
     ranking_payload, ranking_synced = repo.get_snapshot_payload(
         SaudeSnapshotResource.MEDICAMENTOS_RANKING
     )
@@ -128,6 +147,9 @@ async def get_vacinacao(
             end_date,
         )
     else:
+        structured = build_structured_vacinacao_response(repo, year=year, start_date=start_date, end_date=end_date)
+        if structured:
+            return structured
         mensal_payload, mensal_synced = repo.get_snapshot_payload(
             SaudeSnapshotResource.VACINAS_POR_MES,
             year,
@@ -168,22 +190,34 @@ async def get_perfil_epidemiologico(
     db: Session = Depends(get_db),
 ) -> SaudePerfilEpidemiologicoResponse:
     repo = SQLSaudeRepository(db)
+    quant_rows = repo.list_epidemiologico_rows(dataset="quantitativo")
+    sexo_rows = repo.list_epidemiologico_rows(dataset="por_sexo")
+    if quant_rows and sexo_rows:
+        history = repo.list_snapshot_history(SaudeSnapshotResource.QUANTITATIVOS, limit=2)
+        prev = history_payload(history, 1)
+        pv_dict: dict[str, int] = {}
+        if isinstance(prev, dict) and isinstance(prev.get("quantitativos"), dict):
+            for _k, v in prev["quantitativos"].items():
+                if isinstance(v, dict):
+                    pv_dict[str(v.get("titulo", ""))] = int(float(str(v.get("valor", 0)).replace(",", ".")))
+        items: list[SaudeLabelValueTrendItem] = []
+        for r in quant_rows:
+            pv = pv_dict.get(str(r.label))
+            t = SaudeTrendDirection.UP if pv is not None and r.valor > pv else (SaudeTrendDirection.DOWN if pv is not None and r.valor < pv else (SaudeTrendDirection.STABLE if pv is not None else None))
+            items.append(SaudeLabelValueTrendItem(label=r.label, value=r.valor, previous_value=pv, trend=t))
+        return SaudePerfilEpidemiologicoResponse(
+            quantitativos=items, por_sexo=rows_to_label_value(sexo_rows),
+            last_synced_at=max_synced_from_rows(quant_rows, sexo_rows))
+    # fallback snapshot
     payload, last_synced_at = repo.get_snapshot_payload(SaudeSnapshotResource.QUANTITATIVOS)
     history = repo.list_snapshot_history(SaudeSnapshotResource.QUANTITATIVOS, limit=2)
-    sexo_payload, sexo_synced = repo.get_snapshot_payload(
-        SaudeSnapshotResource.ATENDIMENTOS_POR_SEXO
-    )
+    sexo_payload, sexo_synced = repo.get_snapshot_payload(SaudeSnapshotResource.ATENDIMENTOS_POR_SEXO)
     por_sexo = chart_to_label_value_items(sexo_payload)
     if not por_sexo:
         por_sexo = quantitativos_to_gender_items(payload)
     return SaudePerfilEpidemiologicoResponse(
-        quantitativos=quantitativos_to_items_with_trend(
-            payload,
-            history_payload(history, 1),
-        ),
-        por_sexo=por_sexo,
-        last_synced_at=max_synced_at(last_synced_at, sexo_synced),
-    )
+        quantitativos=quantitativos_to_items_with_trend(payload, history_payload(history, 1)),
+        por_sexo=por_sexo, last_synced_at=max_synced_at(last_synced_at, sexo_synced))
 
 
 @router.get("/atencao-primaria", response_model=SaudeAtencaoPrimariaResponse)
@@ -196,6 +230,12 @@ async def get_atencao_primaria(
     effective_start_date = start_date or date(year, 1, 1)
     effective_end_date = end_date or date(year, 12, 31)
     repo = SQLSaudeRepository(db)
+    if start_date is None and end_date is None:
+        structured = build_structured_atencao_primaria_response(
+            repo, year=year, effective_start_date=effective_start_date, effective_end_date=effective_end_date
+        )
+        if structured:
+            return structured
     mensal_payload, mensal_synced = await load_chart_payload(
         repo,
         SaudeSnapshotResource.ATENCAO_PRIMARIA_ATENDIMENTOS_MENSAL,
@@ -230,6 +270,9 @@ async def get_saude_bucal(
     db: Session = Depends(get_db),
 ) -> SaudeBucalResponse:
     repo = SQLSaudeRepository(db)
+    structured = build_structured_saude_bucal_response(repo, year=year, start_date=start_date, end_date=end_date)
+    if structured:
+        return structured
     payload, last_synced_at = repo.get_snapshot_payload(
         SaudeSnapshotResource.SAUDE_BUCAL_ATENDIMENTOS_MENSAL
     )
@@ -296,6 +339,10 @@ async def get_farmacia(
     db: Session = Depends(get_db),
 ) -> SaudeFarmaciaResponse:
     repo = SQLSaudeRepository(db)
+    if start_date is None and end_date is None:
+        structured = build_structured_farmacia_response(repo, year=year, start_date=start_date, end_date=end_date)
+        if structured:
+            return structured
     return await build_farmacia_response(
         repo,
         year=year,
@@ -328,6 +375,9 @@ async def get_procedimentos_tipo(
     db: Session = Depends(get_db),
 ) -> SaudeProcedimentosTipoResponse:
     repo = SQLSaudeRepository(db)
+    structured = build_structured_procedimentos_tipo_response(repo)
+    if structured:
+        return structured
     payload, last_synced_at = repo.get_snapshot_payload(
         SaudeSnapshotResource.PROCEDIMENTOS_POR_TIPO
     )

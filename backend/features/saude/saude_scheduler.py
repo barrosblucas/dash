@@ -39,17 +39,17 @@ class SaudeScheduler:
         self._sync_service = SaudeSyncService()
 
     def start(self) -> None:
-        interval_hours = get_settings().saude_sync_interval_hours
+        interval_minutes = get_settings().saude_sync_interval_minutes
         self._scheduler.add_job(
             self.sync_job,
-            trigger=IntervalTrigger(hours=interval_hours),
+            trigger=IntervalTrigger(minutes=interval_minutes),
             next_run_time=datetime.now(),
             id="saude_sync_recurring",
             name="saude_sync_periodico",
             replace_existing=True,
         )
         self._scheduler.start()
-        logger.info("Scheduler de saúde iniciado — intervalo: %d horas", interval_hours)
+        logger.info("Scheduler de saúde iniciado — intervalo: %d minutos", interval_minutes)
 
     def stop(self) -> None:
         if self._scheduler.running:

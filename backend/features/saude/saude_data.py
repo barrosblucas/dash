@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 from typing import Any, cast
 
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from backend.features.saude.saude_types import (
@@ -17,10 +17,17 @@ from backend.features.saude.saude_types import (
     SaudeUnitUpdateRequest,
 )
 from backend.shared.database.models import (
+    SaudeAtencaoPrimariaModel,
+    SaudeBucalModel,
+    SaudeEpidemiologicoModel,
+    SaudeFarmaciaModel,
+    SaudeMedicamentoModel,
+    SaudeProcedimentosModel,
     SaudeSnapshotModel,
     SaudeSyncLogModel,
     SaudeUnidadeHorarioModel,
     SaudeUnidadeModel,
+    SaudeVacinacaoModel,
 )
 
 
@@ -280,6 +287,99 @@ class SQLSaudeRepository:
             .first()
         )
         return cast(datetime | None, row.finished_at if row is not None else None)
+    def upsert_medicamentos(self, items: list[dict[str, Any]], synced_at: datetime) -> int:
+        """Upsert medication stock items. Key: (product_name, department, establishment)"""
+        count = 0
+        for item in items:
+            existing = self.session.query(SaudeMedicamentoModel).filter(
+                SaudeMedicamentoModel.product_name == item["product_name"],
+                SaudeMedicamentoModel.department == item.get("department"),
+                SaudeMedicamentoModel.establishment == item.get("establishment")).first()
+            if existing:
+                m = cast(Any, existing)
+                m.unit = item.get("unit")
+                m.in_stock = item.get("in_stock", 0)
+                m.minimum_stock = item.get("minimum_stock")
+                m.synced_at = synced_at
+            else:
+                self.session.add(SaudeMedicamentoModel(product_name=item["product_name"], unit=item.get("unit"), in_stock=item.get("in_stock", 0), minimum_stock=item.get("minimum_stock"), department=item.get("department"), establishment=item.get("establishment"), synced_at=synced_at))
+            count += 1
+        self.session.flush()
+        return count
+
+    def replace_domain_rows(self, model_class: type[SaudeFarmaciaModel | SaudeVacinacaoModel | SaudeAtencaoPrimariaModel], rows: list[dict[str, Any]], synced_at: datetime) -> int:
+        """Replace rows for a domain table using delete+insert strategy."""
+        if not rows:
+            return 0
+        for ano, mes, dataset in {(r["ano"], r.get("mes"), r["dataset"]) for r in rows}:
+            filters = [model_class.ano == ano, model_class.dataset == dataset, model_class.mes.is_(None) if mes is None else model_class.mes == mes]
+            self.session.query(model_class).filter(and_(*filters)).delete()
+        for row in rows:
+            self.session.add(model_class(ano=row["ano"], mes=row.get("mes"), dataset=row["dataset"], label=row["label"], quantidade=row["quantidade"], synced_at=synced_at))
+        self.session.flush()
+        return len(rows)
+
+    def replace_epidemiologico_rows(self, rows: list[dict[str, Any]], synced_at: datetime) -> int:
+        """Replace epidemiological data. Key: (dataset, label)"""
+        if not rows:
+            return 0
+        for dataset, label in {(r["dataset"], r["label"]) for r in rows}:
+            self.session.query(SaudeEpidemiologicoModel).filter(SaudeEpidemiologicoModel.dataset == dataset, SaudeEpidemiologicoModel.label == label).delete()
+        for row in rows:
+            self.session.add(SaudeEpidemiologicoModel(dataset=row["dataset"], label=row["label"], valor=row["valor"], synced_at=synced_at))
+        self.session.flush()
+        return len(rows)
+
+    def replace_bucal_rows(self, rows: list[dict[str, Any]], synced_at: datetime) -> int:
+        """Replace dental health data. Key: (label)"""
+        if not rows:
+            return 0
+        for label in {r["label"] for r in rows}:
+            self.session.query(SaudeBucalModel).filter(SaudeBucalModel.label == label).delete()
+        for row in rows:
+            self.session.add(SaudeBucalModel(ano=row["ano"], mes=row.get("mes"), label=row["label"], quantidade=row["quantidade"], synced_at=synced_at))
+        self.session.flush()
+        return len(rows)
+
+    def replace_procedimentos_rows(self, rows: list[dict[str, Any]], synced_at: datetime) -> int:
+        """Replace procedure type data. Key: (label)"""
+        if not rows:
+            return 0
+        for label in {r["label"] for r in rows}:
+            self.session.query(SaudeProcedimentosModel).filter(SaudeProcedimentosModel.label == label).delete()
+        for row in rows:
+            self.session.add(SaudeProcedimentosModel(label=row["label"], quantidade=row["quantidade"], synced_at=synced_at))
+        self.session.flush()
+        return len(rows)
+
+    def list_medicamentos(self, *, search: str | None = None, estabelecimento: str | None = None) -> list[SaudeMedicamentoModel]:
+        q = self.session.query(SaudeMedicamentoModel)
+        if search:
+            q = q.filter(SaudeMedicamentoModel.product_name.ilike(f"%{search.strip()}%"))
+        if estabelecimento:
+            q = q.filter(SaudeMedicamentoModel.establishment.ilike(estabelecimento))
+        return list(q.order_by(SaudeMedicamentoModel.product_name.asc()).all())
+    def get_medicamentos_synced_at(self) -> datetime | None:
+        row = self.session.query(SaudeMedicamentoModel.synced_at).order_by(SaudeMedicamentoModel.synced_at.desc()).first()
+        return cast(datetime | None, row[0] if row else None)
+    def list_farmacia_rows(self, *, ano: int, dataset: str, mes: int | None = None) -> list[SaudeFarmaciaModel]:
+        q = self.session.query(SaudeFarmaciaModel).filter(SaudeFarmaciaModel.ano == ano, SaudeFarmaciaModel.dataset == dataset)
+        if mes is not None:
+            q = q.filter(SaudeFarmaciaModel.mes == mes)
+        return list(q.order_by(SaudeFarmaciaModel.ano.asc(), SaudeFarmaciaModel.mes.asc().nullsfirst(), SaudeFarmaciaModel.label.asc()).all())
+    def list_vacinacao_rows(self, *, ano: int, dataset: str) -> list[SaudeVacinacaoModel]:
+        return list(self.session.query(SaudeVacinacaoModel).filter(SaudeVacinacaoModel.ano == ano, SaudeVacinacaoModel.dataset == dataset).order_by(SaudeVacinacaoModel.ano.asc(), SaudeVacinacaoModel.mes.asc().nullsfirst(), SaudeVacinacaoModel.label.asc()).all())
+    def list_epidemiologico_rows(self, *, dataset: str) -> list[SaudeEpidemiologicoModel]:
+        return list(self.session.query(SaudeEpidemiologicoModel).filter(SaudeEpidemiologicoModel.dataset == dataset).order_by(SaudeEpidemiologicoModel.label.asc()).all())
+    def list_atencao_primaria_rows(self, *, ano: int, dataset: str) -> list[SaudeAtencaoPrimariaModel]:
+        return list(self.session.query(SaudeAtencaoPrimariaModel).filter(SaudeAtencaoPrimariaModel.ano == ano, SaudeAtencaoPrimariaModel.dataset == dataset).order_by(SaudeAtencaoPrimariaModel.ano.asc(), SaudeAtencaoPrimariaModel.mes.asc().nullsfirst(), SaudeAtencaoPrimariaModel.label.asc()).all())
+    def list_bucal_rows(self, *, ano: int | None = None) -> list[SaudeBucalModel]:
+        q = self.session.query(SaudeBucalModel)
+        if ano is not None:
+            q = q.filter(SaudeBucalModel.ano == ano)
+        return list(q.order_by(SaudeBucalModel.ano.asc(), SaudeBucalModel.mes.asc().nullsfirst(), SaudeBucalModel.label.asc()).all())
+    def list_procedimentos_rows(self) -> list[SaudeProcedimentosModel]:
+        return list(self.session.query(SaudeProcedimentosModel).order_by(SaudeProcedimentosModel.label.asc()).all())
 
 
 def _infer_item_count(payload: Any) -> int:

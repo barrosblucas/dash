@@ -1,5 +1,7 @@
 """Modelos ORM compartilhados do banco."""
 
+# governance-exception: file-length reason="Todos os modelos ORM estão consolidados em um único arquivo conforme padrão do SQLAlchemy. Refatoração pendente: split por bounded context mantendo Base única."
+
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -373,6 +375,172 @@ class SaudeSyncLogModel(Base):
 
     __table_args__ = (
         Index("ix_saude_sync_logs_started_status", "started_at", "status"),
+    )
+
+
+class SaudeMedicamentoModel(Base):
+    __tablename__ = "saude_medicamentos"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    product_name = Column(String(500), nullable=False, index=True)
+    unit = Column(String(100), nullable=True)
+    in_stock = Column(Integer, nullable=False, default=0)
+    minimum_stock = Column(Integer, nullable=True)
+    department = Column(String(255), nullable=True)
+    establishment = Column(String(255), nullable=True)
+    synced_at = Column(DateTime, nullable=False, index=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "product_name", "department", "establishment",
+            name="uq_saude_medicamento_prod_dept_estab",
+        ),
+        Index("ix_saude_medicamentos_estab", "establishment"),
+    )
+
+
+class SaudeFarmaciaModel(Base):
+    __tablename__ = "saude_farmacia"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ano = Column(Integer, nullable=False, index=True)
+    mes = Column(Integer, nullable=True, index=True)
+    dataset = Column(String(50), nullable=False, index=True)
+    label = Column(String(500), nullable=False)
+    quantidade = Column(Integer, nullable=False, default=0)
+    synced_at = Column(DateTime, nullable=False, index=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("ano", "mes", "dataset", "label", name="uq_saude_farmacia_row"),
+        Index("ix_saude_farmacia_ano_dataset", "ano", "dataset"),
+    )
+
+
+class SaudeVacinacaoModel(Base):
+    __tablename__ = "saude_vacinacao"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ano = Column(Integer, nullable=False, index=True)
+    mes = Column(Integer, nullable=True, index=True)
+    dataset = Column(String(50), nullable=False, index=True)
+    label = Column(String(500), nullable=False)
+    quantidade = Column(Integer, nullable=False, default=0)
+    synced_at = Column(DateTime, nullable=False, index=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("ano", "mes", "dataset", "label", name="uq_saude_vacinacao_row"),
+        Index("ix_saude_vacinacao_ano_dataset", "ano", "dataset"),
+    )
+
+
+class SaudeEpidemiologicoModel(Base):
+    __tablename__ = "saude_epidemiologico"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    dataset = Column(String(50), nullable=False, index=True)
+    label = Column(String(500), nullable=False)
+    valor = Column(Integer, nullable=False, default=0)
+    synced_at = Column(DateTime, nullable=False, index=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("dataset", "label", name="uq_saude_epidemiologico_row"),
+    )
+
+
+class SaudeAtencaoPrimariaModel(Base):
+    __tablename__ = "saude_atencao_primaria"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ano = Column(Integer, nullable=False, index=True)
+    mes = Column(Integer, nullable=True, index=True)
+    dataset = Column(String(50), nullable=False, index=True)
+    label = Column(String(500), nullable=False)
+    quantidade = Column(Integer, nullable=False, default=0)
+    synced_at = Column(DateTime, nullable=False, index=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "ano", "mes", "dataset", "label", name="uq_saude_atencao_primaria_row"
+        ),
+        Index("ix_saude_ap_ano_dataset", "ano", "dataset"),
+    )
+
+
+class SaudeBucalModel(Base):
+    __tablename__ = "saude_bucal"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ano = Column(Integer, nullable=False, index=True)
+    mes = Column(Integer, nullable=True, index=True)
+    label = Column(String(500), nullable=False)
+    quantidade = Column(Integer, nullable=False, default=0)
+    synced_at = Column(DateTime, nullable=False, index=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("label", name="uq_saude_bucal_label"),
+    )
+
+
+class SaudeProcedimentosModel(Base):
+    __tablename__ = "saude_procedimentos"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    label = Column(String(500), nullable=False)
+    quantidade = Column(Integer, nullable=False, default=0)
+    synced_at = Column(DateTime, nullable=False, index=True)
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint("label", name="uq_saude_procedimentos_label"),
+        Index("ix_saude_procedimentos_label", "label"),
     )
 
 
