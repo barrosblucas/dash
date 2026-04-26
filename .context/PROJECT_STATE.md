@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-24 (atualizado com filtros de período dinâmicos nos endpoints de saúde e transições visuais estáveis no frontend)
+Snapshot: 2026-04-26 (atualizado com bootstrap histórico de saúde e deduplicação de snapshots)
 
 ## Status geral
 
@@ -26,6 +26,8 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Serviço de scraping QualitySistemas com upsert de receitas, despesas e detalhamento
 - [x] Sincronização de PDF de despesas com contrato real do portal (RelatorioPdf retorna path + download subsequente do binário)
 - [x] Bootstrap histórico idempotente no startup da API para preencher anos ausentes do banco com base nos PDFs locais
+- [x] Bootstrap histórico idempotente para snapshots da feature saúde (`SaudeHistoricalBootstrapService`), preenchendo anos ausentes (2016–atual) de recursos year-scoped via API E-Saúde
+- [x] Deduplicação de snapshots na feature saúde: `replace_snapshot` só insere novo registro quando o payload efetivamente mudou, evitando inflação da tabela `saude_snapshots`
 - [x] Sincronização do ano 2026 com prioridade de API (replace por ano para evitar valores antigos persistidos)
 - [x] Estratégia de despesas 2026 ajustada para priorizar `BuscaDadosAnual` (fonte canônica de empenhado/liquidado/pago) e usar PDF como fallback quando o anual indisponível
 - [x] Validação estrutural do fallback PDF de despesas (não substitui arquivo local quando o download vier sem páginas válidas)

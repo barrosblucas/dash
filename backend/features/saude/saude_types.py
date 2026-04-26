@@ -47,6 +47,7 @@ class SaudeSnapshotResource(StrEnum):
 class SaudeSyncTriggerType(StrEnum):
     MANUAL = "manual"
     SCHEDULED = "scheduled"
+    BOOTSTRAP = "bootstrap"
 
 
 class SaudeUnitBaseRequest(BaseModel):

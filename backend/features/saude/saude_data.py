@@ -150,7 +150,16 @@ class SQLSaudeRepository:
     ) -> SaudeSnapshotModel:
         payload_json = json.dumps(payload, ensure_ascii=False)
         item_count = _infer_item_count(payload)
-        existing = SaudeSnapshotModel(
+
+        existing = self.get_snapshot_model(resource, scope_year)
+        if existing is not None:
+            existing_payload = json.loads(str(existing.payload_json))
+            if json.dumps(existing_payload, ensure_ascii=False, sort_keys=True) == json.dumps(
+                payload, ensure_ascii=False, sort_keys=True
+            ):
+                return existing
+
+        new_snapshot = SaudeSnapshotModel(
             resource=resource.value,
             scope_year=scope_year,
             payload_json=payload_json,
@@ -158,10 +167,10 @@ class SQLSaudeRepository:
             synced_at=synced_at,
             source_url=source_url,
         )
-        self.session.add(existing)
+        self.session.add(new_snapshot)
         self.session.flush()
-        self.session.refresh(existing)
-        return existing
+        self.session.refresh(new_snapshot)
+        return new_snapshot
 
     def get_snapshot_model(
         self,

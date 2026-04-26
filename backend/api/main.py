@@ -32,6 +32,9 @@ from backend.features.movimento_extra.movimento_extra_handler import (
 from backend.features.obra.obra_handler import router as obra_router
 from backend.features.receita.receita_handler import router as receitas_router
 from backend.features.saude.saude_handler import router as saude_router
+from backend.features.saude.saude_historical_bootstrap import (
+    SaudeHistoricalBootstrapService,
+)
 from backend.features.scraping.historical_data_bootstrap_service import (
     HistoricalDataBootstrapService,
 )
@@ -96,6 +99,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             logger.info("Bootstrap histórico não necessário")
     except Exception:
         logger.exception("Falha no bootstrap histórico de dados")
+
+    try:
+        saude_bootstrap_result = await SaudeHistoricalBootstrapService().bootstrap_missing_years()
+        if saude_bootstrap_result.executed:
+            logger.info(
+                "Bootstrap histórico de saúde executado. "
+                "Recursos sincronizados: %d. Anos faltantes: %s",
+                saude_bootstrap_result.synced_resources,
+                saude_bootstrap_result.missing_years_by_resource,
+            )
+            if saude_bootstrap_result.warnings:
+                logger.warning(
+                    "Bootstrap histórico de saúde finalizado com avisos: %s",
+                    saude_bootstrap_result.warnings,
+                )
+        else:
+            logger.info("Bootstrap histórico de saúde não necessário")
+    except Exception:
+        logger.exception("Falha no bootstrap histórico de saúde")
 
     saude_scheduler = None
     try:
