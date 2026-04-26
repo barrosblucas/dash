@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-04-23
+Snapshot: 2026-04-26
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -109,6 +109,7 @@ Snapshot: 2026-04-23
 - `saude_unit_import.py`: normalização de payloads importados de unidades e horários
 - `saude_business.py`: camada de compatibilidade para imports antigos da feature
 - `saude_scheduler.py`: APScheduler periódico (6h) para sincronizar snapshots do Saúde Transparente
+- `saude_historical_bootstrap.py`: bootstrap idempotente de anos históricos ausentes para recursos year-scoped
 
 #### Camadas legadas (removidas)
 - `domain/`, `infrastructure/`, `services/`, `etl/`: **removidos** — re-exports backward-compat eliminados após migração completa para features/

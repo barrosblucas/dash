@@ -30,7 +30,6 @@ from backend.shared.database.models import (
     SaudeVacinacaoModel,
 )
 
-
 class SQLSaudeRepository:
     def __init__(self, session: Session):
         self.session = session
@@ -157,7 +156,14 @@ class SQLSaudeRepository:
     ) -> SaudeSnapshotModel:
         payload_json = json.dumps(payload, ensure_ascii=False)
         item_count = _infer_item_count(payload)
-        existing = SaudeSnapshotModel(
+        existing = self.get_snapshot_model(resource, scope_year)
+        if existing is not None:
+            canonical_existing = json.dumps(json.loads(str(existing.payload_json)), ensure_ascii=False, sort_keys=True)
+            canonical_new = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+            if canonical_existing == canonical_new:
+                return existing
+
+        new_snapshot = SaudeSnapshotModel(
             resource=resource.value,
             scope_year=scope_year,
             payload_json=payload_json,
@@ -165,10 +171,10 @@ class SQLSaudeRepository:
             synced_at=synced_at,
             source_url=source_url,
         )
-        self.session.add(existing)
+        self.session.add(new_snapshot)
         self.session.flush()
-        self.session.refresh(existing)
-        return existing
+        self.session.refresh(new_snapshot)
+        return new_snapshot
 
     def get_snapshot_model(
         self,
@@ -380,8 +386,6 @@ class SQLSaudeRepository:
         return list(q.order_by(SaudeBucalModel.ano.asc(), SaudeBucalModel.mes.asc().nullsfirst(), SaudeBucalModel.label.asc()).all())
     def list_procedimentos_rows(self) -> list[SaudeProcedimentosModel]:
         return list(self.session.query(SaudeProcedimentosModel).order_by(SaudeProcedimentosModel.label.asc()).all())
-
-
 def _infer_item_count(payload: Any) -> int:
     if isinstance(payload, list):
         return len(payload)

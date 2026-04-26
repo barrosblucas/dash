@@ -111,6 +111,16 @@ def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[TestClie
             warnings=[],
         ),
     )
+    monkeypatch.setattr(
+        main_module.SaudeHistoricalBootstrapService,
+        "bootstrap_missing_years",
+        lambda self: SimpleNamespace(
+            executed=False,
+            missing_years_by_resource={},
+            synced_resources=0,
+            warnings=[],
+        ),
+    )
 
     with TestClient(main_module.app) as test_client:
         yield test_client
