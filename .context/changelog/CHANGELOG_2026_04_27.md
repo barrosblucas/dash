@@ -50,3 +50,35 @@
   - `npm run build` — pass
   - `ruff check .` (backend) — pass (fix de import sorting em `connection.py`)
   - `pytest` — suite completa pass
+
+### Frontend — Obras (Upload bloqueando após primeira foto)
+- **Fixed** impossibilidade de anexar mais de uma foto na página de obras sem recarregar (F5).
+  - Causa raiz: o `event.currentTarget.value = ''` no `onChange` do `<input type="file">` não era suficiente para resetar o input no ciclo de renderização do React. O browser mantinha estado interno que impedia novas seleções.
+  - Solução: substituído por `key={fileInputKey}` com contador `useState`, forçando React a desmontar e remontar o elemento DOM a cada seleção — padrão confiável para reset de file inputs.
+  - Arquivos modificados:
+    - `frontend/components/admin/obras/ObraMediaEditor.tsx`
+  - Validação:
+    - `npm run lint` — pass
+    - `npm run type-check` — pass
+    - `npm run build` — pass
+    - `npx vitest run ObraForm ObrasListPage` — 7/7 pass
+
+### Frontend — Obras (Máscara monetária BRL ao vivo)
+- **Added** `CurrencyField` — componente dedicado com máscara monetária brasileira em tempo real.
+  - Comportamento: últimos 2 dígitos sempre representam centavos. Ex: digitar `123456` → `1.234,56`.
+  - Cursor preservado entre reformatações via `computeCursor()` + `requestAnimationFrame`.
+  - Substitui o `InputField` genérico com `toCurrencyInput` nos campos: `Valor orçamento`, `Valor original`, `Valor aditivo`, `Valor convênio`, `Valor contrapartida`, `Valor homologado`, `Valor da medição`, `Valor da fonte`.
+  - `FieldShell` e `baseFieldClassName` exportados de `AdminFields.tsx` para reuso por `CurrencyField` sem duplicação de markup.
+  - Removido estado `focusedField` + lógica de blur — máscara inline torna desnecessário.
+  - Arquivos modificados:
+    - `frontend/components/admin/obras/CurrencyField.tsx` — novo
+    - `frontend/components/admin/forms/AdminFields.tsx` — export `FieldShell` + `baseFieldClassName`
+    - `frontend/components/admin/obras/ObraForm.tsx` — `CurrencyField` nos campos financeiros e fonte
+    - `frontend/components/admin/obras/ObraMeasurementsSection.tsx` — `CurrencyField` no valor da medição
+    - `frontend/components/admin/obras/obra-form-helpers.ts` — removido `toCurrencyInput` (substituído pela máscara)
+    - `frontend/components/admin/obras/ObraForm.test.tsx` — ajustado `getByDisplayValue` e valores de digitação para refletir a máscara (6 dígitos = centavos nos 2 últimos)
+  - Validação:
+    - `npm run lint` — pass
+    - `npm run type-check` — pass
+    - `npm run build` — pass
+    - `npx vitest run ObraForm ObrasListPage` — 7/7 pass
