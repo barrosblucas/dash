@@ -34,3 +34,19 @@
     - `mypy .` — pass
     - `pytest` — 100% pass
     - Teste manual: banco existente (`dashboard.db`) e banco novo (temp) aplicaram migrations com sucesso.
+
+
+### Frontend — Obras (POST /api/v1/obras retornando 422 sem detalhe)
+- **Fixed** HTTP 422 no formulário de criação de obra sem mensagem de erro visível para o usuário. Três problemas identificados e corrigidos:
+  1. **Erro 422 sem detalhe**: o interceptor de erro do `apiClient` (`frontend/services/api.ts`) tratava apenas status 400, mas não 422. O backend FastAPI retorna erros de validação Pydantic como 422 com array de `detail`. O interceptor agora unifica 400 e 422, extrai o detalhe estruturado do backend (`loc[].msg`) e exibe mensagem legível no frontend.
+  2. **Validação frontend vs backend desalinhada em `titulo`/`descricao`**: o backend exige `min_length=3` para ambos os campos, mas a validação frontend (`validatePayload`) apenas verificava se os campos não estavam vazios. Títulos com 1-2 caracteres passavam na validação local mas falhavam no backend com 422. Corrigido para `< 3`.
+  3. **Validação de arrays incompleta**: `validatePayload` verificava apenas `locations[0]` e `funding_sources[0]`. Itens adicionais adicionados via "Adicionar local"/"Adicionar fonte" com campos vazios passavam na validação frontend mas falhavam no backend. Corrigido para iterar todos os itens com `forEach`.
+- Arquivos modificados:
+  - `frontend/services/api.ts` — interceptor de erro agora cobre `status === 400 || status === 422` com extração de `detail` array.
+  - `frontend/components/admin/obras/obra-form-helpers.ts` — `validatePayload` refatorado: `titulo`/`descricao` com min length 3; validação de todos os `locations` e `funding_sources` em vez de apenas o primeiro; remoção de checagem duplicada.
+- Validação:
+  - `npx tsc --noEmit` — pass
+  - `npm run lint` — pass
+  - `npm run build` — pass
+  - `ruff check .` (backend) — pass (fix de import sorting em `connection.py`)
+  - `pytest` — suite completa pass

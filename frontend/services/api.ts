@@ -57,9 +57,11 @@ class ApiClient {
           if (status === 404) {
             throw new Error(`Recurso não encontrado: ${message}`);
           }
-          
-          if (status === 400) {
-            throw new Error(`Requisição inválida: ${detail || message}`);
+          if (status === 400 || status === 422) {
+            const detailMsg = Array.isArray(detail)
+              ? detail.map((d: { loc: string[]; msg: string }) => `${d.loc.join('.')}: ${d.msg}`).join('; ')
+              : (detail || message);
+            throw new Error(`Dados inválidos: ${detailMsg}`);
           }
 
           if (status === 401) {

@@ -168,18 +168,30 @@ export const buildPayload = (form: ObraUpsertPayload): ObraUpsertPayload => {
 
 export const validatePayload = (payload: ObraUpsertPayload) => {
   const messages: string[] = [];
-  if (!payload.titulo.trim()) messages.push('Informe o título.');
-  if (!payload.descricao.trim()) messages.push('Informe a descrição.');
+  if (payload.titulo.trim().length < 3) messages.push('O título deve ter no mínimo 3 caracteres.');
+  if (payload.descricao.trim().length < 3) messages.push('A descrição deve ter no mínimo 3 caracteres.');
   if (!payload.secretaria.trim()) messages.push('Informe a secretaria.');
   if (!payload.orgao.trim()) messages.push('Informe o órgão.');
   if (!payload.contrato.trim()) messages.push('Informe o contrato.');
   if (!payload.tipo_obra.trim()) messages.push('Informe o tipo da obra.');
   if (!payload.modalidade.trim()) messages.push('Informe a modalidade.');
   if (!payload.data_inicio) messages.push('Informe a data de início.');
-  if (!payload.locations[0]?.logradouro.trim()) messages.push('Informe ao menos um local com logradouro.');
-  if (!payload.locations[0]?.bairro.trim()) messages.push('Informe o bairro do local principal.');
-  if (!payload.locations[0]?.cep.trim()) messages.push('Informe o CEP do local principal.');
-  if (!payload.locations[0]?.numero.trim()) messages.push('Informe o número do local principal.');
-  if (!payload.funding_sources[0]?.nome.trim()) messages.push('Informe ao menos uma fonte de recurso.');
+  if (!payload.logradouro.trim()) messages.push('Informe o logradouro.');
+  if (!payload.bairro.trim()) messages.push('Informe o bairro.');
+  if (!payload.cep.trim()) messages.push('Informe o CEP.');
+  if (!payload.numero.trim()) messages.push('Informe o número.');
+  if (payload.fonte_recurso === '') messages.push('Informe ao menos uma fonte de recurso.');
+
+  payload.locations.forEach((loc, i) => {
+    if (!loc.logradouro.trim()) messages.push(`Local ${i + 1}: informe o logradouro.`);
+    if (!loc.bairro.trim()) messages.push(`Local ${i + 1}: informe o bairro.`);
+    if (!loc.cep.trim()) messages.push(`Local ${i + 1}: informe o CEP.`);
+    if (!loc.numero.trim()) messages.push(`Local ${i + 1}: informe o número.`);
+  });
+
+  payload.funding_sources.forEach((src, i) => {
+    if (!src.nome.trim()) messages.push(`Fonte ${i + 1}: informe o nome.`);
+  });
+
   return messages[0] ?? null;
 };
