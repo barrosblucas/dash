@@ -197,6 +197,13 @@ Snapshot: 2026-04-26
 - `components/admin/obras/ObraMediaEditor.tsx`: editor reutilizável de links/uploads de mídia da obra e das medições
 - `components/admin/obras/ObraMeasurementsSection.tsx`: seção isolada das medições com anexos por medição
 - `components/admin/obras/obra-form-helpers.ts`: helpers de estado, payload e validação do formulário administrativo de obras
+- `components/obras/ObraProgressChart.tsx`: gráfico de linha de avanço físico/financeiro planejado vs realizado
+- `components/obras/ObraFinancialChart.tsx`: gráfico de barras de desembolso financeiro mensal por medição
+- `components/obras/ObraStatusPanel.tsx`: painel lateral de Status Atual com KPIs e valor empenhado
+- `components/obras/ObraMeasurementHistory.tsx`: tabela de histórico de medições sem bordas ("No-Line")
+- `components/obras/ObraLocationMap.tsx`: mapa Leaflet read-only com toggle Padrão/Satélite
+- `components/obras/ObraPhotoGallery.tsx`: galeria de fotos com grid responsivo e lightbox
+- `components/obras/index.ts`: barrel export dos componentes de obras
 - `components/receitas/ReceitaDetalhamentoTable.tsx`: tabela hierárquica de detalhamento de receitas com expand/collapse
 - `components/ui/`: componentes base (shared)
 - `app/receitas/page.tsx`: página de receitas municipais

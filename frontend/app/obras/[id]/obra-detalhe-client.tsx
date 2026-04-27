@@ -1,10 +1,14 @@
-'use client';
-
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 
 import { formatCurrency, formatDate, obraStatusLabels, obraStatusTone } from '@/lib/obra-formatters';
 import { obrasService } from '@/services/obra-service';
+import ObraProgressChart from '@/components/obras/ObraProgressChart';
+import ObraFinancialChart from '@/components/obras/ObraFinancialChart';
+import ObraStatusPanel from '@/components/obras/ObraStatusPanel';
+import ObraMeasurementHistory from '@/components/obras/ObraMeasurementHistory';
+import ObraLocationMap from '@/components/obras/ObraLocationMap';
+import ObraPhotoGallery from '@/components/obras/ObraPhotoGallery';
 
 const metricFields = [
   ['Contrato', 'contrato'],
@@ -51,6 +55,40 @@ export default function ObraDetalheClient({ id }: ObraDetalheClientProps) {
         <p className="mt-4 max-w-3xl text-sm text-primary-fixed-dim">{data.descricao}</p>
       </section>
 
+      {/* Dashboard Grid: Charts + Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <ObraProgressChart
+            progressoFisico={data.progresso_fisico}
+            progressoFinanceiro={data.progresso_financeiro}
+            medicoes={data.medicoes}
+            dataInicio={data.data_inicio}
+            previsaoTermino={data.previsao_termino}
+          />
+          <ObraFinancialChart medicoes={data.medicoes} />
+        </div>
+
+        <div className="space-y-6">
+          <ObraStatusPanel
+            progressoFisico={data.progresso_fisico}
+            progressoFinanceiro={data.progresso_financeiro}
+            valorOriginal={data.valor_original}
+            valorHomologado={data.valor_homologado}
+            valorMedidoTotal={data.valor_medido_total}
+            medicoes={data.medicoes}
+          />
+          <section className="rounded-3xl bg-surface-container-low p-7 shadow-ambient">
+            <h2 className="font-headline text-xl font-bold text-primary">Cronograma</h2>
+            <div className="mt-5 space-y-4 text-sm text-on-surface">
+              <p>Início: {formatDate(data.data_inicio)}</p>
+              <p>Previsão de término: {formatDate(data.previsao_termino)}</p>
+              <p>Término real: {formatDate(data.data_termino)}</p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      {/* Info Cards */}
       <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6 rounded-3xl bg-surface-container-low p-7 shadow-ambient">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -142,15 +180,6 @@ export default function ObraDetalheClient({ id }: ObraDetalheClientProps) {
 
         <div className="space-y-6">
           <section className="rounded-3xl bg-surface-container-low p-7 shadow-ambient">
-            <h2 className="font-headline text-xl font-bold text-primary">Cronograma</h2>
-            <div className="mt-5 space-y-4 text-sm text-on-surface">
-              <p>Início: {formatDate(data.data_inicio)}</p>
-              <p>Previsão de término: {formatDate(data.previsao_termino)}</p>
-              <p>Término real: {formatDate(data.data_termino)}</p>
-            </div>
-          </section>
-
-          <section className="rounded-3xl bg-surface-container-low p-7 shadow-ambient">
             <div className="flex items-center justify-between">
               <h2 className="font-headline text-xl font-bold text-primary">Medições mensais</h2>
               <span className="text-sm font-semibold text-secondary">{formatCurrency(data.valor_medido_total)}</span>
@@ -186,6 +215,15 @@ export default function ObraDetalheClient({ id }: ObraDetalheClientProps) {
           </section>
         </div>
       </section>
+
+      {/* Measurement History */}
+      <ObraMeasurementHistory medicoes={data.medicoes} />
+
+      {/* Map + Gallery */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <ObraLocationMap locations={data.locations} />
+        <ObraPhotoGallery mediaAssets={data.media_assets} />
+      </div>
     </div>
   );
 }

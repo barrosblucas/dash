@@ -82,3 +82,29 @@
     - `npm run type-check` — pass
     - `npm run build` — pass
     - `npx vitest run ObraForm ObrasListPage` — 7/7 pass
+
+### Frontend — Obras (Detalhamento de obra reformulado)
+- **Added** 6 novos componentes para a página pública de detalhes da obra (`/obras/[id]`), seguindo o layout do design system `obras_detalhes`:
+  1. `ObraProgressChart` — gráfico de linha Recharts com evolução planejada (tracejada cinza) vs realizada (verde), calculada a partir das medições e datas de início/previsão.
+  2. `ObraFinancialChart` — gráfico de barras Recharts com desembolso financeiro mensal por medição, com hover em secondary.
+  3. `ObraStatusPanel` — painel lateral com Status Atual (% físico), barra de progresso, atraso estimado (quando houver divergência físico/financeiro) e card de Valor Total Empenhado com ícone decorativo.
+  4. `ObraMeasurementHistory` — tabela sem bordas ("No-Line" rule) com histórico de medições, % de avanço acumulado, valor medido e status chip (Aprovado/Pago).
+  5. `ObraLocationMap` — mapa Leaflet interativo com toggle Padrão/Satélite, markers numerados e popup com endereço.
+  6. `ObraPhotoGallery` — galeria de fotos filtradas por tipo de mídia, com grid responsivo e lightbox navegável via teclado (Escape, setas).
+- **Changed** `obra-detalhe-client.tsx` reorganizado em novo layout: grid de charts + status (lg:grid-cols-3), seguido de informações gerais, histórico de medições e mapa + galeria. Todas as informações pré-existentes (métricas, cronograma, medições mensais, locais, fontes, anexos) foram mantidas.
+- **Added** barrel export `frontend/components/obras/index.ts`.
+- Arquivos criados:
+
+  - `frontend/components/obras/ObraProgressChart.tsx` (229 linhas)
+  - `frontend/components/obras/ObraFinancialChart.tsx` (146 linhas)
+  - `frontend/components/obras/ObraStatusPanel.tsx` (125 linhas)
+  - `frontend/components/obras/ObraMeasurementHistory.tsx` (134 linhas)
+  - `frontend/components/obras/ObraLocationMap.tsx` (144 linhas)
+  - `frontend/components/obras/ObraPhotoGallery.tsx` (169 linhas)
+  - `frontend/components/obras/index.ts`
+
+- Arquivo modificado: `frontend/app/obras/[id]/obra-detalhe-client.tsx`
+- Validação:
+  - `npm run lint` — pass
+  - `npm run type-check` — pass
+  - `npm run build` — pass
