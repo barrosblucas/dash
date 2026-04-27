@@ -1,5 +1,9 @@
 import { apiClient } from '@/services/api';
 import type {
+  ObraFundingSource,
+  ObraLocation,
+  ObraMediaAsset,
+  ObraMediaLinkPayload,
   ObraMedicao,
   ObraRecord,
   ObrasListResponse,
@@ -24,6 +28,23 @@ const toNumber = (value: number | string | null | undefined): number | null => {
 const normalizeMedicao = (medicao: ObraMedicao): ObraMedicao => ({
   ...medicao,
   valor_medicao: toNumber(medicao.valor_medicao) ?? 0,
+  media_assets: (medicao.media_assets ?? []).map(normalizeMediaAsset),
+});
+
+const normalizeLocation = (location: ObraLocation): ObraLocation => ({
+  ...location,
+  latitude: toNumber(location.latitude),
+  longitude: toNumber(location.longitude),
+});
+
+const normalizeFundingSource = (source: ObraFundingSource): ObraFundingSource => ({
+  ...source,
+  valor: toNumber(source.valor),
+});
+
+const normalizeMediaAsset = (media: ObraMediaAsset): ObraMediaAsset => ({
+  ...media,
+  file_size: media.file_size ?? null,
 });
 
 const normalizeObra = (obra: ObraRecord): ObraRecord => ({
@@ -40,6 +61,9 @@ const normalizeObra = (obra: ObraRecord): ObraRecord => ({
   progresso_fisico: toNumber(obra.progresso_fisico),
   progresso_financeiro: toNumber(obra.progresso_financeiro),
   valor_medido_total: toNumber(obra.valor_medido_total) ?? 0,
+  locations: (obra.locations ?? []).map(normalizeLocation),
+  funding_sources: (obra.funding_sources ?? []).map(normalizeFundingSource),
+  media_assets: (obra.media_assets ?? []).map(normalizeMediaAsset),
   medicoes: obra.medicoes.map(normalizeMedicao),
 });
 
@@ -58,8 +82,33 @@ export const obrasService = {
     const response = await apiClient.get<ObraRecord>(`${OBRAS_ENDPOINT}/${hash}`);
     return normalizeObra(response);
   },
-  create: (payload: ObraUpsertPayload) => apiClient.post<ObraRecord>(OBRAS_ENDPOINT, payload),
+  create: async (payload: ObraUpsertPayload) => normalizeObra(await apiClient.post<ObraRecord>(OBRAS_ENDPOINT, payload)),
   update: (hash: string, payload: ObraUpsertPayload) =>
-    apiClient.put<ObraRecord>(`${OBRAS_ENDPOINT}/${hash}`, payload),
+    apiClient.put<ObraRecord>(`${OBRAS_ENDPOINT}/${hash}`, payload).then(normalizeObra),
+  createMediaLink: async (hash: string, payload: ObraMediaLinkPayload) =>
+    normalizeMediaAsset(await apiClient.post<ObraMediaAsset>(`${OBRAS_ENDPOINT}/${hash}/media/link`, payload)),
+  uploadMedia: async (
+    hash: string,
+    payload: { file: File; titulo?: string; media_kind?: string; medicao_id?: number | null }
+  ) => {
+    const formData = new FormData();
+    formData.append('file', payload.file);
+    if (payload.titulo) {
+      formData.append('titulo', payload.titulo);
+    }
+    if (payload.media_kind) {
+      formData.append('media_kind', payload.media_kind);
+    }
+    if (payload.medicao_id) {
+      formData.append('medicao_id', String(payload.medicao_id));
+    }
+    return normalizeMediaAsset(
+      await apiClient.post<ObraMediaAsset>(`${OBRAS_ENDPOINT}/${hash}/media/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+    );
+  },
+  deleteMedia: (hash: string, mediaId: number) =>
+    apiClient.delete<{ message: string }>(`${OBRAS_ENDPOINT}/${hash}/media/${mediaId}`),
   remove: (hash: string) => apiClient.delete<void>(`${OBRAS_ENDPOINT}/${hash}`),
 };

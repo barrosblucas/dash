@@ -71,9 +71,11 @@ export interface SaudeVisitasDomiciliaresResponse {
 }
 
 export interface SaudeAtencaoPrimariaResponse {
+  start_date: string;
   end_date: string;
   attendances_by_month: SaudeMonthlySeriesItem[];
   procedures_by_specialty: SaudeLabelValueItem[];
+  attendances_by_category: SaudeLabelValueItem[];
   attendances_by_cbo: SaudeLabelValueItem[];
   last_synced_at: string | null;
 }
@@ -191,7 +193,8 @@ export type SaudeSnapshotResource =
   | 'saude_bucal_atendimentos_mensal'
   | 'hospital_censo'
   | 'hospital_procedimentos'
-  | 'hospital_atendimentos_mensal';
+  | 'hospital_atendimentos_mensal'
+  | 'hospital_atendimentos_cid';
 
 export type SaudeSyncTriggerType = 'manual' | 'scheduled';
 

@@ -207,8 +207,8 @@ types → (nenhuma dependência externa)
 - **MetadataETL**: rastreabilidade de execuções do pipeline de extração
 - **User**: identidade administrativa com role, status ativo e versionamento de tokens
 - **IdentityToken**: refresh/reset tokens persistidos com `jti`, expiração e revogação
-- **Obra**: obra pública identificada externamente por `hash`
-- **ObraMedicao**: medições mensais filhas substituídas pela payload de escrita
+- **Obra**: obra pública identificada externamente por `hash`, com local principal derivado e coleções de locais/fontes/mídias
+- **ObraMedicao**: medições mensais filhas com upsert por `sequencia` e anexos opcionais
 
 ### Enums de domínio
 - `TipoReceita`: CORRENTE | CAPITAL
@@ -254,6 +254,20 @@ types → (nenhuma dependência externa)
 - reset de senha passa a ser invalidável de forma segura e one-shot;
 - obras ficam isoladas em um slice vertical sem dependência de outras features;
 - configurações sensíveis deixam de ficar espalhadas na inicialização da aplicação.
+
+### ADR-004: Dashboards públicos de saúde por composição de slices e persistência oportunista (2026-04-26)
+
+**Contexto**: os dashboards públicos de saúde passaram a exibir zeros quando o usuário selecionava períodos multi-ano, apesar de os dados existirem no banco. Em paralelo, obras passou a exigir múltiplos locais, múltiplas fontes e mídia por obra/medição sem quebrar as rotas públicas existentes.
+
+**Decisão**:
+- compor os dashboards de saúde por bloco (`structured first`, fallback live apenas no slice ausente), usando agregação por `ano`/`mes` em vez de parsing textual de labels;
+- persistir consultas live sensíveis a período em `saude_snapshots` com reaproveitamento de ranges históricos e TTL curto apenas para intervalos que tocam o período corrente;
+- manter em obras os campos legados de endereço/fonte como derivados do primeiro item, enquanto a escrita/leitura principal passa a usar coleções explícitas de `locations`, `funding_sources` e `media_assets`.
+
+**Consequências**:
+- ranges multi-ano deixam de zerar dashboards estruturados de vacinação, APS, saúde bucal e farmácia;
+- o hospital passa a expor indisponibilidade explícita para blocos sem fonte pública verificável, sem fabricar zeros;
+- uploads e links de mídia de obras ficam isolados no bounded context `obra`, sem acoplar storage à camada pública do frontend.
 
 ### Decisões anteriores
 

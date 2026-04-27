@@ -67,9 +67,11 @@ interface SaudeRawPerfilEpidemiologicoResponse {
 }
 
 interface SaudeRawAtencaoPrimariaResponse {
+  start_date: string;
   end_date: string;
   atendimentos_por_mes: SaudeRawMonthlySeriesItem[];
   procedimentos_por_especialidade: SaudeRawLabelValueItem[];
+  atendimentos_por_categoria: SaudeRawLabelValueItem[];
   atendimentos_por_cbo: SaudeRawLabelValueItem[];
   last_synced_at: string | null;
 }
@@ -180,9 +182,11 @@ const mapEpidemiologicalProfile = (
 const mapPrimaryCareDashboard = (
   response: SaudeRawAtencaoPrimariaResponse
 ): SaudeAtencaoPrimariaResponse => ({
+  start_date: response.start_date,
   end_date: response.end_date,
   attendances_by_month: response.atendimentos_por_mes,
   procedures_by_specialty: response.procedimentos_por_especialidade,
+  attendances_by_category: response.atendimentos_por_categoria,
   attendances_by_cbo: response.atendimentos_por_cbo,
   last_synced_at: response.last_synced_at,
 });
@@ -273,7 +277,7 @@ export const saudeService = {
       })
     ),
 
-  getHospitalDashboard: async (params?: { estabelecimento_id?: number }) =>
+  getHospitalDashboard: async (params: { year: number; start_date?: string; end_date?: string; estabelecimento_id?: number }) =>
     mapHospitalDashboard(
       await apiClient.get<SaudeRawHospitalResponse>(`${SAUDE_ENDPOINT}/hospital`, {
         params,

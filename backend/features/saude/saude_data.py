@@ -1,5 +1,4 @@
 """Persistência do bounded context saude."""
-
 from __future__ import annotations
 
 import json
@@ -30,10 +29,10 @@ from backend.shared.database.models import (
     SaudeVacinacaoModel,
 )
 
+
 class SQLSaudeRepository:
     def __init__(self, session: Session):
         self.session = session
-
     def list_units(
         self,
         *,
@@ -59,7 +58,6 @@ class SQLSaudeRepository:
                 )
             )
         return list(query.order_by(SaudeUnidadeModel.name.asc()).all())
-
     def count_units(
         self,
         *,
@@ -76,28 +74,24 @@ class SQLSaudeRepository:
                 only_active=only_active,
             )
         )
-
     def get_unit_by_id(self, unit_id: int) -> SaudeUnidadeModel | None:
         return (
             self.session.query(SaudeUnidadeModel)
             .filter(SaudeUnidadeModel.id == unit_id)
             .first()
         )
-
     def get_unit_by_external_id(self, external_id: int) -> SaudeUnidadeModel | None:
         return (
             self.session.query(SaudeUnidadeModel)
             .filter(SaudeUnidadeModel.external_id == external_id)
             .first()
         )
-
     def create_unit(self, payload: SaudeUnitCreateRequest) -> SaudeUnidadeModel:
         model = SaudeUnidadeModel(**payload.model_dump())
         self.session.add(model)
         self.session.flush()
         self.session.refresh(model)
         return model
-
     def update_unit(
         self,
         model: SaudeUnidadeModel,
@@ -108,13 +102,11 @@ class SQLSaudeRepository:
         self.session.flush()
         self.session.refresh(model)
         return model
-
     def deactivate_unit(self, model: SaudeUnidadeModel) -> SaudeUnidadeModel:
         cast(Any, model).is_active = False
         self.session.flush()
         self.session.refresh(model)
         return model
-
     def replace_unit_schedules(
         self,
         unit_id: int,
@@ -136,7 +128,6 @@ class SQLSaudeRepository:
             created.append(model)
         self.session.flush()
         return created
-
     def list_unit_schedules(self, unit_id: int) -> list[SaudeUnidadeHorarioModel]:
         return list(
             self.session.query(SaudeUnidadeHorarioModel)
@@ -144,7 +135,6 @@ class SQLSaudeRepository:
             .order_by(SaudeUnidadeHorarioModel.day_of_week.asc())
             .all()
         )
-
     def replace_snapshot(
         self,
         *,
@@ -175,7 +165,6 @@ class SQLSaudeRepository:
         self.session.flush()
         self.session.refresh(new_snapshot)
         return new_snapshot
-
     def get_snapshot_model(
         self,
         resource: SaudeSnapshotResource,
@@ -189,7 +178,20 @@ class SQLSaudeRepository:
         else:
             query = query.filter(SaudeSnapshotModel.scope_year == scope_year)
         return query.order_by(SaudeSnapshotModel.synced_at.desc()).first()
-
+    def get_snapshot_model_by_source_url(
+        self,
+        resource: SaudeSnapshotResource,
+        source_url: str,
+    ) -> SaudeSnapshotModel | None:
+        return (
+            self.session.query(SaudeSnapshotModel)
+            .filter(
+                SaudeSnapshotModel.resource == resource.value,
+                SaudeSnapshotModel.source_url == source_url,
+            )
+            .order_by(SaudeSnapshotModel.synced_at.desc(), SaudeSnapshotModel.id.desc())
+            .first()
+        )
     def get_snapshot_payload(
         self,
         resource: SaudeSnapshotResource,
@@ -199,7 +201,15 @@ class SQLSaudeRepository:
         if model is None:
             return None, None
         return json.loads(str(model.payload_json)), cast(datetime, model.synced_at)
-
+    def get_snapshot_payload_by_source_url(
+        self,
+        resource: SaudeSnapshotResource,
+        source_url: str,
+    ) -> tuple[Any | None, datetime | None]:
+        model = self.get_snapshot_model_by_source_url(resource, source_url)
+        if model is None:
+            return None, None
+        return json.loads(str(model.payload_json)), cast(datetime, model.synced_at)
     def list_snapshot_models(self) -> list[SaudeSnapshotModel]:
         rows = list(
             self.session.query(SaudeSnapshotModel)
@@ -216,7 +226,6 @@ class SQLSaudeRepository:
             if key not in latest_by_scope:
                 latest_by_scope[key] = row
         return list(latest_by_scope.values())
-
     def list_snapshot_history(
         self,
         resource: SaudeSnapshotResource,
@@ -236,7 +245,6 @@ class SQLSaudeRepository:
             .limit(limit)
             .all()
         )
-
     def create_sync_log(
         self,
         *,
@@ -261,7 +269,6 @@ class SQLSaudeRepository:
         self.session.flush()
         self.session.refresh(model)
         return model
-
     def update_sync_log(
         self,
         model: SaudeSyncLogModel,
@@ -276,7 +283,6 @@ class SQLSaudeRepository:
         self.session.flush()
         self.session.refresh(model)
         return model
-
     def list_recent_sync_logs(self, limit: int = 10) -> list[SaudeSyncLogModel]:
         return list(
             self.session.query(SaudeSyncLogModel)
@@ -284,7 +290,6 @@ class SQLSaudeRepository:
             .limit(limit)
             .all()
         )
-
     def get_last_successful_sync_at(self) -> datetime | None:
         row = (
             self.session.query(SaudeSyncLogModel)
@@ -312,7 +317,6 @@ class SQLSaudeRepository:
             count += 1
         self.session.flush()
         return count
-
     def replace_domain_rows(self, model_class: type[SaudeFarmaciaModel | SaudeVacinacaoModel | SaudeAtencaoPrimariaModel], rows: list[dict[str, Any]], synced_at: datetime) -> int:
         """Replace rows for a domain table using delete+insert strategy."""
         if not rows:
@@ -324,7 +328,6 @@ class SQLSaudeRepository:
             self.session.add(model_class(ano=row["ano"], mes=row.get("mes"), dataset=row["dataset"], label=row["label"], quantidade=row["quantidade"], synced_at=synced_at))
         self.session.flush()
         return len(rows)
-
     def replace_epidemiologico_rows(self, rows: list[dict[str, Any]], synced_at: datetime) -> int:
         """Replace epidemiological data. Key: (dataset, label)"""
         if not rows:
@@ -335,7 +338,6 @@ class SQLSaudeRepository:
             self.session.add(SaudeEpidemiologicoModel(dataset=row["dataset"], label=row["label"], valor=row["valor"], synced_at=synced_at))
         self.session.flush()
         return len(rows)
-
     def replace_bucal_rows(self, rows: list[dict[str, Any]], synced_at: datetime) -> int:
         """Replace dental health data. Key: (label)"""
         if not rows:
@@ -346,7 +348,6 @@ class SQLSaudeRepository:
             self.session.add(SaudeBucalModel(ano=row["ano"], mes=row.get("mes"), label=row["label"], quantidade=row["quantidade"], synced_at=synced_at))
         self.session.flush()
         return len(rows)
-
     def replace_procedimentos_rows(self, rows: list[dict[str, Any]], synced_at: datetime) -> int:
         """Replace procedure type data. Key: (label)"""
         if not rows:
@@ -357,7 +358,6 @@ class SQLSaudeRepository:
             self.session.add(SaudeProcedimentosModel(label=row["label"], quantidade=row["quantidade"], synced_at=synced_at))
         self.session.flush()
         return len(rows)
-
     def list_medicamentos(self, *, search: str | None = None, estabelecimento: str | None = None) -> list[SaudeMedicamentoModel]:
         q = self.session.query(SaudeMedicamentoModel)
         if search:

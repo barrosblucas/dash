@@ -11,9 +11,12 @@ from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
 
+from backend.shared.database.connection import DatabaseManager
+from backend.shared.settings import get_settings
+
 
 def pytest_sessionstart(session: pytest.Session) -> None:
-    gate_script = Path(session.config.rootdir) / ".." / "scripts" / "check_file_length.py"
+    gate_script = Path(session.config.rootpath) / ".." / "scripts" / "check_file_length.py"
     if not gate_script.exists():
         return
     result = subprocess.run(
@@ -28,10 +31,6 @@ def pytest_sessionstart(session: pytest.Session) -> None:
             "Gate de tamanho de arquivo falhou. Refatore antes de prosseguir.",
             returncode=1,
         )
-
-from backend.shared.database.connection import DatabaseManager
-from backend.shared.settings import get_settings
-
 
 class FakeScrapingScheduler:
     def start(self) -> None:

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
@@ -11,20 +11,61 @@ import {
   SaudePanel,
   SaudeUnavailablePanel,
 } from '@/components/saude/SaudePageSection';
+import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { hasChartData } from '@/lib/saude-utils';
+import { getSaudePeriodRange, getYearFromDateInput, hasChartData, maxDate, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber, formatPercent } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 import type { SaudeHospitalCenso, SaudeLabelValueItem, SaudeMonthlySeriesItem } from '@/types/saude';
 
+const MIN_START_DATE = '2020-01-01';
+const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
+const HEATMAP_HOURS = Array.from({ length: 24 }, (_, index) => `${String(index).padStart(2, '0')}hr`);
+const HEATMAP_DAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+
+const unavailableLabels: Record<string, string> = {
+  mapa_de_calor: 'Mapa de calor',
+  internacoes_por_mes: 'Internações mensais',
+  internacoes_por_cid: 'Internações por CID',
+  media_permanencia: 'Tempo médio de permanência',
+  nao_municipes: 'Não munícipes',
+  especialidades_medicas: 'Especialidades médicas',
+  outras_especialidades: 'Outras especialidades',
+  procedimentos_realizados: 'Procedimentos realizados por especialidade',
+  atendimentos_por_cid: 'Atendimentos por CID',
+};
+
 export default function HospitalClient() {
+  const [year, setYear] = useState(saudeYearOptions[0]);
+  const [startDate, setStartDate] = useState(maxDate(defaultPeriod.startDate, MIN_START_DATE));
+  const [endDate, setEndDate] = useState(defaultPeriod.endDate);
   const [estabelecimentoId, setEstabelecimentoId] = useState('');
 
+  const handleYearChange = (nextYear: number) => {
+    setYear(nextYear);
+    const period = getSaudePeriodRange(nextYear);
+    setStartDate(maxDate(period.startDate, MIN_START_DATE));
+    setEndDate(period.endDate);
+  };
+
+  const handleStartDateChange = (value: string) => {
+    const clamped = maxDate(value, MIN_START_DATE);
+    setStartDate(clamped);
+    const nextYear = getYearFromDateInput(clamped);
+    if (nextYear !== null) {
+      setYear(nextYear);
+    }
+  };
+
   const hospitalQuery = useQuery({
-    queryKey: ['saude', 'hospital', estabelecimentoId],
+    queryKey: ['saude', 'hospital', year, startDate, endDate, estabelecimentoId],
+    placeholderData: keepPreviousData,
     queryFn: () =>
       saudeService.getHospitalDashboard({
+        year,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
         estabelecimento_id: estabelecimentoId ? Number(estabelecimentoId) : undefined,
       }),
   });
@@ -45,17 +86,28 @@ export default function HospitalClient() {
       <SaudePageHeader
         eyebrow="Assistência hospitalar"
         title="Capacidade e produção hospitalar"
-        description="Leitura consolidada do censo de leitos, internações, permanência e procedimentos hospitalares. Quando a fonte externa não envia um bloco, o painel deixa isso explícito."
+        description="Atendimentos mensais, procedimentos e CID no período selecionado. Blocos sem fonte pública verificável ficam explicitamente indisponíveis."
         badgeValue={<SaudeSyncBadge value={hospitalQuery.data?.last_synced_at} />}
         actions={
-          <input
-            type="number"
-            min="1"
-            value={estabelecimentoId}
-            onChange={(event) => setEstabelecimentoId(event.target.value)}
-            placeholder="Filtrar por estabelecimento ID"
-            className="rounded-2xl border border-outline/20 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none focus:border-primary"
-          />
+          <div className="flex flex-col gap-3">
+            <SaudePeriodFilter
+              year={year}
+              startDate={startDate}
+              endDate={endDate}
+              onYearChange={handleYearChange}
+              onStartDateChange={handleStartDateChange}
+              onEndDateChange={setEndDate}
+              minStartDate={MIN_START_DATE}
+            />
+            <input
+              type="number"
+              min="1"
+              value={estabelecimentoId}
+              onChange={(event) => setEstabelecimentoId(event.target.value)}
+              placeholder="Filtrar por estabelecimento ID"
+              className="rounded-2xl border border-outline/20 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none focus:border-primary"
+            />
+          </div>
         }
       />
 
@@ -79,6 +131,20 @@ export default function HospitalClient() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-2">
+        <SaudePanel title="Mapa de calor por hora e dia" description="Contrato visual do mapa de calor hospitalar. A grade entra em estado indisponível até existir fonte pública verificável.">
+          <HospitalHeatmapPlaceholder />
+        </SaudePanel>
+
+        <SaudePanel title="Atendimentos mensais" description="Atendimentos hospitalares agregados pelos meses cobertos pelo período selecionado.">
+          <MonthlySeriesOrUnavailable
+            items={hospitalQuery.data?.attendances_by_month ?? []}
+            emptyTitle="Atendimentos mensais indisponíveis"
+            emptyDescription="A fonte externa não publicou atendimentos hospitalares para este recorte."
+          />
+        </SaudePanel>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
         <SaudePanel title="Censo de leitos" description="Resumo estrutural de capacidade hospitalar.">
           {censo ? (
             <CensoSummary censo={censo} />
@@ -90,72 +156,43 @@ export default function HospitalClient() {
           )}
         </SaudePanel>
 
-        <SaudePanel title="Movimento hospitalar por mês" description="Atendimentos hospitalares distribuídos ao longo do tempo.">
-          <MonthlySeriesOrUnavailable
-            items={hospitalQuery.data?.attendances_by_month ?? []}
-            emptyTitle="Movimento mensal indisponível"
-            emptyDescription="A fonte externa não publicou atendimentos hospitalares por mês para este recorte."
-          />
-        </SaudePanel>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        <SaudePanel title="Internações por mês" description="Volume de internações registradas em cada mês.">
-          <MonthlySeriesOrUnavailable
-            items={hospitalQuery.data?.internacoes_by_month ?? []}
-            emptyTitle="Internações mensais indisponíveis"
-            emptyDescription="A fonte externa não retornou o histórico mensal de internações."
-          />
-        </SaudePanel>
-
-        <SaudePanel title="Tempo médio de permanência" description="Série do tempo médio de permanência informado pelo hospital.">
-          <MonthlySeriesOrUnavailable
-            items={hospitalQuery.data?.average_stay_by_month ?? []}
-            emptyTitle="Permanência média indisponível"
-            emptyDescription="A fonte externa não retornou esse bloco para o filtro atual."
-            stroke="#f59e0b"
-          />
-        </SaudePanel>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        <SaudePanel title="Internações por CID" description="Concentração de internações por CID informado pela origem.">
+        <SaudePanel title="Atendimentos por CID" description="Distribuição dos atendimentos hospitalares por CID quando a origem publica o recorte.">
           <RankingOrUnavailable
             items={hospitalQuery.data?.internacoes_by_cid ?? []}
             emptyTitle="CID indisponível"
-            emptyDescription="A fonte externa não retornou internações por CID para o recorte selecionado."
+            emptyDescription="A fonte externa não retornou atendimentos por CID para o período selecionado."
           />
         </SaudePanel>
+      </section>
 
-        <SaudePanel title="Procedimentos hospitalares" description="Volume de procedimentos realizados e total consolidado do período.">
+      <section className="grid gap-6 xl:grid-cols-2">
+        <SaudePanel title="Procedimentos realizados por especialidade" description="Quantidade de procedimentos realizados no período.">
           {hasChartData(hospitalQuery.data?.procedures) ? (
             <div className="space-y-4">
               <SaudeMetricCard
                 label="Total de procedimentos"
                 value={formatNumber(hospitalQuery.data?.total_procedures ?? 0, { decimals: 0 })}
-                supportingText="Soma consolidada do período."
+                supportingText={`Consolidado entre ${startDate} e ${endDate}.`}
                 tone="success"
                 icon="medical_services"
               />
               <RankingOrUnavailable
                 items={hospitalQuery.data?.procedures ?? []}
                 emptyTitle="Procedimentos indisponíveis"
-                emptyDescription="A fonte externa não retornou os procedimentos hospitalares."
+                emptyDescription="A fonte externa não retornou procedimentos para o período selecionado."
               />
             </div>
           ) : (
             <SaudeUnavailablePanel
               title="Procedimentos indisponíveis"
-              description="A fonte externa não retornou esse bloco hospitalar no momento."
+              description="A origem pública não publicou esse recorte hospitalar no momento."
             />
           )}
         </SaudePanel>
-      </section>
 
-      {unavailableResources.length ? (
         <SaudePanel
           title="Blocos indisponíveis na fonte"
-          description="Os recortes abaixo foram solicitados pelo PRD, mas a origem pública não respondeu para este município na verificação atual."
+          description="Esses recortes permanecem mapeados, mas sem uma fonte pública verificável neste momento."
         >
           <div className="flex flex-wrap gap-3">
             {unavailableResources.map((resource) => (
@@ -163,12 +200,12 @@ export default function HospitalClient() {
                 key={resource}
                 className="rounded-full border border-outline/10 bg-surface-container-lowest px-3 py-2 text-sm text-on-surface-variant"
               >
-                {resource}
+                {unavailableLabels[resource] ?? resource}
               </span>
             ))}
           </div>
         </SaudePanel>
-      ) : null}
+      </section>
     </div>
   );
 }
@@ -208,6 +245,67 @@ function CensoSummary({ censo }: { censo: SaudeHospitalCenso }) {
           {typeof censo.taxa_ocupacao === 'number' ? formatPercent(censo.taxa_ocupacao) : 'Indisponível'}
         </p>
       </div>
+    </div>
+  );
+}
+
+function HospitalHeatmapPlaceholder() {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-[28px_repeat(24,minmax(0,1fr))_64px] gap-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-on-surface-variant">
+        <div />
+        {HEATMAP_HOURS.map((hour) => (
+          <div key={hour} className="text-center">
+            {hour}
+          </div>
+        ))}
+        <div className="text-center">Total</div>
+      </div>
+
+      <div className="space-y-1">
+        {HEATMAP_DAYS.map((day, rowIndex) => (
+          <div key={`${day}-${rowIndex}`} className="grid grid-cols-[28px_repeat(24,minmax(0,1fr))_64px] gap-1">
+            <div className="flex items-center justify-center text-sm font-semibold text-on-surface-variant">{day}</div>
+            {HEATMAP_HOURS.map((hour, columnIndex) => (
+              <div
+                key={`${day}-${hour}`}
+                className="h-8 rounded-md border border-outline/10"
+                style={{
+                  background:
+                    columnIndex % 4 === 0
+                      ? 'rgba(245, 158, 11, 0.38)'
+                      : columnIndex % 3 === 0
+                        ? 'rgba(249, 221, 95, 0.68)'
+                        : 'rgba(255, 244, 170, 0.82)',
+                }}
+              />
+            ))}
+            <div className="flex items-center justify-center rounded-md bg-surface-container-lowest text-sm font-semibold text-on-surface-variant">
+              --
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-[28px_repeat(24,minmax(0,1fr))_64px] gap-1">
+        <div />
+        {HEATMAP_HOURS.map((hour) => (
+          <div
+            key={`total-${hour}`}
+            className="flex h-8 items-center justify-center rounded-md bg-surface-container-lowest text-sm font-semibold text-on-surface-variant"
+          >
+            --
+          </div>
+        ))}
+        <div className="flex items-center justify-center rounded-md bg-surface-container-high text-sm font-semibold text-on-surface-variant">
+          --
+        </div>
+      </div>
+
+      <SaudeUnavailablePanel
+        title="Mapa de calor indisponível"
+        description="A grade já segue o contrato visual final, mas a origem pública ainda não expõe os dados horários por dia da semana."
+      />
     </div>
   );
 }

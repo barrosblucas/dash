@@ -9,6 +9,39 @@ import { obrasService } from '@/services/obra-service';
 vi.mock('next/link', () => ({ default: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (<a href={href} {...props}>{children}</a>) }));
 vi.mock('@/services/obra-service');
 
+const baseObra = {
+  descricao: '',
+  orgao: '',
+  contrato: '',
+  tipo_obra: '',
+  modalidade: '',
+  fonte_recurso: '',
+  data_inicio: null,
+  previsao_termino: null,
+  data_termino: null,
+  logradouro: '',
+  bairro: '',
+  cep: '',
+  numero: '',
+  latitude: null,
+  longitude: null,
+  valor_orcamento: null,
+  valor_original: null,
+  valor_aditivo: null,
+  valor_homologado: null,
+  valor_contrapartida: null,
+  valor_convenio: null,
+  valor_economizado: null,
+  progresso_fisico: null,
+  progresso_financeiro: null,
+  locations: [],
+  funding_sources: [],
+  media_assets: [],
+  medicoes: [],
+  created_at: '',
+  updated_at: '',
+};
+
 describe('ObrasListPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -17,8 +50,8 @@ describe('ObrasListPage', () => {
   it('lista obras retornadas pelo serviço', async () => {
     vi.mocked(obrasService.list).mockResolvedValue({
       obras: [
-        { hash: 'abc123', titulo: 'Pavimentação Rua A', status: 'em_andamento', secretaria: 'Infraestrutura', valor_medido_total: 150000, descricao: '', orgao: '', contrato: '', tipo_obra: '', modalidade: '', fonte_recurso: '', data_inicio: null, previsao_termino: null, data_termino: null, logradouro: '', bairro: '', cep: '', numero: '', latitude: null, longitude: null, valor_orcamento: null, valor_original: null, valor_aditivo: null, valor_homologado: null, valor_contrapartida: null, valor_convenio: null, valor_economizado: null, progresso_fisico: null, progresso_financeiro: null, medicoes: [], created_at: '', updated_at: '' },
-        { hash: 'def456', titulo: 'Reforma Escola B', status: 'concluida', secretaria: 'Educação', valor_medido_total: 320000, descricao: '', orgao: '', contrato: '', tipo_obra: '', modalidade: '', fonte_recurso: '', data_inicio: null, previsao_termino: null, data_termino: null, logradouro: '', bairro: '', cep: '', numero: '', latitude: null, longitude: null, valor_orcamento: null, valor_original: null, valor_aditivo: null, valor_homologado: null, valor_contrapartida: null, valor_convenio: null, valor_economizado: null, progresso_fisico: null, progresso_financeiro: null, medicoes: [], created_at: '', updated_at: '' },
+        { ...baseObra, hash: 'abc123', titulo: 'Pavimentação Rua A', status: 'em_andamento', secretaria: 'Infraestrutura', valor_medido_total: 150000 },
+        { ...baseObra, hash: 'def456', titulo: 'Reforma Escola B', status: 'concluida', secretaria: 'Educação', valor_medido_total: 320000 },
       ],
       total: 2,
     });
@@ -35,7 +68,7 @@ describe('ObrasListPage', () => {
     const user = userEvent.setup();
     vi.mocked(obrasService.list).mockResolvedValue({
       obras: [
-        { hash: 'abc123', titulo: 'Pavimentação Rua A', status: 'em_andamento', secretaria: 'Infra', valor_medido_total: 0, descricao: '', orgao: '', contrato: '', tipo_obra: '', modalidade: '', fonte_recurso: '', data_inicio: null, previsao_termino: null, data_termino: null, logradouro: '', bairro: '', cep: '', numero: '', latitude: null, longitude: null, valor_orcamento: null, valor_original: null, valor_aditivo: null, valor_homologado: null, valor_contrapartida: null, valor_convenio: null, valor_economizado: null, progresso_fisico: null, progresso_financeiro: null, medicoes: [], created_at: '', updated_at: '' },
+        { ...baseObra, hash: 'abc123', titulo: 'Pavimentação Rua A', status: 'em_andamento', secretaria: 'Infra', valor_medido_total: 0 },
       ],
       total: 1,
     });

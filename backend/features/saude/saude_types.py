@@ -42,6 +42,7 @@ class SaudeSnapshotResource(StrEnum):
     HOSPITAL_CENSO = "hospital_censo"
     HOSPITAL_PROCEDIMENTOS = "hospital_procedimentos"
     HOSPITAL_ATENDIMENTOS_MENSAL = "hospital_atendimentos_mensal"
+    HOSPITAL_ATENDIMENTOS_CID = "hospital_atendimentos_cid"
 
 
 class SaudeSyncTriggerType(StrEnum):
@@ -219,6 +220,7 @@ class SaudeAtencaoPrimariaResponse(BaseModel):
     end_date: str
     atendimentos_por_mes: list[SaudeMonthlySeriesItem]
     procedimentos_por_especialidade: list[SaudeLabelValueItem]
+    atendimentos_por_categoria: list[SaudeLabelValueItem]
     atendimentos_por_cbo: list[SaudeLabelValueItem]
     last_synced_at: datetime | None
 

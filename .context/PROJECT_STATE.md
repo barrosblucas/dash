@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-26 (atualizado com bootstrap histórico de saúde e deduplicação de snapshots)
+Snapshot: 2026-04-26 (atualizado com saúde multi-ano estruturada e obras com mídia/múltiplos locais)
 
 ## Status geral
 
@@ -18,9 +18,10 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Endpoints de exportação (PDF, Excel)
 - [x] Endpoints de scraping (status do scheduler, trigger manual, histórico de execuções)
 - [x] Bounded context `identity` com login, refresh rotativo, logout, `me`, gestão de usuários e reset de senha
-- [x] Bounded context `obra` com CRUD completo, hash público, medições mensais filhas e cálculo de valores derivados
+- [x] Bounded context `obra` com CRUD completo, hash público, medições mensais filhas, cálculo de valores derivados, múltiplos locais/fontes e mídia por obra/medição
 - [x] Bounded context `saude` com snapshots/cache do E-Saúde, CRUD admin de unidades e dashboards públicos de medicamentos, vacinação, visitas domiciliares, perfil epidemiológico, atenção primária, saúde bucal, hospital, farmácia, perfil demográfico e procedimentos
 - [x] Filtros de período dinâmicos (`start_date`/`end_date`) nos endpoints públicos de saúde: atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal (com fallback local para APIs que ignoram filtro)
+- [x] Dashboards públicos de saúde com composição por slice, agregação multi-ano estruturada no banco e cache por faixa para fallbacks live sensíveis a período
 - [x] Scheduler de scraping periódico (APScheduler, 10 min) com primeira execução imediata no startup
 - [x] Scheduler periódico de Saúde Transparente (APScheduler, 6h) com sync dos snapshots públicos disponíveis do ano atual e anterior
 - [x] Serviço de scraping QualitySistemas com upsert de receitas, despesas e detalhamento
@@ -41,7 +42,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
 - [x] Detalhamento hierárquico de receitas com extração por indentação de PDF
 - [x] Forecasting com Prophet + fallback para projeção linear
-- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, usuários, tokens de identidade, obras, medições, unidades de saúde, horários, snapshots e logs de sync de saúde, despesa_breakdown, quality_sync_state, quality_unidade_gestora)
+- [x] Banco SQLite com modelos ORM (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, usuários, tokens de identidade, obras, medições, locais/fontes/mídias de obras, unidades de saúde, horários, snapshots e logs de sync de saúde, despesa_breakdown, quality_sync_state, quality_unidade_gestora)
 - [x] CORS parametrizado via settings com lista explícita de origens permitidas
 - [x] Endpoints administrativos de banco protegidos por autenticação admin
 
@@ -85,11 +86,12 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Área restrita administrativa em `/admin` protegida por middleware do Next com `/login` dedicado
 - [x] Sessão de autenticação no frontend com access token somente em memória e refresh token em cookie `HttpOnly` via route handlers `/api/auth/*`
 - [x] Gestão de usuários no frontend administrativo (listagem, cadastro, edição e reset de senha)
-- [x] CRUD administrativo de obras com edição completa de metadados e medições mensais dinâmicas
+- [x] CRUD administrativo de obras com edição completa de metadados, medições mensais dinâmicas, múltiplos endereços/pins, múltiplas fontes e anexos/fotos por obra e por medição
 - [x] Portal público de obras consumindo API real em `/obras` e `/obras/[id]`, sem mocks locais
 - [x] Saúde Transparente expandida no frontend com páginas públicas de medicamentos, farmácia, vacinação, visitas domiciliares, perfil epidemiológico, atenção primária, saúde bucal, hospital, procedimentos e unidades, além da administração de unidades em `/admin/saude/unidades`
 - [x] Filtros de período (`start_date`/`end_date`) integrados nos clientes frontend de atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal via componente `SaudePeriodFilter` reutilizável
 - [x] Troca de período nos dashboards de saúde preserva o conteúdo anterior durante o carregamento e sincroniza o ano com a data inicial selecionada
+- [x] Hospital público com filtro anual/período, série mensal consolidada, painel CID, painel de procedimentos e heatmap em estado explícito de indisponibilidade até fonte pública verificável
 
 ### Frontend — Reformulação Visual Completa v2 (2026-04-22)
 - [x] **Reformulação completa do frontend** seguindo templates HTML de referência (`design_system/`)
@@ -162,7 +164,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - `test_api/` agora cobre licitações, identidade e obras; `test_ml/` e parte de `test_etl/` seguem com cobertura parcial
 - Lógica de negócio ainda parcialmente acoplada nos handlers — extrair para `*_business.py` conforme crescer
 - `notebooks/` vazio — sem notebooks de exploração
-- Alembic migrations configurado e migration inicial gerada cobrindo todas as tabelas existentes (receitas, despesas, forecasts, metadata_etl, receita_detalhamento, scraping_log, users, identity_tokens, obras, obra_medicoes)
+- Alembic migrations configurado com revisão incremental para `obra_locations`, `obra_funding_sources` e `obra_media_assets`, além das tabelas legadas
 - `forecast_business.py` ainda importa modelos ORM via repositório ao invés de usar abstração pura
 - `backend/features/scraping/scraping_helpers.py` — `_create_log` unificado na sessao de dados para eliminar `database is locked` no SQLite (2026-04-25)
 - `backend/features/saude/saude_sync.py` — transacao de sync refatorada para coletar payloads async ANTES de persistir, eliminando a causa raiz de lock prolongado no SQLite (2026-04-25)
@@ -183,7 +185,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 6. ~~Implementar testes automatizados no frontend (vitest)~~ ✅ Concluído em 2026-04-23
 7. ~~Limpar débito técnico `mypy` nos módulos legados~~ ✅ Concluído em 2026-04-23
 8. Extrair lógica de negócio restante dos handlers para `*_business.py`
-9. Expandir Saúde Transparente para os recursos ainda indisponíveis do hospital (`internacoes`, `CID`, `permanencia`) e para transporte sanitário
+9. Expandir Saúde Transparente para os recursos ainda indisponíveis do hospital (heatmap real, não munícipes, especialidades médicas, outras especialidades) e para transporte sanitário
 10. ~~Consolidar ícones restantes do lucide-react para Material Symbols~~ ✅ Concluído em 2026-04-21
 
 ## Ambiente

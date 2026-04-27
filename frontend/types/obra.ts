@@ -1,5 +1,34 @@
 export type ObraStatus = 'em_andamento' | 'paralisada' | 'concluida';
 
+export interface ObraMediaAsset {
+  id?: number;
+  titulo: string | null;
+  media_kind: string;
+  source_type: string;
+  url: string | null;
+  original_name?: string | null;
+  content_type?: string | null;
+  file_size?: number | null;
+}
+
+export interface ObraLocation {
+  id?: number;
+  sequencia: number;
+  logradouro: string;
+  bairro: string;
+  cep: string;
+  numero: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+export interface ObraFundingSource {
+  id?: number;
+  sequencia: number;
+  nome: string;
+  valor: number | null;
+}
+
 export interface ObraMedicao {
   id?: number;
   sequencia: number;
@@ -7,6 +36,7 @@ export interface ObraMedicao {
   ano_referencia: number;
   valor_medicao: number;
   observacao: string | null;
+  media_assets: ObraMediaAsset[];
 }
 
 export interface ObraRecord {
@@ -38,6 +68,9 @@ export interface ObraRecord {
   valor_economizado: number | null;
   progresso_fisico: number | null;
   progresso_financeiro: number | null;
+  locations: ObraLocation[];
+  funding_sources: ObraFundingSource[];
+  media_assets: ObraMediaAsset[];
   medicoes: ObraMedicao[];
   valor_medido_total: number;
   created_at: string;
@@ -76,5 +109,15 @@ export interface ObraUpsertPayload {
   valor_convenio: number | null;
   progresso_fisico: number | null;
   progresso_financeiro: number | null;
+  locations: ObraLocation[];
+  funding_sources: ObraFundingSource[];
+  media_assets: ObraMediaAsset[];
   medicoes: ObraMedicao[];
+}
+
+export interface ObraMediaLinkPayload {
+  medicao_id?: number | null;
+  titulo?: string | null;
+  media_kind?: string;
+  url: string;
 }

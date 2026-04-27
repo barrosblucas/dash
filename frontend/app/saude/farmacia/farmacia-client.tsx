@@ -80,16 +80,16 @@ export default function FarmaciaClient() {
 
       <section className="grid gap-4 md:grid-cols-2">
         <SaudeMetricCard
-          label={`Atendimentos em ${year}`}
+          label="Atendimentos no período"
           value={formatNumber(pharmacyQuery.data?.total_attendances ?? 0, { decimals: 0 })}
-          supportingText="Total consolidado de atendimentos de medicamentos."
+          supportingText={`Consolidado entre ${startDate} e ${endDate}.`}
           tone="success"
           icon="support_agent"
         />
         <SaudeMetricCard
-          label={`Dispensações em ${year}`}
+          label="Dispensações no período"
           value={formatNumber(pharmacyQuery.data?.total_dispensed ?? 0, { decimals: 0 })}
-          supportingText="Total consolidado de medicamentos dispensados."
+          supportingText={`Consolidado entre ${startDate} e ${endDate}.`}
           tone="info"
           icon="medication_liquid"
         />

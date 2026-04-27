@@ -9,33 +9,30 @@ from sqlalchemy.orm import Session
 
 from backend.features.saude.saude_data import SQLSaudeRepository
 from backend.features.saude.saude_public_builders import (
-    build_farmacia_response,
     build_medicamentos_estoque_response,
-    build_structured_atencao_primaria_response,
-    build_structured_farmacia_response,
+    build_visitas_domiciliares_response,
+)
+from backend.features.saude.saude_public_dashboards import (
+    build_atencao_primaria_dashboard,
+    build_farmacia_dashboard,
+    build_hospital_dashboard,
+    build_vacinacao_dashboard,
+)
+from backend.features.saude.saude_public_live import (
+    history_payload,
+)
+from backend.features.saude.saude_public_structured import (
     build_structured_medicamentos_dispensados_response,
     build_structured_medicamentos_estoque_response,
     build_structured_procedimentos_tipo_response,
     build_structured_saude_bucal_response,
-    build_structured_vacinacao_response,
-    build_visitas_domiciliares_response,
     max_synced_from_rows,
     rows_to_label_value,
-)
-from backend.features.saude.saude_public_live import (
-    history_payload,
-    load_atencao_primaria_cbo,
-    load_atencao_primaria_procedimentos,
-    load_chart_payload,
-    load_hospital_payload,
-    load_vacinacao_ranking,
 )
 from backend.features.saude.saude_snapshot_mapper import (
     chart_to_label_value_items,
     chart_to_monthly_series_items,
     filter_monthly_series_by_date_range,
-    hospital_censo_from_payload,
-    hospital_table_to_items,
     max_synced_at,
     quantitativos_to_gender_items,
     quantitativos_to_items_with_trend,
@@ -60,12 +57,6 @@ from backend.features.saude.saude_types import (
 from backend.shared.database.connection import get_db
 
 router = APIRouter(tags=["saude"])
-
-_UNAVAILABLE_HOSPITAL_RESOURCES = [
-    "internacoes_por_mes",
-    "internacoes_por_cid",
-    "media_permanencia",
-]
 
 
 @router.get("/medicamentos-estoque", response_model=SaudeMedicationStockResponse)
@@ -135,25 +126,11 @@ async def get_vacinacao(
     db: Session = Depends(get_db),
 ) -> SaudeVacinacaoResponse:
     repo = SQLSaudeRepository(db)
-    structured = build_structured_vacinacao_response(repo, year=year, start_date=start_date, end_date=end_date)
-    if structured:
-        return structured
-    if start_date is not None and end_date is not None:
-        mensal_payload, mensal_synced = await load_chart_payload(repo, SaudeSnapshotResource.VACINAS_POR_MES, year=year)
-        ranking_payload, ranking_synced = await load_vacinacao_ranking(repo, start_date, end_date)
-    else:
-        mensal_payload, mensal_synced = repo.get_snapshot_payload(SaudeSnapshotResource.VACINAS_POR_MES, year)
-        ranking_payload, ranking_synced = repo.get_snapshot_payload(SaudeSnapshotResource.VACINAS_RANKING)
-    mensal = chart_to_monthly_series_items(mensal_payload, year=year)
-    if start_date is not None and end_date is not None:
-        mensal = filter_monthly_series_by_date_range(mensal, datetime(start_date.year, start_date.month, start_date.day), datetime(end_date.year, end_date.month, end_date.day))
-    return SaudeVacinacaoResponse(
-        start_date=start_date.isoformat() if start_date else None,
-        end_date=end_date.isoformat() if end_date else None,
-        aplicadas_por_mes=mensal,
-        ranking_vacinas=chart_to_label_value_items(ranking_payload),
-        total_aplicadas=sum_values(mensal),
-        last_synced_at=max_synced_at(mensal_synced, ranking_synced),
+    return await build_vacinacao_dashboard(
+        repo,
+        year=year,
+        start_date=start_date,
+        end_date=end_date,
     )
 
 
@@ -216,28 +193,12 @@ async def get_atencao_primaria(
     end_date: date | None = Query(default=None),
     db: Session = Depends(get_db),
 ) -> SaudeAtencaoPrimariaResponse:
-    effective_start_date = start_date or date(year, 1, 1)
-    effective_end_date = end_date or date(year, 12, 31)
     repo = SQLSaudeRepository(db)
-    structured = build_structured_atencao_primaria_response(
-        repo, year=year, effective_start_date=effective_start_date, effective_end_date=effective_end_date
-    )
-    if structured:
-        return structured
-    mensal_payload, mensal_synced = await load_chart_payload(repo, SaudeSnapshotResource.ATENCAO_PRIMARIA_ATENDIMENTOS_MENSAL, year=year)
-    procedimentos_payload, procedimentos_synced = await load_atencao_primaria_procedimentos(repo, effective_start_date, effective_end_date)
-    cbo_payload, cbo_synced = await load_atencao_primaria_cbo(repo, year=year, start_date=effective_start_date)
-    atendimentos_mensal = chart_to_monthly_series_items(mensal_payload, year=year)
-    if start_date is not None and end_date is not None:
-        atendimentos_mensal = filter_monthly_series_by_date_range(atendimentos_mensal, datetime(effective_start_date.year, effective_start_date.month, effective_start_date.day), datetime(effective_end_date.year, effective_end_date.month, effective_end_date.day))
-    return SaudeAtencaoPrimariaResponse(
+    return await build_atencao_primaria_dashboard(
+        repo,
         year=year,
-        start_date=effective_start_date.isoformat(),
-        end_date=effective_end_date.isoformat(),
-        atendimentos_por_mes=atendimentos_mensal,
-        procedimentos_por_especialidade=chart_to_label_value_items(procedimentos_payload),
-        atendimentos_por_cbo=chart_to_label_value_items(cbo_payload),
-        last_synced_at=max_synced_at(mensal_synced, procedimentos_synced, cbo_synced),
+        start_date=start_date,
+        end_date=end_date,
     )
 
 
@@ -274,39 +235,19 @@ async def get_saude_bucal(
 
 @router.get("/hospital", response_model=SaudeHospitalResponse)
 async def get_hospital(
+    year: int = Query(..., ge=2000, le=2100),
+    start_date: date | None = Query(default=None),
+    end_date: date | None = Query(default=None),
     estabelecimento_id: int | None = Query(default=None, ge=1),
     db: Session = Depends(get_db),
 ) -> SaudeHospitalResponse:
     repo = SQLSaudeRepository(db)
-    censo_payload, censo_synced = await load_hospital_payload(
+    return await build_hospital_dashboard(
         repo,
-        SaudeSnapshotResource.HOSPITAL_CENSO,
+        year=year,
+        start_date=start_date,
+        end_date=end_date,
         estabelecimento_id=estabelecimento_id,
-    )
-    procedimentos_payload, procedimentos_synced = await load_hospital_payload(
-        repo,
-        SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS,
-        estabelecimento_id=estabelecimento_id,
-    )
-    mensal_payload, mensal_synced = await load_hospital_payload(
-        repo,
-        SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL,
-        estabelecimento_id=estabelecimento_id,
-    )
-    procedimentos_realizados, total_procedimentos = hospital_table_to_items(
-        procedimentos_payload
-    )
-    return SaudeHospitalResponse(
-        estabelecimento_id=estabelecimento_id,
-        censo=hospital_censo_from_payload(censo_payload),
-        procedimentos_realizados=procedimentos_realizados,
-        total_procedimentos=total_procedimentos,
-        atendimentos_por_mes=chart_to_monthly_series_items(mensal_payload),
-        internacoes_por_mes=[],
-        internacoes_por_cid=[],
-        media_permanencia=[],
-        recursos_indisponiveis=_UNAVAILABLE_HOSPITAL_RESOURCES,
-        last_synced_at=max_synced_at(censo_synced, procedimentos_synced, mensal_synced),
     )
 
 
@@ -318,11 +259,7 @@ async def get_farmacia(
     db: Session = Depends(get_db),
 ) -> SaudeFarmaciaResponse:
     repo = SQLSaudeRepository(db)
-    if start_date is None and end_date is None:
-        structured = build_structured_farmacia_response(repo, year=year, start_date=start_date, end_date=end_date)
-        if structured:
-            return structured
-    return await build_farmacia_response(
+    return await build_farmacia_dashboard(
         repo,
         year=year,
         start_date=start_date,

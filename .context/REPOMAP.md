@@ -22,12 +22,12 @@ Snapshot: 2026-04-26
 
 #### `shared/` — infraestrutura compartilhada
 - `shared/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
-- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, unidades de saúde, horários, snapshots de saúde, logs de sync de saúde, despesa_breakdown, quality_sync_state, quality_unidade_gestora)
+- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, locais/fontes/mídias de obras, unidades de saúde, horários, snapshots de saúde, logs de sync de saúde, despesa_breakdown, quality_sync_state, quality_unidade_gestora)
 
 #### `alembic/` — migrations
 - `alembic.ini`: configuração do Alembic apontando para `backend.shared.database.models.Base`
 - `alembic/env.py`: ambiente de migration reutilizando a engine do projeto (`create_db_engine`)
-- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento)
+- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento + revisão `1c2d3e4f5a6b_add_obra_related_tables.py` para locais/fontes/mídias de obras)
 - `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha)
 - `shared/security.py`: hash de senha Argon2, emissão/validação de tokens JWT e dependências de autenticação/autorização
 - `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
@@ -40,10 +40,11 @@ Snapshot: 2026-04-26
 - `identity_handler.py`: rotas `/api/v1/identity` (login, refresh, logout, me, usuários, reset de senha)
 
 #### `features/obra/`
-- `obra_types.py`: schemas Pydantic de obra e medições mensais
+- `obra_types.py`: schemas Pydantic de obra com múltiplos locais/fontes/mídias e medições mensais com anexos
 - `obra_business.py`: cálculos puros de `valor_economizado` e `valor_medido_total`
-- `obra_data.py`: persistência SQLAlchemy de obras e substituição de medições
-- `obra_handler.py`: rotas `/api/v1/obras` com leitura pública e escrita admin
+- `obra_data.py`: persistência SQLAlchemy de obras, upsert de medições por sequência, locais/fontes e sincronização de mídia
+- `obra_handler.py`: rotas `/api/v1/obras` com leitura pública, escrita admin e endpoints de upload/vínculo/remoção de mídia
+- `obra_media_storage.py`: storage local de uploads de obras com resolução de path e limpeza de arquivos
 
 #### `features/receita/`
 - `receita_types.py`: entidade Receita, TipoReceita, ReceitaRepository Protocol, schemas Pydantic
@@ -101,7 +102,9 @@ Snapshot: 2026-04-26
 - `saude_sync.py`: orquestração de sync/importação de unidades e composição dos parâmetros por recurso
 - `saude_snapshot_mapper.py`: normalização de charts/snapshots, tendência epidemiológica e censo hospitalar
 - `saude_public_handler.py`: dashboards públicos (`medicamentos`, `vacinacao`, `visitas-domiciliares`, `perfil-epidemiologico`, `atencao-primaria`, `saude-bucal`, `hospital`, `farmacia`, `perfil-demografico`, `procedimentos-tipo`)
-- `saude_public_builders.py`: builders de resposta para handlers públicos de saúde (farmácia, visitas, medicamentos-estoque)
+- `saude_public_builders.py`: builders de resposta live/fallback para handlers públicos de saúde (farmácia, visitas, medicamentos-estoque)
+- `saude_public_structured.py`: agregadores estruturados por `ano/mes`, ranges multi-ano e respostas derivadas do banco
+- `saude_public_dashboards.py`: composição por slice dos dashboards públicos de vacinação, APS, farmácia e hospital
 - `saude_units_handler.py`: endpoints públicos auxiliares (`unidades`, `horarios`, `sync-status`)
 - `saude_admin_handler.py`: endpoints administrativos (`admin/unidades`, `importar-esaude`, `admin/sync`)
 - `saude_public_live.py`: fallbacks live para filtros não cobertos por snapshot (`start_date`, `estabelecimento_id`)
@@ -187,6 +190,11 @@ Snapshot: 2026-04-26
 - `components/saude/SaudeUnitsMap.tsx`: mapa Leaflet client-only com markers, popup e geolocalização opcional
 - `components/admin/saude/SaudeUnitsAdminPage.tsx`: shell administrativa da V1 de saúde
 - `components/admin/saude/saude-units-form-helpers.ts`: helpers de formulário/horários para CRUD admin de saúde
+- `components/admin/obras/ObraForm.tsx`: formulário administrativo de obras com múltiplos locais/fontes e orquestração de uploads
+- `components/admin/obras/ObraLocationsMap.tsx`: mapa Leaflet para posicionar pins dos locais da obra
+- `components/admin/obras/ObraMediaEditor.tsx`: editor reutilizável de links/uploads de mídia da obra e das medições
+- `components/admin/obras/ObraMeasurementsSection.tsx`: seção isolada das medições com anexos por medição
+- `components/admin/obras/obra-form-helpers.ts`: helpers de estado, payload e validação do formulário administrativo de obras
 - `components/receitas/ReceitaDetalhamentoTable.tsx`: tabela hierárquica de detalhamento de receitas com expand/collapse
 - `components/ui/`: componentes base (shared)
 - `app/receitas/page.tsx`: página de receitas municipais
@@ -216,7 +224,7 @@ Snapshot: 2026-04-26
 - `app/obras/page.tsx`: página de listagem de obras com filtros, KPIs e grid de cards
 - `app/obras/obras-client.tsx`: componente client com consumo real da API de obras, filtros públicos e KPIs
 - `app/obras/[id]/page.tsx`: página dinâmica de detalhe da obra
-- `app/obras/[id]/obra-detalhe-client.tsx`: detalhe da obra com consumo real, cards contratuais e medições mensais
+- `app/obras/[id]/obra-detalhe-client.tsx`: detalhe da obra com consumo real, múltiplos locais/fontes, mídia global e anexos por medição
 - `app/saude/page.tsx`: landing page pública da Saúde Transparente
 - `app/saude/saude-client.tsx`: landing pública com grade ampliada de painéis da Saúde Transparente
 - `app/saude/medicamentos/page.tsx`: página pública de medicamentos
@@ -234,7 +242,7 @@ Snapshot: 2026-04-26
 - `app/saude/saude-bucal/page.tsx`: página pública de saúde bucal
 - `app/saude/saude-bucal/saude-bucal-client.tsx`: série mensal odontológica e total do período
 - `app/saude/hospital/page.tsx`: página pública hospitalar
-- `app/saude/hospital/hospital-client.tsx`: censo de leitos, movimento, internações, procedimentos e blocos explícitos de indisponibilidade
+- `app/saude/hospital/hospital-client.tsx`: série mensal hospitalar com filtro anual/período, heatmap indisponível explícito, CID, procedimentos e blocos sem fonte pública verificada
 - `app/saude/hospital/hospital-client.test.tsx`: cobertura dos estados hospitalares indisponíveis
 - `app/saude/procedimentos/page.tsx`: página pública de procedimentos
 - `app/saude/procedimentos/procedimentos-client.tsx`: gráfico e tabela de procedimentos por tipo
@@ -268,7 +276,7 @@ Snapshot: 2026-04-26
 - `services/api.ts`: API client Axios centralizado com interceptors
 - `services/auth-service.ts`: cliente do frontend para `/api/auth/*`
 - `services/user-service.ts`: CRUD administrativo de usuários
-- `services/obra-service.ts`: leitura pública e CRUD administrativo de obras
+- `services/obra-service.ts`: leitura pública, CRUD administrativo e operações de mídia de obras
 - `services/saude-service.ts`: consumo dos endpoints públicos e administrativos da feature saúde, incluindo vacinação, visitas, APS, saúde bucal, hospital e farmácia
 - `stores/filtersStore.ts`: store Zustand de filtros
 - `stores/authStore.ts`: store em memória da sessão administrativa (sem persistência do access token)

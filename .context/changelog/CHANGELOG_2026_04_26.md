@@ -57,6 +57,50 @@
   - `npm run lint` — pass
   - `npm run build` — compiled successfully
 
+### Backend/Frontend — Saúde e Obras (composição estruturada multi-ano + mídia/múltiplos locais)
+- **Fixed** dashboards de saúde pública com zeros incorretos em ranges multi-ano e faltas de composição entre banco estruturado e fallback live.
+  - Solução:
+    1. Extraída a composição estruturada para `saude_public_structured.py` e a montagem por slice para `saude_public_dashboards.py`.
+    2. Vacinação, atenção primária, saúde bucal e farmácia passaram a agregar por `ano/mes` no banco, cobrindo ranges que atravessam anos.
+    3. Atenção primária ganhou `atendimentos_por_categoria` via endpoint verificado de CBO e hospital passou a consolidar série mensal/CID com blocos explícitos de indisponibilidade quando a fonte pública não é verificável.
+    4. Fallbacks live por período passaram a reutilizar `saude_snapshots` por faixa consultada, preservando histórico e limitando atualização frequente ao período corrente.
+  - Arquivos modificados:
+    - `backend/features/saude/saude_public_structured.py`
+    - `backend/features/saude/saude_public_dashboards.py`
+    - `backend/features/saude/saude_public_live.py`
+    - `backend/features/saude/saude_public_handler.py`
+    - `backend/features/saude/saude_public_builders.py`
+    - `backend/features/saude/saude_resource_catalog.py`
+    - `frontend/app/saude/atencao-primaria/atencao-primaria-client.tsx`
+    - `frontend/app/saude/farmacia/farmacia-client.tsx`
+    - `frontend/app/saude/hospital/hospital-client.tsx`
+    - `frontend/services/saude-service.ts`
+    - `frontend/types/saude.ts`
+- **Added** suporte estrutural a obras com múltiplos locais, múltiplas fontes e mídia por obra/medição.
+  - Solução:
+    1. Criadas as tabelas `obra_locations`, `obra_funding_sources` e `obra_media_assets` via Alembic, preservando os campos legados como derivados do primeiro item.
+    2. `obra_data.py` passou a fazer upsert de medições por `sequencia` e a sincronizar links de mídia sem apagar uploads persistidos.
+    3. `obra_handler.py` ganhou endpoints de upload, vínculo por URL, remoção e leitura de conteúdo de mídia.
+    4. O formulário administrativo foi refeito para suportar múltiplos endereços/pins, múltiplas fontes, parsing decimal com vírgula e anexos por obra e por medição; o detalhe público passou a renderizar locais, fontes e anexos.
+  - Arquivos modificados:
+    - `backend/alembic/versions/1c2d3e4f5a6b_add_obra_related_tables.py`
+    - `backend/features/obra/obra_types.py`
+    - `backend/features/obra/obra_data.py`
+    - `backend/features/obra/obra_handler.py`
+    - `backend/features/obra/obra_media_storage.py`
+    - `frontend/components/admin/obras/ObraForm.tsx`
+    - `frontend/components/admin/obras/ObraLocationsMap.tsx`
+    - `frontend/components/admin/obras/ObraMediaEditor.tsx`
+    - `frontend/components/admin/obras/ObraMeasurementsSection.tsx`
+    - `frontend/components/admin/obras/obra-form-helpers.ts`
+    - `frontend/app/obras/[id]/obra-detalhe-client.tsx`
+    - `frontend/services/obra-service.ts`
+    - `frontend/types/obra.ts`
+  - Validação direcionada:
+    - `pytest tests/test_api/test_obra.py -q` — pass
+    - `pytest tests/test_api/test_saude_dashboards.py tests/test_api/test_saude_farmacia.py -q` — pass
+    - `npm run test -- ObraForm.test.tsx ObrasListPage.test.tsx` — 7/7 pass
+
 ## Validação
 - `pytest tests/test_etl/test_saude_historical_bootstrap.py` — 7/7 pass
 - `pytest tests/test_api/test_saude_dashboards.py` — 2/2 pass

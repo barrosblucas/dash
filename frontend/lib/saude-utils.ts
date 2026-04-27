@@ -50,6 +50,7 @@ export const saudeSyncResourceOptions = [
   { value: 'hospital_censo', label: 'Censo hospitalar' },
   { value: 'hospital_procedimentos', label: 'Procedimentos hospitalares' },
   { value: 'hospital_atendimentos_mensal', label: 'Atendimentos hospitalares por mês' },
+  { value: 'hospital_atendimentos_cid', label: 'Atendimentos hospitalares por CID' },
 ] as const;
 
 export const saudeYearOptions = [...PERIODO_DADOS.anos].reverse();

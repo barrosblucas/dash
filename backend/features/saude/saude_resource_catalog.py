@@ -85,9 +85,9 @@ RESOURCE_DEFINITIONS: dict[SaudeSnapshotResource, SaudeResourceDefinition] = {
         {},
     ),
     SaudeSnapshotResource.ATENCAO_PRIMARIA_CBO: (
-        "buscar-dados-do-chart/quantidade-de-atendimentos-por-cbo-da-especialidade",
+        "buscar-dados-do-chart/quantidade-de-atendimentos-por-cbo-da-atencao-basica",
         True,
-        {"data_de_inicio": "{year}-01-01"},
+        {"data_de_inicio": "{year}-01-01", "data_de_fim": "{year}-12-31"},
     ),
     SaudeSnapshotResource.SAUDE_BUCAL_ATENDIMENTOS_MENSAL: (
         "buscar-dados-do-chart/quantidade-de-atendimentos-por-mes-da-odonto",
@@ -101,12 +101,17 @@ RESOURCE_DEFINITIONS: dict[SaudeSnapshotResource, SaudeResourceDefinition] = {
     ),
     SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS: (
         "dados-hospitalar-quantidade-procedimentos-realizados",
-        False,
+        True,
         {},
     ),
     SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL: (
         "buscar-dados-do-chart/quantidade-de-atendimentos-por-mes-do-hospital",
-        False,
+        True,
+        {},
+    ),
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CID: (
+        "buscar-atendimentos-por-cid",
+        True,
         {},
     ),
 }
@@ -133,6 +138,7 @@ DEFAULT_SYNC_RESOURCES: list[SaudeSnapshotResource] = [
     SaudeSnapshotResource.HOSPITAL_CENSO,
     SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS,
     SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL,
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CID,
 ]
 
 SNAPSHOT_ONLY_RESOURCES: set[SaudeSnapshotResource] = {
@@ -145,4 +151,5 @@ SNAPSHOT_ONLY_RESOURCES: set[SaudeSnapshotResource] = {
     SaudeSnapshotResource.HOSPITAL_CENSO,
     SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS,
     SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL,
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CID,
 }

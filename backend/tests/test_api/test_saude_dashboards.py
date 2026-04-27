@@ -139,8 +139,8 @@ def test_saude_sync_dashboards_publicos_e_historico(
             == "buscar-dados-do-chart/atencao-basica-quantidade-de-procedimentos-realizados-por-especialidade"
         ):
             return {"labels": ["Clínica Geral", "Pediatria"], "datasets": [{"data": [20, 18]}]}
-        if resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-cbo-da-especialidade":
-            assert params == {"data_de_inicio": "2026-01-01"}
+        if resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-cbo-da-atencao-basica":
+            assert params == {"data_de_inicio": "2026-01-01", "data_de_fim": "2026-12-31"}
             return {"labels": ["Enfermeiro", "Médico"], "datasets": [{"data": [7, 5]}]}
         if resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-mes-da-odonto":
             return {
@@ -157,7 +157,10 @@ def test_saude_sync_dashboards_publicos_e_historico(
                 ],
                 "total": 2,
             }
+        if resource_path == "buscar-atendimentos-por-cid":
+            return {"labels": ["A00", "B20"], "datasets": [{"data": [5, 3]}]}
         assert resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-mes-do-hospital"
+        assert params == expected_year
         return {
             "labels": ["Janeiro de 2026", "Fevereiro de 2026"],
             "datasets": [{"data": [33, 28]}],
@@ -261,14 +264,18 @@ def test_saude_sync_dashboards_publicos_e_historico(
     assert compat.status_code == 200
     assert compat.json()["ranking"][0]["label"] == "Dipirona"
 
-    hospital = client.get("/api/v1/saude/hospital")
+    hospital = client.get("/api/v1/saude/hospital", params={"year": 2026})
     assert hospital.status_code == 200
     assert hospital.json()["censo"]["taxa_ocupacao"] == 70.0
     assert hospital.json()["total_procedimentos"] == 2
     assert hospital.json()["recursos_indisponiveis"] == [
+        "mapa_de_calor",
         "internacoes_por_mes",
         "internacoes_por_cid",
         "media_permanencia",
+        "nao_municipes",
+        "especialidades_medicas",
+        "outras_especialidades",
     ]
 
     demografico = client.get("/api/v1/saude/perfil-demografico", params={"year": 2026})
@@ -314,13 +321,15 @@ def test_saude_dashboards_fallback_live_para_start_date_e_estabelecimento(
         return {"quantitativos": {}}
 
     async def fake_sync_fetch_public_payload(self: object, resource_path: str, params: dict[str, str] | None = None) -> object:
-        if resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-cbo-da-especialidade":
-            assert params == {"data_de_inicio": "2026-01-01"}
+        if resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-cbo-da-atencao-basica":
+            assert params == {"data_de_inicio": "2026-01-01", "data_de_fim": "2026-12-31"}
             return {"labels": ["Padrão"], "datasets": [{"data": [1]}]}
         if resource_path == "buscar-censo-dos-leitos-da-internacao":
             return {"total_leitos": 4, "ocupados": 1, "livres": 3}
         if resource_path == "dados-hospitalar-quantidade-procedimentos-realizados":
             return {"data": [{"procedimento": "Curativo", "quantidade": 2}], "total": 1}
+        if resource_path == "buscar-atendimentos-por-cid":
+            return {"labels": ["A15"], "datasets": [{"data": [2]}]}
         return {"labels": ["Janeiro de 2026"], "datasets": [{"data": [3]}]}
 
     monkeypatch.setattr(saude_adapter.ESaudeClient, "fetch_medicamentos_tabela", fake_fetch_medicamentos_tabela)
@@ -345,8 +354,8 @@ def test_saude_dashboards_fallback_live_para_start_date_e_estabelecimento(
     assert sync_response.status_code == 200
 
     async def fake_live_fetch_public_payload(self: object, resource_path: str, params: dict[str, str] | None = None) -> object:
-        if resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-cbo-da-especialidade":
-            assert params == {"data_de_inicio": "2026-02-01"}
+        if resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-cbo-da-atencao-basica":
+            assert params == {"data_de_inicio": "2026-02-01", "data_de_fim": "2026-12-31"}
             return {"labels": ["Técnico"], "datasets": [{"data": [9]}]}
         if resource_path == "buscar-dados-do-chart/atencao-basica-quantidade-de-procedimentos-realizados-por-especialidade":
             assert params == {"data_de_inicio": "2026-02-01", "data_de_fim": "2026-12-31"}
@@ -355,19 +364,22 @@ def test_saude_dashboards_fallback_live_para_start_date_e_estabelecimento(
             assert params == {"estabelecimento_id": "77"}
             return {"total_leitos": 6, "ocupados": 4, "livres": 2}
         if resource_path == "dados-hospitalar-quantidade-procedimentos-realizados":
-            assert params == {"estabelecimento_id": "77"}
+            assert params == {"estabelecimento_id": "77", "ano": "2026"}
             return {"data": [{"procedimento": "Sutura", "quantidade": 5}], "total": 1}
+        if resource_path == "buscar-atendimentos-por-cid":
+            assert params == {"estabelecimento_id": "77", "ano": "2026"}
+            return {"labels": ["B34"], "datasets": [{"data": [4]}]}
         assert resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-mes-do-hospital"
-        assert params == {"estabelecimento_id": "77"}
+        assert params == {"estabelecimento_id": "77", "ano": "2026"}
         return {"labels": ["Março de 2026"], "datasets": [{"data": [18]}]}
 
     monkeypatch.setattr(saude_adapter.ESaudeClient, "fetch_public_payload", fake_live_fetch_public_payload)
 
     atencao_primaria = client.get("/api/v1/saude/atencao-primaria", params={"year": 2026, "start_date": "2026-02-01"})
     assert atencao_primaria.status_code == 200
-    assert atencao_primaria.json()["atendimentos_por_cbo"][0]["label"] == "Padrão"
+    assert atencao_primaria.json()["atendimentos_por_categoria"][0]["label"] == "Técnico"
 
-    hospital = client.get("/api/v1/saude/hospital", params={"estabelecimento_id": 77})
+    hospital = client.get("/api/v1/saude/hospital", params={"year": 2026, "estabelecimento_id": 77})
     assert hospital.status_code == 200
     assert hospital.json()["censo"]["ocupados"] == 4
     assert hospital.json()["procedimentos_realizados"][0]["label"] == "Sutura"

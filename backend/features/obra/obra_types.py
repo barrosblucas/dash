@@ -15,16 +15,66 @@ class ObraStatus(StrEnum):
     CONCLUIDA = "concluida"
 
 
+class ObraLocationPayload(BaseModel):
+    sequencia: int = Field(default=1, ge=1)
+    logradouro: str = Field(..., min_length=1, max_length=255)
+    bairro: str = Field(..., min_length=1, max_length=255)
+    cep: str = Field(..., min_length=1, max_length=20)
+    numero: str = Field(..., min_length=1, max_length=20)
+    latitude: Decimal | None = None
+    longitude: Decimal | None = None
+
+
+class ObraLocationResponse(ObraLocationPayload):
+    id: int
+
+
+class ObraFundingSourcePayload(BaseModel):
+    sequencia: int = Field(default=1, ge=1)
+    nome: str = Field(..., min_length=1, max_length=255)
+    valor: Decimal | None = Field(default=None, ge=0)
+
+
+class ObraFundingSourceResponse(ObraFundingSourcePayload):
+    id: int
+
+
+class ObraMediaAssetPayload(BaseModel):
+    id: int | None = None
+    titulo: str | None = Field(default=None, max_length=255)
+    media_kind: str = Field(default="image", min_length=1, max_length=50)
+    source_type: str = Field(default="url", min_length=1, max_length=20)
+    url: str | None = Field(default=None, max_length=1000)
+
+
+class ObraMediaAssetResponse(BaseModel):
+    id: int
+    titulo: str | None
+    media_kind: str
+    source_type: str
+    url: str | None
+    original_name: str | None
+    content_type: str | None
+    file_size: int | None
+
+
 class MedicaoPayload(BaseModel):
     sequencia: int = Field(..., ge=1)
     mes_referencia: int = Field(..., ge=1, le=12)
     ano_referencia: int = Field(..., ge=2000, le=2100)
     valor_medicao: Decimal = Field(..., ge=0)
     observacao: str | None = Field(default=None, max_length=2000)
+    media_assets: list[ObraMediaAssetPayload] = Field(default_factory=list)
 
 
-class MedicaoResponse(MedicaoPayload):
+class MedicaoResponse(BaseModel):
     id: int
+    sequencia: int
+    mes_referencia: int
+    ano_referencia: int
+    valor_medicao: Decimal
+    observacao: str | None = None
+    media_assets: list[ObraMediaAssetResponse]
 
 
 class ObraWriteRequest(BaseModel):
@@ -54,6 +104,9 @@ class ObraWriteRequest(BaseModel):
     valor_convenio: Decimal | None = Field(default=None, ge=0)
     progresso_fisico: Decimal | None = Field(default=None, ge=0, le=100)
     progresso_financeiro: Decimal | None = Field(default=None, ge=0, le=100)
+    locations: list[ObraLocationPayload] = Field(default_factory=list)
+    funding_sources: list[ObraFundingSourcePayload] = Field(default_factory=list)
+    media_assets: list[ObraMediaAssetPayload] = Field(default_factory=list)
     medicoes: list[MedicaoPayload] = Field(default_factory=list)
 
 
@@ -91,9 +144,19 @@ class ObraResponse(BaseModel):
     valor_medido_total: Decimal
     created_at: datetime
     updated_at: datetime
+    locations: list[ObraLocationResponse]
+    funding_sources: list[ObraFundingSourceResponse]
+    media_assets: list[ObraMediaAssetResponse]
     medicoes: list[MedicaoResponse]
 
 
 class ObraListResponse(BaseModel):
     obras: list[ObraResponse]
     total: int
+
+
+class ObraMediaLinkRequest(BaseModel):
+    medicao_id: int | None = Field(default=None, ge=1)
+    titulo: str | None = Field(default=None, max_length=255)
+    media_kind: str = Field(default="image", min_length=1, max_length=50)
+    url: str = Field(..., min_length=1, max_length=1000)

@@ -85,7 +85,7 @@ export default function AtencaoPrimariaClient() {
         <SaudeMetricCard
           label="Atendimentos no período"
           value={formatNumber(monthlyTotal, { decimals: 0 })}
-          supportingText={`Série mensal filtrada para ${year}.`}
+          supportingText={`Consolidado entre ${startDate} e ${endDate}.`}
           tone="success"
           icon="stethoscope"
         />
@@ -96,9 +96,9 @@ export default function AtencaoPrimariaClient() {
           icon="medical_services"
         />
         <SaudeMetricCard
-          label="CBO líder"
-          value={getTopLabel(primaryCareQuery.data?.attendances_by_cbo ?? [])}
-          supportingText="Recorte mais volumoso entre os CBOs retornados."
+          label="Categoria líder"
+          value={getTopLabel(primaryCareQuery.data?.attendances_by_category ?? [])}
+          supportingText="Categoria profissional com maior volume no período."
           icon="badge"
         />
       </section>
@@ -147,26 +147,12 @@ export default function AtencaoPrimariaClient() {
       <SaudePanel title="Atendimentos por categoria" description="Distribuição por categoria profissional (CBO) no período selecionado.">
         <div className="h-[340px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={primaryCareQuery.data?.attendances_by_cbo ?? []} layout="vertical" margin={{ left: 40 }}>
+            <BarChart data={primaryCareQuery.data?.attendances_by_category ?? []} layout="vertical" margin={{ left: 40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
               <XAxis type="number" tick={{ fill: 'currentColor', fontSize: 12 }} />
               <YAxis type="category" dataKey="label" width={220} tick={{ fill: 'currentColor', fontSize: 12 }} />
               <Tooltip />
               <Bar dataKey="value" fill="#a855f7" radius={[0, 10, 10, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </SaudePanel>
-
-      <SaudePanel title="Atendimentos por CBO da especialidade" description="Recorte por ocupação para visualizar onde a demanda está concentrada.">
-        <div className="h-[340px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={primaryCareQuery.data?.attendances_by_cbo ?? []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
-              <XAxis dataKey="label" tick={{ fill: 'currentColor', fontSize: 12 }} interval={0} angle={-20} textAnchor="end" height={72} />
-              <YAxis tick={{ fill: 'currentColor', fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="value" fill="#06b6d4" radius={[10, 10, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

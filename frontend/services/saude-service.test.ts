@@ -77,9 +77,11 @@ describe('saude-service', () => {
 
   it('consulta atenção primária com ano e data inicial', async () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
+      start_date: '2025-01-01',
       end_date: '2025-12-31',
       atendimentos_por_mes: [],
       procedimentos_por_especialidade: [],
+      atendimentos_por_categoria: [],
       atendimentos_por_cbo: [],
       last_synced_at: null,
     });
@@ -104,10 +106,10 @@ describe('saude-service', () => {
       last_synced_at: null,
     });
 
-    await saudeService.getHospitalDashboard({ estabelecimento_id: 9 });
+    await saudeService.getHospitalDashboard({ year: 2026, estabelecimento_id: 9 });
 
     expect(apiClient.get).toHaveBeenCalledWith('/api/v1/saude/hospital', {
-      params: { estabelecimento_id: 9 },
+      params: { year: 2026, estabelecimento_id: 9 },
     });
   });
 
