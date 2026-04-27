@@ -15,6 +15,9 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
+from alembic import command as alembic_command
+from alembic.config import Config as AlembicConfig
+
 from .models import Base
 
 logger = logging.getLogger(__name__)
@@ -231,6 +234,56 @@ def get_db() -> Generator[Session]:
     with db_manager.get_session() as session:
         yield session
 
+def run_alembic_upgrade(db_path: Path | None = None) -> None:
+    """Executa Alembic upgrade head para manter o schema sincronizado."""
+    target_path = db_path or DEFAULT_DB_PATH
+    database_url = f"sqlite:///{target_path}"
+
+    alembic_ini = Path(__file__).parent.parent.parent / "alembic.ini"
+    if not alembic_ini.exists():
+        raise FileNotFoundError(f"Arquivo alembic.ini não encontrado: {alembic_ini}")
+
+    alembic_cfg = AlembicConfig(str(alembic_ini))
+    alembic_cfg.set_main_option(
+        "script_location", str(alembic_ini.parent / "alembic")
+    )
+    alembic_cfg.set_main_option("sqlalchemy.url", database_url)
+
+    # Se o banco existe mas não tem alembic_version, faz stamp da base
+    if target_path.exists():
+        import sqlite3
+
+        conn = sqlite3.connect(target_path)
+        cursor = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='alembic_version'"
+        )
+        has_alembic = cursor.fetchone() is not None
+        conn.close()
+
+        if not has_alembic:
+            from alembic.script import ScriptDirectory
+
+            script = ScriptDirectory.from_config(alembic_cfg)
+            base = script.get_base()
+            if base is not None:
+                logger.info(
+                    "Banco existente sem alembic_version. Stampando base %s",
+                    base,
+                )
+                conn = sqlite3.connect(target_path)
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS alembic_version "
+                    "(version_num VARCHAR(32) NOT NULL, PRIMARY KEY (version_num))"
+                )
+                conn.execute(
+                    "INSERT INTO alembic_version (version_num) VALUES (?)",
+                    (base,),
+                )
+                conn.commit()
+                conn.close()
+    logger.info("Executando Alembic upgrade head em: %s", target_path)
+    alembic_command.upgrade(alembic_cfg, "head")
+    logger.info("Migrations aplicadas com sucesso")
 
 def init_database() -> None:
     """Inicializa o banco de dados criando as tabelas."""

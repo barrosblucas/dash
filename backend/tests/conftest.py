@@ -98,7 +98,7 @@ def client(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[TestClie
     import backend.api.main as main_module
 
     monkeypatch.setattr(main_module, "db_manager", test_db_manager)
-    monkeypatch.setattr(main_module, "init_database", test_db_manager.create_tables)
+    monkeypatch.setattr(main_module, "run_alembic_upgrade", test_db_manager.create_tables)
     monkeypatch.setattr(
         main_module.HistoricalDataBootstrapService,
         "bootstrap_missing_years",

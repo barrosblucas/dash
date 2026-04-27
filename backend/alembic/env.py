@@ -61,7 +61,12 @@ def run_migrations_online() -> None:
     with the context. We reuse the project's engine factory so that all SQLite
     pragmas and connection args are identical to runtime.
     """
-    connectable: Engine = create_db_engine()
+    configured_url = config.get_main_option("sqlalchemy.url")
+    if configured_url and configured_url.startswith("sqlite:///"):
+        db_path = Path(configured_url.replace("sqlite:///", ""))
+        connectable: Engine = create_db_engine(db_path)
+    else:
+        connectable = create_db_engine()
 
     with connectable.connect() as connection:
         context.configure(

@@ -39,7 +39,7 @@ from backend.features.scraping.historical_data_bootstrap_service import (
     HistoricalDataBootstrapService,
 )
 from backend.features.scraping.scraping_handler import router as scraping_router
-from backend.shared.database.connection import db_manager, init_database
+from backend.shared.database.connection import db_manager, run_alembic_upgrade
 from backend.shared.security import require_admin_user
 from backend.shared.settings import get_settings
 
@@ -63,14 +63,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     try:
         if os.environ.get("SKIP_AUTO_DB_INIT"):
             logger.info(
-                "SKIP_AUTO_DB_INIT ativo; pulando init_database() — "
-                "presumindo que Alembic (ou outro migrador) gerencia o schema"
+                "SKIP_AUTO_DB_INIT ativo; pulando run_alembic_upgrade() — "
+                "presumindo que schema é gerenciado externamente"
             )
         else:
-            init_database()
-            logger.info("Banco de dados inicializado com sucesso")
+            run_alembic_upgrade()
+            logger.info("Banco de dados migrado com sucesso via Alembic")
     except Exception:
-        logger.exception("Erro ao inicializar banco de dados")
+        logger.exception("Erro ao executar migrations Alembic")
         raise
 
     try:
