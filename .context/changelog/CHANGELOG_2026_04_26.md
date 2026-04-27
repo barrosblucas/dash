@@ -2,6 +2,30 @@
 
 ## Correções
 
+### Backend/Frontend — Saúde (hospital com fontes públicas verificadas)
+- **Fixed** dashboard `/saude/hospital` para consumir e exibir corretamente os blocos públicos já existentes na Genesis que estavam marcados como indisponíveis.
+  - Evidência verificada:
+    - `docs/API_E-SAUDE_SAUDE-TRANSPARENTE.md` documenta `mapa-de-calor-atendimentos`, `hospitalar-quantidade-de-atendimentos-nao-municipes`, `hospitalar-quantidade-de-atendimentos-por-medico` e `hospitalar-quantidade-de-atendimentos-por-cbo-da-especialidade`.
+    - A implementação foi reavaliada para respeitar os parâmetros reais desses endpoints, especialmente `estabelecimento_id=1` no hospital padrão e `data_de_inicio/data_de_fim` nos recursos por período.
+  - Solução:
+    1. `saude_resource_catalog.py` passou a parametrizar os snapshots hospitalares novos com os contratos corretos da Genesis.
+    2. `saude_sync.py` foi ajustado para preservar query templates fixos mesmo quando o recurso não depende de `year`, permitindo snapshots como `estabelecimento_id=1`.
+    3. `build_hospital_dashboard` passou a usar `estabelecimento_id=1` como fallback operacional para heatmap, não munícipes, atendimentos por médico e por CBO, além de aplicar o range anual efetivo quando o usuário seleciona apenas o ano.
+    4. `saude_public_live.py` deixou de enviar `ano` junto com `data_de_inicio/data_de_fim` para endpoints hospitalares por período, aderindo ao contrato real da API.
+    5. O frontend trocou o placeholder do heatmap pelo painel real e ganhou painéis para não munícipes, atendimentos por médico e atendimentos por CBO.
+    6. O teste de regressão do hospital foi dividido em dois arquivos para respeitar o gate de 400 linhas por arquivo.
+  - Arquivos modificados:
+    - `backend/features/saude/saude_resource_catalog.py`
+    - `backend/features/saude/saude_sync.py`
+    - `backend/features/saude/saude_public_dashboards.py`
+    - `backend/features/saude/saude_public_live.py`
+    - `backend/tests/test_api/test_saude_dashboards.py`
+    - `backend/tests/test_api/test_saude_dashboards_live_fallback.py`
+    - `frontend/app/saude/hospital/HospitalHeatmapPanel.tsx`
+    - `frontend/app/saude/hospital/hospital-client.tsx`
+    - `frontend/app/saude/hospital/hospital-client.test.tsx`
+    - `frontend/services/saude-service.test.ts`
+
 ### Backend — Saúde (Bootstrap histórico e deduplicação de snapshots)
 - **Fixed** ausência de dados históricos (2016–2024) no item farmácia e demais recursos year-scoped da feature saúde.
   - Causa raiz 1: `SaudeSyncService._resolve_years` limitava o sync automático a apenas `[current_year, current_year - 1]`. O scheduler nunca buscava anos históricos.

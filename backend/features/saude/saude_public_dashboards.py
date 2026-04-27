@@ -29,6 +29,7 @@ from backend.features.saude.saude_snapshot_mapper import (
     chart_to_monthly_series_items,
     filter_monthly_series_by_date_range,
     hospital_censo_from_payload,
+    hospital_heatmap_from_payload,
     hospital_table_to_items,
     max_synced_at,
     sum_values,
@@ -193,11 +194,17 @@ async def build_hospital_dashboard(
 ) -> SaudeHospitalResponse:
     effective_start_date, effective_end_date = resolve_period_bounds(year, start_date, end_date)
     years = collect_years_for_period(year, start_date, end_date)
+    hospital_estabelecimento_id = estabelecimento_id or 1
 
     censo_payload, censo_synced = await load_hospital_payload(
         repo,
         SaudeSnapshotResource.HOSPITAL_CENSO,
         estabelecimento_id=estabelecimento_id,
+    )
+    mapa_calor_payload, mapa_calor_synced = await load_hospital_payload(
+        repo,
+        SaudeSnapshotResource.HOSPITAL_MAPA_CALOR,
+        estabelecimento_id=hospital_estabelecimento_id,
     )
     procedimentos_payload, procedimentos_synced = await load_hospital_payload(
         repo,
@@ -214,6 +221,28 @@ async def build_hospital_dashboard(
         year=year,
         start_date=start_date,
         end_date=end_date,
+    )
+    nao_municipes_payload, nao_municipes_synced = await load_hospital_payload(
+        repo,
+        SaudeSnapshotResource.HOSPITAL_NAO_MUNICIPES,
+        estabelecimento_id=hospital_estabelecimento_id,
+        year=year,
+    )
+    especialidades_medicas_payload, especialidades_medicas_synced = await load_hospital_payload(
+        repo,
+        SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MEDICO,
+        estabelecimento_id=hospital_estabelecimento_id,
+        year=year,
+        start_date=effective_start_date,
+        end_date=effective_end_date,
+    )
+    outras_especialidades_payload, outras_especialidades_synced = await load_hospital_payload(
+        repo,
+        SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CBO,
+        estabelecimento_id=hospital_estabelecimento_id,
+        year=year,
+        start_date=effective_start_date,
+        end_date=effective_end_date,
     )
 
     monthly_items = []
@@ -237,7 +266,19 @@ async def build_hospital_dashboard(
 
     procedimentos_realizados, total_procedimentos = hospital_table_to_items(procedimentos_payload)
     atendimentos_por_cid = chart_to_label_value_items(cid_payload)
+    nao_municipes = chart_to_monthly_series_items(nao_municipes_payload)
+    especialidades_medicas = chart_to_label_value_items(especialidades_medicas_payload)
+    outras_especialidades = chart_to_label_value_items(outras_especialidades_payload)
+    mapa_calor = hospital_heatmap_from_payload(mapa_calor_payload)
     unavailable_resources = list(UNAVAILABLE_HOSPITAL_RESOURCES)
+    if mapa_calor:
+        unavailable_resources.remove("mapa_de_calor")
+    if nao_municipes:
+        unavailable_resources.remove("nao_municipes")
+    if especialidades_medicas:
+        unavailable_resources.remove("especialidades_medicas")
+    if outras_especialidades:
+        unavailable_resources.remove("outras_especialidades")
     if not procedimentos_realizados:
         unavailable_resources.append("procedimentos_realizados")
     if not atendimentos_por_cid:
@@ -246,14 +287,27 @@ async def build_hospital_dashboard(
     return SaudeHospitalResponse(
         estabelecimento_id=estabelecimento_id,
         censo=hospital_censo_from_payload(censo_payload),
+        mapa_calor=mapa_calor,
         procedimentos_realizados=procedimentos_realizados,
         total_procedimentos=total_procedimentos,
         atendimentos_por_mes=atendimentos_por_mes,
+        nao_municipes=nao_municipes,
+        especialidades_medicas=especialidades_medicas,
+        outras_especialidades=outras_especialidades,
         internacoes_por_mes=[],
         internacoes_por_cid=atendimentos_por_cid,
         media_permanencia=[],
         recursos_indisponiveis=unavailable_resources,
-        last_synced_at=max_synced_at(censo_synced, procedimentos_synced, mensal_synced, cid_synced),
+        last_synced_at=max_synced_at(
+            censo_synced,
+            mapa_calor_synced,
+            procedimentos_synced,
+            mensal_synced,
+            cid_synced,
+            nao_municipes_synced,
+            especialidades_medicas_synced,
+            outras_especialidades_synced,
+        ),
     )
 
 

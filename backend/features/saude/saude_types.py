@@ -43,6 +43,10 @@ class SaudeSnapshotResource(StrEnum):
     HOSPITAL_PROCEDIMENTOS = "hospital_procedimentos"
     HOSPITAL_ATENDIMENTOS_MENSAL = "hospital_atendimentos_mensal"
     HOSPITAL_ATENDIMENTOS_CID = "hospital_atendimentos_cid"
+    HOSPITAL_MAPA_CALOR = "hospital_mapa_calor"
+    HOSPITAL_NAO_MUNICIPES = "hospital_nao_municipes"
+    HOSPITAL_ATENDIMENTOS_MEDICO = "hospital_atendimentos_medico"
+    HOSPITAL_ATENDIMENTOS_CBO = "hospital_atendimentos_cbo"
 
 
 class SaudeSyncTriggerType(StrEnum):
@@ -242,12 +246,25 @@ class SaudeHospitalCensoResponse(BaseModel):
     raw: dict[str, object]
 
 
+class SaudeHospitalHeatmapResponse(BaseModel):
+    horas: list[str]
+    dias: list[str]
+    matriz: list[list[int]]
+    totais_hora: list[int]
+    totais_dia: list[int]
+    total_geral: int
+
+
 class SaudeHospitalResponse(BaseModel):
     estabelecimento_id: int | None
     censo: SaudeHospitalCensoResponse | None
+    mapa_calor: SaudeHospitalHeatmapResponse | None
     procedimentos_realizados: list[SaudeLabelValueItem]
     total_procedimentos: int
     atendimentos_por_mes: list[SaudeMonthlySeriesItem]
+    nao_municipes: list[SaudeMonthlySeriesItem]
+    especialidades_medicas: list[SaudeLabelValueItem]
+    outras_especialidades: list[SaudeLabelValueItem]
     internacoes_por_mes: list[SaudeMonthlySeriesItem]
     internacoes_por_cid: list[SaudeLabelValueItem]
     media_permanencia: list[SaudeLabelValueItem]

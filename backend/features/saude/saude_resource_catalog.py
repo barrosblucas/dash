@@ -114,6 +114,26 @@ RESOURCE_DEFINITIONS: dict[SaudeSnapshotResource, SaudeResourceDefinition] = {
         True,
         {},
     ),
+    SaudeSnapshotResource.HOSPITAL_MAPA_CALOR: (
+        "buscar-dados-do-chart/mapa-de-calor-atendimentos",
+        False,
+        {"estabelecimento_id": "1"},
+    ),
+    SaudeSnapshotResource.HOSPITAL_NAO_MUNICIPES: (
+        "buscar-dados-do-chart/hospitalar-quantidade-de-atendimentos-nao-municipes",
+        True,
+        {"ano": "{year}", "estabelecimento_id": "1"},
+    ),
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MEDICO: (
+        "buscar-dados-do-chart/hospitalar-quantidade-de-atendimentos-por-medico",
+        True,
+        {"data_de_inicio": "{year}-01-01", "data_de_fim": "{year}-12-31", "estabelecimento_id": "1"},
+    ),
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CBO: (
+        "buscar-dados-do-chart/hospitalar-quantidade-de-atendimentos-por-cbo-da-especialidade",
+        True,
+        {"data_de_inicio": "{year}-01-01", "data_de_fim": "{year}-12-31", "estabelecimento_id": "1"},
+    ),
 }
 
 DEFAULT_SYNC_RESOURCES: list[SaudeSnapshotResource] = [
@@ -139,6 +159,10 @@ DEFAULT_SYNC_RESOURCES: list[SaudeSnapshotResource] = [
     SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS,
     SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL,
     SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CID,
+    SaudeSnapshotResource.HOSPITAL_MAPA_CALOR,
+    SaudeSnapshotResource.HOSPITAL_NAO_MUNICIPES,
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MEDICO,
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CBO,
 ]
 
 SNAPSHOT_ONLY_RESOURCES: set[SaudeSnapshotResource] = {
@@ -152,4 +176,8 @@ SNAPSHOT_ONLY_RESOURCES: set[SaudeSnapshotResource] = {
     SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS,
     SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL,
     SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CID,
+    SaudeSnapshotResource.HOSPITAL_MAPA_CALOR,
+    SaudeSnapshotResource.HOSPITAL_NAO_MUNICIPES,
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MEDICO,
+    SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CBO,
 }

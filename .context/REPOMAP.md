@@ -125,6 +125,7 @@ Snapshot: 2026-04-26
 - `tests/test_api/test_obra.py`: testes de integração do CRUD de obras e medições
 - `tests/test_api/test_saude.py`: testes de integração do CRUD/importação de unidades, sync manual e contratos públicos originais de saúde
 - `tests/test_api/test_saude_dashboards.py`: testes de integração dos dashboards públicos expandidos e dos fallbacks live por `start_date`/`estabelecimento_id`
+- `tests/test_api/test_saude_dashboards_live_fallback.py`: cobertura dedicada do fallback live do hospital e da atenção primária, separada para respeitar o gate de 400 linhas
 - `tests/test_etl/`: testes do pipeline ETL (preparado)
 - `tests/test_etl/test_historical_data_bootstrap_service.py`: testes unitários do bootstrap histórico (lacunas, execução, utilitários)
 - `tests/test_etl/test_receita_scraper.py`: testes unitários do parser de receitas (meses com zero e mês inválido)

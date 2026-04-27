@@ -51,6 +51,10 @@ export const saudeSyncResourceOptions = [
   { value: 'hospital_procedimentos', label: 'Procedimentos hospitalares' },
   { value: 'hospital_atendimentos_mensal', label: 'Atendimentos hospitalares por mês' },
   { value: 'hospital_atendimentos_cid', label: 'Atendimentos hospitalares por CID' },
+  { value: 'hospital_mapa_calor', label: 'Mapa de calor hospitalar' },
+  { value: 'hospital_nao_municipes', label: 'Atendimentos hospitalares não munícipes' },
+  { value: 'hospital_atendimentos_medico', label: 'Atendimentos hospitalares por médico' },
+  { value: 'hospital_atendimentos_cbo', label: 'Atendimentos hospitalares por CBO' },
 ] as const;
 
 export const saudeYearOptions = [...PERIODO_DADOS.anos].reverse();

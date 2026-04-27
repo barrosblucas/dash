@@ -316,6 +316,10 @@ def _hospital_resource_path(resource: SaudeSnapshotResource) -> str:
         SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS: "dados-hospitalar-quantidade-procedimentos-realizados",
         SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL: "buscar-dados-do-chart/quantidade-de-atendimentos-por-mes-do-hospital",
         SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CID: "buscar-atendimentos-por-cid",
+        SaudeSnapshotResource.HOSPITAL_MAPA_CALOR: "buscar-dados-do-chart/mapa-de-calor-atendimentos",
+        SaudeSnapshotResource.HOSPITAL_NAO_MUNICIPES: "buscar-dados-do-chart/hospitalar-quantidade-de-atendimentos-nao-municipes",
+        SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MEDICO: "buscar-dados-do-chart/hospitalar-quantidade-de-atendimentos-por-medico",
+        SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CBO: "buscar-dados-do-chart/hospitalar-quantidade-de-atendimentos-por-cbo-da-especialidade",
     }
     return mapping[resource]
 
@@ -360,7 +364,7 @@ def _hospital_payload_params(
     params: dict[str, str] = {}
     if estabelecimento_id is not None:
         params["estabelecimento_id"] = str(estabelecimento_id)
-    if year is not None:
+    if year is not None and (start_date is None or end_date is None):
         params["ano"] = str(year)
     if start_date is not None:
         params["data_de_inicio"] = start_date.isoformat()

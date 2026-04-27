@@ -96,7 +96,11 @@ describe('saude-service', () => {
   it('consulta hospital com filtro opcional de estabelecimento', async () => {
     vi.mocked(apiClient.get).mockResolvedValueOnce({
       censo: null,
+      mapa_calor: null,
       atendimentos_por_mes: [],
+      nao_municipes: [],
+      especialidades_medicas: [],
+      outras_especialidades: [],
       procedimentos_realizados: [],
       total_procedimentos: 0,
       internacoes_por_mes: [],

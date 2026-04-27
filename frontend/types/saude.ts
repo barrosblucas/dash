@@ -100,9 +100,22 @@ export interface SaudeHospitalCenso {
   taxa_ocupacao: number | null;
 }
 
+export interface SaudeHospitalHeatmap {
+  horas: string[];
+  dias: string[];
+  matriz: number[][];
+  totais_hora: number[];
+  totais_dia: number[];
+  total_geral: number;
+}
+
 export interface SaudeHospitalResponse {
   censo: SaudeHospitalCenso | null;
+  heatmap: SaudeHospitalHeatmap | null;
   attendances_by_month: SaudeMonthlySeriesItem[];
+  non_resident_attendances: SaudeMonthlySeriesItem[];
+  attendances_by_doctor: SaudeLabelValueItem[];
+  attendances_by_specialty_cbo: SaudeLabelValueItem[];
   procedures: SaudeLabelValueItem[];
   total_procedures: number;
   internacoes_by_month: SaudeMonthlySeriesItem[];
@@ -194,7 +207,11 @@ export type SaudeSnapshotResource =
   | 'hospital_censo'
   | 'hospital_procedimentos'
   | 'hospital_atendimentos_mensal'
-  | 'hospital_atendimentos_cid';
+  | 'hospital_atendimentos_cid'
+  | 'hospital_mapa_calor'
+  | 'hospital_nao_municipes'
+  | 'hospital_atendimentos_medico'
+  | 'hospital_atendimentos_cbo';
 
 export type SaudeSyncTriggerType = 'manual' | 'scheduled';
 

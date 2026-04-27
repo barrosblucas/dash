@@ -8,6 +8,7 @@ from typing import Any
 
 from backend.features.saude.saude_types import (
     SaudeHospitalCensoResponse,
+    SaudeHospitalHeatmapResponse,
     SaudeLabelValueItem,
     SaudeLabelValueTrendItem,
     SaudeMonthlySeriesItem,
@@ -143,6 +144,32 @@ def hospital_censo_from_payload(payload: Any) -> SaudeHospitalCensoResponse | No
     )
 
 
+def hospital_heatmap_from_payload(payload: Any) -> SaudeHospitalHeatmapResponse | None:
+    if not isinstance(payload, dict):
+        return None
+    dados = payload.get("dados")
+    totais_x = payload.get("totaisX")
+    totais_y = payload.get("totaisY")
+    if not isinstance(dados, dict) or not isinstance(totais_x, dict) or not isinstance(totais_y, list):
+        return None
+    horas = [f"{hour:02d}" for hour in range(24)]
+    dias = ["D", "S", "T", "Q", "Q", "S", "S"]
+    matriz = [
+        [_coerce_int(_heatmap_value(dados.get(hour), day_index)) for hour in horas]
+        for day_index in range(7)
+    ]
+    totais_hora = [_coerce_int(totais_x.get(hour)) for hour in horas]
+    totais_dia = [_coerce_int(value) for value in totais_y[:7]]
+    return SaudeHospitalHeatmapResponse(
+        horas=[f"{hour}hr" for hour in horas],
+        dias=dias,
+        matriz=matriz,
+        totais_hora=totais_hora,
+        totais_dia=totais_dia,
+        total_geral=sum(totais_hora),
+    )
+
+
 def hospital_table_to_items(payload: Any) -> tuple[list[SaudeLabelValueItem], int]:
     if not isinstance(payload, dict):
         return [], 0
@@ -189,6 +216,12 @@ def filter_monthly_series_by_date_range(
         if item_date is not None and start_date <= item_date <= end_date:
             filtered.append(item)
     return filtered
+
+
+def _heatmap_value(values: Any, day_index: int) -> Any:
+    if not isinstance(values, list) or day_index >= len(values):
+        return 0
+    return values[day_index]
 
 
 _MONTHS_PT = {

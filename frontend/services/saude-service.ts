@@ -93,9 +93,20 @@ interface SaudeRawHospitalCenso {
 
 interface SaudeRawHospitalResponse {
   censo: SaudeRawHospitalCenso | null;
+  mapa_calor: {
+    horas: string[];
+    dias: string[];
+    matriz: number[][];
+    totais_hora: number[];
+    totais_dia: number[];
+    total_geral: number;
+  } | null;
   procedimentos_realizados: SaudeRawLabelValueItem[];
   total_procedimentos: number;
   atendimentos_por_mes: SaudeRawMonthlySeriesItem[];
+  nao_municipes: SaudeRawMonthlySeriesItem[];
+  especialidades_medicas: SaudeRawLabelValueItem[];
+  outras_especialidades: SaudeRawLabelValueItem[];
   internacoes_por_mes: SaudeRawMonthlySeriesItem[];
   internacoes_por_cid: SaudeRawLabelValueItem[];
   media_permanencia: SaudeRawMonthlySeriesItem[];
@@ -205,7 +216,11 @@ const mapHospitalDashboard = (
   response: SaudeRawHospitalResponse
 ): SaudeHospitalResponse => ({
   censo: response.censo,
+  heatmap: response.mapa_calor,
   attendances_by_month: response.atendimentos_por_mes,
+  non_resident_attendances: response.nao_municipes,
+  attendances_by_doctor: response.especialidades_medicas,
+  attendances_by_specialty_cbo: response.outras_especialidades,
   procedures: response.procedimentos_realizados,
   total_procedures: response.total_procedimentos,
   internacoes_by_month: response.internacoes_por_mes,

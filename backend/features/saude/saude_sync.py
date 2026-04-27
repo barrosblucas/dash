@@ -171,9 +171,9 @@ def resource_source_url(
         suffix = f"?ano={year}" if is_year_scoped(resource) and year is not None else ""
         return f"/publico/saude-transparente/{endpoint}{suffix}"
     query = "&".join(
-        f"{key}={value.format(year=year)}"
+        f"{key}={(value.format(year=year) if year is not None else value)}"
         for key, value in template.items()
-        if year is not None
+        if year is not None or "{year}" not in value
     )
     suffix = f"?{query}" if query else ""
     return f"/publico/saude-transparente/{endpoint}{suffix}"
@@ -186,9 +186,9 @@ def resource_params(
     _, _, template = RESOURCE_DEFINITIONS[resource]
     if template:
         return {
-            key: value.format(year=year)
+            key: value.format(year=year) if year is not None else value
             for key, value in template.items()
-            if year is not None
+            if year is not None or "{year}" not in value
         }
     if is_year_scoped(resource) and year is not None:
         return {"ano": str(year)}

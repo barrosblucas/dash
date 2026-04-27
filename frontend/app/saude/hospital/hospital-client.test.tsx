@@ -46,7 +46,11 @@ describe('HospitalClient', () => {
   it('expõe estados explícitos quando blocos hospitalares estão indisponíveis', async () => {
     vi.mocked(saudeService.getHospitalDashboard).mockResolvedValue({
       censo: null,
+      heatmap: null,
       attendances_by_month: [],
+      non_resident_attendances: [],
+      attendances_by_doctor: [],
+      attendances_by_specialty_cbo: [],
       procedures: [],
       total_procedures: 0,
       internacoes_by_month: [],
@@ -59,9 +63,10 @@ describe('HospitalClient', () => {
     renderWithQuery(<HospitalClient />);
 
     expect((await screen.findAllByText(/censo indisponível/i)).length).toBeGreaterThan(0);
-    expect(screen.getByText(/movimento mensal indisponível/i)).toBeInTheDocument();
-    expect(screen.getByText(/internações mensais indisponíveis/i)).toBeInTheDocument();
+    expect(screen.getByText(/mapa de calor indisponível/i)).toBeInTheDocument();
+    expect(screen.getByText(/não munícipes indisponíveis/i)).toBeInTheDocument();
+    expect(screen.getByText(/atendimentos por médico indisponíveis/i)).toBeInTheDocument();
     expect(screen.getByText(/procedimentos indisponíveis/i)).toBeInTheDocument();
-    expect(screen.getByText(/internacoes_por_mes/i)).toBeInTheDocument();
+    expect(screen.getByText(/internações mensais/i)).toBeInTheDocument();
   });
 });
