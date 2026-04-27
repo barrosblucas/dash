@@ -206,6 +206,7 @@ export type SaudeSnapshotResource =
   | 'saude_bucal_atendimentos_mensal'
   | 'hospital_censo'
   | 'hospital_procedimentos'
+  | 'hospital_procedimentos_especialidade'
   | 'hospital_atendimentos_mensal'
   | 'hospital_atendimentos_cid'
   | 'hospital_mapa_calor'

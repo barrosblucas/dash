@@ -8,6 +8,11 @@ from typing import Any
 
 from backend.features.saude.saude_adapter import ESaudeClient, SaudeExternalAPIError
 from backend.features.saude.saude_data import SQLSaudeRepository
+from backend.features.saude.saude_hospital_payloads import (
+    hospital_payload_params,
+    hospital_resource_path,
+    hospital_source_url,
+)
 from backend.features.saude.saude_public_support import external_error
 from backend.features.saude.saude_resource_catalog import RESOURCE_DEFINITIONS
 from backend.features.saude.saude_sync import (
@@ -268,13 +273,14 @@ async def load_hospital_payload(
     if estabelecimento_id is None and year is None and start_date is None and end_date is None:
         return repo.get_snapshot_payload(resource)
 
-    params = _hospital_payload_params(
+    params = hospital_payload_params(
+        resource,
         estabelecimento_id=estabelecimento_id,
         year=year,
         start_date=start_date,
         end_date=end_date,
     )
-    source_url = _hospital_source_url(resource, params)
+    source_url = hospital_source_url(resource, params)
     snapshot, synced = repo.get_snapshot_payload_by_source_url(resource, source_url)
     if start_date is not None and end_date is not None:
         if snapshot is not None and not _should_refresh_range_snapshot(start_date, end_date, synced):
@@ -285,7 +291,7 @@ async def load_hospital_payload(
     client = ESaudeClient()
     try:
         payload = await client.fetch_public_payload(
-            _hospital_resource_path(resource),
+            hospital_resource_path(resource),
             params=params,
         )
     except SaudeExternalAPIError as exc:
@@ -308,20 +314,6 @@ def history_payload(history: list[Any], index: int) -> Any | None:
     if not isinstance(payload_json, str):
         return None
     return json.loads(payload_json)
-
-
-def _hospital_resource_path(resource: SaudeSnapshotResource) -> str:
-    mapping = {
-        SaudeSnapshotResource.HOSPITAL_CENSO: "buscar-censo-dos-leitos-da-internacao",
-        SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS: "dados-hospitalar-quantidade-procedimentos-realizados",
-        SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL: "buscar-dados-do-chart/quantidade-de-atendimentos-por-mes-do-hospital",
-        SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CID: "buscar-atendimentos-por-cid",
-        SaudeSnapshotResource.HOSPITAL_MAPA_CALOR: "buscar-dados-do-chart/mapa-de-calor-atendimentos",
-        SaudeSnapshotResource.HOSPITAL_NAO_MUNICIPES: "buscar-dados-do-chart/hospitalar-quantidade-de-atendimentos-nao-municipes",
-        SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MEDICO: "buscar-dados-do-chart/hospitalar-quantidade-de-atendimentos-por-medico",
-        SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CBO: "buscar-dados-do-chart/hospitalar-quantidade-de-atendimentos-por-cbo-da-especialidade",
-    }
-    return mapping[resource]
 
 
 def build_range_source_url(
@@ -352,33 +344,3 @@ def _should_refresh_range_snapshot(
 
 def _utc_now_naive() -> datetime:
     return datetime.now(UTC).replace(tzinfo=None)
-
-
-def _hospital_payload_params(
-    *,
-    estabelecimento_id: int | None,
-    year: int | None,
-    start_date: date | None,
-    end_date: date | None,
-) -> dict[str, str] | None:
-    params: dict[str, str] = {}
-    if estabelecimento_id is not None:
-        params["estabelecimento_id"] = str(estabelecimento_id)
-    if year is not None and (start_date is None or end_date is None):
-        params["ano"] = str(year)
-    if start_date is not None:
-        params["data_de_inicio"] = start_date.isoformat()
-    if end_date is not None:
-        params["data_de_fim"] = end_date.isoformat()
-    return params or None
-
-
-def _hospital_source_url(
-    resource: SaudeSnapshotResource,
-    params: dict[str, str] | None,
-) -> str:
-    resource_path = _hospital_resource_path(resource)
-    if not params:
-        return f"/publico/saude-transparente/{resource_path}"
-    query = "&".join(f"{key}={value}" for key, value in sorted(params.items()))
-    return f"/publico/saude-transparente/{resource_path}?{query}"

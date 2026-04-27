@@ -129,11 +129,13 @@ export default function HospitalClient() {
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section>
         <SaudePanel title="Mapa de calor por hora e dia" description="Distribuição dos atendimentos por hora e dia da semana para o hospital selecionado.">
           <HospitalHeatmapPanel heatmap={hospitalQuery.data?.heatmap ?? null} />
         </SaudePanel>
+      </section>
 
+      <section className="grid gap-6 xl:grid-cols-2">
         <SaudePanel title="Atendimentos mensais" description="Atendimentos hospitalares agregados pelos meses cobertos pelo período selecionado.">
           <MonthlySeriesOrUnavailable
             items={hospitalQuery.data?.attendances_by_month ?? []}
@@ -153,6 +155,16 @@ export default function HospitalClient() {
           />
         </SaudePanel>
 
+        <SaudePanel title="Atendimentos por CID" description="Distribuição dos atendimentos hospitalares por CID para o período selecionado.">
+          <RankingOrUnavailable
+            items={hospitalQuery.data?.internacoes_by_cid ?? []}
+            emptyTitle="CID indisponível"
+            emptyDescription="A fonte externa não retornou atendimentos por CID para o período selecionado."
+          />
+        </SaudePanel>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
         <SaudePanel title="Censo de leitos" description="Resumo estrutural de capacidade hospitalar.">
           {censo ? (
             <CensoSummary censo={censo} />
@@ -164,11 +176,13 @@ export default function HospitalClient() {
           )}
         </SaudePanel>
 
-        <SaudePanel title="Atendimentos por CID" description="Distribuição dos atendimentos hospitalares por CID quando a origem publica o recorte.">
-          <RankingOrUnavailable
-            items={hospitalQuery.data?.internacoes_by_cid ?? []}
-            emptyTitle="CID indisponível"
-            emptyDescription="A fonte externa não retornou atendimentos por CID para o período selecionado."
+        <SaudePanel title="Procedimentos realizados por período" description="Consolidado total dos procedimentos hospitalares para o recorte selecionado.">
+          <SaudeMetricCard
+            label="Procedimentos realizados no período"
+            value={formatNumber(hospitalQuery.data?.total_procedures ?? 0, { decimals: 0 })}
+            supportingText={`Consolidado entre ${startDate} e ${endDate}.`}
+            tone={hospitalQuery.data?.total_procedures ? 'success' : 'warning'}
+            icon="medical_services"
           />
         </SaudePanel>
       </section>
@@ -193,27 +207,11 @@ export default function HospitalClient() {
 
       <section className="grid gap-6 xl:grid-cols-2">
         <SaudePanel title="Procedimentos realizados por especialidade" description="Quantidade de procedimentos realizados no período.">
-          {hasChartData(hospitalQuery.data?.procedures) ? (
-            <div className="space-y-4">
-              <SaudeMetricCard
-                label="Total de procedimentos"
-                value={formatNumber(hospitalQuery.data?.total_procedures ?? 0, { decimals: 0 })}
-                supportingText={`Consolidado entre ${startDate} e ${endDate}.`}
-                tone="success"
-                icon="medical_services"
-              />
-              <RankingOrUnavailable
-                items={hospitalQuery.data?.procedures ?? []}
-                emptyTitle="Procedimentos indisponíveis"
-                emptyDescription="A fonte externa não retornou procedimentos para o período selecionado."
-              />
-            </div>
-          ) : (
-            <SaudeUnavailablePanel
-              title="Procedimentos indisponíveis"
-              description="A origem pública não publicou esse recorte hospitalar no momento."
-            />
-          )}
+          <RankingOrUnavailable
+            items={hospitalQuery.data?.procedures ?? []}
+            emptyTitle="Procedimentos indisponíveis"
+            emptyDescription="A fonte externa não retornou procedimentos por especialidade para o período selecionado."
+          />
         </SaudePanel>
 
         <SaudePanel

@@ -148,17 +148,50 @@ def test_saude_sync_dashboards_publicos_e_historico(
                 "datasets": [{"data": [14, 16, 9]}],
             }
         if resource_path == "buscar-censo-dos-leitos-da-internacao":
+            assert params == {"estabelecimento_id": "1"}
             return {"total_leitos": 10, "ocupados": 7, "livres": 3}
         if resource_path == "dados-hospitalar-quantidade-procedimentos-realizados":
+            assert params == {
+                "search": "",
+                "order_column": "quantidade",
+                "order_direction": "desc",
+                "itemsPerPage": "10",
+                "page": "1",
+                "dataDeInicio": "2026-01-01",
+                "dataDeFim": "2026-12-31",
+                "estabelecimentoId": "1",
+            }
             return {
                 "data": [
-                    {"procedimento": "Raio-X", "quantidade": 13},
-                    {"procedimento": "Curativo", "quantidade": 6},
+                    {"nome_procedimento": "Raio-X", "quantidade": 13},
+                    {"nome_procedimento": "Curativo", "quantidade": 6},
                 ],
-                "total": 2,
+                "total": 19,
             }
+        if resource_path == "buscar-dados-do-chart/hospitalar-quantidade-de-procedimentos-realizados-por-especialidade":
+            assert params == {
+                "data_de_inicio": "2026-01-01",
+                "data_de_fim": "2026-12-31",
+                "estabelecimento_id": "1",
+            }
+            return {"labels": ["Enfermeiro", "Médico Clínico"], "datasets": [{"data": [13, 6]}]}
         if resource_path == "buscar-atendimentos-por-cid":
-            return {"labels": ["A00", "B20"], "datasets": [{"data": [5, 3]}]}
+            assert params == {
+                "search": "",
+                "order_column": "quantidade",
+                "order_direction": "desc",
+                "itemsPerPage": "10",
+                "page": "1",
+                "dataDeInicio": "2026-01-01",
+                "dataDeFim": "2026-12-31",
+                "estabelecimentoId": "1",
+            }
+            return {
+                "data": [
+                    {"cid": "A00", "descricao": "Cólera", "total_geral": 5},
+                    {"cid": "B20", "descricao": "HIV", "total_geral": 3},
+                ]
+            }
         if resource_path == "buscar-dados-do-chart/mapa-de-calor-atendimentos":
             assert params == {"estabelecimento_id": "1"}
             return {
@@ -187,9 +220,9 @@ def test_saude_sync_dashboards_publicos_e_historico(
             }
             return {"labels": ["DIRETOR DE SERVIÇOS DE SAÚDE"], "datasets": [{"data": [6]}]}
         assert resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-mes-do-hospital"
-        assert params == expected_year
+        assert params == {"ano": "2026", "estabelecimento_id": "1"}
         return {
-            "labels": ["Janeiro de 2026", "Fevereiro de 2026"],
+            "labels": ["Janeiro", "Fevereiro"],
             "datasets": [{"data": [33, 28]}],
         }
 
@@ -230,6 +263,7 @@ def test_saude_sync_dashboards_publicos_e_historico(
         "saude_bucal_atendimentos_mensal",
         "hospital_censo",
         "hospital_procedimentos",
+        "hospital_procedimentos_especialidade",
         "hospital_atendimentos_mensal",
         "hospital_mapa_calor",
         "hospital_nao_municipes",
@@ -298,14 +332,16 @@ def test_saude_sync_dashboards_publicos_e_historico(
     hospital = client.get("/api/v1/saude/hospital", params={"year": 2026})
     assert hospital.status_code == 200
     assert hospital.json()["censo"]["taxa_ocupacao"] == 70.0
-    assert hospital.json()["total_procedimentos"] == 2
+    assert hospital.json()["total_procedimentos"] == 19
+    assert hospital.json()["procedimentos_realizados"][0]["label"] == "Enfermeiro"
+    assert hospital.json()["atendimentos_por_mes"][0]["value"] == 33
     assert hospital.json()["mapa_calor"]["total_geral"] == 31
+    assert hospital.json()["internacoes_por_cid"][0]["label"] == "A00 - Cólera"
     assert hospital.json()["nao_municipes"][0]["value"] == 12
     assert hospital.json()["especialidades_medicas"][0]["label"] == "MÉDICO CLÍNICO"
     assert hospital.json()["outras_especialidades"][0]["value"] == 6
     assert hospital.json()["recursos_indisponiveis"] == [
         "internacoes_por_mes",
-        "internacoes_por_cid",
         "media_permanencia",
     ]
 
@@ -333,4 +369,3 @@ def test_saude_sync_dashboards_publicos_e_historico(
                 limit=10,
             )
         ) == 2
-

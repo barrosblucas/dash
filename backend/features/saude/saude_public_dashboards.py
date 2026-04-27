@@ -29,6 +29,7 @@ from backend.features.saude.saude_snapshot_mapper import (
     chart_to_monthly_series_items,
     filter_monthly_series_by_date_range,
     hospital_censo_from_payload,
+    hospital_cid_table_to_items,
     hospital_heatmap_from_payload,
     hospital_table_to_items,
     max_synced_at,
@@ -42,15 +43,7 @@ from backend.features.saude.saude_types import (
     SaudeVacinacaoResponse,
 )
 
-UNAVAILABLE_HOSPITAL_RESOURCES = [
-    "mapa_de_calor",
-    "internacoes_por_mes",
-    "internacoes_por_cid",
-    "media_permanencia",
-    "nao_municipes",
-    "especialidades_medicas",
-    "outras_especialidades",
-]
+UNAVAILABLE_HOSPITAL_RESOURCES = ["mapa_de_calor", "internacoes_por_mes", "atendimentos_por_cid", "media_permanencia", "nao_municipes", "especialidades_medicas", "outras_especialidades"]
 
 
 async def build_vacinacao_dashboard(
@@ -199,28 +192,36 @@ async def build_hospital_dashboard(
     censo_payload, censo_synced = await load_hospital_payload(
         repo,
         SaudeSnapshotResource.HOSPITAL_CENSO,
-        estabelecimento_id=estabelecimento_id,
+        estabelecimento_id=hospital_estabelecimento_id,
     )
     mapa_calor_payload, mapa_calor_synced = await load_hospital_payload(
         repo,
         SaudeSnapshotResource.HOSPITAL_MAPA_CALOR,
         estabelecimento_id=hospital_estabelecimento_id,
     )
-    procedimentos_payload, procedimentos_synced = await load_hospital_payload(
+    procedimentos_tabela_payload, procedimentos_tabela_synced = await load_hospital_payload(
         repo,
         SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS,
-        estabelecimento_id=estabelecimento_id,
+        estabelecimento_id=hospital_estabelecimento_id,
         year=year,
-        start_date=start_date,
-        end_date=end_date,
+        start_date=effective_start_date,
+        end_date=effective_end_date,
+    )
+    procedimentos_payload, procedimentos_synced = await load_hospital_payload(
+        repo,
+        SaudeSnapshotResource.HOSPITAL_PROCEDIMENTOS_ESPECIALIDADE,
+        estabelecimento_id=hospital_estabelecimento_id,
+        year=year,
+        start_date=effective_start_date,
+        end_date=effective_end_date,
     )
     cid_payload, cid_synced = await load_hospital_payload(
         repo,
         SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_CID,
-        estabelecimento_id=estabelecimento_id,
+        estabelecimento_id=hospital_estabelecimento_id,
         year=year,
-        start_date=start_date,
-        end_date=end_date,
+        start_date=effective_start_date,
+        end_date=effective_end_date,
     )
     nao_municipes_payload, nao_municipes_synced = await load_hospital_payload(
         repo,
@@ -251,10 +252,10 @@ async def build_hospital_dashboard(
         mensal_payload, synced_at = await load_hospital_payload(
             repo,
             SaudeSnapshotResource.HOSPITAL_ATENDIMENTOS_MENSAL,
-            estabelecimento_id=estabelecimento_id,
+            estabelecimento_id=hospital_estabelecimento_id,
             year=target_year,
         )
-        monthly_items.extend(chart_to_monthly_series_items(mensal_payload))
+        monthly_items.extend(chart_to_monthly_series_items(mensal_payload, year=target_year))
         monthly_synced_values.append(synced_at)
 
     atendimentos_por_mes = filter_monthly_series_by_date_range(
@@ -264,21 +265,23 @@ async def build_hospital_dashboard(
     )
     mensal_synced = max_synced_at(*monthly_synced_values)
 
-    procedimentos_realizados, total_procedimentos = hospital_table_to_items(procedimentos_payload)
-    atendimentos_por_cid = chart_to_label_value_items(cid_payload)
-    nao_municipes = chart_to_monthly_series_items(nao_municipes_payload)
+    _, total_procedimentos = hospital_table_to_items(procedimentos_tabela_payload)
+    procedimentos_realizados = chart_to_label_value_items(procedimentos_payload)
+    atendimentos_por_cid = hospital_cid_table_to_items(cid_payload)
+    nao_municipes = chart_to_monthly_series_items(nao_municipes_payload, year=year)
     especialidades_medicas = chart_to_label_value_items(especialidades_medicas_payload)
     outras_especialidades = chart_to_label_value_items(outras_especialidades_payload)
     mapa_calor = hospital_heatmap_from_payload(mapa_calor_payload)
     unavailable_resources = list(UNAVAILABLE_HOSPITAL_RESOURCES)
-    if mapa_calor:
-        unavailable_resources.remove("mapa_de_calor")
-    if nao_municipes:
-        unavailable_resources.remove("nao_municipes")
-    if especialidades_medicas:
-        unavailable_resources.remove("especialidades_medicas")
-    if outras_especialidades:
-        unavailable_resources.remove("outras_especialidades")
+    for key, value in (
+        ("mapa_de_calor", mapa_calor),
+        ("nao_municipes", nao_municipes),
+        ("especialidades_medicas", especialidades_medicas),
+        ("outras_especialidades", outras_especialidades),
+        ("atendimentos_por_cid", atendimentos_por_cid),
+    ):
+        if value:
+            unavailable_resources.remove(key)
     if not procedimentos_realizados:
         unavailable_resources.append("procedimentos_realizados")
     if not atendimentos_por_cid:
@@ -302,6 +305,7 @@ async def build_hospital_dashboard(
             censo_synced,
             mapa_calor_synced,
             procedimentos_synced,
+            procedimentos_tabela_synced,
             mensal_synced,
             cid_synced,
             nao_municipes_synced,

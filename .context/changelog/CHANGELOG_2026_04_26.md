@@ -14,17 +14,25 @@
     4. `saude_public_live.py` deixou de enviar `ano` junto com `data_de_inicio/data_de_fim` para endpoints hospitalares por período, aderindo ao contrato real da API.
     5. O frontend trocou o placeholder do heatmap pelo painel real e ganhou painéis para não munícipes, atendimentos por médico e atendimentos por CBO.
     6. O teste de regressão do hospital foi dividido em dois arquivos para respeitar o gate de 400 linhas por arquivo.
+    7. Nesta rodada, o hospital passou a persistir e reaproveitar corretamente no banco os recursos `atendimentos por mês`, `CID` e `procedimentos`, distinguindo tabela paginada (`buscar-atendimentos-por-cid`, `dados-hospitalar-quantidade-procedimentos-realizados`) de gráficos (`quantidade-de-atendimentos-por-mes-do-hospital`, `hospitalar-quantidade-de-procedimentos-realizados-por-especialidade`).
+    8. Labels mensais sem ano retornados pela Genesis (`Janeiro`, `Fevereiro`, etc.) passaram a ser normalizados com o ano do recorte antes da filtragem, eliminando o falso vazio em `atendimentos mensais`.
+    9. O heatmap do hospital agora ocupa uma linha inteira no frontend e os procedimentos foram separados visualmente entre `por período` e `por especialidade`.
   - Arquivos modificados:
     - `backend/features/saude/saude_resource_catalog.py`
+    - `backend/features/saude/saude_hospital_payloads.py`
     - `backend/features/saude/saude_sync.py`
     - `backend/features/saude/saude_public_dashboards.py`
     - `backend/features/saude/saude_public_live.py`
+    - `backend/features/saude/saude_snapshot_mapper.py`
+    - `backend/features/saude/saude_types.py`
     - `backend/tests/test_api/test_saude_dashboards.py`
     - `backend/tests/test_api/test_saude_dashboards_live_fallback.py`
     - `frontend/app/saude/hospital/HospitalHeatmapPanel.tsx`
     - `frontend/app/saude/hospital/hospital-client.tsx`
     - `frontend/app/saude/hospital/hospital-client.test.tsx`
     - `frontend/services/saude-service.test.ts`
+    - `frontend/lib/saude-utils.ts`
+    - `frontend/types/saude.ts`
 
 ### Backend — Saúde (Bootstrap histórico e deduplicação de snapshots)
 - **Fixed** ausência de dados históricos (2016–2024) no item farmácia e demais recursos year-scoped da feature saúde.

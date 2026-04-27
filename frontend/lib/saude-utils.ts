@@ -49,6 +49,7 @@ export const saudeSyncResourceOptions = [
   { value: 'saude_bucal_atendimentos_mensal', label: 'Saúde bucal por mês' },
   { value: 'hospital_censo', label: 'Censo hospitalar' },
   { value: 'hospital_procedimentos', label: 'Procedimentos hospitalares' },
+  { value: 'hospital_procedimentos_especialidade', label: 'Procedimentos hospitalares por especialidade' },
   { value: 'hospital_atendimentos_mensal', label: 'Atendimentos hospitalares por mês' },
   { value: 'hospital_atendimentos_cid', label: 'Atendimentos hospitalares por CID' },
   { value: 'hospital_mapa_calor', label: 'Mapa de calor hospitalar' },

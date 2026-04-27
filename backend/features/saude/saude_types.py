@@ -41,6 +41,7 @@ class SaudeSnapshotResource(StrEnum):
     SAUDE_BUCAL_ATENDIMENTOS_MENSAL = "saude_bucal_atendimentos_mensal"
     HOSPITAL_CENSO = "hospital_censo"
     HOSPITAL_PROCEDIMENTOS = "hospital_procedimentos"
+    HOSPITAL_PROCEDIMENTOS_ESPECIALIDADE = "hospital_procedimentos_especialidade"
     HOSPITAL_ATENDIMENTOS_MENSAL = "hospital_atendimentos_mensal"
     HOSPITAL_ATENDIMENTOS_CID = "hospital_atendimentos_cid"
     HOSPITAL_MAPA_CALOR = "hospital_mapa_calor"

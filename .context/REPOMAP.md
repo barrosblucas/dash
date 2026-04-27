@@ -103,6 +103,7 @@ Snapshot: 2026-04-26
 - `saude_snapshot_mapper.py`: normalização de charts/snapshots, tendência epidemiológica e censo hospitalar
 - `saude_public_handler.py`: dashboards públicos (`medicamentos`, `vacinacao`, `visitas-domiciliares`, `perfil-epidemiologico`, `atencao-primaria`, `saude-bucal`, `hospital`, `farmacia`, `perfil-demografico`, `procedimentos-tipo`)
 - `saude_public_builders.py`: builders de resposta live/fallback para handlers públicos de saúde (farmácia, visitas, medicamentos-estoque)
+- `saude_hospital_payloads.py`: contratos de parâmetros/source_url dos endpoints públicos hospitalares (chart vs tabela)
 - `saude_public_structured.py`: agregadores estruturados por `ano/mes`, ranges multi-ano e respostas derivadas do banco
 - `saude_public_dashboards.py`: composição por slice dos dashboards públicos de vacinação, APS, farmácia e hospital
 - `saude_units_handler.py`: endpoints públicos auxiliares (`unidades`, `horarios`, `sync-status`)
@@ -243,7 +244,7 @@ Snapshot: 2026-04-26
 - `app/saude/saude-bucal/page.tsx`: página pública de saúde bucal
 - `app/saude/saude-bucal/saude-bucal-client.tsx`: série mensal odontológica e total do período
 - `app/saude/hospital/page.tsx`: página pública hospitalar
-- `app/saude/hospital/hospital-client.tsx`: série mensal hospitalar com filtro anual/período, heatmap indisponível explícito, CID, procedimentos e blocos sem fonte pública verificada
+- `app/saude/hospital/hospital-client.tsx`: dashboard hospitalar com heatmap em largura total, série mensal, não munícipes, CID, procedimentos por período/especialidade e filtros anual/período
 - `app/saude/hospital/hospital-client.test.tsx`: cobertura dos estados hospitalares indisponíveis
 - `app/saude/procedimentos/page.tsx`: página pública de procedimentos
 - `app/saude/procedimentos/procedimentos-client.tsx`: gráfico e tabela de procedimentos por tipo

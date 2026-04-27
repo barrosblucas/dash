@@ -36,9 +36,11 @@ def test_saude_dashboards_fallback_live_para_start_date_e_estabelecimento(
         if resource_path == "buscar-censo-dos-leitos-da-internacao":
             return {"total_leitos": 4, "ocupados": 1, "livres": 3}
         if resource_path == "dados-hospitalar-quantidade-procedimentos-realizados":
-            return {"data": [{"procedimento": "Curativo", "quantidade": 2}], "total": 1}
+            return {"data": [{"nome_procedimento": "Curativo", "quantidade": 2}], "total": 2}
+        if resource_path == "buscar-dados-do-chart/hospitalar-quantidade-de-procedimentos-realizados-por-especialidade":
+            return {"labels": ["Enfermeiro"], "datasets": [{"data": [2]}]}
         if resource_path == "buscar-atendimentos-por-cid":
-            return {"labels": ["A15"], "datasets": [{"data": [2]}]}
+            return {"data": [{"cid": "A15", "descricao": "Tuberculose", "total_geral": 2}]}
         if resource_path == "buscar-dados-do-chart/mapa-de-calor-atendimentos":
             return {
                 "dados": {"00": [1, 1, 1, 1, 1, 1, 1]},
@@ -80,6 +82,7 @@ def test_saude_dashboards_fallback_live_para_start_date_e_estabelecimento(
                 "atencao_primaria_cbo",
                 "hospital_censo",
                 "hospital_procedimentos",
+                "hospital_procedimentos_especialidade",
                 "hospital_atendimentos_mensal",
             ],
         },
@@ -104,11 +107,36 @@ def test_saude_dashboards_fallback_live_para_start_date_e_estabelecimento(
             assert params == {"estabelecimento_id": "77"}
             return {"total_leitos": 6, "ocupados": 4, "livres": 2}
         if resource_path == "dados-hospitalar-quantidade-procedimentos-realizados":
-            assert params == {"estabelecimento_id": "77", "ano": "2026"}
-            return {"data": [{"procedimento": "Sutura", "quantidade": 5}], "total": 1}
+            assert params == {
+                "search": "",
+                "order_column": "quantidade",
+                "order_direction": "desc",
+                "itemsPerPage": "10",
+                "page": "1",
+                "dataDeInicio": "2026-01-01",
+                "dataDeFim": "2026-12-31",
+                "estabelecimentoId": "77",
+            }
+            return {"data": [{"nome_procedimento": "Sutura", "quantidade": 5}], "total": 5}
+        if resource_path == "buscar-dados-do-chart/hospitalar-quantidade-de-procedimentos-realizados-por-especialidade":
+            assert params == {
+                "data_de_inicio": "2026-01-01",
+                "data_de_fim": "2026-12-31",
+                "estabelecimento_id": "77",
+            }
+            return {"labels": ["Clínico"], "datasets": [{"data": [5]}]}
         if resource_path == "buscar-atendimentos-por-cid":
-            assert params == {"estabelecimento_id": "77", "ano": "2026"}
-            return {"labels": ["B34"], "datasets": [{"data": [4]}]}
+            assert params == {
+                "search": "",
+                "order_column": "quantidade",
+                "order_direction": "desc",
+                "itemsPerPage": "10",
+                "page": "1",
+                "dataDeInicio": "2026-01-01",
+                "dataDeFim": "2026-12-31",
+                "estabelecimentoId": "77",
+            }
+            return {"data": [{"cid": "B34", "descricao": "Virose", "total_geral": 4}]}
         if resource_path == "buscar-dados-do-chart/mapa-de-calor-atendimentos":
             assert params == {"estabelecimento_id": "77"}
             return {
@@ -135,7 +163,7 @@ def test_saude_dashboards_fallback_live_para_start_date_e_estabelecimento(
             return {"labels": ["CBO A"], "datasets": [{"data": [9]}]}
         assert resource_path == "buscar-dados-do-chart/quantidade-de-atendimentos-por-mes-do-hospital"
         assert params == {"estabelecimento_id": "77", "ano": "2026"}
-        return {"labels": ["Março de 2026"], "datasets": [{"data": [18]}]}
+        return {"labels": ["Março"], "datasets": [{"data": [18]}]}
 
     monkeypatch.setattr(
         saude_adapter.ESaudeClient,
@@ -160,5 +188,6 @@ def test_saude_dashboards_fallback_live_para_start_date_e_estabelecimento(
     assert hospital.json()["nao_municipes"][0]["value"] == 8
     assert hospital.json()["especialidades_medicas"][0]["value"] == 11
     assert hospital.json()["outras_especialidades"][0]["label"] == "CBO A"
-    assert hospital.json()["procedimentos_realizados"][0]["label"] == "Sutura"
-    assert hospital.json()["total_procedimentos"] == 1
+    assert hospital.json()["procedimentos_realizados"][0]["label"] == "Clínico"
+    assert hospital.json()["internacoes_por_cid"][0]["label"] == "B34 - Virose"
+    assert hospital.json()["total_procedimentos"] == 5

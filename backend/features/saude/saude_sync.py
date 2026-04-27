@@ -172,7 +172,7 @@ def resource_source_url(
         return f"/publico/saude-transparente/{endpoint}{suffix}"
     query = "&".join(
         f"{key}={(value.format(year=year) if year is not None else value)}"
-        for key, value in template.items()
+        for key, value in sorted(template.items())
         if year is not None or "{year}" not in value
     )
     suffix = f"?{query}" if query else ""

@@ -59,10 +59,17 @@ def chart_to_series_items(
         data = dataset.get("data")
         if not isinstance(data, list):
             continue
-        points = [
-            SaudeMonthlySeriesItem(label=str(label), value=_coerce_int(value))
+        normalized_points = [
+            (
+                _normalize_series_label(str(label), year),
+                _coerce_int(value),
+            )
             for label, value in zip(labels, data, strict=False)
-            if year is None or str(year) in str(label)
+        ]
+        points = [
+            SaudeMonthlySeriesItem(label=label, value=value)
+            for label, value in normalized_points
+            if label is not None
         ]
         if not points:
             continue
@@ -183,6 +190,7 @@ def hospital_table_to_items(payload: Any) -> tuple[list[SaudeLabelValueItem], in
             continue
         label = str(
             row.get("procedimento")
+            or row.get("nome_procedimento")
             or row.get("descricao")
             or row.get("nome")
             or row.get("label")
@@ -197,7 +205,29 @@ def hospital_table_to_items(payload: Any) -> tuple[list[SaudeLabelValueItem], in
         items.append(SaudeLabelValueItem(label=label, value=value))
 
     total = _coerce_int_or_none(payload.get("total"))
-    return items, total if total is not None else len(items)
+    return items, total if total is not None else sum_values(items)
+
+
+def hospital_cid_table_to_items(payload: Any) -> list[SaudeLabelValueItem]:
+    if not isinstance(payload, dict):
+        return []
+    rows = payload.get("data")
+    if not isinstance(rows, list):
+        return []
+    items: list[SaudeLabelValueItem] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        cid = str(row.get("cid") or "").strip()
+        descricao = str(row.get("descricao") or "Sem descrição").strip()
+        label = f"{cid} - {descricao}" if cid else descricao
+        items.append(
+            SaudeLabelValueItem(
+                label=label,
+                value=_coerce_int(row.get("total_geral") or row.get("quantidade")),
+            )
+        )
+    return items
 
 
 def sum_values(items: Sequence[SaudeMonthlySeriesItem | SaudeLabelValueItem]) -> int:
@@ -282,6 +312,16 @@ def _parse_monthly_label(label: str) -> datetime | None:
             return datetime(year, 1, 1)
         except ValueError:
             return None
+    return None
+
+
+def _normalize_series_label(label: str, year: int | None) -> str | None:
+    if year is None:
+        return label
+    if str(year) in label:
+        return label
+    if label.strip().lower() in _MONTHS_PT:
+        return f"{label} de {year}"
     return None
 
 
