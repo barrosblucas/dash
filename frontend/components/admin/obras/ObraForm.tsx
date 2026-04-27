@@ -18,6 +18,7 @@ import {
   financialFields,
   parseLocaleNumber,
   statusOptions,
+  toCurrencyInput,
   toInputValue,
   type PendingUpload,
   validatePayload,
@@ -62,6 +63,7 @@ export default function ObraForm({ obraHash }: ObraFormProps) {
   const queryClient = useQueryClient();
   const isEditing = Boolean(obraHash);
   const [form, setForm] = useState<ObraUpsertPayload>(createEmptyObra());
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [activeLocationIndex, setActiveLocationIndex] = useState(0);
   const [pendingGlobalUploads, setPendingGlobalUploads] = useState<PendingUpload[]>([]);
@@ -288,7 +290,7 @@ export default function ObraForm({ obraHash }: ObraFormProps) {
             {form.funding_sources.map((source, index) => (
               <div key={source.id ?? `${source.sequencia}-${index}`} className="grid gap-4 rounded-2xl border border-outline/10 bg-surface p-4 md:grid-cols-[1fr_220px_auto]">
                 <InputField label="Fonte de recurso" value={source.nome} onChange={(value) => updateFundingSource(index, { ...source, nome: value })} />
-                <InputField label="Valor da fonte" value={toInputValue(source.valor)} onChange={(value) => updateFundingSource(index, { ...source, valor: parseLocaleNumber(value) })} />
+                <InputField label="Valor da fonte" value={focusedField === `funding-${index}` ? toInputValue(source.valor) : toCurrencyInput(source.valor)} onChange={(value) => updateFundingSource(index, { ...source, valor: parseLocaleNumber(value) })} onFocus={() => setFocusedField(`funding-${index}`)} onBlur={() => setFocusedField(null)} />
                 <div className="flex items-end">
                   <button type="button" disabled={form.funding_sources.length === 1} onClick={() => setForm((current) => ({ ...current, funding_sources: remapSequences(current.funding_sources.filter((_, currentIndex) => currentIndex !== index)) }))} className="w-full rounded-xl bg-surface-container-high px-4 py-3 text-sm font-bold text-on-surface disabled:opacity-50">Remover</button>
                 </div>
@@ -307,7 +309,14 @@ export default function ObraForm({ obraHash }: ObraFormProps) {
           </div>
           <div className="grid gap-4 rounded-2xl bg-surface-container-lowest p-5 md:grid-cols-2 xl:grid-cols-3">
             {financialFields.map(([field, label]) => (
-              <InputField key={field} label={label} value={toInputValue(form[field])} onChange={(value) => updateNumericField(field, value)} />
+              <InputField
+                key={field}
+                label={label}
+                value={focusedField === field ? toInputValue(form[field]) : toCurrencyInput(form[field])}
+                onChange={(value) => updateNumericField(field, value)}
+                onFocus={() => setFocusedField(field)}
+                onBlur={() => setFocusedField(null)}
+              />
             ))}
           </div>
         </section>

@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { InputField } from '@/components/admin/forms/AdminFields';
 import type { ObraMediaAsset } from '@/types/obra';
 
@@ -26,6 +28,8 @@ export default function ObraMediaEditor({
   onPendingRemove,
   inputLabel,
 }: ObraMediaEditorProps) {
+  const [fileInputKey, setFileInputKey] = useState(0);
+
   return (
     <div className="space-y-3 rounded-2xl bg-surface-container-lowest p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -61,12 +65,13 @@ export default function ObraMediaEditor({
       <label className="flex flex-col gap-2 text-sm text-on-surface-variant">
         <span className="font-label font-medium text-on-surface">{inputLabel}</span>
         <input
+          key={fileInputKey}
           type="file"
           multiple
           accept="image/*,.pdf"
           onChange={(event) => {
             onFilesSelected(event.target.files);
-            event.currentTarget.value = '';
+            setFileInputKey((prev) => prev + 1);
           }}
           className="rounded-xl border border-outline/40 bg-surface px-4 py-3 text-sm text-on-surface"
         />

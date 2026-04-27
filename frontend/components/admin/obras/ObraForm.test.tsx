@@ -156,8 +156,8 @@ describe('ObraForm - edição com medições', () => {
     } as Awaited<ReturnType<typeof obrasService.update>>);
     renderWithQuery(<ObraForm obraHash="edit-hash" />);
     await waitFor(() => expect(screen.getByDisplayValue('Escola Modelo')).toBeInTheDocument());
-    expect(screen.getByDisplayValue('100000')).toBeInTheDocument();
-    const medicaoValorInput = screen.getByDisplayValue('100000');
+    expect(screen.getByDisplayValue('100.000,00')).toBeInTheDocument();
+    const medicaoValorInput = screen.getByDisplayValue('100.000,00');
     await user.clear(medicaoValorInput);
     await user.type(medicaoValorInput, '150000');
     await user.click(screen.getByRole('button', { name: /salvar obra/i }));

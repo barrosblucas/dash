@@ -31,6 +31,8 @@ interface InputFieldProps {
   max?: number;
   step?: number;
   readOnly?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export function InputField({
@@ -43,6 +45,8 @@ export function InputField({
   max,
   step,
   readOnly = false,
+  onFocus,
+  onBlur,
 }: InputFieldProps) {
   return (
     <FieldShell label={label} hint={hint}>
@@ -54,6 +58,8 @@ export function InputField({
         max={max}
         step={step}
         readOnly={readOnly}
+        onFocus={onFocus}
+        onBlur={onBlur}
         onChange={(event) => onChange(event.target.value)}
       />
     </FieldShell>

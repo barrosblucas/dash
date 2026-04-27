@@ -99,6 +99,14 @@ export const parseLocaleNumber = (value: string) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+export const toCurrencyInput = (value: number | null | undefined): string => {
+  if (value === null || value === undefined) return '';
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
 export const toInputValue = (value: number | null | undefined) => (
   value === null || value === undefined ? '' : String(value)
 );
