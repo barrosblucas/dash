@@ -8,7 +8,7 @@ interface FieldShellProps {
   hint?: string;
 }
 
-function FieldShell({ label, children, hint }: FieldShellProps) {
+export function FieldShell({ label, children, hint }: FieldShellProps) {
   return (
     <label className="flex flex-col gap-2 text-sm text-on-surface-variant">
       <span className="font-label font-medium text-on-surface">{label}</span>
@@ -18,7 +18,7 @@ function FieldShell({ label, children, hint }: FieldShellProps) {
   );
 }
 
-const baseFieldClassName =
+export const baseFieldClassName =
   'w-full rounded-xl border border-outline/40 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none transition placeholder:text-on-surface-variant/50 hover:border-outline/60 focus:border-primary focus:ring-2 focus:ring-primary/20';
 
 interface InputFieldProps {

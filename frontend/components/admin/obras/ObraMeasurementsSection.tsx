@@ -1,13 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-
 import { InputField, TextareaField } from '@/components/admin/forms/AdminFields';
 import type { ObraMedicao } from '@/types/obra';
 
+import CurrencyField from './CurrencyField';
 import ObraMediaEditor from './ObraMediaEditor';
 import type { PendingUpload } from './obra-form-helpers';
-import { parseLocaleNumber, toCurrencyInput, toInputValue } from './obra-form-helpers';
 
 interface ObraMeasurementsSectionProps {
   medicoes: ObraMedicao[];
@@ -32,8 +30,6 @@ export default function ObraMeasurementsSection({
   onPendingChange,
   onPendingRemove,
 }: ObraMeasurementsSectionProps) {
-  const [focusedField, setFocusedField] = useState<string | null>(null);
-
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -70,12 +66,10 @@ export default function ObraMeasurementsSection({
                 value={medicao.ano_referencia}
                 onChange={(value) => onChangeMeasurement(index, { ...medicao, ano_referencia: Number(value) || new Date().getFullYear() })}
               />
-              <InputField
+              <CurrencyField
                 label="Valor da medição"
-                value={focusedField === `medicao-valor-${medicao.sequencia}` ? toInputValue(medicao.valor_medicao) : toCurrencyInput(medicao.valor_medicao)}
-                onChange={(value) => onChangeMeasurement(index, { ...medicao, valor_medicao: parseLocaleNumber(value) ?? 0 })}
-                onFocus={() => setFocusedField(`medicao-valor-${medicao.sequencia}`)}
-                onBlur={() => setFocusedField(null)}
+                value={medicao.valor_medicao}
+                onChange={(value) => onChangeMeasurement(index, { ...medicao, valor_medicao: value ?? 0 })}
               />
             </div>
 

@@ -159,7 +159,7 @@ describe('ObraForm - edição com medições', () => {
     expect(screen.getByDisplayValue('100.000,00')).toBeInTheDocument();
     const medicaoValorInput = screen.getByDisplayValue('100.000,00');
     await user.clear(medicaoValorInput);
-    await user.type(medicaoValorInput, '150000');
+    await user.type(medicaoValorInput, '15000000');
     await user.click(screen.getByRole('button', { name: /salvar obra/i }));
     await waitFor(() => expect(obrasService.update).toHaveBeenCalledWith(
       'edit-hash',
