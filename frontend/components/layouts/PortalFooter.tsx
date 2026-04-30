@@ -7,6 +7,7 @@ const footerSections = [
       { name: 'Início', href: '/' },
       { name: 'Painel Financeiro', href: '/dashboard' },
       { name: 'Obras Públicas', href: '/obras' },
+      { name: 'Ações da Gestão', href: '/acoes' },
       { name: 'Transparência', href: '/transparencia' },
     ],
   },

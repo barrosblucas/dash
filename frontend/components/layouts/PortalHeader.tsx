@@ -16,6 +16,7 @@ const portalNav: NavItem[] = [
   { name: 'Painel Financeiro', href: '/dashboard' },
   { name: 'Saúde Transparente', href: '/saude' },
   { name: 'Obras Públicas', href: '/obras' },
+  { name: 'Ações da Gestão', href: '/acoes' },
   { name: 'Transparência', href: '/transparencia' },
   { name: 'Serviços', href: '/servicos' },
 ];
