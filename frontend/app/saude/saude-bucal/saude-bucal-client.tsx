@@ -14,10 +14,11 @@ import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
 const MIN_START_DATE = '2025-05-01';
-const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
+const SAUDE_BUCAL_YEARS: number[] = saudeYearOptions.filter((y) => y === 2025);
+const defaultPeriod = getSaudePeriodRange(SAUDE_BUCAL_YEARS[0]);
 
 export default function SaudeBucalClient() {
-  const [year, setYear] = useState(saudeYearOptions[0]);
+  const [year, setYear] = useState(SAUDE_BUCAL_YEARS[0]);
   const [startDate, setStartDate] = useState(maxDate(defaultPeriod.startDate, MIN_START_DATE));
   const [endDate, setEndDate] = useState(defaultPeriod.endDate);
 
@@ -71,7 +72,8 @@ export default function SaudeBucalClient() {
             onYearChange={handleYearChange}
             onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
-            minStartDate="2025-05-01"
+            yearOptions={SAUDE_BUCAL_YEARS}
+            minStartDate={MIN_START_DATE}
           />
         }
       />

@@ -9,27 +9,31 @@ import { SaudeMetricCard, SaudePageHeader, SaudePanel } from '@/components/saude
 import SaudePeriodFilter from '@/components/saude/SaudePeriodFilter';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
-import { getSaudePeriodRange, getYearFromDateInput, saudeYearOptions } from '@/lib/saude-utils';
+import { getSaudePeriodRange, getYearFromDateInput, maxDate, saudeYearOptions } from '@/lib/saude-utils';
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
-const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
+const currentYear = new Date().getFullYear();
+const FARMACIA_YEARS = saudeYearOptions.filter((y) => y >= 2020 && y <= currentYear);
+const MIN_START_DATE = '2020-01-01';
+const defaultPeriod = getSaudePeriodRange(FARMACIA_YEARS[0]);
 
 export default function FarmaciaClient() {
-  const [year, setYear] = useState(saudeYearOptions[0]);
-  const [startDate, setStartDate] = useState(defaultPeriod.startDate);
+  const [year, setYear] = useState(FARMACIA_YEARS[0]);
+  const [startDate, setStartDate] = useState(maxDate(defaultPeriod.startDate, MIN_START_DATE));
   const [endDate, setEndDate] = useState(defaultPeriod.endDate);
 
   const handleYearChange = (nextYear: number) => {
     setYear(nextYear);
     const period = getSaudePeriodRange(nextYear);
-    setStartDate(period.startDate);
+    setStartDate(maxDate(period.startDate, MIN_START_DATE));
     setEndDate(period.endDate);
   };
 
   const handleStartDateChange = (date: string) => {
-    setStartDate(date);
-    const nextYear = getYearFromDateInput(date);
+    const clamped = maxDate(date, MIN_START_DATE);
+    setStartDate(clamped);
+    const nextYear = getYearFromDateInput(clamped);
     if (nextYear !== null) {
       setYear(nextYear);
     }
@@ -72,6 +76,8 @@ export default function FarmaciaClient() {
             onYearChange={handleYearChange}
             onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
+            yearOptions={FARMACIA_YEARS}
+            minStartDate={MIN_START_DATE}
           />
         }
       />

@@ -15,3 +15,22 @@
 - Teste manual: `2026/5` (sem dados) → 200 OK com items vazios
 - Teste manual: `2025/1` (dados reais) → 200 OK com 565 itens, totais e insights corretos
 - `pytest` — não executável (ambiente de testes requer dependências ausentes — problema pré-existente)
+
+## Ajustes
+
+### Frontend — SaudePeriodFilter: limitar seletor de ano por página
+- **Changed** `SaudePeriodFilter` agora aceita prop opcional `yearOptions: number[]` para limitar os anos exibidos no dropdown. Sem a prop, mantém o comportamento global via `saudeYearOptions`.
+- **Changed** Páginas de **farmácia**, **vacinação** e **atenção primária**: dropdown de ano limitado a 2020–presente; `minStartDate` ajustado para `2020-01-01` (vacinação alterado de `2019-11-01`).
+- **Changed** Página de **saúde bucal**: dropdown de ano limitado apenas a 2025; `minStartDate` mantido em `2025-05-01`.
+- As demais páginas de saúde (hospital, medicamentos, procedimentos, perfil-epidemiológico, visitas-domiciliares) não foram alteradas — continuam usando o range completo de anos.
+- Arquivos modificados:
+  - `frontend/components/saude/SaudePeriodFilter.tsx`
+  - `frontend/app/saude/farmacia/farmacia-client.tsx`
+  - `frontend/app/saude/vacinacao/vacinacao-client.tsx`
+  - `frontend/app/saude/atencao-primaria/atencao-primaria-client.tsx`
+  - `frontend/app/saude/saude-bucal/saude-bucal-client.tsx`
+
+## Validação (frontend)
+- `npm run lint` — ✔ No ESLint warnings or errors
+- `npm run type-check` — ✔ No errors
+- `npm run build` — ✓ Compiled successfully, 39 static pages generated

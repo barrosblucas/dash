@@ -14,10 +14,12 @@ import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
 const MIN_START_DATE = '2020-01-01';
-const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
+const currentYear = new Date().getFullYear();
+const ATENCAO_PRIMARIA_YEARS = saudeYearOptions.filter((y) => y >= 2020 && y <= currentYear);
+const defaultPeriod = getSaudePeriodRange(ATENCAO_PRIMARIA_YEARS[0]);
 
 export default function AtencaoPrimariaClient() {
-  const [year, setYear] = useState(saudeYearOptions[0]);
+  const [year, setYear] = useState(ATENCAO_PRIMARIA_YEARS[0]);
   const [startDate, setStartDate] = useState(maxDate(defaultPeriod.startDate, MIN_START_DATE));
   const [endDate, setEndDate] = useState(defaultPeriod.endDate);
 
@@ -74,7 +76,8 @@ export default function AtencaoPrimariaClient() {
             onYearChange={handleYearChange}
             onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
-            minStartDate="2020-01-01"
+            yearOptions={ATENCAO_PRIMARIA_YEARS}
+            minStartDate={MIN_START_DATE}
           />
         }
       />

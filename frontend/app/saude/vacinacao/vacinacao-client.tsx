@@ -13,12 +13,14 @@ import { getSaudePeriodRange, getYearFromDateInput, getTopLabel, maxDate, saudeY
 import { formatNumber } from '@/lib/utils';
 import { saudeService } from '@/services/saude-service';
 
-const MIN_START_DATE = '2019-11-01';
+const MIN_START_DATE = '2020-01-01';
+const currentYear = new Date().getFullYear();
+const VACINACAO_YEARS = saudeYearOptions.filter((y) => y >= 2020 && y <= currentYear);
 const chartColors = ['#0f4c81', '#22c55e', '#06b6d4', '#f59e0b', '#a855f7'];
-const defaultPeriod = getSaudePeriodRange(saudeYearOptions[0]);
+const defaultPeriod = getSaudePeriodRange(VACINACAO_YEARS[0]);
 
 export default function VacinacaoClient() {
-  const [year, setYear] = useState(saudeYearOptions[0]);
+  const [year, setYear] = useState(VACINACAO_YEARS[0]);
   const [startDate, setStartDate] = useState(maxDate(defaultPeriod.startDate, MIN_START_DATE));
   const [endDate, setEndDate] = useState(defaultPeriod.endDate);
 
@@ -74,7 +76,8 @@ export default function VacinacaoClient() {
             onYearChange={handleYearChange}
             onStartDateChange={handleStartDateChange}
             onEndDateChange={setEndDate}
-            minStartDate="2019-11-01"
+            yearOptions={VACINACAO_YEARS}
+            minStartDate={MIN_START_DATE}
           />
         }
       />

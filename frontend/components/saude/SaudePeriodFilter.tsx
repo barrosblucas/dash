@@ -11,6 +11,7 @@ interface SaudePeriodFilterProps {
   onEndDateChange: (date: string) => void;
   showYear?: boolean;
   minStartDate?: string;
+  yearOptions?: number[];
 }
 
 export default function SaudePeriodFilter({
@@ -22,6 +23,7 @@ export default function SaudePeriodFilter({
   onEndDateChange,
   showYear = true,
   minStartDate,
+  yearOptions,
 }: SaudePeriodFilterProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-3">
@@ -31,7 +33,7 @@ export default function SaudePeriodFilter({
           onChange={(event) => onYearChange(Number(event.target.value))}
           className="rounded-2xl border border-outline/20 bg-surface-container-lowest px-4 py-3 text-sm text-on-surface outline-none focus:border-primary"
         >
-          {saudeYearOptions.map((option) => (
+          {(yearOptions ?? saudeYearOptions).map((option) => (
             <option key={option} value={option}>
               {option}
             </option>
