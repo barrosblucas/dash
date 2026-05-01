@@ -64,4 +64,23 @@ async def fetch_tipo(
         logger.warning("Resposta inesperada da API externa: %s", type(data))
         return []
 
-    return [MovimentoExtraItem(**item) for item in data]
+    items: list[MovimentoExtraItem] = []
+    for item in data:
+        # External API returns placeholder items with null fields when no data exists
+        if not isinstance(item, dict):
+            continue
+        if item.get("codigo") is None:
+            continue
+        if item.get("tipo") not in ("R", "D"):
+            continue
+        try:
+            item["ano"] = ano
+            items.append(MovimentoExtraItem(**item))
+        except Exception as exc:
+            logger.warning(
+                "Falha ao converter item do movimento extra: %s — item=%s",
+                exc,
+                {k: item.get(k) for k in ("codigo", "ent_codigo", "tipo", "mes")},
+            )
+
+    return items

@@ -11,6 +11,7 @@ export interface MovimentoExtraItem {
   tipo: 'R' | 'D';
   valor_recebido: number;
   mes: number;
+  ano: number;
 }
 
 export interface FundoResumo {

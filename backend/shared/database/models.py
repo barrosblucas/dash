@@ -591,6 +591,7 @@ class SaudeProcedimentosModel(Base):
 
 from backend.shared.database.quality_models import (  # noqa: E402, F401
     DespesaBreakdownModel,
+    MovimentoExtraModel,
     QualitySyncStateModel,
     QualityUnidadeGestoraModel,
 )

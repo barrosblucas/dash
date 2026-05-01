@@ -21,6 +21,7 @@ class MovimentoExtraItem(BaseModel):
         ..., description="Valor recebido/pago"
     )
     mes: int = Field(..., description="Mês de referência")
+    ano: int = Field(..., description="Ano de referência")
 
 
 class FundoResumo(BaseModel):

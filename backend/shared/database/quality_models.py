@@ -94,3 +94,34 @@ class QualityUnidadeGestoraModel(Base):
             "codigo_entidade", name="uq_quality_unidade_gestora_codigo",
         ),
     )
+
+
+class MovimentoExtraModel(Base):
+    __tablename__ = "movimento_extra"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ano = Column(Integer, nullable=False, index=True)
+    mes = Column(Integer, nullable=False, index=True)
+    codigo = Column(Integer, nullable=False)
+    ent_codigo = Column(Integer, nullable=False)
+    descricao = Column(String(500), nullable=False)
+    fornecedor = Column(String(500), nullable=False)
+    tipo = Column(String(1), nullable=False)
+    valor_recebido = Column(Numeric(18, 2), nullable=False, default=Decimal("0"))
+    fonte = Column(String(100), nullable=False, default="QUALITY_API")
+    created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "ano", "mes", "tipo", "codigo", "ent_codigo",
+            name="uq_movimento_extra_identity",
+        ),
+        Index("ix_movimento_extra_ano_mes", "ano", "mes"),
+        Index("ix_movimento_extra_ano_mes_tipo", "ano", "mes", "tipo"),
+    )

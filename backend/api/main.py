@@ -142,6 +142,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     except Exception:
         logger.exception("Falha ao iniciar scheduler de scraping — modo sem scheduler")
 
+    # Inicia scheduler de movimento extra
+    movimento_extra_scheduler = None
+    try:
+        from backend.features.movimento_extra.movimento_extra_scheduler import (
+            MovimentoExtraScheduler,
+        )
+
+        movimento_extra_scheduler = MovimentoExtraScheduler()
+        movimento_extra_scheduler.start()
+        app.state.movimento_extra_scheduler = movimento_extra_scheduler
+        logger.info("Scheduler de movimento extra integrado ao lifespan")
+    except Exception:
+        logger.exception("Falha ao iniciar scheduler de movimento extra — modo sem scheduler")
+
     logger.info("API pronta para receber requisições")
 
     yield
@@ -151,6 +165,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         scheduler.stop()
     if saude_scheduler is not None:
         saude_scheduler.stop()
+    if movimento_extra_scheduler is not None:
+        movimento_extra_scheduler.stop()
+
     logger.info("Dashboard Financeiro Municipal API encerrada")
 
 
