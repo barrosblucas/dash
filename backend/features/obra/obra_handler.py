@@ -197,6 +197,16 @@ async def list_obras(
     )
 
 
+@router.get("/destaque", response_model=ObraResponse, summary="Obra em destaque (mais recente)")
+async def get_obra_destaque(db: Session = Depends(get_db)) -> ObraResponse:
+    """Retorna a obra mais recentemente atualizada."""
+    repo = SQLObraRepository(db)
+    obra = repo.get_most_recently_updated()
+    if obra is None:
+        raise HTTPException(status_code=404, detail="Nenhuma obra encontrada")
+    return _obra_response(repo, obra)
+
+
 @router.get("/{obra_hash}", response_model=ObraResponse)
 async def get_obra(obra_hash: str, db: Session = Depends(get_db)) -> ObraResponse:
     repo = SQLObraRepository(db)

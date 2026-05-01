@@ -5,216 +5,146 @@ import Link from 'next/link';
 
 import PortalHeader from '@/components/layouts/PortalHeader';
 import PortalFooter from '@/components/layouts/PortalFooter';
+import {
+  mainNavCards,
+  accentBorder,
+  accentIconText,
+  accentIconBg,
+  accentCtaText,
+  formatCurrencyCompact,
+  renderDiarioDescription,
+  getDiarioLink,
+  timeAgo,
+} from '@/components/portal/portal-data';
+import { QuickInfoCard, QuickInfoExternalLink } from '@/components/portal/QuickInfoCard';
 import { fetchDiarioHoje } from '@/services/diario-oficial-service';
+import {
+  fetchObraDestaque,
+  fetchProximaLicitacao,
+  fetchUltimaNoticia,
+  fetchReceitasTotais,
+} from '@/services/portal-service';
 import type { DiarioResponse } from '@/types/diario-oficial';
+import type { ObraRecord } from '@/types/obra';
+import type { LicitacaoComprasBR } from '@/types/licitacao';
+import type { NoticiaResponse } from '@/types/noticias';
 
-/* ────────────────────────────────────────────
-   Dados estáticos
-   ──────────────────────────────────────────── */
+/* ── Helper: estado de card com dados, loading e erro ── */
+interface CardState<T> {
+  data: T | null;
+  loading: boolean;
+  error: boolean;
+}
 
-const mainNavCards = [
-  {
-    title: 'Painel Financeiro',
-    description: 'Acompanhe em tempo real as receitas, despesas e a saúde fiscal do município.',
-    icon: 'monitoring',
-    href: '/dashboard',
-    accent: 'primary' as const,
-    cta: 'Acessar Painel',
-    offset: false,
-  },
-  {
-    title: 'Saúde Transparente',
-    description: 'Medicamentos, perfil epidemiológico, procedimentos e mapa das unidades de saúde.',
-    icon: 'local_hospital',
-    href: '/saude',
-    accent: 'secondary' as const,
-    cta: 'Acessar Saúde',
-    offset: false,
-  },
-  {
-    title: 'Obras Públicas',
-    description: 'Status, investimentos e prazos de todas as construções e reformas em andamento.',
-    icon: 'architecture',
-    href: '/obras',
-    accent: 'secondary' as const,
-    cta: 'Ver Mapa de Obras',
-    offset: true,
-  },
-  {
-    title: 'Contas Públicas',
-    description: 'Relatórios de gestão fiscal, balanços anuais e prestação de contas detalhada.',
-    icon: 'description',
-    href: '/transparencia',
-    accent: 'primary' as const,
-    cta: 'Consultar Documentos',
-    offset: false,
-  },
-  {
-    title: 'Aviso de Licitação',
-    description: 'Acompanhe editais, prazos e concorrências públicas do município.',
-    icon: 'gavel',
-    href: '/avisos-licitacoes',
-    accent: 'primaryContainer' as const,
-    cta: 'Ver Licitações',
-    offset: true,
-  },
-];
-
-const accentBorder: Record<string, string> = {
-  primary: 'border-primary',
-  secondary: 'border-secondary',
-  primaryContainer: 'border-primary-container',
-};
-
-const accentIconText: Record<string, string> = {
-  primary: 'text-primary group-hover:text-on-primary',
-  secondary: 'text-secondary group-hover:text-on-secondary',
-  primaryContainer: 'text-primary-container group-hover:text-on-primary',
-};
-
-const accentIconBg: Record<string, string> = {
-  primary: 'group-hover:bg-primary',
-  secondary: 'group-hover:bg-secondary',
-  primaryContainer: 'group-hover:bg-primary-container',
-};
-
-const accentCtaText: Record<string, string> = {
-  primary: 'text-primary',
-  secondary: 'text-secondary',
-  primaryContainer: 'text-primary-container',
-};
-
-const quickAccessItems = [
-  {
-    icon: 'account_balance_wallet',
-    title: 'Contas Públicas',
-    description: 'Status: Fechamento do último mês fiscal concluído e publicado sem ressalvas.',
-    border: 'border-secondary',
-    iconColor: 'text-secondary',
-  },
-  {
-    icon: 'construction',
-    title: 'Obras em Destaque',
-    description: 'Atualização: Reforma da Praça Central atingiu 85% de conclusão nesta semana.',
-    border: 'border-primary',
-    iconColor: 'text-primary',
-  },
-  {
-    icon: 'gavel',
-    title: 'Aviso de Licitação',
-    description: 'Próxima: Pregão Eletrônico 04/2024 para aquisição de merenda escolar. Data: 15/05.',
-    border: 'border-primary-container',
-    iconColor: 'text-primary-container',
-  },
-  {
-    icon: 'lightbulb',
-    title: 'Iluminação Pública',
-    description: 'Dados: 98% de cobertura LED no município. 12 manutenções realizadas nas últimas 24h.',
-    border: 'border-secondary',
-    iconColor: 'text-secondary',
-  },
-  {
-    icon: 'newspaper',
-    title: 'Notícias do Município',
-    description: 'Destaque: Prefeitura lança novo programa de saúde preventiva nas escolas municipais.',
-    border: 'border-primary',
-    iconColor: 'text-primary',
-  },
-];
+function initialCard<T>(): CardState<T> {
+  return { data: null, loading: true, error: false };
+}
 
 /* ────────────────────────────────────────────
    Componente principal
    ──────────────────────────────────────────── */
 
 export default function PortalClient() {
-  const [diarioData, setDiarioData] = useState<DiarioResponse | null>(null);
-  const [diarioLoading, setDiarioLoading] = useState(true);
+  const [diario, setDiario] = useState<CardState<DiarioResponse>>(initialCard);
+  const [receitas, setReceitas] = useState<CardState<number>>(initialCard);
+  const [obra, setObra] = useState<CardState<ObraRecord>>(initialCard);
+  const [licitacao, setLicitacao] = useState<CardState<LicitacaoComprasBR>>(initialCard);
+  const [noticia, setNoticia] = useState<CardState<NoticiaResponse>>(initialCard);
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
+
+    async function loadDiario() {
       try {
         const data = await fetchDiarioHoje();
-        if (!cancelled) setDiarioData(data);
-      } catch {
-        if (!cancelled) setDiarioData(null);
-      } finally {
-        if (!cancelled) setDiarioLoading(false);
-      }
+        if (!cancelled) setDiario({ data, loading: false, error: false });
+      } catch { if (!cancelled) setDiario({ data: null, loading: false, error: true }); }
     }
-    load();
+    async function loadReceitas() {
+      try {
+        const result = await fetchReceitasTotais();
+        if (!cancelled) setReceitas({ data: result.receitas_total, loading: false, error: false });
+      } catch { if (!cancelled) setReceitas({ data: null, loading: false, error: true }); }
+    }
+    async function loadObra() {
+      try {
+        const data = await fetchObraDestaque();
+        if (!cancelled) setObra({ data, loading: false, error: false });
+      } catch { if (!cancelled) setObra({ data: null, loading: false, error: true }); }
+    }
+    async function loadLicitacao() {
+      try {
+        const data = await fetchProximaLicitacao();
+        if (!cancelled) setLicitacao({ data, loading: false, error: false });
+      } catch { if (!cancelled) setLicitacao({ data: null, loading: false, error: true }); }
+    }
+    async function loadNoticia() {
+      try {
+        const data = await fetchUltimaNoticia();
+        if (!cancelled) setNoticia({ data, loading: false, error: false });
+      } catch { if (!cancelled) setNoticia({ data: null, loading: false, error: true }); }
+    }
+
+    loadDiario();
+    loadReceitas();
+    loadObra();
+    loadLicitacao();
+    loadNoticia();
     return () => { cancelled = true; };
   }, []);
 
-  /* ── helpers para o card do Diário Oficial ── */
-  function renderDiarioDescription(data: DiarioResponse): string {
-    if (!data.tem_edicao || data.edicoes.length === 0) {
-      return data.mensagem ?? 'Nenhuma edição publicada hoje.';
-    }
-    const regular = data.edicoes.filter((e) => !e.suplementar);
-    const suplementar = data.edicoes.filter((e) => e.suplementar);
+  const diarioHref = diario.data ? getDiarioLink(diario.data) : null;
 
-    const partes: string[] = [];
-    for (const ed of regular) {
-      partes.push(`Edição ${ed.numero} de ${ed.data}${ed.tamanho ? ` (${ed.tamanho})` : ''}`);
-    }
-    for (const ed of suplementar) {
-      partes.push(`Suplementar: Edição ${ed.numero} de ${ed.data}${ed.tamanho ? ` (${ed.tamanho})` : ''}`);
-    }
-    return partes.join(' | ');
-  }
+  const receitasDesc = receitas.error
+    ? 'Serviço de arrecadação temporariamente indisponível.'
+    : receitas.data != null
+      ? `Total arrecadado até o momento: ${formatCurrencyCompact(receitas.data)}`
+      : 'Dados de arrecadação não encontrados.';
 
-  function renderDiarioLink(data: DiarioResponse): string | null {
-    if (!data.tem_edicao || data.edicoes.length === 0) return null;
-    // Prioriza a edição regular; se não houver, usa a primeira
-    const regular = data.edicoes.find((e) => !e.suplementar);
-    const link = regular?.link_download ?? data.edicoes[0].link_download;
-    return link;
-  }
+  const obraDesc = obra.error
+    ? 'Serviço de obras temporariamente indisponível.'
+    : obra.data
+      ? `${obra.data.titulo} — atualizado ${timeAgo(obra.data.updated_at)}.`
+      : 'Nenhuma obra cadastrada no momento.';
 
-  const diarioHref = diarioData ? renderDiarioLink(diarioData) : null;
+  const licitacaoDesc = licitacao.error
+    ? 'Serviço de licitações temporariamente indisponível.'
+    : licitacao.data
+      ? `${licitacao.data.modalidade} ${licitacao.data.numeroEdital} — ${licitacao.data.objeto.substring(0, 80)}${licitacao.data.objeto.length > 80 ? '...' : ''}`
+      : 'Nenhuma licitação futura encontrada no momento.';
+
+  const noticiaDesc = noticia.error
+    ? 'Serviço de notícias temporariamente indisponível.'
+    : noticia.data
+      ? noticia.data.chamada.substring(0, 120) + (noticia.data.chamada.length > 120 ? '...' : '')
+      : 'Nenhuma notícia disponível no momento.';
 
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      {/* ───── Header ───── */}
       <PortalHeader />
-
       <main className="flex-grow">
-        {/* ───── Hero Section ───── */}
-        <section className="hero-gradient pt-24 pb-32 px-6 sm:px-8 relative overflow-hidden">
-          {/* Decorative radial gradient */}
-          <div
-            className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at top right, #ffffff 0%, transparent 70%)',
-            }}
-          />
 
+        {/* ───── Hero ───── */}
+        <section className="hero-gradient pt-24 pb-32 px-6 sm:px-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none"
+            style={{ backgroundImage: 'radial-gradient(circle at top right, #ffffff 0%, transparent 70%)' }}
+          />
           <div className="max-w-screen-xl mx-auto relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-              {/* Left column */}
               <div className="lg:col-span-7">
                 <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/80 text-white font-label text-sm font-semibold tracking-wide mb-6">
                   BANDEIRANTES - MS
                 </span>
-
                 <h1 className="font-headline font-extrabold text-4xl sm:text-5xl md:text-7xl text-white tracking-tighter leading-tight mb-4">
                   A verdade<br />em números.
                 </h1>
-
                 <p className="font-body text-xl text-white/70 leading-relaxed mb-10 max-w-2xl">
                   Acesso universal, claro e direto aos dados públicos do município.
                   Transparência não é apenas um portal, é o nosso compromisso com a sua cidadania.
                 </p>
-
-                {/* Search bar */}
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-2 max-w-2xl flex items-center shadow-[0_32px_32px_-4px_rgba(0,0,0,0.2)]">
-                  <span className="material-symbols-outlined text-white pl-4 pr-2">
-                    search
-                  </span>
-                  <input
-                    type="text"
+                  <span className="material-symbols-outlined text-white pl-4 pr-2">search</span>
+                  <input type="text"
                     placeholder="O que você procura? (ex: despesas, licitações, obras...)"
                     className="w-full bg-transparent border-none text-white placeholder:text-white/50 font-body text-lg focus:ring-0 focus:outline-none"
                   />
@@ -223,37 +153,22 @@ export default function PortalClient() {
                   </button>
                 </div>
               </div>
-
-              {/* Right column — stat cards (desktop only) */}
               <div className="lg:col-span-5 hidden lg:block">
                 <div className="grid grid-cols-2 gap-4 opacity-90 rotate-3">
-                  {/* Receitas card */}
                   <div className="bg-surface-container-lowest p-6 rounded-xl shadow-2xl flex flex-col gap-4 translate-y-8">
-                    <span className="material-symbols-outlined text-primary text-4xl"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      payments
-                    </span>
+                    <span className="material-symbols-outlined text-primary text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
                     <span className="font-headline font-bold text-primary dark:text-primary text-xl">
-                      R$ 14.2M
+                      {receitas.loading ? '...' : receitas.data != null ? formatCurrencyCompact(receitas.data) : 'R$ 0'}
                     </span>
-                    <span className="font-body text-sm text-on-surface-variant">
-                      Arrecadação Mês
-                    </span>
+                    <span className="font-body text-sm text-on-surface-variant">Arrecadação Total</span>
                   </div>
-
-                  {/* Obras card */}
                   <div className="bg-secondary p-6 rounded-xl shadow-2xl flex flex-col gap-4">
-                    <span className="material-symbols-outlined text-on-secondary text-4xl"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      construction
-                    </span>
+                    <span className="material-symbols-outlined text-on-secondary text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>construction</span>
                     <span className="font-headline font-bold text-on-secondary text-xl">
-                      12 Ativas
+                      {obra.data?.titulo?.substring(0, 18) ?? 'Obras'}
                     </span>
                     <span className="font-body text-sm text-secondary-fixed-dim">
-                      Obras em Andamento
+                      {obra.data ? `Atualizado ${timeAgo(obra.data.updated_at)}` : 'Em Andamento'}
                     </span>
                   </div>
                 </div>
@@ -266,38 +181,14 @@ export default function PortalClient() {
         <section className="px-6 sm:px-8 -mt-16 relative z-20 max-w-screen-xl mx-auto pb-24">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {mainNavCards.map((card) => (
-              <Link
-                key={card.href}
-                href={card.href}
-                className={`
-                  bg-surface-container-lowest
-                  rounded-xl p-8
-                  shadow-[0_32px_32px_-4px_rgba(0,25,60,0.06)]
-                  dark:shadow-[0_32px_32px_-4px_rgba(0,0,0,0.3)]
-                  group hover:-translate-y-2 transition-transform duration-300
-                  flex flex-col h-full
-                  border-b-[3px] ${accentBorder[card.accent]}
-                  ${card.offset ? 'lg:translate-y-8' : ''}
-                `}
+              <Link key={card.href} href={card.href}
+                className={`bg-surface-container-lowest rounded-xl p-8 shadow-[0_32px_32px_-4px_rgba(0,25,60,0.06)] dark:shadow-[0_32px_32px_-4px_rgba(0,0,0,0.3)] group hover:-translate-y-2 transition-transform duration-300 flex flex-col h-full border-b-[3px] ${accentBorder[card.accent]} ${card.offset ? 'lg:translate-y-8' : ''}`}
               >
-                <div className={`
-                  w-14 h-14 rounded-full bg-surface-container-low
-                  flex items-center justify-center mb-6
-                  transition-colors ${accentIconBg[card.accent]} ${accentIconText[card.accent]}
-                `}>
-                  <span className="material-symbols-outlined text-3xl">
-                    {card.icon}
-                  </span>
+                <div className={`w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center mb-6 transition-colors ${accentIconBg[card.accent]} ${accentIconText[card.accent]}`}>
+                  <span className="material-symbols-outlined text-3xl">{card.icon}</span>
                 </div>
-
-                <h3 className="font-headline font-extrabold text-2xl text-primary mb-3">
-                  {card.title}
-                </h3>
-
-                <p className="font-body text-on-surface-variant mb-6 flex-grow">
-                  {card.description}
-                </p>
-
+                <h3 className="font-headline font-extrabold text-2xl text-primary mb-3">{card.title}</h3>
+                <p className="font-body text-on-surface-variant mb-6 flex-grow">{card.description}</p>
                 <span className={`font-headline font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all ${accentCtaText[card.accent]}`}>
                   {card.cta}
                   <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -313,41 +204,22 @@ export default function PortalClient() {
             <h2 className="font-headline font-extrabold text-3xl md:text-4xl text-primary tracking-tight mb-10 text-center">
               Painel de Informações Rápidas
             </h2>
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* ── Diário Oficial (dinâmico) ── */}
-              <div
-                className={`
-                  bg-surface-container-lowest
-                  rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow
-                  border-l-4 border-primary-container
-                `}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <span
-                    className="material-symbols-outlined text-primary-container"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    menu_book
-                  </span>
-                  <h4 className="font-headline font-bold text-lg text-primary">
-                    Diário Oficial do Dia
-                  </h4>
-                </div>
 
-                {diarioLoading ? (
-                  <p className="font-body text-sm text-on-surface-variant animate-pulse">
-                    Carregando...
-                  </p>
-                ) : diarioData && diarioData.tem_edicao && diarioHref ? (
-                  <a
-                    href={diarioHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block group"
-                  >
+              {/* Diário Oficial */}
+              <div className="bg-surface-container-lowest rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border-l-4 border-primary-container">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>menu_book</span>
+                  <h4 className="font-headline font-bold text-lg text-primary">Diário Oficial do Dia</h4>
+                </div>
+                {diario.loading ? (
+                  <p className="font-body text-sm text-on-surface-variant animate-pulse">Carregando...</p>
+                ) : diario.error ? (
+                  <p className="font-body text-sm text-on-surface-variant">Serviço temporariamente indisponível.</p>
+                ) : diario.data && diario.data.tem_edicao && diarioHref ? (
+                  <a href={diarioHref} target="_blank" rel="noopener noreferrer" className="block group">
                     <p className="font-body text-sm text-on-surface-variant group-hover:text-primary transition-colors">
-                      {renderDiarioDescription(diarioData)}
+                      {renderDiarioDescription(diario.data)}
                     </p>
                     <span className="inline-flex items-center gap-1 mt-2 font-headline font-bold text-xs text-primary-container group-hover:gap-2 transition-all">
                       Baixar PDF
@@ -356,42 +228,39 @@ export default function PortalClient() {
                   </a>
                 ) : (
                   <p className="font-body text-sm text-on-surface-variant">
-                    {diarioData?.mensagem ?? 'Não foi possível consultar o Diário Oficial.'}
+                    {diario.data?.mensagem ?? 'Nenhuma edição publicada hoje.'}
                   </p>
                 )}
               </div>
 
-              {quickAccessItems.map((item) => (
-                <div
-                  key={item.title}
-                  className={`
-                    bg-surface-container-lowest
-                    rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow
-                    border-l-4 ${item.border}
-                  `}
-                >
-                  <div className="flex items-center gap-3 mb-3">
-                    <span
-                      className={`material-symbols-outlined ${item.iconColor}`}
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      {item.icon}
-                    </span>
-                    <h4 className="font-headline font-bold text-lg text-primary">
-                      {item.title}
-                    </h4>
-                  </div>
-                  <p className="font-body text-sm text-on-surface-variant">
-                    {item.description}
-                  </p>
-                </div>
-              ))}
+              {/* Contas Públicas → /dashboard */}
+              <QuickInfoCard icon="account_balance_wallet" title="Contas Públicas"
+                description={receitasDesc} border="border-secondary" iconColor="text-secondary"
+                href="/dashboard" loading={receitas.loading} />
+
+              {/* Obras em Destaque → /obras/[hash] */}
+              <QuickInfoCard icon="construction" title="Obras em Destaque"
+                description={obraDesc} border="border-primary" iconColor="text-primary"
+                href={obra.data ? `/obras/${obra.data.hash}` : '/obras'} loading={obra.loading} />
+
+              {/* Aviso de Licitação → /avisos-licitacoes */}
+              <QuickInfoCard icon="gavel" title="Aviso de Licitação"
+                description={licitacaoDesc} border="border-primary-container" iconColor="text-primary-container"
+                href="/avisos-licitacoes" loading={licitacao.loading} />
+
+              {/* Iluminação Pública (estático) */}
+              <QuickInfoCard icon="lightbulb" title="Iluminação Pública"
+                description="Dados: 98% de cobertura LED no município. 12 manutenções realizadas nas últimas 24h."
+                border="border-secondary" iconColor="text-secondary" href={null} loading={false} />
+
+              {/* Notícias do Município → link externo */}
+              <QuickInfoExternalLink icon="newspaper" title="Notícias do Município"
+                description={noticiaDesc} border="border-primary" iconColor="text-primary"
+                externalHref={noticia.data?.link ?? null} loading={noticia.loading} />
             </div>
           </div>
         </section>
       </main>
-
-      {/* ───── Footer ───── */}
       <PortalFooter />
     </div>
   );

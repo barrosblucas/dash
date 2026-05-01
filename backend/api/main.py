@@ -32,6 +32,7 @@ from backend.features.licitacao.licitacao_handler import router as licitacoes_ro
 from backend.features.movimento_extra.movimento_extra_handler import (
     router as movimento_extra_router,
 )
+from backend.features.noticias.noticias_handler import router as noticias_router
 from backend.features.obra.obra_handler import router as obra_router
 from backend.features.receita.receita_handler import router as receitas_router
 from backend.features.saude.saude_handler import router as saude_router
@@ -253,6 +254,7 @@ app.include_router(export_router, prefix="/api/v1")
 app.include_router(scraping_router, prefix="/api/v1")
 app.include_router(movimento_extra_router, prefix="/api/v1")
 app.include_router(licitacoes_router, prefix="/api/v1")
+app.include_router(noticias_router, prefix="/api/v1")
 app.include_router(identity_router, prefix="/api/v1")
 app.include_router(obra_router, prefix="/api/v1")
 app.include_router(saude_router, prefix="/api/v1")

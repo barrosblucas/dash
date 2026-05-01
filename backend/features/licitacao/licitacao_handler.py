@@ -9,6 +9,7 @@ Apenas orquestração HTTP — delega para adapter.
 from __future__ import annotations
 
 import logging
+from datetime import date
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -22,6 +23,7 @@ from backend.features.licitacao.licitacao_adapter import (
 from backend.features.licitacao.licitacao_types import (
     DispensasLicitacaoResponse,
     LicitacaoComprasBRDetailItem,
+    LicitacaoComprasBRItem,
     LicitacaoComprasBRResponse,
 )
 
@@ -104,3 +106,35 @@ async def get_dispensas_licitacao() -> DispensasLicitacaoResponse:
         items=items,
         quantidade=len(items),
     )
+
+
+@router.get(
+    "/proxima",
+    response_model=LicitacaoComprasBRItem,
+    summary="Próxima licitação (abertura futura mais próxima)",
+)
+async def get_proxima_licitacao() -> LicitacaoComprasBRItem:
+    """Retorna a próxima licitação com data de abertura futura mais próxima.
+
+    Busca licitações do ComprasBR e filtra pela data de abertura mais
+    próxima da data atual que ainda não ocorreu. Se nenhuma for encontrada,
+    retorna a mais recente como fallback.
+    """
+    try:
+        items, _ = await fetch_licitacoes_comprasbr(page=1, size=200)
+    except ExternalAPIError as exc:
+        raise _handle_external_error(exc) from exc
+
+    hoje = date.today().isoformat()
+
+    # Filtra licitações com data de abertura futura e ordena
+    futuras = [i for i in items if i.dataAbertura >= hoje]
+    if futuras:
+        futuras.sort(key=lambda x: x.dataAbertura)
+        return futuras[0]
+
+    # Fallback: retorna a mais recente (última listada)
+    if items:
+        return items[0]
+
+    raise HTTPException(status_code=404, detail="Nenhuma licitação encontrada")

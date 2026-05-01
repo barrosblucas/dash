@@ -42,8 +42,8 @@ Snapshot: 2026-05-01
 #### `features/obra/`
 - `obra_types.py`: schemas Pydantic de obra com múltiplos locais/fontes/mídias e medições mensais com anexos
 - `obra_business.py`: cálculos puros de `valor_economizado` e `valor_medido_total`
-- `obra_data.py`: persistência SQLAlchemy de obras, upsert de medições por sequência, locais/fontes e sincronização de mídia
-- `obra_handler.py`: rotas `/api/v1/obras` com leitura pública, escrita admin e endpoints de upload/vínculo/remoção de mídia
+- `obra_data.py`: persistência SQLAlchemy de obras, upsert de medições por sequência, locais/fontes, sincronização de mídia e `get_most_recently_updated()` para obra em destaque
+- `obra_handler.py`: rotas `/api/v1/obras` com leitura pública, escrita admin, upload/vínculo/remoção de mídia e `GET /destaque` para a obra mais recente
 - `obra_media_storage.py`: storage local de uploads de obras com resolução de path e limpeza de arquivos
 
 #### `features/receita/`
@@ -71,8 +71,13 @@ Snapshot: 2026-05-01
 
 #### `features/licitacao/`
 - `licitacao_types.py`: schemas Pydantic de licitações (ComprasBR, dispensas Quality)
-- `licitacao_handler.py`: proxy para licitações — delega para adapter
+- `licitacao_handler.py`: proxy para licitações — delega para adapter; `GET /proxima` retorna a próxima licitação com data de abertura futura
 - `licitacao_adapter.py`: ACL para APIs externas — ComprasBR + Quality (scraping HTML)
+
+#### `features/noticias/`
+- `noticias_types.py`: schema `NoticiaResponse` (titulo, chamada, link, data_publicacao, fonte)
+- `noticias_adapter.py`: ACL mockada com dados demonstrativos — preparada para fonte RSS/API oficial
+- `noticias_handler.py`: endpoint `GET /api/v1/noticias/ultima` para o Painel de Informações Rápidas
 
 #### `features/movimento_extra/`
 - `movimento_extra_types.py`: schemas Pydantic de movimento extra orçamentário
@@ -173,7 +178,9 @@ Snapshot: 2026-05-01
 - `app/admin/obras/new/page.tsx`: criação administrativa de obra
 - `app/admin/obras/[hash]/page.tsx`: edição administrativa de obra
 - `app/admin/saude/unidades/page.tsx`: página administrativa única para CRUD de unidades de saúde, horários, importação e sync manual
-- `app/portal-client.tsx`: componente client do portal com hero, grid de cards e footer
+- `app/portal-client.tsx`: componente client do portal com hero, grid de cards, footer e Painel de Informações Rápidas com dados dinâmicos (receitas totais, obra destaque, próxima licitação, notícias)
+- `components/portal/QuickInfoCard.tsx`: componente de card clicável para o Painel de Informações Rápidas (link interno e externo)
+- `components/portal/portal-data.ts`: dados estáticos, helpers de formatação (currency, timeAgo) e helpers do Diário Oficial
 - `app/dashboard/page.tsx`: página do dashboard financeiro
 - `app/dashboard/dashboard-client.tsx`: componente client do dashboard
 - `app/globals.css`: identidade visual (light + dark finance theme com CSS custom properties)
@@ -293,6 +300,7 @@ Snapshot: 2026-05-01
 - `services/auth-service.ts`: cliente do frontend para `/api/auth/*`
 - `services/user-service.ts`: CRUD administrativo de usuários
 - `services/obra-service.ts`: leitura pública, CRUD administrativo e operações de mídia de obras
+- `services/portal-service.ts`: dados do portal público — obra destaque, próxima licitação, última notícia, receitas totais
 - `services/saude-service.ts`: consumo dos endpoints públicos e administrativos da feature saúde, incluindo vacinação, visitas, APS, saúde bucal, hospital e farmácia
 - `services/diario-oficial-service.ts`: cliente `fetchDiarioHoje()` para consulta do endpoint `/api/v1/diario-oficial/hoje`
 - `stores/filtersStore.ts`: store Zustand de filtros

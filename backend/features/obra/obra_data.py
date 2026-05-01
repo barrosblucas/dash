@@ -26,6 +26,13 @@ class SQLObraRepository:
     def __init__(self, session: Session):
         self.session = session
 
+    def get_most_recently_updated(self) -> ObraModel | None:
+        return (
+            self.session.query(ObraModel)
+            .order_by(ObraModel.updated_at.desc(), ObraModel.id.desc())
+            .first()
+        )
+
     def list_obras(self, status: str | None = None) -> list[ObraModel]:
         query = self.session.query(ObraModel).order_by(ObraModel.created_at.desc())
         if status is not None:
