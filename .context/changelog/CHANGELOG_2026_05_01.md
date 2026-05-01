@@ -21,7 +21,7 @@
 ### Frontend — SaudePeriodFilter: limitar seletor de ano por página
 - **Changed** `SaudePeriodFilter` agora aceita prop opcional `yearOptions: number[]` para limitar os anos exibidos no dropdown. Sem a prop, mantém o comportamento global via `saudeYearOptions`.
 - **Changed** Páginas de **farmácia**, **vacinação** e **atenção primária**: dropdown de ano limitado a 2020–presente; `minStartDate` ajustado para `2020-01-01` (vacinação alterado de `2019-11-01`).
-- **Changed** Página de **saúde bucal**: dropdown de ano limitado apenas a 2025; `minStartDate` mantido em `2025-05-01`.
+- **Changed** Página de **saúde bucal**: dropdown de ano limitado a 2025–presente; `minStartDate` mantido em `2025-05-01`.
 - As demais páginas de saúde (hospital, medicamentos, procedimentos, perfil-epidemiológico, visitas-domiciliares) não foram alteradas — continuam usando o range completo de anos.
 - Arquivos modificados:
   - `frontend/components/saude/SaudePeriodFilter.tsx`
