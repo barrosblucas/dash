@@ -11,6 +11,10 @@ from backend.features.diario_oficial.diario_oficial_adapter import (
     _parse_html,
     fetch_diario,
 )
+from backend.features.diario_oficial.diario_oficial_types import (
+    DiarioEdicao,
+    DiarioResponse,
+)
 
 
 class TestParseHTML:
@@ -207,3 +211,83 @@ class TestFetchDiarioIntegration:
 
         assert isinstance(edicoes, list)
         # Datas futuras não devem ter edições
+
+
+@pytest.mark.asyncio
+class TestSchedulerCache:
+    """Testes do comportamento de cache do scheduler."""
+
+    async def test_cache_atualiza_mesmo_quando_sem_edicao(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Cache deve ser atualizado com 'sem edição' mesmo com cache anterior."""
+        from backend.features.diario_oficial.diario_oficial_scheduler import (
+            DiarioOficialScheduler,
+        )
+
+        scheduler = DiarioOficialScheduler()
+
+        # Simula cache prévio de um dia com edição
+        scheduler.ultimo_resultado = DiarioResponse(
+            data_consulta="30/04/2026",
+            tem_edicao=True,
+            edicoes=[
+                DiarioEdicao(
+                    numero="2908",
+                    data="30-04-2026",
+                    link_download="https://example.com/2908.pdf",
+                    tamanho="322.65 KB",
+                    suplementar=False,
+                )
+            ],
+            mensagem=None,
+        )
+
+        async def _fake_fetch(_data: date) -> list[DiarioEdicao]:
+            return []
+
+        monkeypatch.setattr(
+            "backend.features.diario_oficial.diario_oficial_scheduler.fetch_diario",
+            _fake_fetch,
+        )
+
+        await scheduler._fetch_e_atualizar("teste")
+
+        # Deve ter sobrescrito o cache antigo com "sem edição" para hoje
+        assert scheduler.ultimo_resultado is not None
+        assert scheduler.ultimo_resultado.tem_edicao is False
+        assert scheduler.ultimo_resultado.edicoes == []
+        assert scheduler.ultimo_resultado.mensagem == "Nenhuma edição publicada hoje."
+
+    async def test_cache_mantem_dados_quando_ha_edicao(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Cache deve ser atualizado com novas edições encontradas."""
+        from backend.features.diario_oficial.diario_oficial_scheduler import (
+            DiarioOficialScheduler,
+        )
+
+        scheduler = DiarioOficialScheduler()
+
+        nova_edicao = DiarioEdicao(
+            numero="3000",
+            data=date.today().strftime("%d-%m-%Y"),
+            link_download="https://example.com/3000.pdf",
+            tamanho="100 KB",
+            suplementar=False,
+        )
+
+        async def _fake_fetch(_data: date) -> list[DiarioEdicao]:
+            return [nova_edicao]
+
+        monkeypatch.setattr(
+            "backend.features.diario_oficial.diario_oficial_scheduler.fetch_diario",
+            _fake_fetch,
+        )
+
+        await scheduler._fetch_e_atualizar("teste")
+
+        assert scheduler.ultimo_resultado is not None
+        assert scheduler.ultimo_resultado.tem_edicao is True
+        assert len(scheduler.ultimo_resultado.edicoes) == 1
+        assert scheduler.ultimo_resultado.edicoes[0].numero == "3000"

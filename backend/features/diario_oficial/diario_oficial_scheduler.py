@@ -3,6 +3,7 @@ Scheduler do Diário Oficial.
 
 Busca o Diário Oficial diariamente às 6h (edição regular)
 e novamente às 16h (verifica edição suplementar).
+Horários no fuso de Bandeirantes/MS (America/Campo_Grande, UTC-4).
 """
 
 # mypy: disable-error-code=import-untyped
@@ -11,6 +12,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date
+from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -21,12 +23,14 @@ from backend.features.diario_oficial.diario_oficial_types import DiarioResponse
 logger = logging.getLogger(__name__)
 
 _MISFIRE_GRACE_SECONDS: int = 300  # 5 minutos de tolerância
+_TIMEZONE = ZoneInfo("America/Campo_Grande")
 
 
 class DiarioOficialScheduler:
     """Scheduler periódico para busca do Diário Oficial.
 
-    Busca às 6h (edição regular do dia) e às 16h (possível suplementar).
+    Busca às 6h (edição regular do dia) e às 16h (possível suplementar)
+    no fuso horário de Bandeirantes/MS (America/Campo_Grande, UTC-4).
     Armazena o último resultado em memória para consumo via endpoint.
     """
 
@@ -41,24 +45,25 @@ class DiarioOficialScheduler:
         self.ultimo_resultado: DiarioResponse | None = None
 
     def start(self) -> None:
-        """Inicia o scheduler com jobs às 6h e 16h."""
+        """Inicia o scheduler com jobs às 6h e 16h (America/Campo_Grande)."""
         self._scheduler.add_job(
             self._fetch_manha,
-            trigger=CronTrigger(hour=6, minute=0),
+            trigger=CronTrigger(hour=6, minute=0, timezone=_TIMEZONE),
             id="diario_oficial_manha",
             name="diario_oficial_busca_manha",
             replace_existing=True,
         )
         self._scheduler.add_job(
             self._fetch_tarde,
-            trigger=CronTrigger(hour=16, minute=0),
+            trigger=CronTrigger(hour=16, minute=0, timezone=_TIMEZONE),
             id="diario_oficial_tarde",
             name="diario_oficial_busca_tarde",
             replace_existing=True,
         )
         self._scheduler.start()
         logger.info(
-            "Scheduler do Diário Oficial iniciado — jobs: 06:00 e 16:00"
+            "Scheduler do Diário Oficial iniciado — jobs: 06:00 e 16:00 (%s)",
+            str(_TIMEZONE),
         )
 
     def stop(self) -> None:
@@ -106,8 +111,9 @@ class DiarioOficialScheduler:
                     len(regular),
                     len(suplementar),
                 )
-            elif self.ultimo_resultado is None:
-                # Só registra "sem edição" se não há cache anterior
+            else:
+                # Sempre atualiza o cache com "sem edição" para a data de hoje,
+                # sobrescrevendo qualquer cache de dias anteriores.
                 self.ultimo_resultado = DiarioResponse(
                     data_consulta=data_str,
                     tem_edicao=False,
