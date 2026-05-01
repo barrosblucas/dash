@@ -74,3 +74,69 @@
 - `npm run lint` — ✔ No ESLint warnings or errors
 - `npm run type-check` — ✔ No errors
 - `npm run build` — ✓ Compiled successfully (portal `/` mantém 129 kB First Load JS)
+
+## Funcionalidades Novas
+
+### Backend — Bounded Context Legislação (mockado)
+- **Added** Nova feature `features/legislacao/` com dados mockados de legislações municipais para Bandeirantes-MS.
+  - `legislacao_types.py`: schemas Pydantic (`StatusLegislacao`, `TipoLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`)
+  - `legislacao_adapter.py`: ACL mockada com 14 legislações realistas (leis, decretos, portarias, resoluções, emendas, decreto-lei, lei complementar) variando status (ATIVA, REVOGADA, ALTERADA) e anos (2018–2026). Suporta filtros por `tipo`, `ano`, `status` e busca textual em `ementa`, `numero` e `autor`, além de paginação.
+  - `legislacao_handler.py`: endpoints públicos `GET /api/v1/legislacao` (listagem paginada com query params) e `GET /api/v1/legislacao/{legislacao_id}` (detalhe completo com texto integral)
+- **Changed** `backend/api/main.py`: registrado `legislacao_router` em `/api/v1` após `diario_oficial_router`
+- Arquivos criados:
+  - `backend/features/legislacao/__init__.py`
+  - `backend/features/legislacao/legislacao_types.py`
+  - `backend/features/legislacao/legislacao_mock_data.py`
+  - `backend/features/legislacao/legislacao_mock_data_extra.py`
+  - `backend/features/legislacao/legislacao_adapter.py`
+  - `backend/features/legislacao/legislacao_handler.py`
+- Arquivos modificados:
+  - `backend/api/main.py`
+
+## Validação (Legislação)
+- `ruff check features/legislacao/` — ✔ All checks passed
+- `mypy features/legislacao/` — ✔ No issues found in 4 source files
+- Import check: `router.prefix` → `/legislacao` — OK
+
+## Funcionalidades Novas
+
+### Frontend — Página pública de Legislações (`/legislacoes`)
+- **Added** Tipos TypeScript espelhando schemas do backend em `frontend/types/legislacao.ts`
+  - `TipoLegislacao`, `StatusLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`, `LegislacaoFilters`
+- **Added** Service `frontend/services/legislacao-service.ts` com `list(filters)` e `getById(id)`, consumindo `apiClient`
+- **Added** Página de listagem `frontend/app/legislacoes/page.tsx` (server component) + `legislacoes-client.tsx` (client component)
+  - Header com título e subtítulo
+  - Barra de busca textual por ementa, número ou autor
+  - Filtros: tipo (select), ano (select), status (select)
+  - Grid responsivo de cards (1 col mobile, 2 md, 3 lg) com tipo badge, status badge colorido, ementa truncada, data de publicação e autor
+  - Paginação com controles anterior/próxima e indicador de página
+  - Estado vazio e skeletons de loading
+- **Added** Página de detalhe `frontend/app/legislacoes/[id]/page.tsx` (server component) + `legislacao-detail-client.tsx` (client component)
+  - Breadcrumb: Portal > Legislações > {tipo + número}
+  - Header gradiente com tipo badge, status badge e ementa completa
+  - Grid de informações: publicação, promulgação, vigência, autor, sancionado por, origem
+  - Texto integral em container scrollável
+  - Lista de legislações vinculadas (quando houver)
+  - Botão de download PDF (link externo `url_arquivo`)
+  - Botão voltar para `/legislacoes`
+- **Changed** `frontend/lib/constants.ts`: adicionados `API_ENDPOINTS.legislacao` e `QUERY_KEYS.legislacao`
+- **Changed** `frontend/types/index.ts`: export de `./legislacao`
+- **Changed** `frontend/components/portal/portal-data.ts`: adicionado card "Legislações" após "Aviso de Licitação"
+- **Changed** `frontend/components/layouts/Sidebar.tsx`: adicionado item "Legislações" após "Licitações"
+
+## Testes
+
+### Backend — Testes automatizados para feature Legislação
+- **Added** `backend/tests/test_api/test_legislacao.py` com 14 testes cobrindo adapter (unidade) e handler (integração FastAPI TestClient)
+  - Adapter: retorno de lista paginada, paginação (page/size), filtros por tipo/ano/status, busca textual, combinação de filtros, detalhe existente/inexistente, lista vazia
+  - Handler: endpoint de listagem (200 + schema), detalhe (200), detalhe inexistente (404), filtros via query string
+- Segue padrão de `backend/tests/test_api/test_licitacoes.py` com imports absolutos e `from __future__ import annotations`
+
+## Validação (Testes Legislação)
+- `pytest tests/test_api/test_legislacao.py -v` — 14/14 passing
+- `pytest --tb=short` — 126 passed, 9 errors pré-existentes (não relacionados), 18 warnings
+
+## Validação (Frontend Legislações)
+- `npm run lint` — ✔ No ESLint warnings or errors
+- `npm run type-check` — ✔ No errors
+- `npm run build` — ✓ Compiled successfully, 40 static pages generated (inclui `/legislacoes` e `/legislacoes/[id]`)

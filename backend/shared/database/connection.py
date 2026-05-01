@@ -10,13 +10,13 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-from alembic.config import Config as AlembicConfig
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
 from alembic import command as alembic_command
+from alembic.config import Config as AlembicConfig
 
 from .models import Base
 

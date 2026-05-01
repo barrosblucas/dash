@@ -24,6 +24,7 @@ const navigation: NavItem[] = [
   { name: 'Saúde', href: '/saude', icon: 'health_and_safety' },
   { name: 'Obras', href: '/obras', icon: 'construction' },
   { name: 'Licitações', href: '/avisos-licitacoes', icon: 'gavel' },
+  { name: 'Legislações', href: '/legislacoes', icon: 'article' },
   { name: 'Relatórios', href: '/relatorios', icon: 'description' },
 ];
 

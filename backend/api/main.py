@@ -28,6 +28,9 @@ from backend.features.forecast.forecast_handler import router as forecast_router
 from backend.features.identity.identity_data import bootstrap_first_admin
 from backend.features.identity.identity_handler import router as identity_router
 from backend.features.kpi.kpi_handler import router as kpis_router
+from backend.features.legislacao.legislacao_handler import (
+    router as legislacao_router,
+)
 from backend.features.licitacao.licitacao_handler import router as licitacoes_router
 from backend.features.movimento_extra.movimento_extra_handler import (
     router as movimento_extra_router,
@@ -259,6 +262,7 @@ app.include_router(identity_router, prefix="/api/v1")
 app.include_router(obra_router, prefix="/api/v1")
 app.include_router(saude_router, prefix="/api/v1")
 app.include_router(diario_oficial_router, prefix="/api/v1")
+app.include_router(legislacao_router, prefix="/api/v1")
 
 
 # Endpoint de health check

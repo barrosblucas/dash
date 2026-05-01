@@ -422,6 +422,10 @@ export const API_ENDPOINTS = {
     comprasbrDetail: (id: number) => `/api/v1/licitacoes/comprasbr/${id}`,
     dispensas: '/api/v1/licitacoes/dispensas',
   },
+  legislacao: {
+    list: '/api/v1/legislacao',
+    detail: (id: string) => `/api/v1/legislacao/${id}`,
+  },
 } as const;
 
 // ============================================
@@ -474,6 +478,13 @@ export const QUERY_KEYS = {
       [...QUERY_KEYS.licitacoes.all, 'comprasbr-detail', id] as const,
     dispensas: () =>
       [...QUERY_KEYS.licitacoes.all, 'dispensas'] as const,
+  },
+  legislacao: {
+    all: ['legislacao'] as const,
+    list: (params: Record<string, unknown>) =>
+      [...QUERY_KEYS.legislacao.all, 'list', params] as const,
+    detail: (id: string) =>
+      [...QUERY_KEYS.legislacao.all, 'detail', id] as const,
   },
 } as const;
 

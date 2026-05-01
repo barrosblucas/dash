@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-04-26 (atualizado com saúde multi-ano estruturada e obras com mídia/múltiplos locais)
+Snapshot: 2026-05-01 (atualizado com bounded context legislação mockado)
 
 ## Status geral
 
@@ -38,6 +38,8 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Sincronização de unidades gestoras via `fetch_unidades_gestoras` e persistência em `quality_unidade_gestora`
 - [x] Schemas Pydantic para todas as bordas
 - [x] Proxy routes para licitações: ComprasBR (JSON paginado) e Quality (scraping HTML de dispensas)
+- [x] Bounded context `legislacao` com dados mockados de legislações municipais (listagem paginada com filtros por tipo/ano/status/busca e detalhe completo com texto integral)
+- [x] Testes automatizados para feature legislação (14 testes: adapter + handler)
 - [x] Entidades de domínio com validação (Receita, Despesa)
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
 - [x] Detalhamento hierárquico de receitas com extração por indentação de PDF
@@ -89,6 +91,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] CRUD administrativo de obras com edição completa de metadados, medições mensais dinâmicas, múltiplos endereços/pins, múltiplas fontes e anexos/fotos por obra e por medição
 - [x] Portal público de obras consumindo API real em `/obras` e `/obras/[id]`, sem mocks locais
 - [x] Saúde Transparente expandida no frontend com páginas públicas de medicamentos, farmácia, vacinação, visitas domiciliares, perfil epidemiológico, atenção primária, saúde bucal, hospital, procedimentos e unidades, além da administração de unidades em `/admin/saude/unidades`
+- [x] Página pública de Legislações (`/legislacoes`) com listagem filtrada, busca textual, paginação e página de detalhe (`/legislacoes/[id]`) com texto integral, legislações vinculadas e download de PDF
 - [x] Filtros de período (`start_date`/`end_date`) integrados nos clientes frontend de atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal via componente `SaudePeriodFilter` reutilizável
 - [x] Troca de período nos dashboards de saúde preserva o conteúdo anterior durante o carregamento e sincroniza o ano com a data inicial selecionada
 - [x] Hospital público com filtro anual/período, heatmap real em linha dedicada, série mensal consolidada, não munícipes, atendimentos por médico, atendimentos por CBO, painel CID e procedimentos separados entre período e especialidade, usando os endpoints públicos verificados da Genesis
@@ -161,7 +164,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 ### Arquitetura
 
 - **MIGRAÇÃO REALIZADA (2026-04-21):** Backend migrado de layer-first para vertical bounded contexts (`features/` + `shared/`). Re-exports backward-compatible de `domain/`, `infrastructure/`, `services/`, `etl/` **removidos** (2026-04-21). Apenas `api/routes/` e `api/schemas_*` mantidos como re-exports.
-- `test_api/` agora cobre licitações, identidade e obras; `test_ml/` e parte de `test_etl/` seguem com cobertura parcial
+- `test_api/` agora cobre licitações, identidade, obras e legislação; `test_ml/` e parte de `test_etl/` seguem com cobertura parcial
 - Lógica de negócio ainda parcialmente acoplada nos handlers — extrair para `*_business.py` conforme crescer
 - `notebooks/` vazio — sem notebooks de exploração
 - Alembic migrations configurado com revisão incremental para `obra_locations`, `obra_funding_sources` e `obra_media_assets`, além das tabelas legadas

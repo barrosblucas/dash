@@ -51,6 +51,15 @@ export const mainNavCards = [
     cta: 'Ver Licitações',
     offset: true,
   },
+  {
+    title: 'Legislações',
+    description: 'Consulte leis, decretos, portarias e demais atos normativos do município.',
+    icon: 'article',
+    href: '/legislacoes',
+    accent: 'secondary' as const,
+    cta: 'Consultar Legislações',
+    offset: false,
+  },
 ];
 
 /* ── Mapas de cores dos accent ── */

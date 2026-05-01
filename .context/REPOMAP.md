@@ -126,6 +126,11 @@ Snapshot: 2026-05-01
 - `diario_oficial_handler.py`: endpoint público `GET /api/v1/diario-oficial/hoje` com cache do scheduler e fallback direto
 - `diario_oficial_scheduler.py`: APScheduler com jobs às 06:00 (edição regular) e 16:00 (verifica suplementar), cache em `app.state`
 
+#### `features/legislacao/`
+- `legislacao_types.py`: schemas Pydantic (`StatusLegislacao`, `TipoLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`)
+- `legislacao_adapter.py`: ACL mockada com 14 legislações municipais realistas (leis, decretos, portarias, resoluções, emendas) para Bandeirantes-MS, com filtros por tipo, ano, status e busca textual
+- `legislacao_handler.py`: endpoints `GET /api/v1/legislacao` (listagem paginada com filtros) e `GET /api/v1/legislacao/{id}` (detalhe completo)
+
 #### Camadas legadas (removidas)
 - `domain/`, `infrastructure/`, `services/`, `etl/`: **removidos** — re-exports backward-compat eliminados após migração completa para features/
 - `api/routes/`: re-exportam de `features/*/`
@@ -133,6 +138,7 @@ Snapshot: 2026-05-01
 - `tests/test_api/`: testes de integração das rotas
 - `tests/conftest.py`: fixtures de integração com banco temporário e bootstrap admin de teste
 - `tests/test_api/test_licitacoes.py`: testes unitários do parser HTML de licitações Quality e do proxy ComprasBR
+- `tests/test_api/test_legislacao.py`: testes unitários do adapter mockado (filtros, paginação, busca textual, detalhe) e integração dos endpoints GET `/api/v1/legislacao`
 - `tests/test_api/test_identity.py`: testes de integração de login, refresh/logout, usuários, reset de senha e proteção de `/admin/*`
 - `tests/test_api/test_obra.py`: testes de integração do CRUD de obras e medições
 - `tests/test_api/test_saude.py`: testes de integração do CRUD/importação de unidades, sync manual e contratos públicos originais de saúde
@@ -276,6 +282,10 @@ Snapshot: 2026-05-01
 - `app/licitacoes/page.tsx`: placeholder — Licitações
 - `app/avisos-licitacoes/page.tsx`: página de avisos de licitações
 - `app/avisos-licitacoes/avisos-licitacoes-client.tsx`: componente principal (≤400 linhas) com calendário mensal/semanal, lista, filtros e modal
+- `app/legislacoes/page.tsx`: página pública de legislações municipais
+- `app/legislacoes/legislacoes-client.tsx`: componente principal (≤400 linhas) com listagem, busca, filtros, grid de cards e paginação
+- `app/legislacoes/[id]/page.tsx`: página dinâmica de detalhe da legislação
+- `app/legislacoes/[id]/legislacao-detail-client.tsx`: detalhe completo com breadcrumb, informações, texto integral e download
 - `app/avisos-licitacoes/constants.ts`: constantes e tipos locais (`ViewMode`, `FonteFilter`, `StatusFilter`, URLs, arrays de filtros)
 - `app/avisos-licitacoes/parsers.ts`: parsers `parseComprasBR`, `parseDispensas` e `extrairTituloSucinto`
 - `app/avisos-licitacoes/feriados.ts`: cálculo de feriados via algoritmo de Meeus/Jones/Butcher + fixos
@@ -303,6 +313,7 @@ Snapshot: 2026-05-01
 - `services/portal-service.ts`: dados do portal público — obra destaque, próxima licitação, última notícia, receitas totais
 - `services/saude-service.ts`: consumo dos endpoints públicos e administrativos da feature saúde, incluindo vacinação, visitas, APS, saúde bucal, hospital e farmácia
 - `services/diario-oficial-service.ts`: cliente `fetchDiarioHoje()` para consulta do endpoint `/api/v1/diario-oficial/hoje`
+- `services/legislacao-service.ts`: service da feature legislação com `list(filters)` e `getById(id)`
 - `stores/filtersStore.ts`: store Zustand de filtros
 - `stores/authStore.ts`: store em memória da sessão administrativa (sem persistência do access token)
 - `stores/themeStore.ts`: store Zustand de tema (light/dark) com persistência + hook useChartThemeColors
@@ -324,6 +335,7 @@ Snapshot: 2026-05-01
 - `types/obra.ts`: contratos TS da feature de obras
 - `types/diario-oficial.ts`: contratos TS da feature diário oficial (`DiarioEdicao`, `DiarioResponse`)
 - `types/saude.ts`: contratos TS da feature saúde espelhando os schemas Pydantic do backend, incluindo os novos dashboards públicos
+- `types/legislacao.ts`: contratos TS da feature legislação (`TipoLegislacao`, `StatusLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`)
 - `types/index.ts`: barrel de exports
 - `public/`: assets estáticos
 
