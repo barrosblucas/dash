@@ -129,6 +129,7 @@ O backend é organizado em bounded contexts verticais dentro de `features/`. Cad
 | Identity | `features/identity/` | types, handler, data |
 | Obra | `features/obra/` | types, handler, data, business |
 | Saúde | `features/saude/` | types, handler, data, business, adapter, scheduler |
+| Diário Oficial | `features/diario_oficial/` | types, handler, adapter, scheduler |
 
 ### Regra de adição de feature
 

@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-04-26
+Snapshot: 2026-05-01
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -115,6 +115,12 @@ Snapshot: 2026-04-26
 - `saude_scheduler.py`: APScheduler periódico (6h) para sincronizar snapshots do Saúde Transparente
 - `saude_historical_bootstrap.py`: bootstrap idempotente de anos históricos ausentes para recursos year-scoped
 
+#### `features/diario_oficial/`
+- `diario_oficial_types.py`: schemas Pydantic (`DiarioEdicao`, `DiarioResponse`) com flag `suplementar`
+- `diario_oficial_adapter.py`: ACL HTTP para `diariooficialms.com.br` — parseia HTML com `selectolax` para extrair número, data, link de download, tamanho e detectar edição suplementar
+- `diario_oficial_handler.py`: endpoint público `GET /api/v1/diario-oficial/hoje` com cache do scheduler e fallback direto
+- `diario_oficial_scheduler.py`: APScheduler com jobs às 06:00 (edição regular) e 16:00 (verifica suplementar), cache em `app.state`
+
 #### Camadas legadas (removidas)
 - `domain/`, `infrastructure/`, `services/`, `etl/`: **removidos** — re-exports backward-compat eliminados após migração completa para features/
 - `api/routes/`: re-exportam de `features/*/`
@@ -134,6 +140,7 @@ Snapshot: 2026-04-26
 - `tests/test_etl/test_saude_scheduler.py`: testes unitários do scheduler da feature saúde
 - `tests/test_etl/test_expense_pdf_sync_service.py`: testes unitários da sincronização de PDF de despesas
 - `tests/test_etl/test_quality_api_client.py`: testes unitários do contrato de URL do cliente Quality para despesas
+- `tests/test_etl/test_diario_oficial.py`: testes unitários do parser HTML do Diário Oficial (10 cenários: regular, suplementar, múltiplas edições, vazio, sem padrão, sem tamanho, traço longo, edição extra/especial)
 - `tests/test_ml/`: testes dos modelos de ML (preparado)
 - `pyproject.toml`: configuração de qualidade (ruff, black, mypy, pytest, coverage)
 - `requirements.txt`: dependências Python (FastAPI, SQLAlchemy, Pydantic, Prophet, etc.)
@@ -287,6 +294,7 @@ Snapshot: 2026-04-26
 - `services/user-service.ts`: CRUD administrativo de usuários
 - `services/obra-service.ts`: leitura pública, CRUD administrativo e operações de mídia de obras
 - `services/saude-service.ts`: consumo dos endpoints públicos e administrativos da feature saúde, incluindo vacinação, visitas, APS, saúde bucal, hospital e farmácia
+- `services/diario-oficial-service.ts`: cliente `fetchDiarioHoje()` para consulta do endpoint `/api/v1/diario-oficial/hoje`
 - `stores/filtersStore.ts`: store Zustand de filtros
 - `stores/authStore.ts`: store em memória da sessão administrativa (sem persistência do access token)
 - `stores/themeStore.ts`: store Zustand de tema (light/dark) com persistência + hook useChartThemeColors
@@ -306,6 +314,7 @@ Snapshot: 2026-04-26
 - `types/identity.ts`: contratos TS da feature de autenticação
 - `types/user.ts`: contratos TS da feature de usuários
 - `types/obra.ts`: contratos TS da feature de obras
+- `types/diario-oficial.ts`: contratos TS da feature diário oficial (`DiarioEdicao`, `DiarioResponse`)
 - `types/saude.ts`: contratos TS da feature saúde espelhando os schemas Pydantic do backend, incluindo os novos dashboards públicos
 - `types/index.ts`: barrel de exports
 - `public/`: assets estáticos

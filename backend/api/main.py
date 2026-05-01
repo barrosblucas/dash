@@ -20,6 +20,9 @@ from fastapi.responses import JSONResponse
 
 from backend.api.schemas import HealthCheckResponse
 from backend.features.despesa.despesa_handler import router as despesas_router
+from backend.features.diario_oficial.diario_oficial_handler import (
+    router as diario_oficial_router,
+)
 from backend.features.export.export_handler import router as export_router
 from backend.features.forecast.forecast_handler import router as forecast_router
 from backend.features.identity.identity_data import bootstrap_first_admin
@@ -156,6 +159,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     except Exception:
         logger.exception("Falha ao iniciar scheduler de movimento extra — modo sem scheduler")
 
+    # Inicia scheduler do Diário Oficial
+    diario_oficial_scheduler = None
+    try:
+        from backend.features.diario_oficial.diario_oficial_scheduler import (
+            DiarioOficialScheduler,
+        )
+
+        diario_oficial_scheduler = DiarioOficialScheduler()
+        diario_oficial_scheduler.start()
+        app.state.diario_oficial_scheduler = diario_oficial_scheduler
+        logger.info("Scheduler do Diário Oficial integrado ao lifespan")
+    except Exception:
+        logger.exception("Falha ao iniciar scheduler do Diário Oficial — modo sem scheduler")
+
     logger.info("API pronta para receber requisições")
 
     yield
@@ -167,6 +184,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         saude_scheduler.stop()
     if movimento_extra_scheduler is not None:
         movimento_extra_scheduler.stop()
+    if diario_oficial_scheduler is not None:
+        diario_oficial_scheduler.stop()
 
     logger.info("Dashboard Financeiro Municipal API encerrada")
 
@@ -237,6 +256,7 @@ app.include_router(licitacoes_router, prefix="/api/v1")
 app.include_router(identity_router, prefix="/api/v1")
 app.include_router(obra_router, prefix="/api/v1")
 app.include_router(saude_router, prefix="/api/v1")
+app.include_router(diario_oficial_router, prefix="/api/v1")
 
 
 # Endpoint de health check

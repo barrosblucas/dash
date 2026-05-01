@@ -1,9 +1,12 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 import PortalHeader from '@/components/layouts/PortalHeader';
 import PortalFooter from '@/components/layouts/PortalFooter';
+import { fetchDiarioHoje } from '@/services/diario-oficial-service';
+import type { DiarioResponse } from '@/types/diario-oficial';
 
 /* ────────────────────────────────────────────
    Dados estáticos
@@ -83,13 +86,6 @@ const accentCtaText: Record<string, string> = {
 
 const quickAccessItems = [
   {
-    icon: 'menu_book',
-    title: 'Diário Oficial do Dia',
-    description: 'Edição 1250: Publicação do balancete financeiro mensal. Novas portarias de nomeação para a Secretaria de Educação.',
-    border: 'border-primary-container',
-    iconColor: 'text-primary-container',
-  },
-  {
     icon: 'account_balance_wallet',
     title: 'Contas Públicas',
     description: 'Status: Fechamento do último mês fiscal concluído e publicado sem ressalvas.',
@@ -131,6 +127,53 @@ const quickAccessItems = [
    ──────────────────────────────────────────── */
 
 export default function PortalClient() {
+  const [diarioData, setDiarioData] = useState<DiarioResponse | null>(null);
+  const [diarioLoading, setDiarioLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const data = await fetchDiarioHoje();
+        if (!cancelled) setDiarioData(data);
+      } catch {
+        if (!cancelled) setDiarioData(null);
+      } finally {
+        if (!cancelled) setDiarioLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  /* ── helpers para o card do Diário Oficial ── */
+  function renderDiarioDescription(data: DiarioResponse): string {
+    if (!data.tem_edicao || data.edicoes.length === 0) {
+      return data.mensagem ?? 'Nenhuma edição publicada hoje.';
+    }
+    const regular = data.edicoes.filter((e) => !e.suplementar);
+    const suplementar = data.edicoes.filter((e) => e.suplementar);
+
+    const partes: string[] = [];
+    for (const ed of regular) {
+      partes.push(`Edição ${ed.numero} de ${ed.data}${ed.tamanho ? ` (${ed.tamanho})` : ''}`);
+    }
+    for (const ed of suplementar) {
+      partes.push(`Suplementar: Edição ${ed.numero} de ${ed.data}${ed.tamanho ? ` (${ed.tamanho})` : ''}`);
+    }
+    return partes.join(' | ');
+  }
+
+  function renderDiarioLink(data: DiarioResponse): string | null {
+    if (!data.tem_edicao || data.edicoes.length === 0) return null;
+    // Prioriza a edição regular; se não houver, usa a primeira
+    const regular = data.edicoes.find((e) => !e.suplementar);
+    const link = regular?.link_download ?? data.edicoes[0].link_download;
+    return link;
+  }
+
+  const diarioHref = diarioData ? renderDiarioLink(diarioData) : null;
+
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       {/* ───── Header ───── */}
@@ -272,6 +315,52 @@ export default function PortalClient() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* ── Diário Oficial (dinâmico) ── */}
+              <div
+                className={`
+                  bg-surface-container-lowest
+                  rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow
+                  border-l-4 border-primary-container
+                `}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <span
+                    className="material-symbols-outlined text-primary-container"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    menu_book
+                  </span>
+                  <h4 className="font-headline font-bold text-lg text-primary">
+                    Diário Oficial do Dia
+                  </h4>
+                </div>
+
+                {diarioLoading ? (
+                  <p className="font-body text-sm text-on-surface-variant animate-pulse">
+                    Carregando...
+                  </p>
+                ) : diarioData && diarioData.tem_edicao && diarioHref ? (
+                  <a
+                    href={diarioHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                  >
+                    <p className="font-body text-sm text-on-surface-variant group-hover:text-primary transition-colors">
+                      {renderDiarioDescription(diarioData)}
+                    </p>
+                    <span className="inline-flex items-center gap-1 mt-2 font-headline font-bold text-xs text-primary-container group-hover:gap-2 transition-all">
+                      Baixar PDF
+                      <span className="material-symbols-outlined text-sm">download</span>
+                    </span>
+                  </a>
+                ) : (
+                  <p className="font-body text-sm text-on-surface-variant">
+                    {diarioData?.mensagem ?? 'Não foi possível consultar o Diário Oficial.'}
+                  </p>
+                )}
+              </div>
+
               {quickAccessItems.map((item) => (
                 <div
                   key={item.title}

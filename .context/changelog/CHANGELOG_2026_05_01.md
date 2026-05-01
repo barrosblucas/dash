@@ -34,3 +34,43 @@
 - `npm run lint` — ✔ No ESLint warnings or errors
 - `npm run type-check` — ✔ No errors
 - `npm run build` — ✓ Compiled successfully, 39 static pages generated
+
+## Funcionalidades Novas
+
+### Backend — Feature Diário Oficial (scraper + API + scheduler)
+- **Added** Nova feature `features/diario_oficial/` com scraping do site `diariooficialms.com.br` para Bandeirantes-MS.
+  - `diario_oficial_types.py`: schemas Pydantic (`DiarioEdicao`, `DiarioResponse`)
+  - `diario_oficial_adapter.py`: ACL HTTP com `httpx` + `selectolax` que parseia `<ul.list-group>` para extrair número, data, link de download, tamanho e flag `suplementar`
+  - `diario_oficial_handler.py`: endpoint público `GET /api/v1/diario-oficial/hoje` com cache do scheduler e fallback direto
+  - `diario_oficial_scheduler.py`: APScheduler com jobs às 06:00 (edição regular) e 16:00 (verifica suplementar), armazenando resultado em memória via `app.state`
+- **Added** Integração ao `main.py`: router registrado em `/api/v1` e scheduler inicializado no `lifespan` com shutdown gracioso
+- Arquivos criados:
+  - `backend/features/diario_oficial/__init__.py`
+  - `backend/features/diario_oficial/diario_oficial_types.py`
+  - `backend/features/diario_oficial/diario_oficial_adapter.py`
+  - `backend/features/diario_oficial/diario_oficial_handler.py`
+  - `backend/features/diario_oficial/diario_oficial_scheduler.py`
+  - `backend/tests/test_etl/test_diario_oficial.py`
+- Arquivos modificados:
+  - `backend/api/main.py`
+
+### Frontend — Diário Oficial dinâmico no Portal
+- **Changed** `portal-client.tsx`: card "Diário Oficial do Dia" agora consome dados reais da API `/api/v1/diario-oficial/hoje` em vez de texto estático.
+  - Exibe edição regular e suplementar com link de download
+  - Estados: loading ("Carregando..."), sem edição (mensagem), erro (mensagem de fallback)
+  - Card mantém estilo visual existente (`border-primary-container`, ícone `menu_book`)
+- **Added** `types/diario-oficial.ts`: contratos TypeScript (`DiarioEdicao`, `DiarioResponse`)
+- **Added** `services/diario-oficial-service.ts`: cliente `fetchDiarioHoje()`
+- Arquivos criados:
+  - `frontend/types/diario-oficial.ts`
+  - `frontend/services/diario-oficial-service.ts`
+- Arquivos modificados:
+  - `frontend/app/portal-client.tsx`
+
+## Validação (Diário Oficial)
+- `ruff check .` — ✔ All checks passed
+- `mypy .` — ✔ No issues (strict mode)
+- Testes unitários do parser HTML: 10/10 passing (edição regular, suplementar, múltiplas, vazio, sem padrão, sem tamanho, traço longo, edição extra/especial)
+- `npm run lint` — ✔ No ESLint warnings or errors
+- `npm run type-check` — ✔ No errors
+- `npm run build` — ✓ Compiled successfully (portal `/` mantém 129 kB First Load JS)
