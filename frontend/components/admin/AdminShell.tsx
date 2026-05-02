@@ -14,6 +14,7 @@ const adminNavigation = [
   { href: '/admin/obras', label: 'Obras', icon: 'construction' },
   { href: '/admin/saude/unidades', label: 'Saúde', icon: 'local_hospital' },
   { href: '/admin/legislacoes', label: 'Legislações', icon: 'article' },
+  { href: '/admin/diario-oficial', label: 'Diário Oficial', icon: 'newspaper' },
 ] as const;
 
 interface AdminShellProps {

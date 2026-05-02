@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-05-01 (atualizado com bounded context legislação mockado)
+Snapshot: 2026-05-02 (atualizado com página admin de Diário Oficial)
 
 ## Status geral
 
@@ -38,8 +38,10 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Sincronização de unidades gestoras via `fetch_unidades_gestoras` e persistência em `quality_unidade_gestora`
 - [x] Schemas Pydantic para todas as bordas
 - [x] Proxy routes para licitações: ComprasBR (JSON paginado) e Quality (scraping HTML de dispensas)
-- [x] Bounded context `legislacao` com dados mockados de legislações municipais (listagem paginada com filtros por tipo/ano/status/busca e detalhe completo com texto integral)
+- [x] Bounded context `legislacao` com CRUD admin completo (listagem paginada com filtros por tipo/ano/status/busca, detalhe completo com texto integral, criação, atualização e remoção)
 - [x] Testes automatizados para feature legislação (14 testes: adapter + handler)
+- [x] Endpoints admin do Diário Oficial MS: busca paginada de publicações (`GET /api/v1/diario-oficial/buscar`) e importação como legislação (`POST /api/v1/diario-oficial/importar`)
+- [x] Cliente `DiarioOficialClient` promovido de `scripts/` para `shared/` (reutilizável por features e scripts)
 - [x] Entidades de domínio com validação (Receita, Despesa)
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
 - [x] Detalhamento hierárquico de receitas com extração por indentação de PDF
@@ -92,6 +94,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Portal público de obras consumindo API real em `/obras` e `/obras/[id]`, sem mocks locais
 - [x] Saúde Transparente expandida no frontend com páginas públicas de medicamentos, farmácia, vacinação, visitas domiciliares, perfil epidemiológico, atenção primária, saúde bucal, hospital, procedimentos e unidades, além da administração de unidades em `/admin/saude/unidades`
 - [x] Página pública de Legislações (`/legislacoes`) com listagem filtrada, busca textual, paginação e página de detalhe (`/legislacoes/[id]`) com texto integral, legislações vinculadas e download de PDF
+- [x] Página administrativa de Diário Oficial (`/admin/diario-oficial`) com busca por termo e período, listagem paginada, importação individual como legislação e navegação integrada no AdminShell
 - [x] Filtros de período (`start_date`/`end_date`) integrados nos clientes frontend de atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal via componente `SaudePeriodFilter` reutilizável
 - [x] Troca de período nos dashboards de saúde preserva o conteúdo anterior durante o carregamento e sincroniza o ano com a data inicial selecionada
 - [x] Hospital público com filtro anual/período, heatmap real em linha dedicada, série mensal consolidada, não munícipes, atendimentos por médico, atendimentos por CBO, painel CID e procedimentos separados entre período e especialidade, usando os endpoints públicos verificados da Genesis

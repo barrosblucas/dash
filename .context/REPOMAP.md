@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-05-01
+Snapshot: 2026-05-02
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -188,6 +188,7 @@ Snapshot: 2026-05-01
 - `app/admin/obras/new/page.tsx`: criação administrativa de obra
 - `app/admin/obras/[hash]/page.tsx`: edição administrativa de obra
 - `app/admin/saude/unidades/page.tsx`: página administrativa única para CRUD de unidades de saúde, horários, importação e sync manual
+- `app/admin/diario-oficial/page.tsx`: página administrativa de busca e importação do Diário Oficial MS
 - `app/portal-client.tsx`: componente client do portal com hero, grid de cards, footer e Painel de Informações Rápidas com dados dinâmicos (receitas totais, obra destaque, próxima licitação, notícias)
 - `components/portal/QuickInfoCard.tsx`: componente de card clicável para o Painel de Informações Rápidas (link interno e externo)
 - `components/portal/portal-data.ts`: dados estáticos, helpers de formatação (currency, timeAgo) e helpers do Diário Oficial
@@ -316,7 +317,7 @@ Snapshot: 2026-05-01
 - `services/obra-service.ts`: leitura pública, CRUD administrativo e operações de mídia de obras
 - `services/portal-service.ts`: dados do portal público — obra destaque, próxima licitação, última notícia, receitas totais
 - `services/saude-service.ts`: consumo dos endpoints públicos e administrativos da feature saúde, incluindo vacinação, visitas, APS, saúde bucal, hospital e farmácia
-- `services/diario-oficial-service.ts`: cliente `fetchDiarioHoje()` para consulta do endpoint `/api/v1/diario-oficial/hoje`
+- `services/diario-oficial-service.ts`: cliente `fetchDiarioHoje()` para consulta do endpoint `/api/v1/diario-oficial/hoje`; `buscarDiario()` e `importarDiario()` para os endpoints admin de busca e importação
 - `services/legislacao-service.ts`: service da feature legislação com `list(filters)` e `getById(id)`
 - `stores/filtersStore.ts`: store Zustand de filtros
 - `stores/authStore.ts`: store em memória da sessão administrativa (sem persistência do access token)
@@ -337,7 +338,7 @@ Snapshot: 2026-05-01
 - `types/identity.ts`: contratos TS da feature de autenticação
 - `types/user.ts`: contratos TS da feature de usuários
 - `types/obra.ts`: contratos TS da feature de obras
-- `types/diario-oficial.ts`: contratos TS da feature diário oficial (`DiarioEdicao`, `DiarioResponse`)
+- `types/diario-oficial.ts`: contratos TS da feature diário oficial (`DiarioEdicao`, `DiarioResponse`, `DiarioBuscaItem`, `DiarioBuscaResponse`, `DiarioImportRequest`)
 - `types/saude.ts`: contratos TS da feature saúde espelhando os schemas Pydantic do backend, incluindo os novos dashboards públicos
 - `types/legislacao.ts`: contratos TS da feature legislação (`TipoLegislacao`, `StatusLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`)
 - `types/index.ts`: barrel de exports
