@@ -10,7 +10,7 @@ import logging
 import re
 from typing import Any
 
-from backend.scripts.scrape_diario_oficial_models import LeiItem
+from backend.scripts.scrape_diario_oficial_models import LegislacaoItem, LeiItem
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +58,7 @@ def extract_direct_pdf_links(html: str) -> dict[str, str]:
         pdf_url = href_match.group(1)
 
         # Extrai o número da matéria do h4
-        h4_match = re.search(
-            r"<h4[^>]*>(.*?)</h4>", content, re.DOTALL | re.IGNORECASE
-        )
+        h4_match = re.search(r"<h4[^>]*>(.*?)</h4>", content, re.DOTALL | re.IGNORECASE)
         if h4_match:
             h4_text = re.sub(r"<[^>]*>", " ", h4_match.group(1))
             h4_text = re.sub(r"\s+", " ", h4_text).strip()
@@ -148,4 +146,79 @@ def parse_item(raw: dict[str, Any]) -> LeiItem | None:
         direct_pdf_url="",  # Será preenchido na etapa de resolução
         numero_lei=numero_lei,
         ano_lei=ano_lei,
+    )
+
+
+# ─── Parsers Legislação Municipal ────────────────────────────────────────────
+
+
+def extract_materia_download_url(action_baixar_html: str) -> tuple[str, str]:
+    """Extrai URL de download e hash do HTML do campo action-baixar.
+
+    Exemplo de entrada:
+        <form method="post" target="_blank"
+              action="https://www.diariooficialms.com.br/baixar-materia/878370/05c2484fa7901a148a7f442f66e3cd66">
+            <button class="action-baixar-materia" type="button">Baixar</button>
+        </form>
+
+    Returns:
+        Tupla (url_completa, hash) ou ("", "") se não encontrado.
+    """
+    match = re.search(
+        r'action="(https://www\.diariooficialms\.com\.br/baixar-materia/(\d+)/([a-f0-9]+))"',
+        action_baixar_html,
+    )
+    if match:
+        return match.group(1), match.group(3)
+    return "", ""
+
+
+def parse_legislacao_item(raw: dict[str, Any]) -> LegislacaoItem | None:
+    """Converte um item bruto da API em LegislacaoItem.
+
+    Args:
+        raw: Dicionário retornado pela API no array data[].
+
+    Returns:
+        LegislacaoItem parseado ou None se não for lei.
+    """
+    titulo_html = str(raw.get("titulo", ""))
+
+    numero_lei = extract_lei_numero(titulo_html)
+    if not numero_lei:
+        logger.debug("  ⏭ Item ignorado (não é lei): id=%s", raw.get("id", "?"))
+        return None
+
+    action_baixar = str(raw.get("action-baixar", ""))
+    link_legislacao, download_hash = extract_materia_download_url(action_baixar)
+
+    # Extrai ano: do número (ex: "1.263/2026") ou da data de publicação
+    ano_lei = ""
+    if "/" in numero_lei:
+        _, ano_lei = numero_lei.rsplit("/", 1)
+    else:
+        data_str = str(raw.get("data_de_circulacao", ""))
+        if data_str and len(data_str) >= 10:
+            ano_lei = data_str[-4:]
+
+    # Limpa título para exibição
+    titulo_limpo = re.sub(r"<[^>]*>", " ", titulo_html)
+    titulo_limpo = re.sub(r"\s+", " ", titulo_limpo).strip()
+
+    # Extrai anexo_habilitado do objeto cidade
+    cidade = raw.get("cidade", {})
+    anexo_habilitado = (
+        cidade.get("anexo_habilitado", False) if isinstance(cidade, dict) else False
+    )
+
+    return LegislacaoItem(
+        id=str(raw.get("id", "")),
+        titulo=titulo_limpo,
+        data_circulacao=str(raw.get("data_de_circulacao", "")),
+        numero_materia=str(raw.get("numero_da_materia", "")),
+        numero_lei=numero_lei,
+        ano_lei=ano_lei,
+        link_legislacao=link_legislacao,
+        download_hash=download_hash,
+        anexo_habilitado=bool(anexo_habilitado),
     )

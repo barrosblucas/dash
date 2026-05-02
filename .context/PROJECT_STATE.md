@@ -42,7 +42,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Testes automatizados para feature legislação (14 testes: adapter + handler)
 - [x] Endpoints admin do Diário Oficial MS: busca paginada de publicações (`GET /api/v1/diario-oficial/buscar`) e importação como legislação (`POST /api/v1/diario-oficial/importar`)
 - [x] Cliente `DiarioOficialClient` promovido de `scripts/` para `shared/` (reutilizável por features e scripts)
-- [x] Entidades de domínio com validação (Receita, Despesa)
+- [x] Scraper de edições completas do Diário Oficial MS (busca API + download de PDFs via DigitalOcean Spaces, catálogo CSV com 128 leis)
+- [x] Scraper de matérias legislativas individuais via Playwright (download de PDFs individuais contornando reCAPTCHA v3, catálogo com links de legislação + diário oficial + anexos, 47 testes)
+- [x] Página admin "Legislação Municipal" (frontend + backend) com busca paginada de matérias, importação como legislação, e coluna de anexos — coexiste com página "Diário Oficial" existente
 - [x] Pipeline ETL de extração de PDFs (pdfplumber)
 - [x] Detalhamento hierárquico de receitas com extração por indentação de PDF
 - [x] Forecasting com Prophet + fallback para projeção linear

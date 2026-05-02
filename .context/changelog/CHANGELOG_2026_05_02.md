@@ -70,10 +70,74 @@ python -m backend.scripts.scrape_diario_oficial_leis --dry-run
 - Estado de carregamento individual por item na importação
 - Link direto para a legislação criada após importação bem-sucedida
 
+## Funcionalidades Novas
+
+### Scraper — Legislação Municipal: download de matérias individuais via Playwright
+
+- **Changed** `backend/scripts/scrape_diario_oficial_models.py`: adicionados dataclasses `LegislacaoItem`, `LegislacaoScrapeResult` e configs (`LEG_OUTPUT_DIR`, `LEG_PDFS_DIR`, `LEG_ANEXOS_DIR`, `RECAPTCHA_SITE_KEY`, `PAGE_URL`)
+- **Changed** `backend/scripts/scrape_diario_oficial_parsers.py`: adicionados `extract_materia_download_url()` (extrai URL + hash do campo `action-baixar` da API) e `parse_legislacao_item()` (parse de item da API → `LegislacaoItem` com suporte a `anexo_habilitado`)
+- **Added** `backend/scripts/scrape_legislacao_municipal.py`: script CLI com automação Playwright para download de matérias legislativas individuais, contornando reCAPTCHA v3 via `grecaptcha.execute()` + `fetch()` no contexto do browser
+- **Changed** `backend/requirements.txt`: adicionado `playwright==1.49.1`
+- **Added** `backend/tests/test_etl/test_legislacao_municipal_scraper.py`: 37 testes de parsing, CSV e dry-run
+- **Added** `backend/tests/test_etl/test_legislacao_municipal_scraper_download.py`: 10 testes do fluxo de download (sucesso, falha, retry, skip, Playwright ausente, CLI exit code)
+
+#### Funcionamento
+- Reutiliza `DiarioOficialClient` para busca na API `/filtro`
+- Para cada lei encontrada, extrai URL de download individual de `action-baixar` (`/baixar-materia/{id}/{hash}`)
+- Usa Playwright headless para obter token reCAPTCHA v3 e fazer POST com `fetch()` no contexto do browser
+- Retry com backoff exponencial (até 3 tentativas) para cada matéria
+- Gera catálogo CSV com: link da legislação, link do diário oficial, flag de anexo, caminhos locais
+- Suporte a anexos modelado (`anexo_habilitado`, `anexos`, `anexos_locais`) mas lógica de download de anexos é placeholder
+
+#### Setup necessário
+```bash
+pip install playwright && playwright install chromium
+```
+
+#### Uso
+```bash
+cd /home/thanos/dash && source .venv/bin/activate && \
+python -m backend.scripts.scrape_legislacao_municipal --dry-run
+
+python -m backend.scripts.scrape_legislacao_municipal --term "LEI" --max-results 5
+```
+
+## Saída gerada
+- `data/legislacao_municipal/catalogo.csv` — catálogo com links de matéria individual e edição completa
+- `data/legislacao_municipal/pdfs/materia_*.pdf` — PDFs das matérias legislativas individuais
+
 ## Validação
-- Ruff: ✅ All checks passed
-- mypy: ✅ Success: no issues found in 7 source files
-- Pytest: ✅ All tests passing
-- Frontend ESLint: ✅ No warnings or errors
-- Frontend TypeScript: ✅ `tsc --noEmit` sem erros
-- Frontend Build: ✅ Next.js build completo com `/admin/diario-oficial` gerado (2.45 kB)
+- Ruff check: ✅ All checks passed
+- Ruff format: ✅ 4 arquivos formatados (nossos arquivos)
+- mypy: ✅ 1 erro pré-existente em `diario_oficial_handler.py:61` (não relacionado)
+- Pytest: ✅ 188 passed (47 novos + 141 existentes), 0 failed
+- Cobertura do script principal: 95.29%
+
+## Funcionalidades Novas
+
+### Página Admin — Legislação Municipal: integração frontend + backend
+
+- **Added** `backend/features/legislacao_municipal/__init__.py`: novo módulo feature
+- **Added** `backend/features/legislacao_municipal/legislacao_municipal_types.py`: schemas Pydantic (`LegislacaoBuscaItem`, `LegislacaoBuscaResponse`, `LegislacaoImportRequest`)
+- **Added** `backend/features/legislacao_municipal/legislacao_municipal_handler.py`: endpoints admin `GET /api/v1/legislacao-municipal/buscar` (busca paginada com resolução de link do diário) e `POST /api/v1/legislacao-municipal/importar` (importa matéria como legislação via `link_diario_oficial`)
+- **Changed** `backend/api/main.py`: registro do router `legislacao_municipal_router`
+- **Added** `backend/tests/test_api/test_legislacao_municipal.py`: 5 testes de integração (auth, paginação, resultado vazio, wiring do link)
+- **Added** `frontend/types/legislacao-municipal.ts`: tipos TypeScript espelhando Pydantic
+- **Added** `frontend/services/legislacao-municipal-service.ts`: `buscarLegislacao()` e `importarLegislacao()`
+- **Added** `frontend/app/admin/legislacao-municipal/page.tsx`: server component com metadata
+- **Added** `frontend/app/admin/legislacao-municipal/legislacao-municipal-admin-client.tsx`: client component com formulário de busca, tabela de resultados (coluna Anexo), paginação, botão importar
+- **Changed** `frontend/components/admin/AdminShell.tsx`: entrada "Legislação Municipal" (ícone `book`) na navegação admin
+
+#### Características
+- Página "/admin/legislacao-municipal" coexiste com "/admin/diario-oficial" (duas versões)
+- Busca usa mesma API DataTables via `DiarioOficialClient`, parseando com `parse_legislacao_item()`
+- Importação usa `link_diario_oficial` (download direto do Spaces) como URL do PDF
+- Resolução automática de `link_diario_oficial` agrupada por data (batch)
+- Coluna "Anexo" na tabela mostrando status do município
+- Design idêntico ao sistema admin existente (glassmorphism, Material Symbols, Tailwind)
+
+## Validação (integração)
+- Pytest: ✅ 193 passed (5 novos testes de API), 0 failed
+- Frontend lint: ✅ No ESLint warnings or errors
+- Frontend type-check: ✅ tsc --noEmit sem erros
+- Frontend build: ✅ Compiled successfully, `/admin/legislacao-municipal` gerado

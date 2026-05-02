@@ -31,6 +31,9 @@ from backend.features.kpi.kpi_handler import router as kpis_router
 from backend.features.legislacao.legislacao_handler import (
     router as legislacao_router,
 )
+from backend.features.legislacao_municipal.legislacao_municipal_handler import (
+    router as legislacao_municipal_router,
+)
 from backend.features.licitacao.licitacao_handler import router as licitacoes_router
 from backend.features.movimento_extra.movimento_extra_handler import (
     router as movimento_extra_router,
@@ -108,7 +111,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         logger.exception("Falha no bootstrap histórico de dados")
 
     try:
-        saude_bootstrap_result = await SaudeHistoricalBootstrapService().bootstrap_missing_years()
+        saude_bootstrap_result = (
+            await SaudeHistoricalBootstrapService().bootstrap_missing_years()
+        )
         if saude_bootstrap_result.executed:
             logger.info(
                 "Bootstrap histórico de saúde executado. "
@@ -131,6 +136,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             from backend.features.legislacao.legislacao_bootstrap import (
                 bootstrap_legislacoes,
             )
+
             bootstrap_legislacoes(session)
     except Exception:
         logger.exception("Falha no bootstrap de legislações")
@@ -170,7 +176,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         app.state.movimento_extra_scheduler = movimento_extra_scheduler
         logger.info("Scheduler de movimento extra integrado ao lifespan")
     except Exception:
-        logger.exception("Falha ao iniciar scheduler de movimento extra — modo sem scheduler")
+        logger.exception(
+            "Falha ao iniciar scheduler de movimento extra — modo sem scheduler"
+        )
 
     # Inicia scheduler do Diário Oficial
     diario_oficial_scheduler = None
@@ -184,7 +192,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         app.state.diario_oficial_scheduler = diario_oficial_scheduler
         logger.info("Scheduler do Diário Oficial integrado ao lifespan")
     except Exception:
-        logger.exception("Falha ao iniciar scheduler do Diário Oficial — modo sem scheduler")
+        logger.exception(
+            "Falha ao iniciar scheduler do Diário Oficial — modo sem scheduler"
+        )
 
     logger.info("API pronta para receber requisições")
 
@@ -272,6 +282,7 @@ app.include_router(obra_router, prefix="/api/v1")
 app.include_router(saude_router, prefix="/api/v1")
 app.include_router(diario_oficial_router, prefix="/api/v1")
 app.include_router(legislacao_router, prefix="/api/v1")
+app.include_router(legislacao_municipal_router, prefix="/api/v1")
 
 
 # Endpoint de health check

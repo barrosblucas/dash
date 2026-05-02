@@ -135,6 +135,10 @@ Snapshot: 2026-05-02
 - `legislacao_adapter.py`: ACL mockada (mantida como fonte de dados para bootstrap)
 - `legislacao_mock_data.py` + `legislacao_mock_data_extra.py`: 15 legislações mockadas para Bandeirantes-MS
 
+#### `features/legislacao_municipal/`
+- `legislacao_municipal_types.py`: schemas Pydantic (`LegislacaoBuscaItem`, `LegislacaoBuscaResponse`, `LegislacaoImportRequest`) com campos `link_legislacao`, `link_diario_oficial`, `anexo_habilitado`
+- `legislacao_municipal_handler.py`: endpoints admin `GET /api/v1/legislacao-municipal/buscar` (busca paginada de matérias) e `POST /api/v1/legislacao-municipal/importar` (importa matéria como legislação usando link direto do diário)
+
 #### Camadas legadas (removidas)
 - `domain/`, `infrastructure/`, `services/`, `etl/`: **removidos** — re-exports backward-compat eliminados após migração completa para features/
 - `api/routes/`: re-exportam de `features/*/`
@@ -369,6 +373,11 @@ Snapshot: 2026-05-02
 
 ## Scripts Backend (`backend/scripts/`)
 - `reload_detalhamento.py`: script de (re)extração do detalhamento hierárquico de receitas dos PDFs
+- `scrape_diario_oficial_leis.py`: scraper de leis municipais — busca via API DataTables, download de edições completas (PDF do DigitalOcean Spaces)
+- `scrape_diario_oficial_client.py`: re-export de `DiarioOficialClient` de `shared/`
+- `scrape_diario_oficial_models.py`: modelos `LeiItem`, `ScrapeResult`, `LegislacaoItem`, `LegislacaoScrapeResult` + configs
+- `scrape_diario_oficial_parsers.py`: parsing de HTML da API, extração de links, números de lei e action-baixar
+- `scrape_legislacao_municipal.py`: scraper de matérias legislativas individuais via Playwright (reCAPTCHA v3) + catálogo com links de legislação e diário oficial
 
 ## .context/
 - `AI-GOVERNANCE.md`: regras obrigatórias de implementação
