@@ -60,3 +60,23 @@ export interface LegislacaoFilters {
   status?: StatusLegislacao | '';
   busca?: string;
 }
+
+export interface LegislacaoCreatePayload {
+  tipo: TipoLegislacao;
+  numero: string;
+  ano: number;
+  ementa: string;
+  texto_integral?: string | null;
+  data_publicacao: string;
+  data_promulgacao?: string | null;
+  data_vigencia_inicio?: string | null;
+  data_vigencia_fim?: string | null;
+  status?: StatusLegislacao;
+  autor?: string | null;
+  sancionado_por?: string | null;
+  origem?: string | null;
+  legislacao_vinculada?: string[] | null;
+  url_arquivo?: string | null;
+}
+
+export type LegislacaoUpdatePayload = Partial<LegislacaoCreatePayload>;

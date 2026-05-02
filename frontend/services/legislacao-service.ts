@@ -5,7 +5,7 @@
 
 import { apiClient } from './api';
 import { API_ENDPOINTS } from '@/lib/constants';
-import type { LegislacaoListResponse, LegislacaoDetalhe, LegislacaoFilters } from '@/types/legislacao';
+import type { LegislacaoListResponse, LegislacaoDetalhe, LegislacaoFilters, LegislacaoCreatePayload, LegislacaoUpdatePayload } from '@/types/legislacao';
 
 export const legislacaoService = {
   list: async (filters: LegislacaoFilters = {}): Promise<LegislacaoListResponse> => {
@@ -24,5 +24,23 @@ export const legislacaoService = {
 
   getById: async (id: string): Promise<LegislacaoDetalhe> => {
     return apiClient.get<LegislacaoDetalhe>(API_ENDPOINTS.legislacao.detail(id));
+  },
+};
+
+export const legislacaoAdminService = {
+  list: async (): Promise<LegislacaoListResponse> => {
+    return apiClient.get<LegislacaoListResponse>(API_ENDPOINTS.legislacao.list);
+  },
+  getById: async (id: string): Promise<LegislacaoDetalhe> => {
+    return apiClient.get<LegislacaoDetalhe>(API_ENDPOINTS.legislacao.detail(id));
+  },
+  create: async (payload: LegislacaoCreatePayload): Promise<LegislacaoDetalhe> => {
+    return apiClient.post<LegislacaoDetalhe>(API_ENDPOINTS.legislacao.list, payload);
+  },
+  update: async (id: string, payload: LegislacaoUpdatePayload): Promise<LegislacaoDetalhe> => {
+    return apiClient.put<LegislacaoDetalhe>(API_ENDPOINTS.legislacao.detail(id), payload);
+  },
+  remove: async (id: string): Promise<void> => {
+    return apiClient.delete<void>(API_ENDPOINTS.legislacao.detail(id));
   },
 };
