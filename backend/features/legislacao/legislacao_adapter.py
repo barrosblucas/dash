@@ -29,7 +29,9 @@ from backend.features.legislacao.legislacao_types import (
 
 logger = logging.getLogger(__name__)
 
-_MOCK_LEGISLACOES: list[dict[str, Any]] = _MOCK_LEGISLACOES_PART1 + _MOCK_LEGISLACOES_PART2
+_MOCK_LEGISLACOES: list[dict[str, Any]] = (
+    _MOCK_LEGISLACOES_PART1 + _MOCK_LEGISLACOES_PART2
+)
 
 
 def _matches_search(item: dict[str, Any], busca: str | None) -> bool:
@@ -42,7 +44,9 @@ def _matches_search(item: dict[str, Any], busca: str | None) -> bool:
         item.get("numero", ""),
         item.get("ementa", ""),
         item.get("autor", "") or "",
-        item.get("tipo", "").value if hasattr(item.get("tipo"), "value") else str(item.get("tipo", "")),
+        item.get("tipo", "").value
+        if hasattr(item.get("tipo"), "value")
+        else str(item.get("tipo", "")),
     ]
     return any(termo in str(c).lower() for c in campos)
 

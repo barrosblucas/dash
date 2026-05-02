@@ -129,6 +129,7 @@ O backend é organizado em bounded contexts verticais dentro de `features/`. Cad
 | Identity | `features/identity/` | types, handler, data |
 | Obra | `features/obra/` | types, handler, data, business |
 | Saúde | `features/saude/` | types, handler, data, business, adapter, scheduler |
+| Legislação | `features/legislacao/` | types, handler, data, adapter, bootstrap |
 | Diário Oficial | `features/diario_oficial/` | types, handler, adapter, scheduler |
 
 ### Regra de adição de feature
@@ -210,6 +211,7 @@ types → (nenhuma dependência externa)
 - **IdentityToken**: refresh/reset tokens persistidos com `jti`, expiração e revogação
 - **Obra**: obra pública identificada externamente por `hash`, com local principal derivado e coleções de locais/fontes/mídias
 - **ObraMedicao**: medições mensais filhas com upsert por `sequencia` e anexos opcionais
+- **Legislacao**: legislações municipais com tipo, número, ano, ementa, texto integral, vigência e status; seed via bootstrap idempotente
 
 ### Enums de domínio
 - `TipoReceita`: CORRENTE | CAPITAL

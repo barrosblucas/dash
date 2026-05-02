@@ -1,6 +1,7 @@
 """
 Dados mockados de fallback para legislações municipais (parte 1).
 """
+
 from __future__ import annotations
 
 from backend.features.legislacao.legislacao_types import (

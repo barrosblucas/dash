@@ -126,6 +126,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     except Exception:
         logger.exception("Falha no bootstrap histórico de saúde")
 
+    try:
+        with db_manager.get_session() as session:
+            from backend.features.legislacao.legislacao_bootstrap import (
+                bootstrap_legislacoes,
+            )
+            bootstrap_legislacoes(session)
+    except Exception:
+        logger.exception("Falha no bootstrap de legislações")
+
     saude_scheduler = None
     try:
         from backend.features.saude.saude_scheduler import SaudeScheduler

@@ -22,12 +22,13 @@ Snapshot: 2026-05-01
 
 #### `shared/` — infraestrutura compartilhada
 - `shared/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
-- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, locais/fontes/mídias de obras, unidades de saúde, horários, snapshots de saúde, logs de sync de saúde, despesa_breakdown, quality_sync_state, quality_unidade_gestora)
+- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, locais/fontes/mídias de obras, legislações)
+- `shared/database/saude_models.py`: modelos ORM de saúde (unidades, horários, snapshots, logs de sync, medicamentos, farmácia, vacinação, epidemiológico, APS, saúde bucal, procedimentos)
 
 #### `alembic/` — migrations
 - `alembic.ini`: configuração do Alembic apontando para `backend.shared.database.models.Base`
 - `alembic/env.py`: ambiente de migration reutilizando a engine do projeto (`create_db_engine`)
-- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento + revisão `1c2d3e4f5a6b_add_obra_related_tables.py` para locais/fontes/mídias de obras)
+- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento + revisão `1c2d3e4f5a6b_add_obra_related_tables.py` para locais/fontes/mídias de obras + revisão `a1b2c3d4e5f6_add_legislacao_table.py` para legislações)
 - `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha)
 - `shared/security.py`: hash de senha Argon2, emissão/validação de tokens JWT e dependências de autenticação/autorização
 - `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
@@ -127,9 +128,12 @@ Snapshot: 2026-05-01
 - `diario_oficial_scheduler.py`: APScheduler com jobs às 06:00 (edição regular) e 16:00 (verifica suplementar), cache em `app.state`
 
 #### `features/legislacao/`
-- `legislacao_types.py`: schemas Pydantic (`StatusLegislacao`, `TipoLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`)
-- `legislacao_adapter.py`: ACL mockada com 14 legislações municipais realistas (leis, decretos, portarias, resoluções, emendas) para Bandeirantes-MS, com filtros por tipo, ano, status e busca textual
-- `legislacao_handler.py`: endpoints `GET /api/v1/legislacao` (listagem paginada com filtros) e `GET /api/v1/legislacao/{id}` (detalhe completo)
+- `legislacao_types.py`: schemas Pydantic (`StatusLegislacao`, `TipoLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`, `LegislacaoCreateRequest`, `LegislacaoUpdateRequest`)
+- `legislacao_data.py`: persistência SQLAlchemy (`SQLLegislacaoRepository`) com CRUD completo, filtros, paginação e busca textual
+- `legislacao_handler.py`: endpoints públicos `GET /api/v1/legislacao` (listagem paginada) e `GET /api/v1/legislacao/{id}` (detalhe) + admin `POST`, `PUT`, `DELETE` com `require_admin_user`
+- `legislacao_bootstrap.py`: bootstrap idempotente que carrega 15 legislações mockadas quando a tabela está vazia
+- `legislacao_adapter.py`: ACL mockada (mantida como fonte de dados para bootstrap)
+- `legislacao_mock_data.py` + `legislacao_mock_data_extra.py`: 15 legislações mockadas para Bandeirantes-MS
 
 #### Camadas legadas (removidas)
 - `domain/`, `infrastructure/`, `services/`, `etl/`: **removidos** — re-exports backward-compat eliminados após migração completa para features/
@@ -138,7 +142,7 @@ Snapshot: 2026-05-01
 - `tests/test_api/`: testes de integração das rotas
 - `tests/conftest.py`: fixtures de integração com banco temporário e bootstrap admin de teste
 - `tests/test_api/test_licitacoes.py`: testes unitários do parser HTML de licitações Quality e do proxy ComprasBR
-- `tests/test_api/test_legislacao.py`: testes unitários do adapter mockado (filtros, paginação, busca textual, detalhe) e integração dos endpoints GET `/api/v1/legislacao`
+- `tests/test_api/test_legislacao.py`: testes de integração do CRUD de legislações (public endpoints, admin CRUD, auth 401/403, filtros, paginação, bootstrap, update com clear de vinculada)
 - `tests/test_api/test_identity.py`: testes de integração de login, refresh/logout, usuários, reset de senha e proteção de `/admin/*`
 - `tests/test_api/test_obra.py`: testes de integração do CRUD de obras e medições
 - `tests/test_api/test_saude.py`: testes de integração do CRUD/importação de unidades, sync manual e contratos públicos originais de saúde
