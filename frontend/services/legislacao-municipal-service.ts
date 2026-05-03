@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api';
-import type { LegislacaoBuscaResponse, LegislacaoImportRequest } from '@/types/legislacao-municipal';
+import type { LegislacaoBuscaResponse, LegislacaoDownloadRequest, LegislacaoImportRequest } from '@/types/legislacao-municipal';
 import type { LegislacaoDetalhe } from '@/types/legislacao';
 
 const ENDPOINT = '/api/v1/legislacao-municipal';
@@ -18,4 +18,10 @@ export async function buscarLegislacao(params: BuscarLegislacaoParams): Promise<
 
 export async function importarLegislacao(payload: LegislacaoImportRequest): Promise<LegislacaoDetalhe> {
   return apiClient.post<LegislacaoDetalhe>(`${ENDPOINT}/importar`, payload);
+}
+
+export async function downloadLegislacao(payload: LegislacaoDownloadRequest): Promise<Blob> {
+  return apiClient.post<Blob>(`${ENDPOINT}/download`, payload, {
+    responseType: 'blob',
+  });
 }

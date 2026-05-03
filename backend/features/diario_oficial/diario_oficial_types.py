@@ -26,9 +26,7 @@ class DiarioEdicao(BaseModel):
 class DiarioResponse(BaseModel):
     """Resposta da consulta do Diário Oficial para uma data."""
 
-    data_consulta: str = Field(
-        ..., description="Data consultada no formato dd/mm/aaaa"
-    )
+    data_consulta: str = Field(..., description="Data consultada no formato dd/mm/aaaa")
     tem_edicao: bool = Field(
         ..., description="True se há pelo menos uma edição publicada na data"
     )
@@ -69,7 +67,11 @@ class DiarioImportRequest(BaseModel):
     titulo: str = Field(..., description="Título da publicação")
     data_publicacao: str = Field(..., description="Data no formato DD/MM/YYYY")
     numero_materia: str = Field(..., description="Número da matéria/edição")
-    link_download: str = Field(..., description="URL direta do PDF")
+    link_download: str = Field(..., description="URL direta do PDF para download")
     numero_lei: str = Field(..., min_length=1, description="Número da lei extraído")
     ano_lei: str = Field(..., description="Ano da lei")
     tipo: str = Field(default="LEI", description="Tipo de legislação")
+    url_arquivo: str = Field(
+        default="",
+        description="URL da legislação individual (/baixar-materia/{id}/{hash}) para armazenamento",
+    )

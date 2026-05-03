@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 
-import { buscarLegislacao, importarLegislacao } from '@/services/legislacao-municipal-service';
+import { buscarLegislacao, downloadLegislacao, importarLegislacao } from '@/services/legislacao-municipal-service';
 import type { LegislacaoBuscaItem, LegislacaoBuscaResponse } from '@/types/legislacao-municipal';
 import type { LegislacaoDetalhe } from '@/types/legislacao';
 
@@ -43,6 +43,8 @@ export default function LegislacaoMunicipalAdminClient() {
   const [importingId, setImportingId] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<LegislacaoDetalhe | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const performSearch = useCallback(
     async (targetPage: number) => {
@@ -50,6 +52,7 @@ export default function LegislacaoMunicipalAdminClient() {
       setError(null);
       setImportSuccess(null);
       setImportError(null);
+      setDownloadError(null);
 
       try {
         const response = await buscarLegislacao({
@@ -102,6 +105,30 @@ export default function LegislacaoMunicipalAdminClient() {
       setImportError(err instanceof Error ? err.message : 'Erro ao importar matéria.');
     } finally {
       setImportingId(null);
+    }
+  };
+
+  const handleDownloadLegislacao = async (item: LegislacaoBuscaItem) => {
+    setDownloadingId(item.id);
+    setDownloadError(null);
+
+    try {
+      const blob = await downloadLegislacao({
+        id: item.id,
+        link_legislacao: item.link_legislacao,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `legislacao_${item.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : 'Erro ao baixar legislação.');
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -201,6 +228,12 @@ export default function LegislacaoMunicipalAdminClient() {
         </div>
       )}
 
+      {downloadError && (
+        <div className="rounded-xl bg-error-container px-4 py-3 text-sm text-on-error-container">
+          {downloadError}
+        </div>
+      )}
+
       {/* Results */}
       {results && (
         <div className="space-y-4">
@@ -257,12 +290,28 @@ export default function LegislacaoMunicipalAdminClient() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <button
-                              disabled
-                              title="Disponível após importação"
-                              className="inline-flex items-center gap-1 rounded-lg bg-surface-container px-3 py-1.5 text-xs text-on-surface-variant opacity-60 cursor-not-allowed"
+                              onClick={() => {
+                                if (item.link_diario_oficial) {
+                                  window.open(item.link_diario_oficial, '_blank', 'noopener,noreferrer');
+                                }
+                              }}
+                              disabled={!item.link_diario_oficial}
+                              title={item.link_diario_oficial ? 'Baixar PDF do Diário Oficial' : 'Link de download não disponível'}
+                              className="inline-flex items-center gap-1 rounded-lg bg-surface-container px-3 py-1.5 text-xs text-on-surface-variant hover:bg-surface-container-high disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                               <span className="material-symbols-outlined text-[16px]">download</span>
                               Baixar PDF
+                            </button>
+                            <button
+                              onClick={() => handleDownloadLegislacao(item)}
+                              disabled={!item.link_legislacao || downloadingId === item.id}
+                              title={item.link_legislacao ? 'Baixar apenas a legislação (PDF individual)' : 'Link de download não disponível'}
+                              className="inline-flex items-center gap-1 rounded-lg bg-tertiary-container px-3 py-1.5 text-xs text-on-tertiary-container hover:bg-tertiary disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                              <span className="material-symbols-outlined text-[16px]">
+                                {downloadingId === item.id ? 'sync' : 'description'}
+                              </span>
+                              {downloadingId === item.id ? 'Baixando...' : 'Legislação'}
                             </button>
                             <button
                               onClick={() => handleImport(item)}

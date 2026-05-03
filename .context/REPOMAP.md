@@ -136,8 +136,9 @@ Snapshot: 2026-05-02
 - `legislacao_mock_data.py` + `legislacao_mock_data_extra.py`: 15 legislações mockadas para Bandeirantes-MS
 
 #### `features/legislacao_municipal/`
-- `legislacao_municipal_types.py`: schemas Pydantic (`LegislacaoBuscaItem`, `LegislacaoBuscaResponse`, `LegislacaoImportRequest`) com campos `link_legislacao`, `link_diario_oficial`, `anexo_habilitado`
-- `legislacao_municipal_handler.py`: endpoints admin `GET /api/v1/legislacao-municipal/buscar` (busca paginada de matérias) e `POST /api/v1/legislacao-municipal/importar` (importa matéria como legislação usando link direto do diário)
+- `legislacao_municipal_types.py`: schemas Pydantic (`LegislacaoBuscaItem`, `LegislacaoBuscaResponse`, `LegislacaoImportRequest`, `LegislacaoDownloadRequest`) com campos `link_legislacao`, `link_diario_oficial`, `anexo_habilitado`
+- `legislacao_municipal_handler.py`: endpoints admin `GET /api/v1/legislacao-municipal/buscar` (busca paginada de matérias), `POST /api/v1/legislacao-municipal/importar` (importa matéria como legislação) e `POST /api/v1/legislacao-municipal/download` (download individual via Playwright com reCAPTCHA)
+- `legislacao_municipal_adapter.py`: adapter Playwright para download de matérias legislativas individuais, incluindo `validate_download_url()`, `validate_pdf_content()` e `download_legislacao_pdf()`
 
 #### Camadas legadas (removidas)
 - `domain/`, `infrastructure/`, `services/`, `etl/`: **removidos** — re-exports backward-compat eliminados após migração completa para features/

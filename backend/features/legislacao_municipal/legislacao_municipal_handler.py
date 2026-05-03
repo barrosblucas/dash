@@ -1,17 +1,19 @@
 """
 Handlers HTTP da feature Legislação Municipal.
 
-Endpoints para busca e importação admin de matérias legislativas
+Endpoints para busca, importação e download admin de matérias legislativas
 individuais do diariooficialms.com.br.
 """
 
 from __future__ import annotations
 
+import io
 import logging
 from datetime import date
 from typing import Any
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from backend.features.diario_oficial.diario_oficial_business import (
@@ -23,6 +25,7 @@ from backend.features.legislacao.legislacao_types import LegislacaoDetalhe
 from backend.features.legislacao_municipal.legislacao_municipal_types import (
     LegislacaoBuscaItem,
     LegislacaoBuscaResponse,
+    LegislacaoDownloadRequest,
     LegislacaoImportRequest,
 )
 from backend.scripts.scrape_diario_oficial_parsers import parse_legislacao_item
@@ -127,6 +130,8 @@ async def importar_legislacao(
     """
     async with DiarioOficialClient() as client:
         # Converte o payload para o formato esperado por importar_como_legislacao
+        # link_download = link direto do PDF (DigitalOcean Spaces) para download
+        # url_arquivo = link da legislação individual (/baixar-materia) para armazenamento
         diario_payload = DiarioImportRequest(
             diario_id=payload.legislacao_id,
             titulo=payload.titulo,
@@ -136,7 +141,46 @@ async def importar_legislacao(
             numero_lei=payload.numero_lei,
             ano_lei=payload.ano_lei,
             tipo=payload.tipo,
+            url_arquivo=payload.link_legislacao,
         )
 
         legislacao = await importar_como_legislacao(db, client, diario_payload)
         return LegislacaoDetalhe(**legislacao_to_detalhe_dict(legislacao))
+
+
+@router.post(
+    "/legislacao-municipal/download",
+    tags=["legislacao-municipal"],
+)
+async def download_legislacao(
+    payload: LegislacaoDownloadRequest,
+    _: Any = Depends(require_admin_user),
+) -> StreamingResponse:
+    """
+    Baixa uma matéria legislativa individual via Playwright (contorna reCAPTCHA v3).
+    Retorna o PDF como streaming response.
+
+    Protegido: requer autenticação admin.
+    """
+    from backend.features.legislacao_municipal.legislacao_municipal_adapter import (  # noqa: PLC0415  # type: ignore[import-untyped]
+        download_legislacao_pdf,
+    )
+
+    try:
+        pdf_bytes, filename = await download_legislacao_pdf(payload.link_legislacao)
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Length": str(len(pdf_bytes)),
+            },
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception:
+        logger.exception("Falha ao baixar legislação %s", payload.id)
+        raise HTTPException(
+            status_code=500,
+            detail="Falha ao processar o download",
+        ) from None

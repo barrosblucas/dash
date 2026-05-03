@@ -102,6 +102,10 @@ async def importar_como_legislacao(
         # 4. Cria a legislação
         ementa = payload.titulo[:200].strip()
 
+        # Usa url_arquivo (link da legislação individual) se fornecido,
+        # senão usa link_download (link direto do PDF)
+        stored_url = payload.url_arquivo if payload.url_arquivo else pdf_url
+
         create_request = LegislacaoCreateRequest(
             tipo=_parse_tipo_legislacao(payload.tipo),
             numero=payload.numero_lei,
@@ -109,7 +113,7 @@ async def importar_como_legislacao(
             ementa=ementa,
             texto_integral=texto_integral or None,
             data_publicacao=_parse_data(payload.data_publicacao),
-            url_arquivo=pdf_url,
+            url_arquivo=stored_url,
             origem="Diário Oficial MS",
             status=StatusLegislacao.ATIVA,
         )

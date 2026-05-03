@@ -33,6 +33,15 @@ class LegislacaoBuscaResponse(BaseModel):
     size: int
 
 
+class LegislacaoDownloadRequest(BaseModel):
+    """Requisição para baixar uma matéria legislativa individual."""
+
+    id: str = Field(..., description="ID da matéria no Diário Oficial")
+    link_legislacao: str = Field(
+        ..., description="URL /baixar-materia/{id}/{hash} para download via reCAPTCHA"
+    )
+
+
 class LegislacaoImportRequest(BaseModel):
     """Requisição para importar uma matéria legislativa como legislação."""
 

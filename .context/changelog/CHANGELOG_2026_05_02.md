@@ -141,3 +141,64 @@ python -m backend.scripts.scrape_legislacao_municipal --term "LEI" --max-results
 - Frontend lint: ✅ No ESLint warnings or errors
 - Frontend type-check: ✅ tsc --noEmit sem erros
 - Frontend build: ✅ Compiled successfully, `/admin/legislacao-municipal` gerado
+
+## Bug Fixes
+
+### Legislação Municipal — correção de download e importação de link
+
+- **Fixed** `frontend/app/admin/legislacao-municipal/legislacao-municipal-admin-client.tsx`: botão "Baixar PDF" agora é funcional — abre o link direto do DigitalOcean Spaces (`link_diario_oficial`) em nova aba; desabilitado apenas quando o link não está disponível
+- **Changed** `backend/features/diario_oficial/diario_oficial_types.py`: adicionado campo opcional `url_arquivo` em `DiarioImportRequest` para separar URL de download da URL armazenada
+- **Changed** `backend/features/diario_oficial/diario_oficial_business.py`: `importar_como_legislacao` agora usa `payload.url_arquivo` (quando fornecido) como `url_arquivo` no registro de legislação, em vez de sempre usar `link_download`
+- **Changed** `backend/features/legislacao_municipal/legislacao_municipal_handler.py`: handler `importar_legislacao` agora passa `payload.link_legislacao` como `url_arquivo` para `DiarioImportRequest`
+
+#### Problema corrigido
+1. **Botão de download**: estava desabilitado com `disabled` e sem `onClick` — agora abre o PDF do Diário Oficial em nova aba
+2. **Link importado**: ao importar legislação, o `url_arquivo` salvo no banco era o link do Diário Oficial (edição completa do Spaces) em vez do link da legislação individual (`/baixar-materia/{id}/{hash}`)
+
+#### Fluxo corrigido
+- `link_diario_oficial` (DigitalOcean Spaces) → usado para download do PDF (GET direto)
+- `link_legislacao` (`/baixar-materia/{id}/{hash}`) → armazenado como `url_arquivo` no banco
+
+#### Validação
+- Ruff check: ✅ All checks passed
+- Ruff format: ✅ 7 arquivos formatados (mudança), 85 pré-existentes fora de escopo
+- mypy: ⚠️ 2 erros pré-existentes (não introduzidos por esta mudança — `test_legislacao_municipal.py:205` union-attr e `diario_oficial_handler.py:61` no-any-return)
+- Pytest: ✅ 30 passed (10 legislacao_municipal + 20 legislacao), 0 failed
+- Frontend lint: ✅ No ESLint warnings or errors
+- Frontend type-check: ✅ tsc --noEmit sem erros
+- Frontend build: ✅ Compiled successfully
+
+## Bug Fixes
+
+### Legislação Municipal — segundo botão de download individual (PDF da lei)
+
+- **Added** `backend/features/legislacao_municipal/legislacao_municipal_adapter.py`: adapter com `download_legislacao_pdf()` usando Playwright para contornar reCAPTCHA v3, `validate_download_url()` com whitelist de domínio, `validate_pdf_content()` com magic bytes `%PDF`
+- **Added** `backend/features/legislacao_municipal/legislacao_municipal_types.py`: schema `LegislacaoDownloadRequest`
+- **Changed** `backend/features/legislacao_municipal/legislacao_municipal_handler.py`: novo endpoint `POST /api/v1/legislacao-municipal/download` que delega ao adapter; handler `importar_legislacao` agora passa `payload.link_legislacao` como `url_arquivo`
+- **Changed** `backend/features/diario_oficial/diario_oficial_types.py`: campo opcional `url_arquivo` em `DiarioImportRequest` para separar URL de download (Spaces) da URL armazenada (`/baixar-materia`)
+- **Changed** `backend/features/diario_oficial/diario_oficial_business.py`: `importar_como_legislacao` usa `payload.url_arquivo` quando fornecido
+- **Changed** `backend/tests/test_api/test_legislacao_municipal.py`: 5 novos testes de download + assertion `url_arquivo == link_legislacao` no teste de importação
+- **Changed** `frontend/types/legislacao-municipal.ts` + `frontend/services/legislacao-municipal-service.ts`: tipo e service para `downloadLegislacao()`
+- **Changed** `frontend/app/admin/legislacao-municipal/legislacao-municipal-admin-client.tsx`: novo botão "Legislação" ao lado de "Baixar PDF" + estados de loading/erro
+
+#### Problema corrigido
+1. **Botão de download**: estava desabilitado — agora "Baixar PDF" baixa a edição completa (Spaces) e o novo "Legislação" baixa apenas a lei individual via Playwright
+2. **Link importado**: ao importar, `url_arquivo` agora armazena `link_legislacao` em vez de `link_diario_oficial`
+
+#### Fluxo corrigido
+- `link_diario_oficial` (DigitalOcean Spaces) → botão "Baixar PDF" (GET direto) + usado para download na importação
+- `link_legislacao` (`/baixar-materia/{id}/{hash}`) → botão "Legislação" (proxy Playwright) + armazenado como `url_arquivo`
+
+#### Segurança
+- Whitelist de URL: apenas `https://www.diariooficialms.com.br/baixar-materia/` é permitido
+- Validação de conteúdo: magic bytes `%PDF` verificados antes de retornar
+- Mensagens de erro genéricas (sem vazar detalhes internos)
+- Endpoint protegido com `require_admin_user`
+
+#### Validação
+- Ruff check: ✅ All checks passed
+- Ruff format: ✅ 7 arquivos formatados
+- mypy: ⚠️ 2 erros pré-existentes (não introduzidos)
+- Pytest: ✅ 30 passed (10 legislacao_municipal + 20 legislacao), 0 failed
+- Frontend lint, type-check, build: ✅ todos passaram
+- UI Playwright: ✅ 20 botões "Baixar PDF", 20 "Legislação", 20 "Importar" presentes

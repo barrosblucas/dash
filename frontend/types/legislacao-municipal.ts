@@ -17,6 +17,11 @@ export interface LegislacaoBuscaResponse {
   size: number;
 }
 
+export interface LegislacaoDownloadRequest {
+  id: string;
+  link_legislacao: string;
+}
+
 export interface LegislacaoImportRequest {
   legislacao_id: string;
   titulo: string;
