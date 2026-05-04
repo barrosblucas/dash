@@ -87,38 +87,6 @@ export default function ObraDetalheClient({ id }: ObraDetalheClientProps) {
               <p>Término real: {formatDate(data.data_termino)}</p>
             </div>
           </section>
-        </div>
-      </div>
-
-      {/* Info Cards */}
-      <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        {/* LEFT: Progresso + Métricas */}
-        <section className="rounded-3xl bg-surface-container-low p-7 shadow-ambient space-y-6">
-          <h2 className="font-headline text-xl font-bold text-primary">Informações da Obra</h2>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-surface-container-lowest p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-on-surface-variant">Progresso físico</p>
-              <p className="mt-3 font-headline text-4xl font-black text-primary">{data.progresso_fisico ?? 0}%</p>
-            </div>
-            <div className="rounded-2xl bg-surface-container-lowest p-5">
-              <p className="text-xs uppercase tracking-[0.18em] text-on-surface-variant">Progresso financeiro</p>
-              <p className="mt-3 font-headline text-4xl font-black text-primary">{data.progresso_financeiro ?? 0}%</p>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {metricFields.map(([label, key]) => (
-              <div key={key} className="rounded-2xl bg-surface-container-lowest p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-on-surface-variant">{label}</p>
-                <p className="mt-3 text-sm font-semibold text-primary">{data[key] || '—'}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* RIGHT: Financeiro + Locais + Fontes */}
-        <div className="space-y-6">
           <section className="rounded-3xl bg-surface-container-low p-7 shadow-ambient">
             <h2 className="font-headline text-xl font-bold text-primary">Valores</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -136,7 +104,6 @@ export default function ObraDetalheClient({ id }: ObraDetalheClientProps) {
               </div>
             </div>
           </section>
-
           <section className="rounded-3xl bg-surface-container-low p-7 shadow-ambient space-y-6">
             <div className="grid gap-4 xl:grid-cols-2">
               <div className="rounded-2xl bg-surface-container-lowest p-5">
@@ -169,6 +136,31 @@ export default function ObraDetalheClient({ id }: ObraDetalheClientProps) {
               </div>
             </div>
           </section>
+        </div>
+      </div>
+
+      {/* Info Cards */}
+      <section className="rounded-3xl bg-surface-container-low p-7 shadow-ambient space-y-6">
+        <h2 className="font-headline text-xl font-bold text-primary">Informações da Obra</h2>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl bg-surface-container-lowest p-5">
+            <p className="text-xs uppercase tracking-[0.18em] text-on-surface-variant">Progresso físico</p>
+            <p className="mt-3 font-headline text-4xl font-black text-primary">{data.progresso_fisico ?? 0}%</p>
+          </div>
+          <div className="rounded-2xl bg-surface-container-lowest p-5">
+            <p className="text-xs uppercase tracking-[0.18em] text-on-surface-variant">Progresso financeiro</p>
+            <p className="mt-3 font-headline text-4xl font-black text-primary">{data.progresso_financeiro ?? 0}%</p>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {metricFields.map(([label, key]) => (
+            <div key={key} className="rounded-2xl bg-surface-container-lowest p-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-on-surface-variant">{label}</p>
+              <p className="mt-3 text-sm font-semibold text-primary">{data[key] || '—'}</p>
+            </div>
+          ))}
         </div>
       </section>
 
