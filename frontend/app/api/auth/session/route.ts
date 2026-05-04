@@ -4,6 +4,7 @@ import {
   callIdentityBackend,
   clearRefreshCookie,
   getRefreshCookie,
+  IDENTITY_BACKEND_UNAVAILABLE_DETAIL,
   setRefreshCookie,
   toAuthSession,
 } from '@/lib/auth-server';
@@ -25,6 +26,12 @@ export async function GET() {
   );
 
   if (!backendResponse.ok) {
+    if (backendResponse.status >= 500) {
+      return NextResponse.json(
+        { authenticated: false, session: null, detail: IDENTITY_BACKEND_UNAVAILABLE_DETAIL },
+        { status: backendResponse.status }
+      );
+    }
     clearRefreshCookie();
     return NextResponse.json({ authenticated: false, session: null }, { status: 401 });
   }

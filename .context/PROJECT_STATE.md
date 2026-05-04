@@ -9,7 +9,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 ## Funcionalidade implementada
 
 ### Backend
-- [x] API FastAPI rodando na porta 8000 com prefixo `/api/v1`
+- [x] API FastAPI rodando na porta 8000 com prefixo `/api/v1` e startup local restaurado após merge dos heads do Alembic
 - [x] Health check (`GET /health`)
 - [x] Endpoints de receitas (listagem, totais por ano/mês, categorias, detalhamento hierárquico)
 - [x] Endpoints de despesas (listagem, totais por ano/mês)
@@ -172,7 +172,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - `test_api/` agora cobre licitações, identidade, obras e legislação; `test_ml/` e parte de `test_etl/` seguem com cobertura parcial
 - Lógica de negócio ainda parcialmente acoplada nos handlers — extrair para `*_business.py` conforme crescer
 - `notebooks/` vazio — sem notebooks de exploração
-- Alembic migrations configurado com revisão incremental para `obra_locations`, `obra_funding_sources` e `obra_media_assets`, além das tabelas legadas
+- Alembic migrations configurado com revisão incremental para `obra_locations`, `obra_funding_sources` e `obra_media_assets`, além das tabelas legadas, com merge explícito dos heads em `e6f7a8b9c0d1`
 - `forecast_business.py` ainda importa modelos ORM via repositório ao invés de usar abstração pura
 - `backend/features/scraping/scraping_helpers.py` — `_create_log` unificado na sessao de dados para eliminar `database is locked` no SQLite (2026-04-25)
 - `backend/features/saude/saude_sync.py` — transacao de sync refatorada para coletar payloads async ANTES de persistir, eliminando a causa raiz de lock prolongado no SQLite (2026-04-25)

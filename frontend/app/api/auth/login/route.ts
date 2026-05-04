@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import {
   callIdentityBackend,
+  IDENTITY_BACKEND_UNAVAILABLE_DETAIL,
   setRefreshCookie,
   toAuthSession,
 } from '@/lib/auth-server';
@@ -14,12 +15,23 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify(payload),
   });
 
-  const backendPayload = (await backendResponse.json().catch(() => null)) as BackendIdentityPayload | null;
+  const backendPayload = (await backendResponse.json().catch(() => null)) as (BackendIdentityPayload & { detail?: string }) | null;
 
-  if (!backendResponse.ok || !backendPayload) {
+  if (!backendResponse.ok) {
     return NextResponse.json(
-      { detail: 'Credenciais inválidas ou serviço indisponível.' },
+      {
+        detail: backendResponse.status >= 500
+          ? (backendPayload?.detail ?? IDENTITY_BACKEND_UNAVAILABLE_DETAIL)
+          : 'Credenciais inválidas ou serviço indisponível.',
+      },
       { status: backendResponse.status || 401 }
+    );
+  }
+
+  if (!backendPayload) {
+    return NextResponse.json(
+      { detail: 'Resposta inválida do serviço de autenticação.' },
+      { status: 502 }
     );
   }
 

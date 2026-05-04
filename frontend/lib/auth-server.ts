@@ -4,6 +4,7 @@ import type { BackendIdentityPayload } from '@/types/identity';
 
 export const AUTH_REFRESH_COOKIE_NAME = 'dashboard_refresh_token';
 const secureCookie = process.env.NODE_ENV === 'production';
+export const IDENTITY_BACKEND_UNAVAILABLE_DETAIL = 'Serviço de autenticação indisponível. Verifique se o backend está ativo.';
 
 const getBackendBaseUrl = () => process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -50,9 +51,16 @@ export const callIdentityBackend = async (
   const headers = new Headers(init.headers);
   headers.set('Content-Type', 'application/json');
 
-  return fetch(`${getBackendBaseUrl()}${path}`, {
-    ...init,
-    headers,
-    cache: 'no-store',
-  });
+  try {
+    return await fetch(`${getBackendBaseUrl()}${path}`, {
+      ...init,
+      headers,
+      cache: 'no-store',
+    });
+  } catch {
+    return Response.json(
+      { detail: IDENTITY_BACKEND_UNAVAILABLE_DETAIL },
+      { status: 503 }
+    );
+  }
 };

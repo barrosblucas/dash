@@ -15,6 +15,9 @@
 - `create_media_link()`, `create_uploaded_media()`: aceitam e persistem `is_cover` com validação de regra
 - `_replace_url_media_assets()`: persiste `is_cover` nas mídias URL recriadas
 
+### Corrigido
+- migration `e6f7a8b9c0d1` faz merge dos heads `a1b2c3d4e5f6` e `d4e5f6a7b8c9`, restaurando `alembic upgrade head` e o startup automático do backend local via `dev.sh`
+
 ## tests
 ### Adicionado
 - `test_media_cover_exposed_on_create_and_read`: valida exposição de `is_cover` em create/read

@@ -28,7 +28,7 @@ Snapshot: 2026-05-04
 #### `alembic/` — migrations
 - `alembic.ini`: configuração do Alembic apontando para `backend.shared.database.models.Base`
 - `alembic/env.py`: ambiente de migration reutilizando a engine do projeto (`create_db_engine`)
-- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento + revisão `1c2d3e4f5a6b_add_obra_related_tables.py` para locais/fontes/mídias de obras + revisão `a1b2c3d4e5f6_add_legislacao_table.py` para legislações + revisão `d4e5f6a7b8c9` adiciona `is_cover` em `obra_media_assets`)
+- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento + revisão `1c2d3e4f5a6b_add_obra_related_tables.py` para locais/fontes/mídias de obras + revisão `a1b2c3d4e5f6_add_legislacao_table.py` para legislações + revisão `d4e5f6a7b8c9` adiciona `is_cover` em `obra_media_assets` + revisão `e6f7a8b9c0d1` faz merge dos heads do Alembic)
 - `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha)
 - `shared/security.py`: hash de senha Argon2, emissão/validação de tokens JWT e dependências de autenticação/autorização
 - `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
