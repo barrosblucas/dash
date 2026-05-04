@@ -112,7 +112,9 @@ def test_obra_crud_and_public_reads(client: TestClient, admin_login: dict[str, s
     assert len(created["locations"]) == 2
     assert len(created["funding_sources"]) == 2
     assert created["media_assets"][0]["url"] == "https://example.com/placa.jpg"
+    assert created["media_assets"][0]["is_cover"] is False
     assert created["medicoes"][1]["media_assets"][0]["url"] == "https://example.com/medicao.pdf"
+    assert created["medicoes"][1]["media_assets"][0]["is_cover"] is False
 
     list_response = client.get("/api/v1/obras")
     assert list_response.status_code == 200
@@ -173,3 +175,110 @@ def test_obra_crud_and_public_reads(client: TestClient, admin_login: dict[str, s
 
     missing_detail = client.get(f"/api/v1/obras/{created['hash']}")
     assert missing_detail.status_code == 404
+
+
+def test_media_cover_upload_promotes_and_clears_previous(
+    client: TestClient, admin_login: dict[str, str]
+) -> None:
+    """Upload com is_cover=true promove nova capa e desmarca a anterior."""
+    # Create obra
+    resp = client.post(
+        "/api/v1/obras",
+        headers={"Authorization": admin_login["Authorization"]},
+        json=_obra_payload(),
+    )
+    assert resp.status_code == 201
+    obra_hash = resp.json()["hash"]
+
+    # Upload first image as cover
+    first = client.post(
+        f"/api/v1/obras/{obra_hash}/media/upload",
+        headers={"Authorization": admin_login["Authorization"]},
+        files={"file": ("img1.jpg", b"fake-image-data", "image/jpeg")},
+        data={"titulo": "Capa 1", "media_kind": "image", "is_cover": "true"},
+    )
+    assert first.status_code == 201
+    first_id = first.json()["id"]
+    assert first.json()["is_cover"] is True
+    assert first.json()["titulo"] == "Capa 1"
+
+    # Upload second image as cover — should clear first
+    second = client.post(
+        f"/api/v1/obras/{obra_hash}/media/upload",
+        headers={"Authorization": admin_login["Authorization"]},
+        files={"file": ("img2.jpg", b"more-fake-data", "image/jpeg")},
+        data={"titulo": "Capa 2", "media_kind": "image", "is_cover": "true"},
+    )
+    assert second.status_code == 201
+    second_id = second.json()["id"]
+    assert second.json()["is_cover"] is True
+
+    # Verify via detail endpoint
+    detail = client.get(f"/api/v1/obras/{obra_hash}")
+    assert detail.status_code == 200
+    media_list = detail.json()["media_assets"]
+    cover_ids = [m["id"] for m in media_list if m["is_cover"]]
+    assert cover_ids == [second_id], "Only the most recent cover should be marked"
+    # First image should no longer be cover
+    first_updated = next(m for m in media_list if m["id"] == first_id)
+    assert first_updated["is_cover"] is False
+
+
+def test_media_cover_only_for_global_images(
+    client: TestClient, admin_login: dict[str, str]
+) -> None:
+    """Mídias de medição não viram capa, mesmo se solicitado."""
+    resp = client.post(
+        "/api/v1/obras",
+        headers={"Authorization": admin_login["Authorization"]},
+        json=_obra_payload(),
+    )
+    assert resp.status_code == 201
+    obra_hash = resp.json()["hash"]
+
+    # Get medição ID
+    detail = client.get(f"/api/v1/obras/{obra_hash}")
+    medicao_id = detail.json()["medicoes"][0]["id"]
+
+    # Upload image with is_cover=true but linked to medição
+    upload_resp = client.post(
+        f"/api/v1/obras/{obra_hash}/media/upload",
+        headers={"Authorization": admin_login["Authorization"]},
+        files={"file": ("med.jpg", b"med-fake", "image/jpeg")},
+        data={
+            "titulo": "Medição cover",
+            "media_kind": "image",
+            "medicao_id": str(medicao_id),
+            "is_cover": "true",
+        },
+    )
+    assert upload_resp.status_code == 201
+    assert upload_resp.json()["is_cover"] is False, (
+        "Mídia de medição não pode ser capa"
+    )
+
+
+def test_media_cover_exposed_on_create_and_read(
+    client: TestClient, admin_login: dict[str, str]
+) -> None:
+    """Create/read expõe is_cover nos schemas response."""
+    payload = _obra_payload()
+    payload["media_assets"] = [
+        {
+            "titulo": "Placa da obra",
+            "media_kind": "image",
+            "source_type": "url",
+            "url": "https://example.com/placa.jpg",
+            "is_cover": True,
+        }
+    ]
+    resp = client.post(
+        "/api/v1/obras",
+        headers={"Authorization": admin_login["Authorization"]},
+        json=payload,
+    )
+    assert resp.status_code == 201
+    created = resp.json()
+    cover_media = [m for m in created["media_assets"] if m["is_cover"]]
+    assert len(cover_media) == 1
+    assert cover_media[0]["url"] == "https://example.com/placa.jpg"

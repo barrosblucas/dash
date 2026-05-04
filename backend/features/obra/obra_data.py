@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import secrets
-from typing import cast
+from typing import Any, cast
 
 from sqlalchemy.orm import Session
 
@@ -77,7 +77,8 @@ class SQLObraRepository:
             query = query.filter(ObraMediaModel.medicao_id.is_(None))
         else:
             query = query.filter(ObraMediaModel.medicao_id == medicao_id)
-        return list(query.order_by(ObraMediaModel.created_at.asc(), ObraMediaModel.id.asc()).all())
+        # Cover first, then by creation order
+        return list(query.order_by(ObraMediaModel.is_cover.desc(), ObraMediaModel.created_at.asc(), ObraMediaModel.id.asc()).all())
 
     def get_media_asset(self, media_id: int) -> ObraMediaModel | None:
         return self.session.query(ObraMediaModel).filter(ObraMediaModel.id == media_id).first()
@@ -111,6 +112,9 @@ class SQLObraRepository:
         obra_id: int,
         payload: ObraMediaLinkRequest,
     ) -> ObraMediaModel:
+        is_cover = self._resolve_is_cover(
+            payload.is_cover, payload.medicao_id, payload.media_kind
+        )
         model = ObraMediaModel(
             obra_id=obra_id,
             medicao_id=payload.medicao_id,
@@ -118,9 +122,12 @@ class SQLObraRepository:
             media_kind=payload.media_kind,
             source_type="url",
             external_url=payload.url,
+            is_cover=is_cover,
         )
         self.session.add(model)
         self.session.flush()
+        if is_cover:
+            self._clear_other_covers(obra_id, cast(int, model.id))
         self.session.refresh(model)
         return model
 
@@ -131,11 +138,13 @@ class SQLObraRepository:
         medicao_id: int | None,
         titulo: str | None,
         media_kind: str,
+        is_cover: bool = False,
         storage_path: str,
         original_name: str | None,
         content_type: str | None,
         file_size: int | None,
     ) -> ObraMediaModel:
+        cover = self._resolve_is_cover(is_cover, medicao_id, media_kind)
         model = ObraMediaModel(
             obra_id=obra_id,
             medicao_id=medicao_id,
@@ -146,9 +155,12 @@ class SQLObraRepository:
             original_name=original_name,
             content_type=content_type,
             file_size=file_size,
+            is_cover=cover,
         )
         self.session.add(model)
         self.session.flush()
+        if cover:
+            self._clear_other_covers(obra_id, cast(int, model.id))
         self.session.refresh(model)
         return model
 
@@ -260,13 +272,34 @@ class SQLObraRepository:
         self.session.flush()
         return persisted
 
+    def _resolve_is_cover(
+        self, requested: bool, medicao_id: int | None, media_kind: str
+    ) -> bool:
+        """Returns True only if is_cover is requested AND it's a global image."""
+        if not requested:
+            return False
+        if medicao_id is not None:
+            return False
+        if media_kind != "image":
+            return False
+        return True
+
+    def _clear_other_covers(self, obra_id: int, exclude_id: int) -> None:
+        """Set is_cover=False on all other global media of the same obra."""
+        self.session.query(ObraMediaModel).filter(
+            ObraMediaModel.obra_id == obra_id,
+            ObraMediaModel.id != exclude_id,
+            ObraMediaModel.medicao_id.is_(None),
+            ObraMediaModel.is_cover.is_(True),
+        ).update({"is_cover": False}, synchronize_session="fetch")
+
     def _sync_media_assets(
         self,
         obra_id: int,
         medicoes_by_sequence: dict[int, ObraMedicaoModel],
         payload: ObraWriteRequest,
     ) -> None:
-        self._replace_url_media_assets(obra_id, None, payload.media_assets)
+        self._sync_global_media_assets(obra_id, payload.media_assets)
         for medicao in payload.medicoes:
             model = medicoes_by_sequence.get(medicao.sequencia)
             if model is None:
@@ -277,12 +310,62 @@ class SQLObraRepository:
                 medicao.media_assets,
             )
 
+    def _sync_global_media_assets(
+        self,
+        obra_id: int,
+        media_assets: list[ObraMediaAssetPayload],
+    ) -> None:
+        """Sync global media assets: recreate URL media; update upload fields (titulo, media_kind, is_cover)."""
+        # Collect IDs of upload assets to update
+        upload_ids = {
+            cast(int, m.id)
+            for m in media_assets
+            if m.id is not None and m.source_type == "upload"
+        }
+        if upload_ids:
+            existing_uploads = (
+                self.session.query(ObraMediaModel)
+                .filter(
+                    ObraMediaModel.id.in_(upload_ids),
+                    ObraMediaModel.obra_id == obra_id,
+                    ObraMediaModel.medicao_id.is_(None),
+                    ObraMediaModel.source_type == "upload",
+                )
+                .all()
+            )
+            upload_map = {cast(int, u.id): u for u in existing_uploads}
+            any_new_cover = False
+            for media in media_assets:
+                if media.id is None or media.source_type != "upload":
+                    continue
+                upload = upload_map.get(media.id)
+                if upload is None:
+                    continue
+                resolved_cover = self._resolve_is_cover(
+                    media.is_cover, None, media.media_kind
+                )
+                upload_model = cast(Any, upload)
+                upload_model.titulo = media.titulo
+                upload_model.media_kind = media.media_kind
+                upload_model.is_cover = resolved_cover
+                if resolved_cover:
+                    self._clear_other_covers(obra_id, cast(int, upload.id))
+                    any_new_cover = True
+            if any_new_cover:
+                self.session.flush()
+
+        # Handle URL media (delete + recreate)
+        url_assets = [m for m in media_assets if m.source_type == "url" and m.url]
+        self._replace_url_media_assets(obra_id, None, url_assets)
+        self.session.flush()
+
     def _replace_url_media_assets(
         self,
         obra_id: int,
         medicao_id: int | None,
         media_assets: list[ObraMediaAssetPayload],
-    ) -> None:
+    ) -> int | None:
+        """Replace URL media assets. Returns the ID of a newly-set cover, if any."""
         query = self.session.query(ObraMediaModel).filter(
             ObraMediaModel.obra_id == obra_id,
             ObraMediaModel.source_type == "url",
@@ -292,17 +375,24 @@ class SQLObraRepository:
         else:
             query = query.filter(ObraMediaModel.medicao_id == medicao_id)
         query.delete()
+        new_cover_id: int | None = None
         for media in media_assets:
             if media.source_type != "url" or not media.url:
                 continue
-            self.session.add(
-                ObraMediaModel(
-                    obra_id=obra_id,
-                    medicao_id=medicao_id,
-                    titulo=media.titulo,
-                    media_kind=media.media_kind,
-                    source_type="url",
-                    external_url=media.url,
-                )
+            is_cover = self._resolve_is_cover(media.is_cover, medicao_id, media.media_kind)
+            model = ObraMediaModel(
+                obra_id=obra_id,
+                medicao_id=medicao_id,
+                titulo=media.titulo,
+                media_kind=media.media_kind,
+                source_type="url",
+                external_url=media.url,
+                is_cover=is_cover,
             )
+            self.session.add(model)
+            self.session.flush()
+            if is_cover:
+                new_cover_id = cast(int, model.id)
+                self._clear_other_covers(obra_id, cast(int, model.id))
         self.session.flush()
+        return new_cover_id

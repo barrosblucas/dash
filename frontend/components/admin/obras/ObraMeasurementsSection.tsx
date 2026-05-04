@@ -94,6 +94,7 @@ export default function ObraMeasurementsSection({
               onPendingChange={(key, field, value) => onPendingChange(medicao.sequencia, key, field, value)}
               onPendingRemove={(key) => onPendingRemove(medicao.sequencia, key)}
               inputLabel="Upload de fotos ou anexos da medição"
+              enableCover={false}
             />
           </div>
         ))}

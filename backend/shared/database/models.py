@@ -334,6 +334,7 @@ class ObraMediaModel(Base):
     original_name = Column(String(255), nullable=True)
     content_type = Column(String(120), nullable=True)
     file_size = Column(Integer, nullable=True)
+    is_cover = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
     updated_at = Column(
         DateTime,

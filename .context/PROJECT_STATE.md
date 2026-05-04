@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-05-02 (atualizado com página admin de Diário Oficial)
+Snapshot: 2026-05-04 (atualizado com suporte a capa de obra)
 
 ## Status geral
 
@@ -18,7 +18,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Endpoints de exportação (PDF, Excel)
 - [x] Endpoints de scraping (status do scheduler, trigger manual, histórico de execuções)
 - [x] Bounded context `identity` com login, refresh rotativo, logout, `me`, gestão de usuários e reset de senha
-- [x] Bounded context `obra` com CRUD completo, hash público, medições mensais filhas, cálculo de valores derivados, múltiplos locais/fontes e mídia por obra/medição
+- [x] Bounded context `obra` com CRUD completo, hash público, medições mensais filhas, cálculo de valores derivados, múltiplos locais/fontes, mídia por obra/medição e suporte a imagem de capa (`is_cover`)
 - [x] Bounded context `saude` com snapshots/cache do E-Saúde, CRUD admin de unidades e dashboards públicos de medicamentos, vacinação, visitas domiciliares, perfil epidemiológico, atenção primária, saúde bucal, hospital, farmácia, perfil demográfico e procedimentos
 - [x] Filtros de período dinâmicos (`start_date`/`end_date`) nos endpoints públicos de saúde: atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal (com fallback local para APIs que ignoram filtro)
 - [x] Dashboards públicos de saúde com composição por slice, agregação multi-ano estruturada no banco e cache por faixa para fallbacks live sensíveis a período

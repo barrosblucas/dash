@@ -45,6 +45,7 @@ class ObraMediaAssetPayload(BaseModel):
     media_kind: str = Field(default="image", min_length=1, max_length=50)
     source_type: str = Field(default="url", min_length=1, max_length=20)
     url: str | None = Field(default=None, max_length=1000)
+    is_cover: bool = False
 
 
 class ObraMediaAssetResponse(BaseModel):
@@ -56,6 +57,7 @@ class ObraMediaAssetResponse(BaseModel):
     original_name: str | None
     content_type: str | None
     file_size: int | None
+    is_cover: bool
 
 
 class MedicaoPayload(BaseModel):
@@ -160,3 +162,4 @@ class ObraMediaLinkRequest(BaseModel):
     titulo: str | None = Field(default=None, max_length=255)
     media_kind: str = Field(default="image", min_length=1, max_length=50)
     url: str = Field(..., min_length=1, max_length=1000)
+    is_cover: bool = False

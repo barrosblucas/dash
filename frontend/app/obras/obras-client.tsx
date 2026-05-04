@@ -93,8 +93,20 @@ export default function ObrasClient() {
             href={`/obras/${obra.hash}`}
             className="group overflow-hidden rounded-xl bg-surface-container-lowest shadow-ambient transition hover:-translate-y-1"
           >
-            <div className="flex h-44 items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
-              <span className="material-symbols-outlined text-6xl text-primary/30">construction</span>
+            <div className="flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
+              {(() => {
+                const coverAsset = obra.media_assets.find((m) => m.is_cover && m.url)
+                  ?? obra.media_assets.find((m) => m.media_kind === 'image' && m.url);
+                return coverAsset?.url ? (
+                  <img
+                    src={coverAsset.url}
+                    alt={coverAsset.titulo ?? ''}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="material-symbols-outlined text-6xl text-primary/30">construction</span>
+                );
+              })()}
             </div>
 
             <div className="space-y-4 p-6">

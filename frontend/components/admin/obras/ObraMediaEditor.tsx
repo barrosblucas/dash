@@ -16,6 +16,9 @@ interface ObraMediaEditorProps {
   onPendingChange: (key: string, field: 'titulo' | 'media_kind', value: string) => void;
   onPendingRemove: (key: string) => void;
   inputLabel: string;
+  enableCover?: boolean;
+  onCoverSelect?: (index: number) => void;
+  onPendingCoverSelect?: (key: string) => void;
 }
 
 export default function ObraMediaEditor({
@@ -27,6 +30,9 @@ export default function ObraMediaEditor({
   onPendingChange,
   onPendingRemove,
   inputLabel,
+  enableCover = false,
+  onCoverSelect,
+  onPendingCoverSelect,
 }: ObraMediaEditorProps) {
   const [fileInputKey, setFileInputKey] = useState(0);
 
@@ -36,7 +42,7 @@ export default function ObraMediaEditor({
         <p className="text-sm font-semibold text-primary">Mídias vinculadas</p>
         <button
           type="button"
-          onClick={() => onChange(items.length, { titulo: '', media_kind: 'image', source_type: 'url', url: '' })}
+          onClick={() => onChange(items.length, { titulo: '', media_kind: 'image', source_type: 'url', url: '', is_cover: false })}
           className="rounded-xl bg-secondary px-3 py-2 text-xs font-bold text-on-secondary"
         >
           Adicionar link
@@ -54,7 +60,20 @@ export default function ObraMediaEditor({
             )}
           </div>
           <InputField label="Categoria da mídia" value={media.media_kind} onChange={(value) => onChange(index, { ...media, media_kind: value })} />
-          <div className="flex items-end">
+          <div className="flex flex-col gap-2">
+            {enableCover && media.media_kind === 'image' && onCoverSelect && (
+              <button
+                type="button"
+                onClick={() => onCoverSelect(index)}
+                className={`w-full rounded-xl px-4 py-2 text-xs font-bold transition ${
+                  media.is_cover
+                    ? 'bg-primary text-on-primary'
+                    : 'bg-surface-container-high text-on-surface-variant hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                {media.is_cover ? '⭐ Capa' : 'Marcar como capa'}
+              </button>
+            )}
             <button type="button" onClick={() => onRemove(index)} className="w-full rounded-xl bg-tertiary-container px-4 py-3 text-sm font-bold text-on-tertiary-container">
               Remover
             </button>
@@ -84,7 +103,20 @@ export default function ObraMediaEditor({
             <InputField label="Arquivo selecionado" value={upload.file.name} onChange={() => undefined} readOnly />
           </div>
           <InputField label="Categoria do upload" value={upload.media_kind} onChange={(value) => onPendingChange(upload.key, 'media_kind', value)} />
-          <div className="flex items-end">
+          <div className="flex flex-col gap-2">
+            {enableCover && upload.media_kind === 'image' && onPendingCoverSelect && (
+              <button
+                type="button"
+                onClick={() => onPendingCoverSelect(upload.key)}
+                className={`w-full rounded-xl px-4 py-2 text-xs font-bold transition ${
+                  upload.is_cover
+                    ? 'bg-primary text-on-primary'
+                    : 'bg-surface-container-high text-on-surface-variant hover:bg-primary/20 hover:text-primary'
+                }`}
+              >
+                {upload.is_cover ? '⭐ Capa' : 'Marcar como capa'}
+              </button>
+            )}
             <button type="button" onClick={() => onPendingRemove(upload.key)} className="w-full rounded-xl bg-surface-container-high px-4 py-3 text-sm font-bold text-on-surface">
               Remover
             </button>

@@ -45,6 +45,7 @@ const normalizeFundingSource = (source: ObraFundingSource): ObraFundingSource =>
 const normalizeMediaAsset = (media: ObraMediaAsset): ObraMediaAsset => ({
   ...media,
   file_size: media.file_size ?? null,
+  is_cover: media.is_cover ?? false,
 });
 
 const normalizeObra = (obra: ObraRecord): ObraRecord => ({
@@ -89,7 +90,7 @@ export const obrasService = {
     normalizeMediaAsset(await apiClient.post<ObraMediaAsset>(`${OBRAS_ENDPOINT}/${hash}/media/link`, payload)),
   uploadMedia: async (
     hash: string,
-    payload: { file: File; titulo?: string; media_kind?: string; medicao_id?: number | null }
+    payload: { file: File; titulo?: string; media_kind?: string; medicao_id?: number | null; is_cover?: boolean }
   ) => {
     const formData = new FormData();
     formData.append('file', payload.file);
@@ -101,6 +102,9 @@ export const obrasService = {
     }
     if (payload.medicao_id) {
       formData.append('medicao_id', String(payload.medicao_id));
+    }
+    if (payload.is_cover !== undefined) {
+      formData.append('is_cover', String(payload.is_cover));
     }
     return normalizeMediaAsset(
       await apiClient.post<ObraMediaAsset>(`${OBRAS_ENDPOINT}/${hash}/media/upload`, formData, {

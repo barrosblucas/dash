@@ -80,6 +80,7 @@ def _media_response(model: ObraMediaModel) -> ObraMediaAssetResponse:
         original_name=model.original_name,
         content_type=model.content_type,
         file_size=model.file_size,
+        is_cover=bool(model.is_cover),
     )
 
 
@@ -255,6 +256,7 @@ async def upload_media(
     titulo: str | None = Form(default=None),
     media_kind: str = Form(default="image"),
     medicao_id: int | None = Form(default=None),
+    is_cover: bool = Form(default=False),
     _: UserModel = Depends(require_admin_user),
     db: Session = Depends(get_db),
 ) -> ObraMediaAssetResponse:
@@ -270,6 +272,7 @@ async def upload_media(
         medicao_id=medicao_id,
         titulo=titulo,
         media_kind=media_kind,
+        is_cover=is_cover,
         storage_path=storage_path,
         original_name=file.filename,
         content_type=file.content_type,

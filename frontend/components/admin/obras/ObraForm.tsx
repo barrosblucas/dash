@@ -41,6 +41,7 @@ const createPendingUploads = (files: FileList | null, scope: 'global' | number):
     file,
     titulo: file.name.replace(/\.[^.]+$/, ''),
     media_kind: file.type.includes('pdf') ? 'document' : 'image',
+    is_cover: false,
   }));
 };
 
@@ -100,6 +101,7 @@ export default function ObraForm({ obraHash }: ObraFormProps) {
           file: upload.file,
           titulo: upload.titulo || undefined,
           media_kind: upload.media_kind,
+          is_cover: upload.is_cover || undefined,
         });
       }
 
@@ -237,7 +239,6 @@ export default function ObraForm({ obraHash }: ObraFormProps) {
             <TextareaField label="Descrição" value={form.descricao} onChange={(value) => updateField('descricao', value)} rows={5} />
           </div>
         </section>
-
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="font-headline text-lg font-bold text-primary">Locais e mapa</h3>
@@ -322,21 +323,51 @@ export default function ObraForm({ obraHash }: ObraFormProps) {
           <h3 className="font-headline text-lg font-bold text-primary">Fotos e anexos da obra</h3>
           <ObraMediaEditor
             items={form.media_assets}
-            onChange={(index, nextMedia) => setForm((current) => ({
-              ...current,
-              media_assets: index === current.media_assets.length
-                ? [...current.media_assets, nextMedia]
-                : current.media_assets.map((item, currentIndex) => currentIndex === index ? nextMedia : item),
-            }))}
+            onChange={(index, nextMedia) => {
+              const sanitized = nextMedia.media_kind !== 'image'
+                ? { ...nextMedia, is_cover: false }
+                : nextMedia;
+              setForm((current) => ({
+                ...current,
+                media_assets: index === current.media_assets.length
+                  ? [...current.media_assets, sanitized]
+                  : current.media_assets.map((item, currentIndex) => currentIndex === index ? sanitized : item),
+              }));
+            }}
             onRemove={(index) => void removeMedia('global', index)}
             onFilesSelected={(files) => setPendingGlobalUploads((current) => [...current, ...createPendingUploads(files, 'global')])}
             pendingUploads={pendingGlobalUploads}
-            onPendingChange={(key, field, value) => setPendingGlobalUploads((current) => current.map((upload) => upload.key === key ? { ...upload, [field]: value } : upload))}
+            onPendingChange={(key, field, value) => setPendingGlobalUploads((current) => current.map((upload) => {
+              const next = upload.key === key ? { ...upload, [field]: value } : upload;
+              if (field === 'media_kind' && value !== 'image') {
+                next.is_cover = false;
+              }
+              return next;
+            }))}
             onPendingRemove={(key) => setPendingGlobalUploads((current) => current.filter((upload) => upload.key !== key))}
             inputLabel="Upload de fotos ou anexos da obra"
+            enableCover
+            onCoverSelect={(index) => {
+              setForm((current) => ({
+                ...current,
+                media_assets: current.media_assets.map((item, i) => ({
+                  ...item,
+                  is_cover: i === index,
+                })),
+              }));
+              setPendingGlobalUploads((current) => current.map((upload) => ({ ...upload, is_cover: false })));
+            }}
+            onPendingCoverSelect={(key) => {
+              setPendingGlobalUploads((current) =>
+                current.map((upload) => ({ ...upload, is_cover: upload.key === key }))
+              );
+              setForm((current) => ({
+                ...current,
+                media_assets: current.media_assets.map((item) => ({ ...item, is_cover: false })),
+              }));
+            }}
           />
         </section>
-
         <ObraMeasurementsSection
           medicoes={form.medicoes}
           pendingMeasurementUploads={pendingMeasurementUploads}
@@ -354,7 +385,6 @@ export default function ObraForm({ obraHash }: ObraFormProps) {
             [sequence]: (current[sequence] ?? []).filter((upload) => upload.key !== key),
           }))}
         />
-
         {feedback ? <div className="rounded-2xl bg-error-container px-4 py-3 text-sm text-on-error">{feedback}</div> : null}
 
         <div className="flex items-center justify-end gap-3 pt-2">

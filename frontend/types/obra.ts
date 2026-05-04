@@ -9,6 +9,7 @@ export interface ObraMediaAsset {
   original_name?: string | null;
   content_type?: string | null;
   file_size?: number | null;
+  is_cover: boolean;
 }
 
 export interface ObraLocation {
@@ -120,4 +121,5 @@ export interface ObraMediaLinkPayload {
   titulo?: string | null;
   media_kind?: string;
   url: string;
+  is_cover?: boolean;
 }

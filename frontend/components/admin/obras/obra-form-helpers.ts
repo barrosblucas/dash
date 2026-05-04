@@ -12,6 +12,7 @@ export interface PendingUpload {
   file: File;
   titulo: string;
   media_kind: string;
+  is_cover: boolean;
 }
 
 export const statusOptions = [
@@ -111,6 +112,20 @@ export const toInputValue = (value: number | null | undefined) => (
   value === null || value === undefined ? '' : String(value)
 );
 
+export const toPersistedGlobalMedia = (mediaAssets: ObraMediaAsset[]) => (
+  mediaAssets.flatMap((item) => {
+    if (item.source_type === 'url') {
+      return item.url ? [{ ...item, url: item.url.trim(), is_cover: item.is_cover ?? false }] : [];
+    }
+
+    if (item.source_type === 'upload' && item.id) {
+      return [{ ...item, is_cover: item.is_cover ?? false }];
+    }
+
+    return [];
+  })
+);
+
 export const toUrlMedia = (mediaAssets: ObraMediaAsset[]) => (
   mediaAssets.filter((item) => item.source_type === 'url' && item.url)
 );
@@ -165,7 +180,7 @@ export const buildPayload = (form: ObraUpsertPayload): ObraUpsertPayload => {
     numero: primaryLocation.numero.trim(),
     latitude: primaryLocation.latitude,
     longitude: primaryLocation.longitude,
-    media_assets: toUrlMedia(form.media_assets),
+    media_assets: toPersistedGlobalMedia(form.media_assets),
     medicoes: form.medicoes.map((medicao) => ({
       ...medicao,
       observacao: medicao.observacao?.trim() || null,

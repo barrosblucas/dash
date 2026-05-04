@@ -90,6 +90,77 @@ describe('ObraForm - criação', () => {
       descricao: 'Revitalização da praça central',
       locations: expect.arrayContaining([expect.objectContaining({ logradouro: 'Rua A' })]),
       funding_sources: expect.arrayContaining([expect.objectContaining({ nome: 'Tesouro Municipal' })]),
+    }))); 
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/admin/obras'));
+  });
+
+  it('envia is_cover no upload pendente marcado como capa', async () => {
+    const user = userEvent.setup();
+    vi.mocked(obrasService.create).mockResolvedValue(createServiceRecord() as Awaited<ReturnType<typeof obrasService.create>>);
+    vi.mocked(obrasService.uploadMedia).mockResolvedValue({
+      id: 10,
+      titulo: 'foto-capa',
+      media_kind: 'image',
+      source_type: 'upload',
+      url: '/api/v1/obras/media/10/content',
+      is_cover: true,
+    } as Awaited<ReturnType<typeof obrasService.uploadMedia>>);
+
+    renderWithQuery(<ObraForm />);
+    await user.type(screen.getByLabelText(/título/i), 'Praça Central');
+    await user.type(screen.getByLabelText(/secretaria/i), 'Obras');
+    await user.type(screen.getByLabelText(/órgão/i), 'Prefeitura');
+    await user.type(screen.getByLabelText(/contrato/i), 'CTR-01');
+    await user.type(screen.getByLabelText(/tipo da obra/i), 'Revitalização');
+    await user.type(screen.getByLabelText(/modalidade/i), 'Concorrência');
+    await user.type(screen.getByLabelText(/data de início/i), '2026-01-10');
+    await user.type(screen.getByLabelText(/descrição/i), 'Revitalização da praça central');
+    await user.type(screen.getByLabelText(/logradouro do local/i), 'Rua A');
+    await user.type(screen.getByLabelText(/bairro do local/i), 'Centro');
+    await user.type(screen.getByLabelText(/cep do local/i), '79000-000');
+    await user.type(screen.getByLabelText(/número do local/i), '100');
+    await user.type(screen.getByLabelText(/fonte de recurso/i), 'Tesouro Municipal');
+
+    const fileInput = screen.getByLabelText(/upload de fotos ou anexos da obra/i);
+    const file = new File(['fake-image'], 'foto-capa.jpg', { type: 'image/jpeg' });
+    await user.upload(fileInput, file);
+    await user.click(screen.getByRole('button', { name: /marcar como capa/i }));
+    await user.click(screen.getByRole('button', { name: /criar obra/i }));
+
+    await waitFor(() => expect(obrasService.uploadMedia).toHaveBeenCalledWith(
+      'obra-hash',
+      expect.objectContaining({ is_cover: true, media_kind: 'image' })
+    ));
+  });
+
+  it('envia is_cover nas mídias URL ao criar obra com capa', async () => {
+    const user = userEvent.setup();
+    vi.mocked(obrasService.create).mockResolvedValue(createServiceRecord() as Awaited<ReturnType<typeof obrasService.create>>);
+    renderWithQuery(<ObraForm />);
+    await user.type(screen.getByLabelText(/título/i), 'Praça Central');
+    await user.type(screen.getByLabelText(/secretaria/i), 'Obras');
+    await user.type(screen.getByLabelText(/órgão/i), 'Prefeitura');
+    await user.type(screen.getByLabelText(/contrato/i), 'CTR-01');
+    await user.type(screen.getByLabelText(/tipo da obra/i), 'Revitalização');
+    await user.type(screen.getByLabelText(/modalidade/i), 'Concorrência');
+    await user.type(screen.getByLabelText(/data de início/i), '2026-01-10');
+    await user.type(screen.getByLabelText(/descrição/i), 'Revitalização da praça central');
+    await user.type(screen.getByLabelText(/logradouro do local/i), 'Rua A');
+    await user.type(screen.getByLabelText(/bairro do local/i), 'Centro');
+    await user.type(screen.getByLabelText(/cep do local/i), '79000-000');
+    await user.type(screen.getByLabelText(/número do local/i), '100');
+    await user.type(screen.getByLabelText(/fonte de recurso/i), 'Tesouro Municipal');
+
+    await user.click(screen.getByRole('button', { name: /adicionar link/i }));
+    const urlInputs = screen.getAllByLabelText(/url da mídia/i);
+    await user.type(urlInputs[urlInputs.length - 1], 'https://exemplo.com/foto.jpg');
+    await user.click(screen.getByRole('button', { name: /marcar como capa/i }));
+
+    await user.click(screen.getByRole('button', { name: /criar obra/i }));
+    await waitFor(() => expect(obrasService.create).toHaveBeenCalledWith(expect.objectContaining({
+      media_assets: expect.arrayContaining([
+        expect.objectContaining({ url: 'https://exemplo.com/foto.jpg', is_cover: true }),
+      ]),
     })));
     await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/admin/obras'));
   });
