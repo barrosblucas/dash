@@ -20,6 +20,8 @@ export interface LegislacaoBuscaResponse {
 export interface LegislacaoDownloadRequest {
   id: string;
   link_legislacao: string;
+  data_publicacao: string;    // DD/MM/YYYY — para abrir a página correta
+  numero_materia: string;     // para identificar o botão na página
 }
 
 export interface LegislacaoImportRequest {

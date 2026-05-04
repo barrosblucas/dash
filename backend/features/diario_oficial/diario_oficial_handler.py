@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 import re
 from datetime import date
-from typing import Any
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
@@ -54,11 +54,15 @@ async def get_diario_hoje(request: Request) -> DiarioResponse:
 
     # Tenta obter do cache do scheduler
     scheduler = getattr(request.app.state, "diario_oficial_scheduler", None)
-    if scheduler is not None and scheduler.ultimo_resultado is not None:
+    ultimo_resultado = cast(
+        DiarioResponse | None,
+        getattr(scheduler, "ultimo_resultado", None),
+    )
+    if ultimo_resultado is not None:
         # Verifica se o cache é de hoje
-        if scheduler.ultimo_resultado.data_consulta == data_str:
+        if ultimo_resultado.data_consulta == data_str:
             logger.info("Retornando diário do cache do scheduler")
-            return scheduler.ultimo_resultado
+            return ultimo_resultado
 
     # Fallback: busca direta
     try:

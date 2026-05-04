@@ -116,6 +116,8 @@ export default function LegislacaoMunicipalAdminClient() {
       const blob = await downloadLegislacao({
         id: item.id,
         link_legislacao: item.link_legislacao,
+        data_publicacao: item.data_publicacao,
+        numero_materia: item.numero_materia,
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

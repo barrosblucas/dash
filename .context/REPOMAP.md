@@ -137,8 +137,8 @@ Snapshot: 2026-05-02
 
 #### `features/legislacao_municipal/`
 - `legislacao_municipal_types.py`: schemas Pydantic (`LegislacaoBuscaItem`, `LegislacaoBuscaResponse`, `LegislacaoImportRequest`, `LegislacaoDownloadRequest`) com campos `link_legislacao`, `link_diario_oficial`, `anexo_habilitado`
-- `legislacao_municipal_handler.py`: endpoints admin `GET /api/v1/legislacao-municipal/buscar` (busca paginada de matérias), `POST /api/v1/legislacao-municipal/importar` (importa matéria como legislação) e `POST /api/v1/legislacao-municipal/download` (download individual via Playwright com reCAPTCHA)
-- `legislacao_municipal_adapter.py`: adapter Playwright para download de matérias legislativas individuais, incluindo `validate_download_url()`, `validate_pdf_content()` e `download_legislacao_pdf()`
+- `legislacao_municipal_handler.py`: endpoints admin `GET /api/v1/legislacao-municipal/buscar` (busca paginada de matérias), `POST /api/v1/legislacao-municipal/importar` (importa matéria como legislação) e `POST /api/v1/legislacao-municipal/download` (download individual que isola a matéria dentro do PDF da edição)
+- `legislacao_municipal_adapter.py`: adapter de download individual que valida `link_legislacao`, resolve o PDF direto por `data_publicacao` + `numero_materia`, baixa do DigitalOcean Spaces, recorta a matéria/lei com pdfplumber + pypdf (CropBox) e valida o conteúdo. Se não conseguir isolar a matéria, falha explicitamente em vez de retornar a edição inteira.
 
 #### Camadas legadas (removidas)
 - `domain/`, `infrastructure/`, `services/`, `etl/`: **removidos** — re-exports backward-compat eliminados após migração completa para features/
@@ -161,6 +161,9 @@ Snapshot: 2026-05-02
 - `tests/test_etl/test_expense_pdf_sync_service.py`: testes unitários da sincronização de PDF de despesas
 - `tests/test_etl/test_quality_api_client.py`: testes unitários do contrato de URL do cliente Quality para despesas
 - `tests/test_etl/test_diario_oficial.py`: testes unitários do parser HTML do Diário Oficial (10 cenários: regular, suplementar, múltiplas edições, vazio, sem padrão, sem tamanho, traço longo, edição extra/especial)
+- `tests/test_etl/test_legislacao_municipal_scraper_download.py`: testes do fluxo Playwright + reCAPTCHA do scraper de legislação municipal (retry, skip, Playwright ausente, CLI)
+- `tests/test_etl/test_legislacao_municipal_adapter.py`: testes de integração com mock do DiarioOficialClient para o fluxo de download com recorte (erro explícito sem heading, CropBox, propagação de erros HTTP)
+- `tests/test_etl/test_legislacao_municipal_adapter_helpers.py`: testes unitários dos helpers de recorte de PDF (`_clean_html_title`, `_find_heading_position`, `_find_next_heading_edge`, `_crop_pdf_section`) com PDF sintético reportlab
 - `tests/test_ml/`: testes dos modelos de ML (preparado)
 - `pyproject.toml`: configuração de qualidade (ruff, black, mypy, pytest, coverage)
 - `requirements.txt`: dependências Python (FastAPI, SQLAlchemy, Pydantic, Prophet, etc.)

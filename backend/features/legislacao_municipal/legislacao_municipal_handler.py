@@ -157,17 +157,21 @@ async def download_legislacao(
     _: Any = Depends(require_admin_user),
 ) -> StreamingResponse:
     """
-    Baixa uma matéria legislativa individual via Playwright (contorna reCAPTCHA v3).
-    Retorna o PDF como streaming response.
+    Baixa uma matéria legislativa individual via link direto do PDF da edição.
+    Resolve o arquivo pela data/número da matéria e retorna o PDF.
 
     Protegido: requer autenticação admin.
     """
-    from backend.features.legislacao_municipal.legislacao_municipal_adapter import (  # noqa: PLC0415  # type: ignore[import-untyped]
+    from backend.features.legislacao_municipal.legislacao_municipal_adapter import (
         download_legislacao_pdf,
     )
 
     try:
-        pdf_bytes, filename = await download_legislacao_pdf(payload.link_legislacao)
+        pdf_bytes, filename = await download_legislacao_pdf(
+            link_legislacao=payload.link_legislacao,
+            data_publicacao=payload.data_publicacao,
+            numero_materia=payload.numero_materia,
+        )
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
             media_type="application/pdf",

@@ -16,23 +16,17 @@ Não duplique essas regras aqui. Em caso de conflito, siga o documento canônico
 ## Fluxo obrigatório
 1. Identifique o domínio correto antes de editar (backend, frontend, ou ambos)
 2. Verifique se a mudança exige atualização de schema Pydantic e/ou tipo TypeScript
-3. Planeje em 3 bullets os arquivos principais que serão alterados
-4. Mantenha a mudança mínima, local e aderente ao domínio
-5. Classifique a mudança usando a taxonomia canônica de `.context/AI-GOVERNANCE.md`
-6. Aplique a ordem correta:
+3. Mantenha a mudança mínima, local e aderente ao domínio
+4. Classifique a mudança usando a taxonomia canônica de `.context/AI-GOVERNANCE.md`
+5. Aplique a ordem correta:
    - `regra_de_negocio`: `test-first`
    - `borda_externa`: `contract-first + testes + implementação mínima`
    - `mudanca_mecanica`: teste no mesmo ciclo da implementação
-7. Atualize documentação viva quando aplicável
-8. Rode a validação final obrigatória
+6. Atualize documentação viva quando aplicável
+7. Rode a validação final obrigatória
 
 ## Skills e especialistas
 - Utilize o `context-mode`, e suas tools.
-- Use as skills apenas quando agregarem valor real à tarefa
-- Use skills e perspectivas especializadas de forma mínima e sob demanda
-- Trabalhe por padrão em single-thread
-- Utilize os `agents` de forma restrita e intencional
-- Não use multi-agent por padrão; só quando houver bloqueio real, alto risco, incerteza externa relevante ou pedido explícito
 - Em caso de dúvida, reduza ambiguidade consultando a matriz de execução em `.context/AI-GOVERNANCE.md`
 
 ## Documentação viva
@@ -81,3 +75,26 @@ Rode ambos os conjuntos de validação antes de considerar a tarefa pronta.
 - Se uma solicitação violar a governança do repositório, alerte e proponha a alternativa correta
 - Entidades de domínio não dependem de infraestrutura
 - Frontend nunca importa de `backend/`
+
+## Language And Naming
+
+For code and project artifacts:
+- use technical English for files, modules, tests, variables, functions, classes, database objects, and API-facing identifiers
+- prefer names that reveal scope, domain, and technical role
+- prefer explicit, predictable, and searchable naming
+
+Avoid:
+- vague names such as `data.ts`, `helper.ts`, `util.ts`, or `misc.ts`
+- mixed-language identifiers
+- repeated prefixes with no routing value
+- business logic hidden in generic `utils/`
+
+For comments:
+- write comments in `PT-BR` only when they are needed
+- keep them short and explanatory
+
+For living docs such as `CHANGELOG`, `PROJECT_STATE`, `REPOMAP`, and architecture notes:
+- write them in `PT-BR` unless the repository requires another language
+- keep technical identifiers in technical English
+
+Do not mix natural-language chat style with code naming conventions.

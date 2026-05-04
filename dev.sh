@@ -1,7 +1,8 @@
 #!/bin/bash
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
-VENV_DIR="$PROJECT_DIR/venv"
+BACKEND_VENV_DIR="$PROJECT_DIR/backend/.venv"
+ROOT_VENV_DIR="$PROJECT_DIR/venv"
 FRONTEND_DIR="$PROJECT_DIR/frontend"
 BACKEND_LOG="/tmp/dashboard_backend.log"
 FRONTEND_LOG="/tmp/dashboard_frontend.log"
@@ -10,6 +11,32 @@ PIDFILE="/tmp/dashboard_dev.pids"
 
 BACKEND_PID=""
 FRONTEND_PID=""
+
+select_venv() {
+    if [ -x "$BACKEND_VENV_DIR/bin/python" ]; then
+        VENV_DIR="$BACKEND_VENV_DIR"
+    else
+        VENV_DIR="$ROOT_VENV_DIR"
+    fi
+}
+
+check_backend_runtime() {
+    if ! "$VENV_DIR/bin/python" - <<'PY' >/dev/null 2>&1
+import fastapi
+import uvicorn
+PY
+    then
+        echo "Erro: dependências backend indisponíveis no ambiente: $VENV_DIR"
+        echo ""
+        echo "Rode:"
+        echo "  source \"$VENV_DIR/bin/activate\""
+        echo "  pip install -r \"$PROJECT_DIR/backend/requirements.txt\""
+        echo ""
+        return 1
+    fi
+
+    return 0
+}
 
 cleanup() {
     echo ""
@@ -39,18 +66,24 @@ stop_apps() {
 
 start_apps() {
     stop_apps 2>/dev/null
+    select_venv
 
     # Verifica se pode rodar localmente (venv + node_modules)
-    if [ -d "$VENV_DIR" ] && [ -d "$FRONTEND_DIR/node_modules" ]; then
+    if [ -x "$VENV_DIR/bin/python" ] && [ -d "$FRONTEND_DIR/node_modules" ]; then
         echo ""
         echo "============================================================"
         echo "  Dashboard Financeiro Municipal - Modo Desenvolvimento"
         echo "============================================================"
         echo ""
 
+        if ! check_backend_runtime; then
+            return 1
+        fi
+
         source "$VENV_DIR/bin/activate"
         cd "$PROJECT_DIR"
 
+        echo "[$(date '+%H:%M:%S')] Ambiente backend: $VENV_DIR"
         echo "[$(date '+%H:%M:%S')] Iniciando Backend (FastAPI)..."
         uvicorn backend.api.main:app --host 0.0.0.0 --port 8000 --reload --log-level info > "$BACKEND_LOG" 2>&1 &
         BACKEND_PID=$!
@@ -87,8 +120,8 @@ start_apps() {
             echo ""
             echo "Para rodar localmente:"
             echo "  sudo apt install python3.12-venv"
-            echo "  python3 -m venv $VENV_DIR"
-            echo "  source $VENV_DIR/bin/activate"
+            echo "  python3 -m venv $BACKEND_VENV_DIR"
+            echo "  source $BACKEND_VENV_DIR/bin/activate"
             echo "  pip install -r $PROJECT_DIR/backend/requirements.txt"
             echo "  cd $FRONTEND_DIR && npm install"
             return

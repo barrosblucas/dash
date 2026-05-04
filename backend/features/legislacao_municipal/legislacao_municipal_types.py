@@ -40,6 +40,12 @@ class LegislacaoDownloadRequest(BaseModel):
     link_legislacao: str = Field(
         ..., description="URL /baixar-materia/{id}/{hash} para download via reCAPTCHA"
     )
+    data_publicacao: str = Field(
+        ..., description="Data de publicação no formato DD/MM/YYYY"
+    )
+    numero_materia: str = Field(
+        ..., description="Número da matéria para localizar o botão na página"
+    )
 
 
 class LegislacaoImportRequest(BaseModel):

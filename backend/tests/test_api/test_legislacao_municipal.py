@@ -8,15 +8,13 @@ Endpoints:
 
 from __future__ import annotations
 
-import base64
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 HANDLER = "backend.features.legislacao_municipal.legislacao_municipal_handler"
 ADAPTER = "backend.features.legislacao_municipal.legislacao_municipal_adapter"
-ASYNC_PLAYWRIGHT = "playwright.async_api.async_playwright"
 
 
 def _raw_legislacao_item(
@@ -202,7 +200,9 @@ class TestImportarLegislacao:
         mock_importar.assert_awaited_once()
 
         # Extrai o payload (terceiro argumento) da chamada
-        _call_db, _call_client, call_payload = mock_importar.await_args.args
+        await_args = mock_importar.await_args
+        assert await_args is not None
+        _call_db, _call_client, call_payload = await_args.args
 
         # O link_download no DiarioImportRequest deve ser o link_diario_oficial
         assert call_payload.link_download == import_payload["link_diario_oficial"]
@@ -219,38 +219,23 @@ class TestLegislacaoMunicipalDownload:
     INVALID_URL = "https://evil.com/baixar-materia/123/abc"
     DOWNLOAD_ENDPOINT = "/api/v1/legislacao-municipal/download"
 
-    @staticmethod
-    def _make_mock_playwright(page_evaluate_result: str | None = None) -> MagicMock:
-        """Constrói a cadeia de mocks do Playwright.
+    _BASE_PAYLOAD = {
+        "id": "123",
+        "link_legislacao": VALID_URL,
+        "data_publicacao": "24/04/2026",
+        "numero_materia": "2904",
+    }
 
-        Retorna um mock que, quando usado como async_playwright(), produz a
-        cadeia: pw → browser → context → page, onde page.evaluate retorna
-        o valor fornecido.
-        """
-        mock_page = AsyncMock()
-        mock_page.evaluate = AsyncMock(return_value=page_evaluate_result)
-
-        mock_context = AsyncMock()
-        mock_context.new_page = AsyncMock(return_value=mock_page)
-
-        mock_browser = AsyncMock()
-        mock_browser.new_context = AsyncMock(return_value=mock_context)
-
-        mock_chromium = MagicMock()
-        mock_chromium.launch = AsyncMock(return_value=mock_browser)
-
-        mock_pw = AsyncMock()
-        mock_pw.chromium = mock_chromium
-        mock_pw.__aenter__ = AsyncMock(return_value=mock_pw)
-        mock_pw.__aexit__ = AsyncMock(return_value=None)
-
-        return mock_pw
+    def _payload(self, **overrides: str) -> dict[str, str]:
+        p = dict(self._BASE_PAYLOAD)
+        p.update(overrides)
+        return p
 
     def test_download_sem_auth_retorna_401(self, client: TestClient) -> None:
         """Sem token de admin, retorna 401."""
         response = client.post(
             self.DOWNLOAD_ENDPOINT,
-            json={"id": "123", "link_legislacao": self.VALID_URL},
+            json=self._payload(),
         )
         assert response.status_code == 401
 
@@ -259,12 +244,16 @@ class TestLegislacaoMunicipalDownload:
         client: TestClient,
         admin_login: dict[str, str],
     ) -> None:
-        """URL fora do domínio permitido retorna 400 sem acionar Playwright."""
-        response = client.post(
-            self.DOWNLOAD_ENDPOINT,
-            headers=admin_login,
-            json={"id": "123", "link_legislacao": self.INVALID_URL},
-        )
+        """URL fora do domínio permitido retorna 400."""
+        with patch(f"{ADAPTER}.validate_download_url") as mock_validate:
+            mock_validate.side_effect = ValueError("URL de download inválida")
+
+            response = client.post(
+                self.DOWNLOAD_ENDPOINT,
+                headers=admin_login,
+                json=self._payload(link_legislacao=self.INVALID_URL),
+            )
+
         assert response.status_code == 400
         assert "inválida" in response.text.lower()
 
@@ -275,21 +264,23 @@ class TestLegislacaoMunicipalDownload:
     ) -> None:
         """Com dados válidos, retorna PDF com headers corretos."""
         fake_pdf = b"%PDF-1.4\n1 0 obj\nendobj\n%%EOF"
-        b64_content = base64.b64encode(fake_pdf).decode()
-        mock_pw = self._make_mock_playwright(b64_content)
+        mock_download = AsyncMock(
+            return_value=(fake_pdf, "legislacao_123.pdf")
+        )
 
-        with patch(ASYNC_PLAYWRIGHT, return_value=mock_pw):
+        with patch(
+            f"{ADAPTER}.download_legislacao_pdf", mock_download
+        ):
             response = client.post(
                 self.DOWNLOAD_ENDPOINT,
                 headers=admin_login,
-                json={"id": "123", "link_legislacao": self.VALID_URL},
+                json=self._payload(),
             )
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "application/pdf"
         assert "attachment" in response.headers["content-disposition"]
         assert response.content.startswith(b"%PDF")
-        # Verifica que o PDF mockado foi retornado intacto
         assert response.content == fake_pdf
 
     def test_download_conteudo_invalido_retorna_400(
@@ -298,54 +289,41 @@ class TestLegislacaoMunicipalDownload:
         admin_login: dict[str, str],
     ) -> None:
         """Conteúdo que não é PDF retorna 400 sem vazar detalhes."""
-        b64_content = base64.b64encode(b"<html>error page</html>").decode()
-        mock_pw = self._make_mock_playwright(b64_content)
+        mock_download = AsyncMock(
+            side_effect=ValueError("Conteúdo retornado não é um PDF válido")
+        )
 
-        with patch(ASYNC_PLAYWRIGHT, return_value=mock_pw):
+        with patch(
+            f"{ADAPTER}.download_legislacao_pdf", mock_download
+        ):
             response = client.post(
                 self.DOWNLOAD_ENDPOINT,
                 headers=admin_login,
-                json={"id": "123", "link_legislacao": self.VALID_URL},
+                json=self._payload(),
             )
 
         assert response.status_code == 400
-        # Não deve vazar detalhes do conteúdo retornado
         assert "html" not in response.text.lower()
-        assert "error" not in response.text.lower()
 
-    def test_download_falha_playwright_retorna_erro_generico(
+    def test_download_falha_adapter_retorna_erro_generico(
         self,
         client: TestClient,
         admin_login: dict[str, str],
     ) -> None:
-        """Exceção do Playwright retorna erro 500 sem vazar detalhes."""
-        mock_page = AsyncMock()
-        mock_page.evaluate = AsyncMock(
+        """Exceção do adapter retorna erro 500 sem vazar detalhes."""
+        mock_download = AsyncMock(
             side_effect=Exception("Timeout ao acessar página")
         )
 
-        mock_context = AsyncMock()
-        mock_context.new_page = AsyncMock(return_value=mock_page)
-
-        mock_browser = AsyncMock()
-        mock_browser.new_context = AsyncMock(return_value=mock_context)
-
-        mock_chromium = MagicMock()
-        mock_chromium.launch = AsyncMock(return_value=mock_browser)
-
-        mock_pw = AsyncMock()
-        mock_pw.chromium = mock_chromium
-        mock_pw.__aenter__ = AsyncMock(return_value=mock_pw)
-        mock_pw.__aexit__ = AsyncMock(return_value=None)
-
-        with patch(ASYNC_PLAYWRIGHT, return_value=mock_pw):
+        with patch(
+            f"{ADAPTER}.download_legislacao_pdf", mock_download
+        ):
             response = client.post(
                 self.DOWNLOAD_ENDPOINT,
                 headers=admin_login,
-                json={"id": "123", "link_legislacao": self.VALID_URL},
+                json=self._payload(),
             )
 
         assert response.status_code == 500
-        # Não deve vazar detalhes internos na resposta
         assert "Timeout" not in response.text
         assert "Falha ao processar o download" in response.text

@@ -58,3 +58,9 @@ Thumbs.db
 # Test artifacts
 .coverage
 *.tsbuildinfo
+
+# Data
+data/*
+frontend/tsconfig.tsbuildinfo
+backend/despesas/2026.pdf
+backend/.coverage
