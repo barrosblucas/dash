@@ -260,6 +260,7 @@ class ObraMedicaoModel(Base):
     mes_referencia = Column(Integer, nullable=False)
     ano_referencia = Column(Integer, nullable=False)
     valor_medicao = Column(Numeric(18, 2), nullable=False, default=Decimal("0"))
+    progresso_fisico = Column(Numeric(5, 2), nullable=True)
     observacao = Column(Text, nullable=True)
     created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
     updated_at = Column(

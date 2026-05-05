@@ -28,22 +28,9 @@ export default function ObraMeasurementHistory({
     });
   }, [medicoes]);
 
-  const totalMedido = useMemo(() => {
-    return sortedMedicoes.reduce((sum, m) => sum + m.valor_medicao, 0);
-  }, [sortedMedicoes]);
+  const ultimaIndex = sortedMedicoes.length > 0 ? sortedMedicoes.length - 1 : -1;
 
-  const medicoesComPercentual = useMemo(() => {
-    let acumulado = 0;
-    return sortedMedicoes.map((medicao) => {
-      acumulado += medicao.valor_medicao;
-      const percentual = totalMedido > 0 ? (acumulado / totalMedido) * 100 : 0;
-      return { ...medicao, percentual };
-    });
-  }, [sortedMedicoes, totalMedido]);
-
-  const ultimaIndex = medicoesComPercentual.length > 0 ? medicoesComPercentual.length - 1 : -1;
-
-  if (medicoesComPercentual.length === 0) {
+  if (sortedMedicoes.length === 0) {
     return (
       <div className="bg-surface-container-lowest rounded-3xl p-8">
         <div className="flex items-center justify-between mb-6">
@@ -93,7 +80,7 @@ export default function ObraMeasurementHistory({
             </tr>
           </thead>
           <tbody>
-            {medicoesComPercentual.map((medicao, index) => {
+            {sortedMedicoes.map((medicao, index) => {
               const isUltima = index === ultimaIndex;
               const bgClass = index % 2 === 0 ? 'bg-surface' : 'bg-surface-container-low';
               return (
@@ -108,7 +95,7 @@ export default function ObraMeasurementHistory({
                     {String(medicao.mes_referencia).padStart(2, '0')}/{medicao.ano_referencia}
                   </td>
                   <td className="px-4 py-3.5 text-on-surface">
-                    {medicao.percentual.toFixed(1)}%
+                    {medicao.progresso_fisico != null ? `${medicao.progresso_fisico.toFixed(1)}%` : '—'}
                   </td>
                   <td className="px-4 py-3.5 text-right font-semibold text-primary">
                     {formatCurrency(medicao.valor_medicao)}

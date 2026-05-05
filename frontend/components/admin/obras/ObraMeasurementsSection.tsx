@@ -49,7 +49,7 @@ export default function ObraMeasurementsSection({
               </button>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               <InputField label="Sequência" value={medicao.sequencia} onChange={() => undefined} readOnly />
               <InputField
                 label="Mês da medição"
@@ -70,6 +70,15 @@ export default function ObraMeasurementsSection({
                 label="Valor da medição"
                 value={medicao.valor_medicao}
                 onChange={(value) => onChangeMeasurement(index, { ...medicao, valor_medicao: value ?? 0 })}
+              />
+              <InputField
+                label="% Avanço físico"
+                type="number"
+                min={0}
+                max={100}
+                step={0.1}
+                value={medicao.progresso_fisico ?? ''}
+                onChange={(value) => onChangeMeasurement(index, { ...medicao, progresso_fisico: value !== '' ? Number(value) : null })}
               />
             </div>
 

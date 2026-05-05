@@ -36,6 +36,7 @@ export interface ObraMedicao {
   mes_referencia: number;
   ano_referencia: number;
   valor_medicao: number;
+  progresso_fisico: number | null;
   observacao: string | null;
   media_assets: ObraMediaAsset[];
 }

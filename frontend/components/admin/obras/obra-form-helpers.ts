@@ -51,6 +51,7 @@ export const createMeasurement = (sequencia: number): ObraMedicao => ({
   mes_referencia: 1,
   ano_referencia: new Date().getFullYear(),
   valor_medicao: 0,
+  progresso_fisico: null,
   observacao: '',
   media_assets: [],
 });

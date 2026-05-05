@@ -65,6 +65,7 @@ class MedicaoPayload(BaseModel):
     mes_referencia: int = Field(..., ge=1, le=12)
     ano_referencia: int = Field(..., ge=2000, le=2100)
     valor_medicao: Decimal = Field(..., ge=0)
+    progresso_fisico: Decimal | None = Field(default=None, ge=0, le=100)
     observacao: str | None = Field(default=None, max_length=2000)
     media_assets: list[ObraMediaAssetPayload] = Field(default_factory=list)
 
@@ -75,6 +76,7 @@ class MedicaoResponse(BaseModel):
     mes_referencia: int
     ano_referencia: int
     valor_medicao: Decimal
+    progresso_fisico: Decimal | None = None
     observacao: str | None = None
     media_assets: list[ObraMediaAssetResponse]
 

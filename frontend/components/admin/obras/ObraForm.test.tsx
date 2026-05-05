@@ -213,7 +213,7 @@ describe('ObraForm - edição com medições', () => {
       ],
       media_assets: [],
       medicoes: [
-        { id: 1, sequencia: 1, mes_referencia: 3, ano_referencia: 2024, valor_medicao: 100000, observacao: 'Primeira medição', media_assets: [] },
+        { id: 1, sequencia: 1, mes_referencia: 3, ano_referencia: 2024, valor_medicao: 100000, progresso_fisico: null, observacao: 'Primeira medição', media_assets: [] },
       ],
       valor_medido_total: 100000,
       created_at: '2024-01-01T00:00:00Z',
@@ -222,7 +222,7 @@ describe('ObraForm - edição com medições', () => {
     vi.mocked(obrasService.update).mockResolvedValue({
       ...createServiceRecord(),
       hash: 'edit-hash',
-      medicoes: [{ id: 1, sequencia: 1, mes_referencia: 3, ano_referencia: 2024, valor_medicao: 150000, observacao: 'Primeira medição', media_assets: [] }],
+      medicoes: [{ id: 1, sequencia: 1, mes_referencia: 3, ano_referencia: 2024, valor_medicao: 150000, progresso_fisico: null, observacao: 'Primeira medição', media_assets: [] }],
       valor_medido_total: 150000,
     } as Awaited<ReturnType<typeof obrasService.update>>);
     renderWithQuery(<ObraForm obraHash="edit-hash" />);

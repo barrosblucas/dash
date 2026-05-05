@@ -28,6 +28,7 @@ const toNumber = (value: number | string | null | undefined): number | null => {
 const normalizeMedicao = (medicao: ObraMedicao): ObraMedicao => ({
   ...medicao,
   valor_medicao: toNumber(medicao.valor_medicao) ?? 0,
+  progresso_fisico: toNumber(medicao.progresso_fisico),
   media_assets: (medicao.media_assets ?? []).map(normalizeMediaAsset),
 });
 

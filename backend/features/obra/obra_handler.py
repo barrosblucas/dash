@@ -94,6 +94,7 @@ def _medicao_response(
         mes_referencia=model.mes_referencia,
         ano_referencia=model.ano_referencia,
         valor_medicao=model.valor_medicao,
+        progresso_fisico=model.progresso_fisico,
         observacao=model.observacao,
         media_assets=[_media_response(item) for item in media_assets],
     )
