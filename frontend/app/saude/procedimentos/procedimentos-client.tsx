@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
+import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
 import { formatNumber } from '@/lib/utils';
@@ -39,6 +40,8 @@ export default function ProcedimentosClient() {
         </div>
         <SaudeSyncBadge value={proceduresQuery.data?.last_synced_at} />
       </div>
+
+      <SaudeFeatureNav />
 
       <section className="rounded-3xl bg-surface-container-low p-6 shadow-ambient">
         <div className="h-[320px]">

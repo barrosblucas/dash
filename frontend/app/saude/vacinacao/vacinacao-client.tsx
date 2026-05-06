@@ -122,12 +122,12 @@ export default function VacinacaoClient() {
         </SaudePanel>
 
         <SaudePanel title="Vacinas mais aplicadas" description="Ranking do período para identificar os imunizantes com maior volume.">
-          <div className="h-[320px]">
+          <div className="h-[420px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topApplied} layout="vertical" margin={{ left: 40 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
                 <XAxis type="number" tick={{ fill: 'currentColor', fontSize: 12 }} />
-                <YAxis type="category" dataKey="label" width={180} tick={{ fill: 'currentColor', fontSize: 12 }} />
+                <YAxis type="category" dataKey="label" width={150} tick={{ fill: 'currentColor', fontSize: 11 }} tickMargin={8} />
                 <Tooltip />
                 <Bar dataKey="value" radius={[0, 10, 10, 0]}>
                   {topApplied.map((entry, index) => (

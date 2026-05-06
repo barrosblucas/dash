@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+import SaudeFeatureNav from '@/components/saude/SaudeFeatureNav';
 import SaudeStateBlock from '@/components/saude/SaudeStateBlock';
 import SaudeSyncBadge from '@/components/saude/SaudeSyncBadge';
 import { saudeService } from '@/services/saude-service';
@@ -60,6 +61,8 @@ export default function UnidadesClient() {
         </div>
         <SaudeSyncBadge value={syncStatusQuery.data?.last_success_at ?? null} />
       </div>
+
+      <SaudeFeatureNav />
 
       <section className="rounded-3xl bg-surface-container-low p-6 shadow-ambient">
         <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">

@@ -135,7 +135,7 @@ export default function HospitalClient() {
         </SaudePanel>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section>
         <SaudePanel title="Atendimentos mensais" description="Atendimentos hospitalares agregados pelos meses cobertos pelo período selecionado.">
           <MonthlySeriesOrUnavailable
             items={hospitalQuery.data?.attendances_by_month ?? []}
@@ -193,6 +193,7 @@ export default function HospitalClient() {
             items={hospitalQuery.data?.attendances_by_doctor ?? []}
             emptyTitle="Atendimentos por médico indisponíveis"
             emptyDescription="A fonte externa não retornou produção por médico para o filtro atual."
+            layout="horizontal"
           />
         </SaudePanel>
 
@@ -201,6 +202,7 @@ export default function HospitalClient() {
             items={hospitalQuery.data?.attendances_by_specialty_cbo ?? []}
             emptyTitle="CBO da especialidade indisponível"
             emptyDescription="A fonte externa não retornou a distribuição por CBO para o filtro atual."
+            layout="horizontal"
           />
         </SaudePanel>
       </section>
@@ -307,22 +309,43 @@ function RankingOrUnavailable({
   items,
   emptyTitle,
   emptyDescription,
+  layout = 'vertical',
 }: {
   items: SaudeLabelValueItem[];
   emptyTitle: string;
   emptyDescription: string;
+  layout?: 'vertical' | 'horizontal';
 }) {
   if (!hasChartData(items)) {
     return <SaudeUnavailablePanel title={emptyTitle} description={emptyDescription} />;
   }
 
+  const minItemGap = 56;
+  const chartHeight = Math.max(480, items.length * minItemGap + 48);
+
+  if (layout === 'horizontal') {
+    return (
+      <div className="h-[320px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={items} margin={{ top: 8, right: 24, bottom: 8, left: 16 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
+            <XAxis dataKey="label" tick={{ fill: 'currentColor', fontSize: 11 }} angle={-35} textAnchor="end" height={80} />
+            <YAxis tick={{ fill: 'currentColor', fontSize: 12 }} />
+            <Tooltip />
+            <Bar dataKey="value" fill="#0f4c81" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-[300px]">
+    <div style={{ height: chartHeight }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={items} layout="vertical" margin={{ left: 24 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
           <XAxis type="number" tick={{ fill: 'currentColor', fontSize: 12 }} />
-          <YAxis type="category" dataKey="label" width={120} tick={{ fill: 'currentColor', fontSize: 12 }} />
+          <YAxis type="category" dataKey="label" width={150} tick={{ fill: 'currentColor', fontSize: 11 }} tickMargin={8} />
           <Tooltip />
           <Bar dataKey="value" fill="#0f4c81" radius={[0, 10, 10, 0]} />
         </BarChart>
