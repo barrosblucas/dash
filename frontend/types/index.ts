@@ -15,3 +15,4 @@ export * from './user';
 export * from './obra';
 export * from './saude';
 export * from './legislacao';
+export * from './institucional';

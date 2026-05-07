@@ -5,6 +5,7 @@ const footerSections = [
     title: 'Portal',
     links: [
       { name: 'Início', href: '/' },
+      { name: 'Prefeitura', href: '/prefeitura' },
       { name: 'Painel Financeiro', href: '/dashboard' },
       { name: 'Obras Públicas', href: '/obras' },
       { name: 'Ações da Gestão', href: '/acoes' },

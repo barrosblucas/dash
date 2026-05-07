@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-05-04 (atualizado com suporte a capa de obra)
+Snapshot: 2026-05-06 (adicionado bounded context institucional)
 
 ## Status geral
 
@@ -36,6 +36,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Detecção de mudança por hash SHA-256 para anos ≥2026 em `quality_sync_state` (evita reprocessamento quando dados não mudaram)
 - [x] Endpoints de breakdown de despesas: `GET /api/v1/despesas/breakdown/{type}/{ano}`, `GET /api/v1/despesas/breakdown/{type}/{ano}/totais`, `GET /api/v1/despesas/breakdown/{type}/anos`
 - [x] Sincronização de unidades gestoras via `fetch_unidades_gestoras` e persistência em `quality_unidade_gestora`
+- [x] Bounded context `institucional` com endpoints públicos (prefeitura, gestão, secretarias, repartições), CRUD admin protegido e bootstrap idempotente com 11 departamentos/autarquias
 - [x] Schemas Pydantic para todas as bordas
 - [x] Proxy routes para licitações: ComprasBR (JSON paginado) e Quality (scraping HTML de dispensas)
 - [x] Bounded context `legislacao` com CRUD admin completo (listagem paginada com filtros por tipo/ano/status/busca, detalhe completo com texto integral, criação, atualização e remoção)
@@ -100,6 +101,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Filtros de período (`start_date`/`end_date`) integrados nos clientes frontend de atenção primária, vacinação, visitas domiciliares, farmácia e saúde bucal via componente `SaudePeriodFilter` reutilizável
 - [x] Troca de período nos dashboards de saúde preserva o conteúdo anterior durante o carregamento e sincroniza o ano com a data inicial selecionada
 - [x] Hospital público com filtro anual/período, heatmap real em linha dedicada, série mensal consolidada, não munícipes, atendimentos por médico, atendimentos por CBO, painel CID e procedimentos separados entre período e especialidade, usando os endpoints públicos verificados da Genesis
+- [x] **Páginas públicas da Prefeitura** (`/prefeitura`, `/prefeitura/prefeito-e-vice`, `/prefeitura/gabinete`, `/prefeitura/secretarias`, `/prefeitura/secretarias/[slug]`, `/prefeitura/reparticoes`) com hero institucional, cards de gestores, navegação contextual, missão/visão/valores e contatos
 
 ### Frontend — Reformulação Visual Completa v2 (2026-04-22)
 - [x] **Reformulação completa do frontend** seguindo templates HTML de referência (`design_system/`)

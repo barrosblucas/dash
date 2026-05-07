@@ -27,6 +27,9 @@ from backend.features.export.export_handler import router as export_router
 from backend.features.forecast.forecast_handler import router as forecast_router
 from backend.features.identity.identity_data import bootstrap_first_admin
 from backend.features.identity.identity_handler import router as identity_router
+from backend.features.institucional.institucional_handler import (
+    router as institucional_router,
+)
 from backend.features.kpi.kpi_handler import router as kpis_router
 from backend.features.legislacao.legislacao_handler import (
     router as legislacao_router,
@@ -133,13 +136,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
     try:
         with db_manager.get_session() as session:
-            from backend.features.legislacao.legislacao_bootstrap import (
-                bootstrap_legislacoes,
-            )
+            from backend.features.legislacao import legislacao_bootstrap
 
-            bootstrap_legislacoes(session)
+            legislacao_bootstrap.bootstrap_legislacoes(session)
     except Exception:
         logger.exception("Falha no bootstrap de legislações")
+
+    try:
+        with db_manager.get_session() as session:
+            from backend.features.institucional import institucional_bootstrap
+
+            institucional_bootstrap.bootstrap_institucional(session)
+    except Exception:
+        logger.exception("Falha no bootstrap institucional")
 
     saude_scheduler = None
     try:
@@ -283,6 +292,7 @@ app.include_router(saude_router, prefix="/api/v1")
 app.include_router(diario_oficial_router, prefix="/api/v1")
 app.include_router(legislacao_router, prefix="/api/v1")
 app.include_router(legislacao_municipal_router, prefix="/api/v1")
+app.include_router(institucional_router, prefix="/api/v1")
 
 
 # Endpoint de health check

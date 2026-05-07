@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-05-04
+Snapshot: 2026-05-06
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -22,13 +22,14 @@ Snapshot: 2026-05-04
 
 #### `shared/` — infraestrutura compartilhada
 - `shared/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
-- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, locais/fontes/mídias de obras com `is_cover`, legislações)
+- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, locais/fontes/mídias de obras com `is_cover`, legislações, profile institucional, departamentos, repartições)
 - `shared/database/saude_models.py`: modelos ORM de saúde (unidades, horários, snapshots, logs de sync, medicamentos, farmácia, vacinação, epidemiológico, APS, saúde bucal, procedimentos)
+- `shared/database/institucional_models.py`: modelos ORM institucionais (ProfileInstitucionalModel, DepartmentModel, OfficeModel)
 
 #### `alembic/` — migrations
 - `alembic.ini`: configuração do Alembic apontando para `backend.shared.database.models.Base`
 - `alembic/env.py`: ambiente de migration reutilizando a engine do projeto (`create_db_engine`)
-- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento + revisão `1c2d3e4f5a6b_add_obra_related_tables.py` para locais/fontes/mídias de obras + revisão `a1b2c3d4e5f6_add_legislacao_table.py` para legislações + revisão `d4e5f6a7b8c9` adiciona `is_cover` em `obra_media_assets` + revisão `e6f7a8b9c0d1` faz merge dos heads do Alembic)
+- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento + revisão `1c2d3e4f5a6b_add_obra_related_tables.py` para locais/fontes/mídias de obras + revisão `a1b2c3d4e5f6_add_legislacao_table.py` para legislações + revisão `d4e5f6a7b8c9` adiciona `is_cover` em `obra_media_assets` + revisão `e6f7a8b9c0d1` faz merge dos heads do Alembic + revisão `f0e1d2c3b4a5_add_institucional_tables.py` para tabelas institucionais)
 - `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha)
 - `shared/security.py`: hash de senha Argon2, emissão/validação de tokens JWT e dependências de autenticação/autorização
 - `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
@@ -127,6 +128,12 @@ Snapshot: 2026-05-04
 - `diario_oficial_handler.py`: endpoint público `GET /api/v1/diario-oficial/hoje` com cache do scheduler e fallback direto
 - `diario_oficial_scheduler.py`: APScheduler com jobs às 06:00 (edição regular) e 16:00 (verifica suplementar), cache em `app.state`
 
+#### `features/institucional/`
+- `institucional_types.py`: schemas Pydantic — `PrefeituraResponse`, `GestaoResponse`, `DepartmentRecord`, `OfficeRecord`, `ProfileUpdateRequest`, `DepartmentCreateRequest`, `DepartmentUpdateRequest`, `OfficeCreateRequest`, `OfficeUpdateRequest`, enums `DepartmentKind`, `OfficeKind`
+- `institucional_handler.py`: rotas públicas `/api/v1/institucional/{prefeitura,gestao,secretarias,secretarias/{slug},reparticoes}` e admin `/admin/{profile,secretarias,reparticoes}` com CRUD completo e proteção `require_admin_user`
+- `institucional_data.py`: persistência SQLAlchemy — funções `get_profile`, `update_profile`, `list_departments`, `get_department_by_slug`, CRUD de departments e offices, mapeadores `profile_to_prefeitura_dict`, `profile_to_gestao_dict`, `department_to_dict`, `office_to_dict`
+- `institucional_bootstrap.py`: bootstrap idempotente — profile com `city_hall_name="Prefeitura de Bandeirantes"`, 10 secretarias + SAAE (autarquia), repartições iniciais vinculadas
+
 #### `features/legislacao/`
 - `legislacao_types.py`: schemas Pydantic (`StatusLegislacao`, `TipoLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`, `LegislacaoCreateRequest`, `LegislacaoUpdateRequest`)
 - `legislacao_data.py`: persistência SQLAlchemy (`SQLLegislacaoRepository`) com CRUD completo, filtros, paginação e busca textual
@@ -217,6 +224,12 @@ Snapshot: 2026-05-04
 - `components/layouts/DashboardLayout.tsx`: layout wrapper com sidebar fixa (md+) e drawer mobile animado
 - `components/layouts/PortalHeader.tsx`: header público com nav links, theme toggle, "Acesso Restrito"
 - `components/layouts/PortalFooter.tsx`: footer com grid 4 colunas + copyright
+- `components/prefeitura/PrefeituraPageHeader.tsx`: hero institucional reutilizável para páginas da prefeitura
+- `components/prefeitura/PrefeituraCard.tsx`: card reutilizável com título, descrição e children
+- `components/prefeitura/PrefeituraContactBlock.tsx`: grid de contatos com ícones
+- `components/prefeitura/PrefeituraPlaceholder.tsx`: fallback elegante "Informações em atualização"
+- `components/prefeitura/PrefeituraOfficialCard.tsx`: card de gestor com foto, cargo, nome e bio
+- `components/prefeitura/PrefeituraFeatureNav.tsx`: navegação contextual em pills entre as páginas da prefeitura
 - `components/saude/SaudeSyncBadge.tsx`: badge reutilizável de última sincronização para a feature saúde
 - `components/saude/SaudeStateBlock.tsx`: estados de loading/erro/empty da feature saúde
 - `components/saude/SaudePageSection.tsx`: kit visual compartilhado da feature (`SaudePageHeader`, `SaudePanel`, `SaudeMetricCard`, `SaudeUnavailablePanel`, `SaudeFeatureCard`)
@@ -286,10 +299,24 @@ Snapshot: 2026-05-04
 - `app/saude/hospital/page.tsx`: página pública hospitalar
 - `app/saude/hospital/hospital-client.tsx`: dashboard hospitalar com heatmap em largura total, série mensal, não munícipes, CID, procedimentos por período/especialidade e filtros anual/período
 - `app/saude/hospital/hospital-client.test.tsx`: cobertura dos estados hospitalares indisponíveis
+- `services/institucional-service.test.ts`: testes do service institucional (prefeitura, gestão, secretarias, detalhe, repartições)
+- `app/prefeitura/prefeitura-client.test.tsx`: testes do client da landing da prefeitura (loading, dados, navegação)
 - `app/saude/procedimentos/page.tsx`: página pública de procedimentos
 - `app/saude/procedimentos/procedimentos-client.tsx`: gráfico e tabela de procedimentos por tipo
 - `app/saude/unidades/page.tsx`: página pública de unidades de saúde
 - `app/saude/unidades/unidades-client.tsx`: filtros, contagem e integração dinâmica com mapa Leaflet
+- `app/prefeitura/page.tsx`: landing page pública da Prefeitura Municipal
+- `app/prefeitura/prefeitura-client.tsx`: hero, contatos, redes sociais e cards de navegação para subpáginas
+- `app/prefeitura/prefeito-e-vice/page.tsx`: página pública do prefeito e vice-prefeito
+- `app/prefeitura/prefeito-e-vice/prefeito-vice-client.tsx`: cards dos gestores eleitos
+- `app/prefeitura/gabinete/page.tsx`: página pública do gabinete do prefeito
+- `app/prefeitura/gabinete/gabinete-client.tsx`: descrição do gabinete e card do chefe de gabinete
+- `app/prefeitura/secretarias/page.tsx`: index de secretarias e autarquias
+- `app/prefeitura/secretarias/secretarias-client.tsx`: grid de cards com badges de tipo e links para detalhe
+- `app/prefeitura/secretarias/[slug]/page.tsx`: detalhe de secretaria/SAAE
+- `app/prefeitura/secretarias/[slug]/secretaria-detail-client.tsx`: foto do secretário, missão/visão/valores, contatos
+- `app/prefeitura/reparticoes/page.tsx`: lista de repartições e setores municipais
+- `app/prefeitura/reparticoes/reparticoes-client.tsx`: endereços, telefones e links para Google Maps
 - `app/contratos/page.tsx`: placeholder — Gestão de Contratos
 - `app/diarias/page.tsx`: placeholder — Diárias e Passagens
 - `app/licitacoes/page.tsx`: placeholder — Licitações
@@ -327,6 +354,7 @@ Snapshot: 2026-05-04
 - `services/saude-service.ts`: consumo dos endpoints públicos e administrativos da feature saúde, incluindo vacinação, visitas, APS, saúde bucal, hospital e farmácia
 - `services/diario-oficial-service.ts`: cliente `fetchDiarioHoje()` para consulta do endpoint `/api/v1/diario-oficial/hoje`; `buscarDiario()` e `importarDiario()` para os endpoints admin de busca e importação
 - `services/legislacao-service.ts`: service da feature legislação com `list(filters)` e `getById(id)`
+- `services/institucional-service.ts`: service da feature institucional/prefeitura com `getCityHall`, `getManagement`, `listDepartments`, `getDepartmentBySlug`, `listOffices`
 - `stores/filtersStore.ts`: store Zustand de filtros
 - `stores/authStore.ts`: store em memória da sessão administrativa (sem persistência do access token)
 - `stores/themeStore.ts`: store Zustand de tema (light/dark) com persistência + hook useChartThemeColors
@@ -349,6 +377,7 @@ Snapshot: 2026-05-04
 - `types/diario-oficial.ts`: contratos TS da feature diário oficial (`DiarioEdicao`, `DiarioResponse`, `DiarioBuscaItem`, `DiarioBuscaResponse`, `DiarioImportRequest`)
 - `types/saude.ts`: contratos TS da feature saúde espelhando os schemas Pydantic do backend, incluindo os novos dashboards públicos
 - `types/legislacao.ts`: contratos TS da feature legislação (`TipoLegislacao`, `StatusLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`)
+- `types/institucional.ts`: contratos TS da feature institucional/prefeitura (`CityHallRecord`, `ManagementRecord`, `DepartmentRecord`, `OfficeRecord`)
 - `types/index.ts`: barrel de exports
 - `public/`: assets estáticos
 

@@ -38,7 +38,8 @@ dashboard/
 │   │   ├── export/           # Contexto de exportação
 │   │   ├── identity/         # Contexto de identidade/admin
 │   │   ├── obra/             # Contexto de obras públicas
-│   │   └── saude/            # Contexto de Saúde Transparente (snapshots E-Saúde + CRUD de unidades)
+│   │   ├── saude/            # Contexto de Saúde Transparente (snapshots E-Saúde + CRUD de unidades)
+│   │   └── institucional/    # Contexto institucional (prefeitura, gestão, secretarias, repartições)
 │   ├── shared/               # Infraestrutura compartilhada entre features
 │   │   ├── database/
 │   │   │   ├── connection.py # Engine SQLAlchemy, session factory, DatabaseManager
@@ -129,6 +130,7 @@ O backend é organizado em bounded contexts verticais dentro de `features/`. Cad
 | Identity | `features/identity/` | types, handler, data |
 | Obra | `features/obra/` | types, handler, data, business |
 | Saúde | `features/saude/` | types, handler, data, business, adapter, scheduler |
+| Institucional | `features/institucional/` | types, handler, data, bootstrap |
 | Legislação | `features/legislacao/` | types, handler, data, adapter, bootstrap |
 | Diário Oficial | `features/diario_oficial/` | types, handler, adapter, scheduler |
 
@@ -211,6 +213,9 @@ types → (nenhuma dependência externa)
 - **IdentityToken**: refresh/reset tokens persistidos com `jti`, expiração e revogação
 - **Obra**: obra pública identificada externamente por `hash`, com local principal derivado e coleções de locais/fontes/mídias
 - **ObraMedicao**: medições mensais filhas com upsert por `sequencia` e anexos opcionais
+- **ProfileInstitucional**: singleton com dados públicos da prefeitura, prefeito, vice, chefe de gabinete e redes sociais
+- **Department**: secretaria municipal ou autarquia com secretário, missão, visão, valores e contatos
+- **Office**: repartição/setor vinculado opcionalmente a um departamento, com endereço, telefone e coordenadas
 - **Legislacao**: legislações municipais com tipo, número, ano, ementa, texto integral, vigência e status; seed via bootstrap idempotente
 
 ### Enums de domínio

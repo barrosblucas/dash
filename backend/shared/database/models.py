@@ -1,4 +1,5 @@
 """Modelos ORM compartilhados do banco."""
+
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -20,6 +21,7 @@ from sqlalchemy.sql import func
 
 class Base(DeclarativeBase):
     pass
+
 
 class ReceitaModel(Base):
     __tablename__ = "receitas"
@@ -50,6 +52,7 @@ class ReceitaModel(Base):
         Index("ix_receita_categoria_ano", "categoria", "ano"),
     )
 
+
 class DespesaModel(Base):
     __tablename__ = "despesas"
 
@@ -77,6 +80,7 @@ class DespesaModel(Base):
         Index("ix_despesa_tipo_periodo", "tipo", "ano", "mes"),
     )
 
+
 class ForecastModel(Base):
     __tablename__ = "forecasts"
 
@@ -97,6 +101,7 @@ class ForecastModel(Base):
         ),
     )
 
+
 class MetadataETLModel(Base):
     __tablename__ = "metadata_etl"
 
@@ -113,6 +118,7 @@ class MetadataETLModel(Base):
         Index("ix_etl_arquivo", "arquivo"),
         Index("ix_etl_tipo_ano", "tipo", "ano"),
     )
+
 
 class ReceitaDetalhamentoModel(Base):
     __tablename__ = "receita_detalhamento"
@@ -153,6 +159,7 @@ class ReceitaDetalhamentoModel(Base):
         ),
     )
 
+
 class ScrapingLogModel(Base):
     __tablename__ = "scraping_log"
 
@@ -171,6 +178,7 @@ class ScrapingLogModel(Base):
         Index("ix_scraping_log_type_year", "data_type", "year"),
         Index("ix_scraping_log_started", "started_at"),
     )
+
 
 class UserModel(Base):
     __tablename__ = "users"
@@ -191,6 +199,7 @@ class UserModel(Base):
         nullable=False,
     )
 
+
 class IdentityTokenModel(Base):
     __tablename__ = "identity_tokens"
 
@@ -209,6 +218,7 @@ class IdentityTokenModel(Base):
         Index("ix_identity_tokens_user_type", "user_id", "token_type"),
         Index("ix_identity_tokens_exp", "expires_at"),
     )
+
 
 class ObraModel(Base):
     __tablename__ = "obras"
@@ -249,6 +259,7 @@ class ObraModel(Base):
         nullable=False,
     )
 
+
 class ObraMedicaoModel(Base):
     __tablename__ = "obra_medicoes"
 
@@ -275,11 +286,14 @@ class ObraMedicaoModel(Base):
         Index("ix_obra_medicoes_periodo", "ano_referencia", "mes_referencia"),
     )
 
+
 class ObraLocationModel(Base):
     __tablename__ = "obra_locations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    obra_id = Column(Integer, ForeignKey("obras.id", ondelete="CASCADE"), nullable=False)
+    obra_id = Column(
+        Integer, ForeignKey("obras.id", ondelete="CASCADE"), nullable=False
+    )
     sequencia = Column(Integer, nullable=False, default=1)
     logradouro = Column(String(255), nullable=False)
     bairro = Column(String(255), nullable=False)
@@ -300,11 +314,14 @@ class ObraLocationModel(Base):
         Index("ix_obra_locations_obra", "obra_id", "sequencia"),
     )
 
+
 class ObraFundingSourceModel(Base):
     __tablename__ = "obra_funding_sources"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    obra_id = Column(Integer, ForeignKey("obras.id", ondelete="CASCADE"), nullable=False)
+    obra_id = Column(
+        Integer, ForeignKey("obras.id", ondelete="CASCADE"), nullable=False
+    )
     sequencia = Column(Integer, nullable=False, default=1)
     nome = Column(String(255), nullable=False)
     valor = Column(Numeric(18, 2), nullable=True)
@@ -321,12 +338,17 @@ class ObraFundingSourceModel(Base):
         Index("ix_obra_funding_sources_obra", "obra_id", "sequencia"),
     )
 
+
 class ObraMediaModel(Base):
     __tablename__ = "obra_media_assets"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    obra_id = Column(Integer, ForeignKey("obras.id", ondelete="CASCADE"), nullable=False)
-    medicao_id = Column(Integer, ForeignKey("obra_medicoes.id", ondelete="CASCADE"), nullable=True)
+    obra_id = Column(
+        Integer, ForeignKey("obras.id", ondelete="CASCADE"), nullable=False
+    )
+    medicao_id = Column(
+        Integer, ForeignKey("obra_medicoes.id", ondelete="CASCADE"), nullable=True
+    )
     titulo = Column(String(255), nullable=True)
     media_kind = Column(String(50), nullable=False, default="image")
     source_type = Column(String(20), nullable=False, default="url")
@@ -349,6 +371,7 @@ class ObraMediaModel(Base):
         Index("ix_obra_media_assets_medicao", "medicao_id"),
     )
 
+
 class LegislacaoModel(Base):
     __tablename__ = "legislacoes"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -365,13 +388,30 @@ class LegislacaoModel(Base):
     autor = Column(String(255), nullable=True)
     sancionado_por = Column(String(255), nullable=True)
     origem = Column(String(255), nullable=True)
-    legislacao_vinculada_json = Column(Text, nullable=True, comment="JSON array of linked legislation IDs")
+    legislacao_vinculada_json = Column(
+        Text, nullable=True, comment="JSON array of linked legislation IDs"
+    )
     url_arquivo = Column(String(1000), nullable=True)
     created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)
-    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp(), nullable=False)
-    __table_args__ = (UniqueConstraint("tipo", "numero", "ano", name="uq_legislacoes_tipo_numero_ano"),
-        Index("ix_legislacoes_ano_tipo", "ano", "tipo"))
+    updated_at = Column(
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
+    )
+    __table_args__ = (
+        UniqueConstraint(
+            "tipo", "numero", "ano", name="uq_legislacoes_tipo_numero_ano"
+        ),
+        Index("ix_legislacoes_ano_tipo", "ano", "tipo"),
+    )
 
+
+from backend.shared.database.institucional_models import (  # noqa: E402, F401
+    DepartmentModel,
+    OfficeModel,
+    ProfileInstitucionalModel,
+)
 from backend.shared.database.quality_models import (  # noqa: E402, F401
     DespesaBreakdownModel,
     MovimentoExtraModel,

@@ -7,6 +7,15 @@ import type { DiarioResponse } from '@/types/diario-oficial';
 /* ── Cards de navegação principal ── */
 export const mainNavCards = [
   {
+    title: 'Prefeitura',
+    description: 'Conheça a gestão, secretarias, gabinete e canais de atendimento da prefeitura.',
+    icon: 'account_balance',
+    href: '/prefeitura',
+    accent: 'primary' as const,
+    cta: 'Acessar Prefeitura',
+    offset: false,
+  },
+  {
     title: 'Painel Financeiro',
     description: 'Acompanhe em tempo real as receitas, despesas e a saúde fiscal do município.',
     icon: 'monitoring',
