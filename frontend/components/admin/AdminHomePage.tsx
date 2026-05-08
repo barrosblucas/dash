@@ -21,6 +21,12 @@ const adminCards = [
     description: 'Gerencie unidades de saúde, horários, importação e sincronização manual.',
     icon: 'favorite',
   },
+  {
+    href: '/admin/prefeitura',
+    title: 'Prefeitura',
+    description: 'Gerencie dados institucionais, perfil da prefeitura, secretarias e repartições.',
+    icon: 'location_city',
+  },
 ] as const;
 
 export default function AdminHomePage() {
