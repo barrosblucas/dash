@@ -76,8 +76,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Backend e frontend bindados em `0.0.0.0` para acesso na rede local
 - [x] Empacotamento em Docker Compose com backend, frontend, SQLite persistido, `receitas/` em leitura e `despesas/` em escrita para atualização automática
 - [x] Override de desenvolvimento com hot reload para backend (`uvicorn --reload`) e frontend (`next dev`)
-- [x] Portal público da transparência na rota `/` com grid de cards para navegação entre seções
+- [x] Portal público da transparência na rota `/` e espelho em `/transparencia` com grid de cards para navegação entre seções
 - [x] Cards do portal: Dashboard Financeiro, Receitas, Despesas, Movimento Extra, Aviso de Licitações (disponíveis) + Obras, Contratos, Diárias, Licitações (em breve)
+- [x] Menu público com rota placeholder `/servicos` e manifesto web `/manifest.json`
 - [x] Páginas placeholder para 6 seções futuras (Movimento Extra, Obras, Contratos, Diárias, Licitações, Aviso de Licitações)
 - [x] Link "Portal" na sidebar para retorno ao portal público
 - [x] Metadados atualizados: título "Portal da Transparência | Bandeirantes MS"

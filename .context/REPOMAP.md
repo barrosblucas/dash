@@ -190,6 +190,8 @@ Snapshot: 2026-05-06
 - `app/layout.tsx`: layout raiz (theme-aware com script anti-FOIT)
 - `middleware.ts`: proteção de `/admin` por presença de cookie de refresh da sessão administrativa
 - `app/page.tsx`: portal público da transparência (página inicial)
+- `app/transparencia/page.tsx`: rota espelho do portal público para links legados
+- `app/servicos/page.tsx`: placeholder de serviços públicos do portal
 - `app/login/page.tsx`: tela de autenticação para acesso restrito
 - `app/api/auth/login/route.ts`: borda frontend para login contra `/api/v1/identity/login`
 - `app/api/auth/session/route.ts`: reidrata sessão administrativa via refresh token em cookie HttpOnly
@@ -379,7 +381,7 @@ Snapshot: 2026-05-06
 - `types/legislacao.ts`: contratos TS da feature legislação (`TipoLegislacao`, `StatusLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`)
 - `types/institucional.ts`: contratos TS da feature institucional/prefeitura (`CityHallRecord`, `ManagementRecord`, `DepartmentRecord`, `OfficeRecord`)
 - `types/index.ts`: barrel de exports
-- `public/`: assets estáticos
+- `public/`: assets estáticos, incluindo `manifest.json` e `icon.svg`
 
 ## Database (`database/`)
 - `dashboard.db`: banco SQLite (desenvolvimento, gitignored)

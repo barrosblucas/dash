@@ -1,0 +1,18 @@
+{
+  "name": "Portal da Transparência Bandeirantes MS",
+  "short_name": "Bandeirantes MS",
+  "description": "Portal da Transparência da Prefeitura Municipal de Bandeirantes MS.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0f1a",
+  "theme_color": "#0a0f1a",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
