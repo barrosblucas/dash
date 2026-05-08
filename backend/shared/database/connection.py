@@ -282,7 +282,7 @@ def run_alembic_upgrade(db_path: Path | None = None) -> None:
                 conn.commit()
                 conn.close()
     logger.info("Executando Alembic upgrade head em: %s", target_path)
-    alembic_command.upgrade(alembic_cfg, "head")
+    alembic_command.upgrade(alembic_cfg, "heads")
     logger.info("Migrations aplicadas com sucesso")
 
 def init_database() -> None:

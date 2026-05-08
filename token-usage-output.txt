@@ -1,0 +1,146 @@
+═══════════════════════════════════════════════════════════════════════════
+Token Analysis: Session ses_200a2fa9bffeM5BWcZwC8lMsLV
+Model: deepseek-v4-pro
+═══════════════════════════════════════════════════════════════════════════
+
+WARNINGS
+───────────────────────────────────────────────────
+- Pricing for 'deepseek/deepseek-v4-pro' was not found in models.json. Cost estimates use the default fallback rates ($1/M input, $3/M output, no cache pricing).
+- OpenCode export failed for session ses_200a2fa9bffeM5BWcZwC8lMsLV. Context sections were skipped: JSON Parse error: Unterminated string
+
+TOKEN BREAKDOWN BY CATEGORY
+─────────────────────────────────────────────────────────────────────────
+Estimated using tokenizer analysis of message content:
+
+Input Categories:
+  SYSTEM    ███████████████░░░░░░░░░░░░░░░    51.3% (36,055)
+  USER      ███░░░░░░░░░░░░░░░░░░░░░░░░░░░     10.3% (7,201)
+  TOOLS     ████████████░░░░░░░░░░░░░░░░░░    38.4% (26,971)
+
+  Subtotal: 70,227 estimated input tokens
+  Note: inferred system/overhead values are heuristic estimates from API telemetry.
+
+Output Categories:
+  ASSISTANT ███░░░░░░░░░░░░░░░░░░░░░░░░░░░        8.7% (606)
+  REASONING ███████████████████████████░░░     91.3% (6,342)
+
+  Subtotal: 6,948 estimated output tokens
+
+Local Total: 77,175 tokens (estimated)
+
+TOOL USAGE BREAKDOWN
+─────────────────────────────────────────────────────────────────────────
+lean-ctx_ctx_multi_read ██████████████████░░░░░░░░░░░░    58.6% (15,816)    4x
+lean-ctx_ctx_read    █████░░░░░░░░░░░░░░░░░░░░░░░░░     18.2% (4,902)    7x
+lean-ctx_ctx_tree    ████░░░░░░░░░░░░░░░░░░░░░░░░░░     13.5% (3,639)    1x
+context-mode_ctx_batch_execute █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        3.2% (869)    2x
+context-mode_ctx_search █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        2.0% (546)    3x
+glob                 █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        1.9% (501)    1x
+todowrite            ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        1.6% (422)    4x
+grep                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░        0.9% (231)    2x
+edit                 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░         0.1% (40)   10x
+write                ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░          0.0% (5)    1x
+
+TOP CONTRIBUTORS
+─────────────────────────────────────────────────────────────────────────
+• System (inferred from API telemetry) 36,055 tokens (46.7%)
+• lean-ctx_ctx_multi_read      15,816 tokens (20.5%)
+• User#5                       6,065 tokens (7.9%)
+• lean-ctx_ctx_read            4,902 tokens (6.4%)
+• lean-ctx_ctx_tree            3,639 tokens (4.7%)
+
+═══════════════════════════════════════════════════════════════════════════
+MOST RECENT API CALL
+─────────────────────────────────────────────────────────────────────────
+
+Raw telemetry from last API response:
+  Input (fresh):             83 tokens
+  Cache read:            70,144 tokens
+  Output:                   108 tokens
+  Reasoning:                 21 tokens
+  Provider total:        70,356 tokens
+  Cost:              $0.0108
+  ─────────────────────────────────────
+  Total:                 70,356 tokens
+
+═══════════════════════════════════════════════════════════════════════════
+SESSION TOTALS (All 39 API calls)
+─────────────────────────────────────────────────────────────────────────
+
+Assistant messages observed: 40 (structural count)
+
+Total tokens processed across the entire session (for cost calculation):
+
+  Input tokens:          62,309 (fresh tokens across all calls)
+  Cache read:         1,734,016 (cached tokens across all calls)
+  Cache write:                0 (tokens written to cache)
+  Output tokens:          6,242 (all model responses)
+  Reasoning tokens:       6,324 (thinking/reasoning)
+  ─────────────────────────────────────
+  Session Total:      1,808,891 tokens (for billing)
+  Cache read calls:          38 / 39
+  Cache write calls:          0 / 39
+
+═══════════════════════════════════════════════════════════════════════════
+SESSION COST
+─────────────────────────────────────────────────────────────────────────
+
+Token usage breakdown:
+  Input tokens:          62,309
+  Output tokens:          6,242
+  Reasoning tokens:       6,324
+  Cache read:         1,734,016
+
+─────────────────────────────────────────────────────────────────────────
+ACTUAL COST (from API):  $0.4036
+Estimated cost:          $0.1000 (-75.2% diff)
+
+Note: Actual cost from OpenCode includes provider-specific pricing
+and 200K+ context adjustments.
+
+══════════════════════════════════════════════════════════════════════════
+AVAILABLE SKILLS (always-available context)
+─────────────────────────────────────────────────────────────────────────
+
+OpenCode currently includes a verbose skill catalog in the system prompt on every API call.
+The rows below estimate the per-skill XML entries inside that shared catalog.
+
+  Skill                  Description                                   Tokens
+  ───────────────────────────────────────────────────────────────────────
+  agent-browser          Browser automation CLI for AI agents. Use wh…    ~251
+  codemap                Generate comprehensive hierarchical codemaps…     ~85
+  simplify               Simplifies code for clarity without changing…     ~77
+  ───────────────────────────────────────────────────────────────────────
+  Total: ~413 tokens (3 skills available)
+
+  Note: Full system-prompt skill catalog is ~448 tokens (includes shared wrapper/preamble).
+        Compact skill tool description adds ~391 tokens more.
+
+═══════════════════════════════════════════════════════════════════════════
+AVAILABLE SUBAGENTS (in task tool definition)
+─────────────────────────────────────────────────────────────────────────
+
+These subagents are embedded in the task tool description and consume tokens on every API call.
+
+  Subagent               Description                                        Tokens
+  ───────────────────────────────────────────────────────────────────────
+  explorer               Fast codebase search and pattern matching. Use fo…     ~29
+  councillor             Read-only council advisor. Examines codebase and …     ~27
+  designer               UI/UX design, review, and implementation. Use for…     ~26
+  librarian              External documentation and library research. Use …     ~24
+  oracle                 Strategic technical advisor. Use for architecture…     ~24
+  fixer                  Fast implementation specialist. Receives complete…     ~21
+  council                Multi-LLM council agent that synthesizes response…     ~20
+  ───────────────────────────────────────────────────────────────────────
+  Total: ~171 tokens (7 subagents available)
+
+  Note: Full task tool description is ~1,022 tokens (includes instructions/examples).
+
+═══════════════════════════════════════════════════════════════════════════
+SUMMARY
+─────────────────────────────────────────────────────────────────────────
+
+                          Cost        Tokens          API Calls
+  Session:           $    0.4036     1,808,891            39
+
+═══════════════════════════════════════════════════════════════════════════
