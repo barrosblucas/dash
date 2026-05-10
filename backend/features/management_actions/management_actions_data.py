@@ -6,7 +6,9 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from backend.features.management_actions.management_actions_types import (
+    ActionCreateRequest,
     ActionStatus,
+    ActionUpdateRequest,
 )
 from backend.shared.database.management_actions_models import ManagementActionModel
 
@@ -24,13 +26,33 @@ def list_actions(
 
 
 def create_action(
-    db: Session, payload: dict[str, Any]
+    db: Session, payload: ActionCreateRequest
 ) -> ManagementActionModel:
-    action = ManagementActionModel(**payload)
+    action = ManagementActionModel(**payload.model_dump())
     db.add(action)
     db.flush()
     db.refresh(action)
     return action
+
+
+def get_action_by_id(db: Session, action_id: int) -> ManagementActionModel | None:
+    return db.query(ManagementActionModel).filter(ManagementActionModel.id == action_id).first()
+
+
+def update_action(
+    db: Session, action: ManagementActionModel, payload: ActionUpdateRequest
+) -> ManagementActionModel:
+    updates = payload.model_dump(exclude_unset=True)
+    for field, value in updates.items():
+        setattr(action, field, value)
+    db.flush()
+    db.refresh(action)
+    return action
+
+
+def delete_action(db: Session, action: ManagementActionModel) -> None:
+    db.delete(action)
+    db.flush()
 
 
 def _format_investment(value: float) -> str:

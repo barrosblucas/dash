@@ -21,3 +21,22 @@ export interface ManagementActionListResponse {
   items: ManagementAction[];
   total: number;
 }
+
+export interface ManagementActionCreatePayload {
+  title: string;
+  description: string | null;
+  category: string;
+  category_icon: string;
+  investment_raw: number;
+  impact_label: string;
+  impact_number: number;
+  impact_suffix: string;
+  image: string | null;
+  month: string;
+  year: string;
+  status: 'concluída' | 'em andamento';
+  color: string;
+  progress: number;
+}
+
+export type ManagementActionUpdatePayload = Partial<ManagementActionCreatePayload>;

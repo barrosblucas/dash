@@ -12,6 +12,7 @@ const adminNavigation = [
   { href: '/admin', label: 'Painel', icon: 'shield_person' },
   { href: '/admin/users', label: 'Usuários', icon: 'group' },
   { href: '/admin/obras', label: 'Obras', icon: 'construction' },
+  { href: '/admin/acoes', label: 'Ações', icon: 'rocket_launch' },
   { href: '/admin/saude/unidades', label: 'Saúde', icon: 'local_hospital' },
   { href: '/admin/legislacoes', label: 'Legislações', icon: 'article' },
   { href: '/admin/diario-oficial', label: 'Diário Oficial', icon: 'newspaper' },

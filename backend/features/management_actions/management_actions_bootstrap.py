@@ -8,6 +8,9 @@ from backend.features.management_actions.management_actions_data import (
     create_action,
     list_actions,
 )
+from backend.features.management_actions.management_actions_types import (
+    ActionCreateRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +137,6 @@ def seed_management_actions(db: Session) -> None:
         return
 
     for action_data in SEED_ACTIONS:
-        create_action(db, action_data)
+        create_action(db, ActionCreateRequest(**action_data))
 
     logger.info("Seed de management actions concluído: %d ações inseridas.", len(SEED_ACTIONS))
