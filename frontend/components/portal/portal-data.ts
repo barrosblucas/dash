@@ -40,7 +40,7 @@ export const mainNavCards = [
     href: '/obras',
     accent: 'secondary' as const,
     cta: 'Ver Mapa de Obras',
-    offset: true,
+    offset: false,
   },
   {
     title: 'Contas Públicas',
@@ -58,7 +58,17 @@ export const mainNavCards = [
     href: '/avisos-licitacoes',
     accent: 'primaryContainer' as const,
     cta: 'Ver Licitações',
-    offset: true,
+    offset: false,
+  },
+  {
+    title: 'Gestão de Contratos',
+    description:
+      'Informações sobre os contratos e aditivos realizados entre a entidade e outras partes.',
+    icon: 'handshake',
+    href: '/contratos',
+    accent: 'secondary' as const,
+    cta: 'Consultar Contratos',
+    offset: false,
   },
   {
     title: 'Legislações',

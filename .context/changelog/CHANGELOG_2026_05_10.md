@@ -2,6 +2,9 @@
 
 ## Added
 
+### Frontend — Navegação inicial
+- **Portal card**: adiciona "Gestão de Contratos" na página inicial com link para `/contratos`
+
 ### Backend — Feature `management_actions`
 - **ORM Model**: `ManagementActionModel` em `backend/shared/database/management_actions_models.py` — tabela `management_actions` com 16 colunas
 - **Pydantic Types**: `ActionStatus`, `ActionRecord`, `ActionListResponse` em `backend/features/management_actions/management_actions_types.py`
