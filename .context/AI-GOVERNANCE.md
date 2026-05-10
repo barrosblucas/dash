@@ -188,7 +188,7 @@ python scripts/run_governance_gates.py --warn-only
 
 | Tipo | Limite | Exceções conhecidas |
 |------|--------|-------------------|
-| `.py` | 400 linhas | — |
+| `.py` | 400 linhas | `main.py` até 420 — registro de routers cresce com features |
 | `.tsx` / `.ts` | 400 linhas | `constants.ts` até 500 |
 | `.jsx` / `.js` | 400 linhas | — |
 
