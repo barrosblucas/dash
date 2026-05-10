@@ -412,6 +412,9 @@ from backend.shared.database.institucional_models import (  # noqa: E402, F401
     OfficeModel,
     ProfileInstitucionalModel,
 )
+from backend.shared.database.management_actions_models import (  # noqa: E402, F401
+    ManagementActionModel,
+)
 from backend.shared.database.quality_models import (  # noqa: E402, F401
     DespesaBreakdownModel,
     MovimentoExtraModel,

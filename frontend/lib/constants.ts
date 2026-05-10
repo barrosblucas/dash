@@ -486,11 +486,11 @@ export const QUERY_KEYS = {
     detail: (id: string) =>
       [...QUERY_KEYS.legislacao.all, 'detail', id] as const,
   },
+  managementActions: {
+    all: ['management-actions'] as const,
+    list: (category?: string) => [...QUERY_KEYS.managementActions.all, 'list', category] as const,
+  },
 } as const;
-
-// ============================================
-// Local Storage Keys
-// ============================================
 
 export const STORAGE_KEYS = {
   theme: 'bandeirantes-theme',

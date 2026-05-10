@@ -3,13 +3,16 @@
 import { useRef, useState, useMemo } from 'react';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 
 import PortalHeader from '@/components/layouts/PortalHeader';
 import PortalFooter from '@/components/layouts/PortalFooter';
+import { QUERY_KEYS } from '@/lib/constants';
+import { managementActionsService } from '@/services/management-actions-service';
+import type { ManagementAction } from '@/types/management-actions';
 
 import { AnimatedCounter } from './animated-counter';
 import { DashboardCard } from './dashboard-card';
-import { actions, categories } from './constants';
 
 function PieSlice({ color, startAngle, endAngle, size = 200 }: { color: string; startAngle: number; endAngle: number; size?: number }) {
   const strokeWidth = 12;
@@ -38,15 +41,15 @@ function PieSlice({ color, startAngle, endAngle, size = 200 }: { color: string; 
   );
 }
 
-function DonutChart() {
-  const total = actions.reduce((s, a) => s + a.investmentRaw, 0);
+function DonutChart({ actions }: { actions: ManagementAction[] }) {
+  const total = actions.reduce((s, a) => s + a.investment_raw, 0);
   let cumAngle = 0;
 
   return (
     <div className="flex flex-col items-center">
       <svg width="220" height="220" viewBox="0 0 220 220">
         {actions.map((a) => {
-          const pct = (a.investmentRaw / total) * 360;
+          const pct = total > 0 ? (a.investment_raw / total) * 360 : 0;
           const start = cumAngle;
           cumAngle += pct;
           return <PieSlice key={a.id} color={a.color} startAngle={start} endAngle={cumAngle} size={220} />;
@@ -93,18 +96,75 @@ function FloatingShapes() {
   );
 }
 
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-8">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="rounded-2xl border border-outline-variant/10 bg-surface-container-lowest p-6 animate-pulse">
+          <div className="flex gap-6">
+            <div className="w-48 h-32 rounded-xl bg-surface-container-high" />
+            <div className="flex-1 space-y-3">
+              <div className="h-4 w-24 rounded bg-surface-container-high" />
+              <div className="h-6 w-72 rounded bg-surface-container-high" />
+              <div className="h-4 w-full rounded bg-surface-container-high" />
+              <div className="h-4 w-3/4 rounded bg-surface-container-high" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="text-center py-20">
+      <span className="material-symbols-outlined text-5xl text-error mb-4 block">error_outline</span>
+      <h3 className="font-headline font-bold text-lg text-on-surface mb-2">Erro ao carregar dados</h3>
+      <p className="text-on-surface-variant font-body mb-6">Não foi possível carregar as ações da gestão. Tente novamente.</p>
+      <button
+        onClick={onRetry}
+        className="px-6 py-2 rounded-full bg-primary text-on-primary font-headline font-bold text-sm hover:opacity-90 transition-opacity"
+      >
+        Tentar novamente
+      </button>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="text-center py-20">
+      <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-4 block">inbox</span>
+      <h3 className="font-headline font-bold text-lg text-on-surface mb-2">Nenhuma ação encontrada</h3>
+      <p className="text-on-surface-variant font-body">As ações da gestão serão exibidas aqui quando cadastradas.</p>
+    </div>
+  );
+}
+
 export default function TimelineV5Client() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: containerRef });
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
   const [activeFilter, setActiveFilter] = useState('Todas');
 
-  const filteredActions = useMemo(
-    () => (activeFilter === 'Todas' ? actions : actions.filter((a) => a.category === activeFilter)),
-    [activeFilter],
+  const { data: response, isLoading, error, refetch } = useQuery({
+    queryKey: QUERY_KEYS.managementActions.list(),
+    queryFn: () => managementActionsService.getActions(),
+  });
+
+  const actions = useMemo(() => response?.items ?? [], [response?.items]);
+  const categories = useMemo(
+    () => ['Todas', ...Array.from(new Set(actions.map((a) => a.category))).sort()],
+    [actions],
   );
 
-  const totalInvest = actions.reduce((s, a) => s + a.investmentRaw, 0);
+  const filteredActions = useMemo(
+    () => (activeFilter === 'Todas' ? actions : actions.filter((a) => a.category === activeFilter)),
+    [activeFilter, actions],
+  );
+
+  const totalInvest = actions.reduce((s, a) => s + a.investment_raw, 0);
   const concluded = actions.filter((a) => a.status === 'concluída').length;
   const inProgress = actions.filter((a) => a.status === 'em andamento').length;
 
@@ -197,40 +257,47 @@ export default function TimelineV5Client() {
 
         <AnimatePresence mode="wait">
           <motion.div key={activeFilter} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-            <div className="space-y-8">
-              {filteredActions.map((action) => (
-                <DashboardCard key={action.id} action={action} />
-              ))}
-            </div>
+            {isLoading && <LoadingSkeleton />}
+            {error && <ErrorState onRetry={() => refetch()} />}
+            {!isLoading && !error && actions.length === 0 && <EmptyState />}
+            {!isLoading && !error && actions.length > 0 && (
+              <div className="space-y-8">
+                {filteredActions.map((action) => (
+                  <DashboardCard key={action.id} action={action} />
+                ))}
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </section>
 
-      <section className="relative py-16 px-6 overflow-hidden border-t border-outline-variant/5">
-        <div className="absolute inset-0 bg-gradient-to-b from-surface-container-lowest to-surface" />
+      {actions.length > 0 && (
+        <section className="relative py-16 px-6 overflow-hidden border-t border-outline-variant/5">
+          <div className="absolute inset-0 bg-gradient-to-b from-surface-container-lowest to-surface" />
 
-        <div className="relative max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h3 className="font-display-sm text-primary mb-4">Distribuição por Categoria</h3>
-            <p className="text-on-surface-variant font-body">Proporção do investimento total de R$ {(totalInvest / 1e6).toFixed(1)}M por área de atuação.</p>
-          </motion.div>
+          <div className="relative max-w-5xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h3 className="font-display-sm text-primary mb-4">Distribuição por Categoria</h3>
+              <p className="text-on-surface-variant font-body">Proporção do investimento total de R$ {(totalInvest / 1e6).toFixed(1)}M por área de atuação.</p>
+            </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="flex justify-center"
-          >
-            <DonutChart />
-          </motion.div>
-        </div>
-      </section>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="flex justify-center"
+            >
+              <DonutChart actions={actions} />
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       <section className="py-20 px-6 bg-surface-container-low">
         <div className="max-w-3xl mx-auto text-center">

@@ -3,7 +3,8 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 
-import type { DashboardAction } from './constants';
+import type { ManagementAction } from '@/types/management-actions';
+
 import { AnimatedCounter } from './animated-counter';
 
 function ProgressBar({ value, color }: { value: number; color: string }) {
@@ -64,7 +65,7 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
   );
 }
 
-export function DashboardCard({ action }: { action: DashboardAction }) {
+export function DashboardCard({ action }: { action: ManagementAction }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
 
@@ -84,7 +85,7 @@ export function DashboardCard({ action }: { action: DashboardAction }) {
             <div className="lg:w-72 flex-shrink-0">
               <div className="relative rounded-2xl overflow-hidden aspect-[4/3] mb-4">
                 <motion.img
-                  src={action.image}
+                  src={action.image ?? ''}
                   alt={action.title}
                   className="w-full h-full object-cover"
                   whileHover={{ scale: 1.05 }}
@@ -126,7 +127,7 @@ export function DashboardCard({ action }: { action: DashboardAction }) {
                     whileHover={{ rotate: [0, -8, 8, 0], transition: { duration: 0.4 } }}
                   >
                     <span className="material-symbols-outlined text-white text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      {action.categoryIcon}
+                      {action.category_icon}
                     </span>
                   </motion.div>
                   <span className="text-xs font-headline font-bold uppercase tracking-widest text-on-surface-variant">{action.category}</span>
@@ -136,7 +137,7 @@ export function DashboardCard({ action }: { action: DashboardAction }) {
                   {action.title}
                 </h3>
 
-                <p className="font-body text-sm text-on-surface-variant leading-relaxed mb-6">{action.description}</p>
+                <p className="font-body text-sm text-on-surface-variant leading-relaxed mb-6">{action.description ?? ''}</p>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -150,9 +151,9 @@ export function DashboardCard({ action }: { action: DashboardAction }) {
                 <div className="relative overflow-hidden rounded-2xl p-4 border border-secondary/10" style={{ backgroundColor: action.color + '0A' }}>
                   <div className="absolute top-0 right-0 w-16 h-16 rounded-bl-full opacity-5" style={{ backgroundColor: action.color }} />
                   <span className="material-symbols-outlined text-lg mb-1 block" style={{ color: action.color, fontVariationSettings: "'FILL' 1" }}>trending_up</span>
-                  <p className="text-[10px] uppercase font-headline font-bold text-on-surface-variant tracking-wider">{action.impactLabel}</p>
+                  <p className="text-[10px] uppercase font-headline font-bold text-on-surface-variant tracking-wider">{action.impact_label}</p>
                   <p className="font-headline font-extrabold text-base mt-0.5" style={{ color: action.color }}>
-                    +<AnimatedCounter value={action.impactNumber} suffix={action.impactSuffix} />
+                    +<AnimatedCounter value={action.impact_number} suffix={action.impact_suffix} />
                   </p>
                 </div>
 

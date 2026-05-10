@@ -21,7 +21,7 @@ from fastapi.responses import JSONResponse
 from backend.api.schemas import HealthCheckResponse
 from backend.features.despesa.despesa_handler import router as despesas_router
 from backend.features.diario_oficial.diario_oficial_handler import (
-    router as diario_oficial_router,
+    router as diario_oficial_router,  # noqa: E501
 )
 from backend.features.export.export_handler import router as export_router
 from backend.features.forecast.forecast_handler import router as forecast_router
@@ -32,14 +32,17 @@ from backend.features.institucional.institucional_handler import (
 )
 from backend.features.kpi.kpi_handler import router as kpis_router
 from backend.features.legislacao.legislacao_handler import (
-    router as legislacao_router,
+    router as legislacao_router,  # noqa: E501
 )
 from backend.features.legislacao_municipal.legislacao_municipal_handler import (
-    router as legislacao_municipal_router,
+    router as legislacao_municipal_router,  # noqa: E501
 )
 from backend.features.licitacao.licitacao_handler import router as licitacoes_router
+from backend.features.management_actions.management_actions_handler import (
+    router as management_actions_router,  # noqa: E501
+)
 from backend.features.movimento_extra.movimento_extra_handler import (
-    router as movimento_extra_router,
+    router as movimento_extra_router,  # noqa: E501
 )
 from backend.features.noticias.noticias_handler import router as noticias_router
 from backend.features.obra.obra_handler import router as obra_router
@@ -149,6 +152,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             institucional_bootstrap.bootstrap_institucional(session)
     except Exception:
         logger.exception("Falha no bootstrap institucional")
+
+    try:
+        with db_manager.get_session() as session:
+            from backend.features.management_actions.management_actions_bootstrap import (
+                seed_management_actions,  # noqa: E501
+            )
+            seed_management_actions(session)
+    except Exception:
+        logger.exception("Falha no seed de management actions")
 
     saude_scheduler = None
     try:
@@ -293,6 +305,7 @@ app.include_router(diario_oficial_router, prefix="/api/v1")
 app.include_router(legislacao_router, prefix="/api/v1")
 app.include_router(legislacao_municipal_router, prefix="/api/v1")
 app.include_router(institucional_router, prefix="/api/v1")
+app.include_router(management_actions_router, prefix="/api/v1")
 
 
 # Endpoint de health check
