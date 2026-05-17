@@ -64,3 +64,10 @@ data/*
 frontend/tsconfig.tsbuildinfo
 backend/despesas/2026.pdf
 backend/.coverage
+backend/.coverage.*
+
+# Context-mode
+.lean-ctx/
+
+# Storage blobs
+storage/obras/

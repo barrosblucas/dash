@@ -49,7 +49,7 @@ LIMITS: dict[str, int] = {
 SPECIFIC_LIMITS: dict[str, int] = {
     "frontend/lib/constants.ts": 500,
     "backend/shared/database/models.py": 600,  # governance-exception: file-length — débito técnico documentado, refatoração pendente
-    "backend/api/main.py": 420,  # governance-exception: file-length — arquivo de registro de routers cresce naturalmente com features
+    "backend/api/main.py": 480,  # governance-exception: file-length — arquivo de registro de routers cresce naturalmente com features
 }
 
 EXCEPTION_PATTERN = re.compile(

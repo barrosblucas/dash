@@ -19,11 +19,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.api.schemas import HealthCheckResponse
+from backend.features.cargo.cargo_handler import router as cargo_router
+from backend.features.contrato.contrato_handler import router as contrato_router
+from backend.features.convenio.convenio_handler import router as convenio_router
 from backend.features.despesa.despesa_handler import router as despesas_router
+from backend.features.diaria.diaria_handler import router as diaria_router
 from backend.features.diario_oficial.diario_oficial_handler import (
     router as diario_oficial_router,  # noqa: E501
 )
+from backend.features.emenda.emenda_handler import router as emenda_router
 from backend.features.export.export_handler import router as export_router
+from backend.features.folha.folha_handler import router as folha_router
 from backend.features.forecast.forecast_handler import router as forecast_router
 from backend.features.identity.identity_data import bootstrap_first_admin
 from backend.features.identity.identity_handler import router as identity_router
@@ -46,6 +52,7 @@ from backend.features.movimento_extra.movimento_extra_handler import (
 )
 from backend.features.noticias.noticias_handler import router as noticias_router
 from backend.features.obra.obra_handler import router as obra_router
+from backend.features.patrimonio.patrimonio_handler import router as patrimonio_router
 from backend.features.receita.receita_handler import router as receitas_router
 from backend.features.saude.saude_handler import router as saude_router
 from backend.features.saude.saude_historical_bootstrap import (
@@ -217,6 +224,36 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             "Falha ao iniciar scheduler do Diário Oficial — modo sem scheduler"
         )
 
+    # Inicia scheduler de diárias
+    diaria_scheduler = None
+    try:
+        from backend.features.diaria.diaria_scheduler import DiariaScheduler
+
+        diaria_scheduler = DiariaScheduler()
+        diaria_scheduler.start()
+        app.state.diaria_scheduler = diaria_scheduler
+        logger.info("Scheduler de diárias integrado ao lifespan")
+    except Exception:
+        logger.exception(
+            "Falha ao iniciar scheduler de diárias — modo sem scheduler"
+        )
+
+    # Inicia scheduler de patrimônio
+    patrimonio_scheduler = None
+    try:
+        from backend.features.patrimonio.patrimonio_scheduler import (
+            PatrimonioScheduler,
+        )
+
+        patrimonio_scheduler = PatrimonioScheduler()
+        patrimonio_scheduler.start()
+        app.state.patrimonio_scheduler = patrimonio_scheduler
+        logger.info("Scheduler de patrimônio integrado ao lifespan")
+    except Exception:
+        logger.exception(
+            "Falha ao iniciar scheduler de patrimônio — modo sem scheduler"
+        )
+
     logger.info("API pronta para receber requisições")
 
     yield
@@ -230,6 +267,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         movimento_extra_scheduler.stop()
     if diario_oficial_scheduler is not None:
         diario_oficial_scheduler.stop()
+    if diaria_scheduler is not None:
+        diaria_scheduler.stop()
+    if patrimonio_scheduler is not None:
+        patrimonio_scheduler.stop()
 
     logger.info("Dashboard Financeiro Municipal API encerrada")
 
@@ -294,10 +335,17 @@ app.include_router(despesas_router, prefix="/api/v1")
 app.include_router(kpis_router, prefix="/api/v1")
 app.include_router(forecast_router, prefix="/api/v1")
 app.include_router(export_router, prefix="/api/v1")
+app.include_router(folha_router, prefix="/api/v1")
 app.include_router(scraping_router, prefix="/api/v1")
+app.include_router(cargo_router, prefix="/api/v1")
+app.include_router(contrato_router, prefix="/api/v1")
+app.include_router(emenda_router, prefix="/api/v1")
+app.include_router(convenio_router, prefix="/api/v1")
+app.include_router(diaria_router, prefix="/api/v1")
 app.include_router(movimento_extra_router, prefix="/api/v1")
 app.include_router(licitacoes_router, prefix="/api/v1")
 app.include_router(noticias_router, prefix="/api/v1")
+app.include_router(patrimonio_router, prefix="/api/v1")
 app.include_router(identity_router, prefix="/api/v1")
 app.include_router(obra_router, prefix="/api/v1")
 app.include_router(saude_router, prefix="/api/v1")

@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-05-06 (adicionado bounded context institucional)
+Snapshot: 2026-05-17 (6 novos bounded contexts Quality + páginas públicas adicionais)
 
 ## Status geral
 
@@ -40,6 +40,12 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Schemas Pydantic para todas as bordas
 - [x] Proxy routes para licitações: ComprasBR (JSON paginado) e Quality (scraping HTML de dispensas)
 - [x] Bounded context `legislacao` com CRUD admin completo (listagem paginada com filtros por tipo/ano/status/busca, detalhe completo com texto integral, criação, atualização e remoção)
+- [x] Bounded context `emenda` com cache de emendas parlamentares e scraping periódico da API Quality
+- [x] Bounded context `contrato` com cache local de contratos, detalhe por contrato e scraping periódico da API Quality
+- [x] Bounded context `convenio` com cache local de convênios e movimentações mensais, scraping periódico da API Quality
+- [x] Bounded context `diaria` com cache local de diárias e passagens por ano/mês, scraping periódico da API Quality
+- [x] Bounded context `cargo` com cache local de cargos e salários por categoria, scraping periódico da API Quality
+- [x] Bounded context `patrimonio` com cache local de inventário patrimonial por tipo de bem, scraping periódico da API Quality
 - [x] Testes automatizados para feature legislação (14 testes: adapter + handler)
 - [x] Endpoints admin do Diário Oficial MS: busca paginada de publicações (`GET /api/v1/diario-oficial/buscar`) e importação como legislação (`POST /api/v1/diario-oficial/importar`)
 - [x] Cliente `DiarioOficialClient` promovido de `scripts/` para `shared/` (reutilizável por features e scripts)
@@ -77,9 +83,10 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Empacotamento em Docker Compose com backend, frontend, SQLite persistido, `receitas/` em leitura e `despesas/` em escrita para atualização automática
 - [x] Override de desenvolvimento com hot reload para backend (`uvicorn --reload`) e frontend (`next dev`)
 - [x] Portal público da transparência na rota `/` e espelho em `/transparencia` com grid de cards para navegação entre seções
-- [x] Cards do portal: Dashboard Financeiro, Receitas, Despesas, Movimento Extra, Aviso de Licitações (disponíveis) + Obras, Contratos, Diárias, Licitações (em breve)
+- [x] Cards do portal expandidos com Convênios, Diárias, Cargos e Salários, Emendas Parlamentares, Controle Patrimonial, Planejamento Orçamentário e RGF/RREO
 - [x] Menu público com rota placeholder `/servicos` e manifesto web `/manifest.json`
-- [x] Páginas placeholder para 6 seções futuras (Movimento Extra, Obras, Contratos, Diárias, Licitações, Aviso de Licitações)
+- [x] Páginas públicas reais para `/contratos`, `/convenios`, `/diarias`, `/cargos`, `/emendas` e `/patrimonio`
+- [x] Páginas públicas de links oficiais para `/planejamento` e `/rgf-rreo`
 - [x] Link "Portal" na sidebar para retorno ao portal público
 - [x] Metadados atualizados: título "Portal da Transparência | Bandeirantes MS"
 - [x] Página de Movimento Extra Orçamentário com glossário interativo, insights automáticos e visualização por fundos
@@ -188,8 +195,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 
 ## Próximos passos planejados
 
-1. Melhorar cobertura de testes (especialmente handlers e business logic)
-2. Limpar re-exports backward-compatible restantes (`api/routes/`, `api/schemas_*`)
+1. Implementar a feature de Folha de Pagamento (dados individualizados + agregados por departamento)
+2. Melhorar cobertura de testes (especialmente handlers e business logic)
+3. Limpar re-exports backward-compatible restantes (`api/routes/`, `api/schemas_*`)
 3. ~~Configurar Alembic migrations~~ ✅ Concluído em 2026-04-23
 4. ~~Integrar o backend de identidade/usuários/obras ao frontend administrativo~~ ✅ Concluído em 2026-04-22
 5. Configurar estratégia operacional de entrega de reset de senha fora do ambiente local

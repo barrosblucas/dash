@@ -1,20 +1,19 @@
 """Seed real data from Bandeirantes-MS official website into institucional tables."""
 from __future__ import annotations
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 os.environ.setdefault("DATABASE_URL", "sqlite:///./data/portal.db")
 
+import json
+
+from backend.features.institucional.institucional_data import get_or_create_profile
 from backend.shared.database.connection import create_db_engine, create_session_factory
 from backend.shared.database.institucional_models import (
-    ProfileInstitucionalModel,
     DepartmentModel,
-    OfficeModel,
 )
-from backend.features.institucional.institucional_data import get_or_create_profile
-import json
 
 
 def seed_profile(db):

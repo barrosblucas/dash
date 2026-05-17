@@ -1,6 +1,6 @@
 # REPOMAP
 
-Snapshot: 2026-05-06
+Snapshot: 2026-05-17
 
 ## Raiz
 - `AGENTS.md`: fluxo operacional obrigatório para agentes
@@ -22,14 +22,15 @@ Snapshot: 2026-05-06
 
 #### `shared/` — infraestrutura compartilhada
 - `shared/database/connection.py`: engine SQLAlchemy, session factory, DatabaseManager
-- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, locais/fontes/mídias de obras com `is_cover`, legislações, profile institucional, departamentos, repartições)
+- `shared/database/models.py`: modelos ORM (receitas, despesas, forecasts, metadata ETL, detalhamento de receitas, scraping, usuários, tokens de identidade, obras, medições, locais/fontes/mídias de obras com `is_cover`, legislações, profile institucional, departamentos, repartições) — importa todos os modelos de `quality_models.py`, `institucional_models.py`, `management_actions_models.py` e `saude_models.py`
+- `shared/database/quality_models.py`: modelos ORM de qualidade (despesa_breakdown, quality_sync_state, quality_unidade_gestora, movimento_extra, contratos, convênios, movimentações, diárias, emendas, cargos, patrimonio, folha_offices, folha_employees)
 - `shared/database/saude_models.py`: modelos ORM de saúde (unidades, horários, snapshots, logs de sync, medicamentos, farmácia, vacinação, epidemiológico, APS, saúde bucal, procedimentos)
 - `shared/database/institucional_models.py`: modelos ORM institucionais (ProfileInstitucionalModel, DepartmentModel, OfficeModel)
 
 #### `alembic/` — migrations
 - `alembic.ini`: configuração do Alembic apontando para `backend.shared.database.models.Base`
 - `alembic/env.py`: ambiente de migration reutilizando a engine do projeto (`create_db_engine`)
-- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento + revisão `1c2d3e4f5a6b_add_obra_related_tables.py` para locais/fontes/mídias de obras + revisão `a1b2c3d4e5f6_add_legislacao_table.py` para legislações + revisão `d4e5f6a7b8c9` adiciona `is_cover` em `obra_media_assets` + revisão `e6f7a8b9c0d1` faz merge dos heads do Alembic + revisão `f0e1d2c3b4a5_add_institucional_tables.py` para tabelas institucionais)
+- `alembic/versions/`: diretório de revisions (migration inicial + revisão `7b6610d4f1c2_add_saude_transparente_v1.py` para Saúde Transparente + revisão `043c91035847` para despesa_breakdown, quality_sync_state e quality_unidade_gestora + revisão `686fd3aaaeb2` para colunas mensais em receita_detalhamento + revisão `1c2d3e4f5a6b_add_obra_related_tables.py` para locais/fontes/mídias de obras + revisão `a1b2c3d4e5f6_add_legislacao_table.py` para legislações + revisão `d4e5f6a7b8c9` adiciona `is_cover` em `obra_media_assets` + revisão `e6f7a8b9c0d1` faz merge dos heads do Alembic + revisão `f0e1d2c3b4a5_add_institucional_tables.py` para tabelas institucionais + revisão `b0c1d2e3f4a5_add_patrimonio_table.py` para tabela patrimonio + revisão `c0d1e2f3a4b5_add_folha_tables.py` para folha_offices e folha_employees)
 - `shared/settings.py`: settings centralizados do backend (CORS, segredos JWT, bootstrap admin, reset de senha)
 - `shared/security.py`: hash de senha Argon2, emissão/validação de tokens JWT e dependências de autenticação/autorização
 - `shared/pdf_extractor.py`: módulo consolidado — entidades PDF, parsers e classe PDFExtractor
@@ -86,6 +87,37 @@ Snapshot: 2026-05-06
 - `movimento_extra_handler.py`: proxy para API Quality — delega para adapter e business
 - `movimento_extra_adapter.py`: ACL para API externa Quality de movimento extra
 - `movimento_extra_business.py`: lógica de domínio — agrupamento por fundos, insights, totais
+
+#### `features/contrato/`
+- `contrato_types.py`: schemas Pydantic de contratos (`ContratoItem`, `ContratoDetalhe`, `ContratoFiscal`, `ContratoResumoAnual`, `ContratoListResponse`)
+- `contrato_adapter.py`: ACL HTTP para API Quality de contratos (`fetch_contratos`, `fetch_contrato_detalhe`)
+- `contrato_data.py`: persistência e consultas SQLAlchemy de contratos
+- `contrato_handler.py`: endpoints `/api/v1/contratos/busca`, `/api/v1/contratos/{ano}/{numero}`, `/api/v1/contratos/anos`
+
+#### `features/convenio/`
+- `convenio_types.py`: schemas Pydantic de convênios (`ConvenioItem`, `ConvenioMovimentacao`, `ConvenioResumoAnual`, `ConvenioListResponse`, `ConvenioMovimentacaoResponse`)
+- `convenio_adapter.py`: ACL HTTP para API Quality de convênios (`fetch_convenios`, `fetch_convenio_movimentacoes`)
+- `convenio_data.py`: persistência e consultas SQLAlchemy de convênios e movimentações
+- `convenio_handler.py`: endpoints `/api/v1/convenios/busca`, `/api/v1/convenios/detalhe`, `/api/v1/convenios/movimentacoes`, `/api/v1/convenios/anos`
+
+#### `features/emenda/`
+- `emenda_types.py`: schemas Pydantic de emendas parlamentares (`EmendaItem`, `EmendaResumoAnual`, `EmendaListResponse`)
+- `emenda_adapter.py`: ACL HTTP para API Quality de emendas (`fetch_emendas`)
+- `emenda_data.py`: persistência e consultas SQLAlchemy de emendas
+- `emenda_handler.py`: endpoints `/api/v1/emendas/busca`, `/api/v1/emendas/anos`
+
+#### `features/folha/`
+- `folha_types.py`: schemas Pydantic (`FolhaOfficeItem`, `FolhaEmployeeItem`, `FolhaResumoMensal`, `FolhaEmployeeListResponse`, `FolhaOfficeListResponse`)
+- `folha_adapter.py`: ACL HTTP para API Quality da folha de pagamento (`fetch_offices`, `fetch_employees`, `search_employees`) com parse seguro de valores monetários
+- `folha_data.py`: persistência e consultas SQLAlchemy de órgãos/departamentos e servidores (list, get_resumo_mensal, upsert, get_anos_disponiveis)
+- `folha_handler.py`: endpoints `/api/v1/folha/offices`, `/api/v1/folha/employees`, `/api/v1/folha/anos`
+
+#### `features/patrimonio/`
+- `patrimonio_types.py`: schemas Pydantic de controle patrimonial (`PatrimonioItem`, `PatrimonioResumoPorTipo`, `PatrimonioResumoAnual`, `PatrimonioListResponse`)
+- `patrimonio_adapter.py`: ACL HTTP para API Quality de levantamento patrimonial (`fetch_patrimonio`)
+- `patrimonio_data.py`: persistência e consultas SQLAlchemy de patrimônio (`list_patrimonio`, `get_anos_disponiveis`, `get_resumo_anual`, `upsert_patrimonio`)
+- `patrimonio_handler.py`: endpoints `/api/v1/patrimonio/busca`, `/api/v1/patrimonio/anos`
+- `patrimonio_scheduler.py`: APScheduler periódico (10 min) sincronizando ano atual e anterior
 
 #### `features/scraping/`
 - `scraping_types.py`: schemas Pydantic de scraping (status, trigger, histórico); `ScrapingTriggerRequest` expandido com flag `run_historical`
@@ -319,8 +351,20 @@ Snapshot: 2026-05-06
 - `app/prefeitura/secretarias/[slug]/secretaria-detail-client.tsx`: foto do secretário, missão/visão/valores, contatos
 - `app/prefeitura/reparticoes/page.tsx`: lista de repartições e setores municipais
 - `app/prefeitura/reparticoes/reparticoes-client.tsx`: endereços, telefones e links para Google Maps
-- `app/contratos/page.tsx`: placeholder — Gestão de Contratos
-- `app/diarias/page.tsx`: placeholder — Diárias e Passagens
+- `app/contratos/page.tsx`: página pública — Gestão de Contratos
+- `app/contratos/contratos-client.tsx`: componente cliente da Gestão de Contratos
+- `app/convenios/page.tsx`: página pública — Convênios
+- `app/convenios/convenios-client.tsx`: componente cliente de Convênios
+- `app/emendas/page.tsx`: página pública — Emendas Parlamentares
+- `app/emendas/emendas-client.tsx`: componente cliente das Emendas Parlamentares
+- `app/diarias/page.tsx`: página pública — Diárias e Passagens
+- `app/diarias/diarias-client.tsx`: componente cliente de Diárias e Passagens
+- `app/cargos/page.tsx`: página pública — Cargos e Salários
+- `app/cargos/cargos-client.tsx`: componente cliente de Cargos e Salários
+- `app/patrimonio/page.tsx`: página pública — Controle Patrimonial
+- `app/patrimonio/patrimonio-client.tsx`: componente cliente de Controle Patrimonial
+- `app/planejamento/page.tsx`: página pública de links oficiais — Planejamento Orçamentário
+- `app/rgf-rreo/page.tsx`: página pública de links oficiais — RGF e RREO
 - `app/licitacoes/page.tsx`: placeholder — Licitações
 - `app/avisos-licitacoes/page.tsx`: página de avisos de licitações
 - `app/avisos-licitacoes/avisos-licitacoes-client.tsx`: componente principal (≤400 linhas) com calendário mensal/semanal, lista, filtros e modal
@@ -357,6 +401,12 @@ Snapshot: 2026-05-06
 - `services/diario-oficial-service.ts`: cliente `fetchDiarioHoje()` para consulta do endpoint `/api/v1/diario-oficial/hoje`; `buscarDiario()` e `importarDiario()` para os endpoints admin de busca e importação
 - `services/legislacao-service.ts`: service da feature legislação com `list(filters)` e `getById(id)`
 - `services/institucional-service.ts`: service da feature institucional/prefeitura com `getCityHall`, `getManagement`, `listDepartments`, `getDepartmentBySlug`, `listOffices`
+- `services/emenda-service.ts`: service da feature emendas parlamentares (`list`, `anos`)
+- `services/contrato-service.ts`: service da feature contratos (`list`, `detalhe`, `anos`)
+- `services/convenio-service.ts`: service da feature convênios (`list`, `movimentacoes`, `anos`)
+- `services/diaria-service.ts`: service da feature diárias (`list`, `anos`)
+- `services/cargo-service.ts`: service da feature cargos (`list`, `anos`)
+- `services/patrimonio-service.ts`: service da feature patrimônio (`list`, `anos`)
 - `stores/filtersStore.ts`: store Zustand de filtros
 - `stores/authStore.ts`: store em memória da sessão administrativa (sem persistência do access token)
 - `stores/themeStore.ts`: store Zustand de tema (light/dark) com persistência + hook useChartThemeColors
@@ -380,6 +430,12 @@ Snapshot: 2026-05-06
 - `types/saude.ts`: contratos TS da feature saúde espelhando os schemas Pydantic do backend, incluindo os novos dashboards públicos
 - `types/legislacao.ts`: contratos TS da feature legislação (`TipoLegislacao`, `StatusLegislacao`, `LegislacaoItem`, `LegislacaoDetalhe`, `LegislacaoListResponse`)
 - `types/institucional.ts`: contratos TS da feature institucional/prefeitura (`CityHallRecord`, `ManagementRecord`, `DepartmentRecord`, `OfficeRecord`)
+- `types/emenda.ts`: contratos TS da feature emendas parlamentares (`EmendaItem`, `EmendaResumoAnual`, `EmendaListResponse`)
+- `types/contrato.ts`: contratos TS da feature contratos (`ContratoItem`, `ContratoDetalhe`, `ContratoResumoAnual`, `ContratoListResponse`)
+- `types/convenio.ts`: contratos TS da feature convênios (`ConvenioItem`, `ConvenioMovimentacao`, `ConvenioResumoAnual`, `ConvenioListResponse`)
+- `types/diaria.ts`: contratos TS da feature diárias (`DiariaItem`, `DiariaResumoMensal`, `DiariaResumoAnual`, `DiariaListResponse`)
+- `types/cargo.ts`: contratos TS da feature cargos (`CargoItem`, `CargoResumoCategoria`, `CargoResumoAnual`, `CargoListResponse`)
+- `types/patrimonio.ts`: contratos TS da feature patrimônio (`PatrimonioItem`, `PatrimonioResumoAnual`, `PatrimonioListResponse`)
 - `types/index.ts`: barrel de exports
 - `public/`: assets estáticos, incluindo `manifest.json` e `icon.svg`
 

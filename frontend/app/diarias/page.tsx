@@ -1,18 +1,18 @@
 import type { Metadata } from 'next';
 
-import PlaceholderPage from '@/components/portal/PlaceholderPage';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
+
+import DiariasClient from './diarias-client';
 
 export const metadata: Metadata = {
-  title: 'Diárias e Passagens',
-  description: 'Diárias e passagens concedidas pela administração de Bandeirantes MS',
+  title: 'Diárias e Passagens | Portal da Transparência',
+  description: 'Diárias e passagens concedidas pela administração pública municipal de Bandeirantes MS',
 };
 
 export default function DiariasPage() {
   return (
-    <PlaceholderPage
-      title="Diárias e Passagens"
-      description="Esta seção permitirá consultar as diárias e passagens concedidas pela administração. Está em desenvolvimento e estará disponível em breve."
-      iconName="flight"
-    />
+    <DashboardLayout>
+      <DiariasClient />
+    </DashboardLayout>
   );
 }
