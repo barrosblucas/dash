@@ -66,22 +66,49 @@ async def fetch_contratos(ano: int, tipo: str | None = None) -> list[ContratoIte
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
             response = await client.get(url, params=params, headers=_HEADERS)
+
+            if response.status_code >= 500:
+                logger.warning(
+                    "API externa indisponível (HTTP %d) ao buscar contratos (ano=%s tipo=%s) — retornando vazio",
+                    response.status_code,
+                    ano,
+                    tipo,
+                )
+                return []
+
+            if response.status_code == 404:
+                logger.info(
+                    "Nenhum dado encontrado (HTTP 404) ao buscar contratos (ano=%s tipo=%s)",
+                    ano,
+                    tipo,
+                )
+                return []
+
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as exc:
-        logger.error(
-            "HTTP %s ao buscar contratos (ano=%s tipo=%s)",
+        logger.warning(
+            "HTTP %s ao buscar contratos (ano=%s tipo=%s) — retornando vazio",
             exc.response.status_code,
             ano,
             tipo,
         )
-        raise ContratoAPIError(
-            f"Erro ao buscar dados na API externa: HTTP {exc.response.status_code}",
-            status_code=exc.response.status_code,
-        ) from exc
-    except httpx.RequestError as exc:
-        logger.error("Erro de conexão ao buscar contratos: %s", exc)
-        raise ContratoAPIError("Erro de conexão com a API externa") from exc
+        return []
+    except httpx.ConnectError:
+        logger.warning(
+            "API externa indisponível ao buscar contratos (ano=%s tipo=%s) — retornando vazio",
+            ano,
+            tipo,
+        )
+        return []
+    except Exception as exc:
+        logger.warning(
+            "Erro inesperado ao buscar contratos (ano=%s tipo=%s): %s — retornando vazio",
+            ano,
+            tipo,
+            exc,
+        )
+        return []
 
     if not isinstance(data, list):
         logger.warning("Resposta inesperada da API externa: %s", type(data))
@@ -124,24 +151,49 @@ async def fetch_contrato_detalhe(
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
             response = await client.get(url, params=params, headers=_HEADERS)
+
+            if response.status_code >= 500:
+                logger.warning(
+                    "API externa indisponível (HTTP %d) ao buscar detalhe do contrato (ano=%s numero=%s) — retornando vazio",
+                    response.status_code,
+                    ano,
+                    numero,
+                )
+                return None
+
+            if response.status_code == 404:
+                logger.info(
+                    "Nenhum dado encontrado (HTTP 404) ao buscar detalhe do contrato (ano=%s numero=%s)",
+                    ano,
+                    numero,
+                )
+                return None
+
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as exc:
-        logger.error(
-            "HTTP %s ao buscar detalhe do contrato (ano=%s numero=%s)",
+        logger.warning(
+            "HTTP %s ao buscar detalhe do contrato (ano=%s numero=%s) — retornando vazio",
             exc.response.status_code,
             ano,
             numero,
         )
-        raise ContratoAPIError(
-            f"Erro ao buscar detalhe na API externa: HTTP {exc.response.status_code}",
-            status_code=exc.response.status_code,
-        ) from exc
-    except httpx.RequestError as exc:
-        logger.error(
-            "Erro de conexão ao buscar detalhe do contrato: %s", exc
+        return None
+    except httpx.ConnectError:
+        logger.warning(
+            "API externa indisponível ao buscar detalhe do contrato (ano=%s numero=%s) — retornando vazio",
+            ano,
+            numero,
         )
-        raise ContratoAPIError("Erro de conexão com a API externa") from exc
+        return None
+    except Exception as exc:
+        logger.warning(
+            "Erro inesperado ao buscar detalhe do contrato (ano=%s numero=%s): %s — retornando vazio",
+            ano,
+            numero,
+            exc,
+        )
+        return None
 
     if isinstance(data, dict):
         return dict(data)

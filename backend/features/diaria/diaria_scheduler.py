@@ -15,7 +15,7 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-from backend.features.diaria.diaria_adapter import DiariaAPIError, fetch_diarias
+from backend.features.diaria.diaria_adapter import fetch_diarias
 from backend.features.diaria.diaria_data import upsert_diarias
 from backend.shared.database.connection import db_manager
 
@@ -71,20 +71,12 @@ class DiariaScheduler:
         try:
             for ano in years:
                 for mes in range(1, 13):
-                    try:
-                        items = await fetch_diarias(ano, mes)
-                        if items:
-                            with db_manager.get_session() as session:
-                                count = upsert_diarias(session, items)
-                                total += count
-                                session.commit()
-                    except DiariaAPIError as exc:
-                        logger.warning(
-                            "Erro API externa no sync job (ano=%s mes=%s): %s",
-                            ano,
-                            mes,
-                            exc.message,
-                        )
+                    items = await fetch_diarias(ano, mes)
+                    if items:
+                        with db_manager.get_session() as session:
+                            count = upsert_diarias(session, items)
+                            total += count
+                            session.commit()
                     # Pequeno delay entre chamadas para não sobrecarregar API externa
                     await asyncio.sleep(0.5)
 

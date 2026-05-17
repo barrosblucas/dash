@@ -68,22 +68,49 @@ async def fetch_diarias(
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
             response = await client.get(url, params=params, headers=_HEADERS)
+
+            if response.status_code >= 500:
+                logger.warning(
+                    "API externa indisponível (HTTP %d) ao buscar diárias (ano=%s mes=%s) — retornando vazio",
+                    response.status_code,
+                    ano,
+                    mes,
+                )
+                return []
+
+            if response.status_code == 404:
+                logger.info(
+                    "Nenhum dado encontrado (HTTP 404) ao buscar diárias (ano=%s mes=%s)",
+                    ano,
+                    mes,
+                )
+                return []
+
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as exc:
-        logger.error(
-            "HTTP %s ao buscar diárias (ano=%s mes=%s)",
+        logger.warning(
+            "HTTP %s ao buscar diárias (ano=%s mes=%s) — retornando vazio",
             exc.response.status_code,
             ano,
             mes,
         )
-        raise DiariaAPIError(
-            f"Erro ao buscar dados na API externa: HTTP {exc.response.status_code}",
-            status_code=exc.response.status_code,
-        ) from exc
-    except httpx.RequestError as exc:
-        logger.error("Erro de conexão ao buscar diárias: %s", exc)
-        raise DiariaAPIError("Erro de conexão com a API externa") from exc
+        return []
+    except httpx.ConnectError:
+        logger.warning(
+            "API externa indisponível ao buscar diárias (ano=%s mes=%s) — retornando vazio",
+            ano,
+            mes,
+        )
+        return []
+    except Exception as exc:
+        logger.warning(
+            "Erro inesperado ao buscar diárias (ano=%s mes=%s): %s — retornando vazio",
+            ano,
+            mes,
+            exc,
+        )
+        return []
 
     if not isinstance(data, list):
         logger.warning("Resposta inesperada da API externa: %s", type(data))

@@ -65,21 +65,44 @@ async def fetch_convenios(ano: int) -> list[ConvenioItem]:
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
             response = await client.get(url, params=params, headers=_HEADERS)
+
+            if response.status_code >= 500:
+                logger.warning(
+                    "API externa indisponível (HTTP %d) ao buscar convênios (ano=%s) — retornando vazio",
+                    response.status_code,
+                    ano,
+                )
+                return []
+
+            if response.status_code == 404:
+                logger.info(
+                    "Nenhum dado encontrado (HTTP 404) ao buscar convênios (ano=%s)",
+                    ano,
+                )
+                return []
+
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as exc:
-        logger.error(
-            "HTTP %s ao buscar convênios (ano=%s)",
+        logger.warning(
+            "HTTP %s ao buscar convênios (ano=%s) — retornando vazio",
             exc.response.status_code,
             ano,
         )
-        raise ConvenioAPIError(
-            f"Erro ao buscar dados na API externa: HTTP {exc.response.status_code}",
-            status_code=exc.response.status_code,
-        ) from exc
-    except httpx.RequestError as exc:
-        logger.error("Erro de conexão ao buscar convênios: %s", exc)
-        raise ConvenioAPIError("Erro de conexão com a API externa") from exc
+        return []
+    except httpx.ConnectError:
+        logger.warning(
+            "API externa indisponível ao buscar convênios (ano=%s) — retornando vazio",
+            ano,
+        )
+        return []
+    except Exception as exc:
+        logger.warning(
+            "Erro inesperado ao buscar convênios (ano=%s): %s — retornando vazio",
+            ano,
+            exc,
+        )
+        return []
 
     if not isinstance(data, list):
         logger.warning("Resposta inesperada da API externa: %s", type(data))
@@ -128,24 +151,49 @@ async def fetch_convenio_movimentacoes(
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
             response = await client.get(url, params=params, headers=_HEADERS)
+
+            if response.status_code >= 500:
+                logger.warning(
+                    "API externa indisponível (HTTP %d) ao buscar movimentações de convênios (ano=%s mes=%s) — retornando vazio",
+                    response.status_code,
+                    ano,
+                    mes,
+                )
+                return []
+
+            if response.status_code == 404:
+                logger.info(
+                    "Nenhum dado encontrado (HTTP 404) ao buscar movimentações de convênios (ano=%s mes=%s)",
+                    ano,
+                    mes,
+                )
+                return []
+
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as exc:
-        logger.error(
-            "HTTP %s ao buscar movimentações de convênios (ano=%s mes=%s)",
+        logger.warning(
+            "HTTP %s ao buscar movimentações de convênios (ano=%s mes=%s) — retornando vazio",
             exc.response.status_code,
             ano,
             mes,
         )
-        raise ConvenioAPIError(
-            f"Erro ao buscar dados na API externa: HTTP {exc.response.status_code}",
-            status_code=exc.response.status_code,
-        ) from exc
-    except httpx.RequestError as exc:
-        logger.error(
-            "Erro de conexão ao buscar movimentações de convênios: %s", exc
+        return []
+    except httpx.ConnectError:
+        logger.warning(
+            "API externa indisponível ao buscar movimentações de convênios (ano=%s mes=%s) — retornando vazio",
+            ano,
+            mes,
         )
-        raise ConvenioAPIError("Erro de conexão com a API externa") from exc
+        return []
+    except Exception as exc:
+        logger.warning(
+            "Erro inesperado ao buscar movimentações de convênios (ano=%s mes=%s): %s — retornando vazio",
+            ano,
+            mes,
+            exc,
+        )
+        return []
 
     if not isinstance(data, list):
         logger.warning(

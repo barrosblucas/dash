@@ -42,7 +42,7 @@ async def scrape_contratos(year: int) -> dict[str, Any]:
         if not items:
             return {"status": "NO_DATA", "count": 0}
 
-        with db_manager.session() as session:
+        with db_manager.get_session() as session:
             count = upsert_contratos(session, items)
 
         logger.info("Scraping contratos %d: %d itens persistidos", year, count)

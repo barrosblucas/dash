@@ -14,10 +14,7 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-from backend.features.patrimonio.patrimonio_adapter import (
-    PatrimonioAPIError,
-    fetch_patrimonio,
-)
+from backend.features.patrimonio.patrimonio_adapter import fetch_patrimonio
 from backend.features.patrimonio.patrimonio_data import upsert_patrimonio
 from backend.shared.database.connection import db_manager
 
@@ -72,19 +69,12 @@ class PatrimonioScheduler:
 
         try:
             for ano in years:
-                try:
-                    items = await fetch_patrimonio(ano)
-                    if items:
-                        with db_manager.get_session() as session:
-                            count = upsert_patrimonio(session, items)
-                            total += count
-                            session.commit()
-                except PatrimonioAPIError as exc:
-                    logger.warning(
-                        "Erro API externa no sync job (ano=%s): %s",
-                        ano,
-                        exc.message,
-                    )
+                items = await fetch_patrimonio(ano)
+                if items:
+                    with db_manager.get_session() as session:
+                        count = upsert_patrimonio(session, items)
+                        total += count
+                        session.commit()
 
             self._last_sync_count = total
             logger.info(
