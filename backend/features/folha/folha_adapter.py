@@ -83,10 +83,8 @@ async def fetch_offices(ano: int, mes: int) -> list[FolhaOfficeItem]:
         mes: Mês de referência (1-12).
 
     Returns:
-        Lista de FolhaOfficeItem.
-
-    Raises:
-        FolhaAPIError: Em caso de falha na comunicação.
+        Lista de FolhaOfficeItem. Retorna lista vazia em caso de HTTP 404, 5xx,
+        ou erro de conexão — nunca lança exceção.
     """
     params = {
         "entity": _ENTITY,
@@ -98,20 +96,42 @@ async def fetch_offices(ano: int, mes: int) -> list[FolhaOfficeItem]:
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
             response = await client.get(url, params=params, headers=_HEADERS)
+
+            if response.status_code >= 500:
+                logger.warning(
+                    "API externa indisponível (HTTP %d) ao buscar offices (ano=%s mes=%s) — retornando vazio",
+                    response.status_code,
+                    ano,
+                    mes,
+                )
+                return []
+
+            if response.status_code == 404:
+                logger.info(
+                    "Nenhum dado encontrado (HTTP 404) ao buscar offices (ano=%s mes=%s)",
+                    ano,
+                    mes,
+                )
+                return []
+
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as exc:
-        logger.error(
-            "HTTP %s ao buscar offices (ano=%s mes=%s)",
-            exc.response.status_code, ano, mes,
+        logger.warning(
+            "HTTP %s ao buscar offices (ano=%s mes=%s) — retornando vazio",
+            exc.response.status_code,
+            ano,
+            mes,
         )
-        raise FolhaAPIError(
-            f"Erro ao buscar offices: HTTP {exc.response.status_code}",
-            status_code=exc.response.status_code,
-        ) from exc
+        return []
     except httpx.RequestError as exc:
-        logger.error("Erro de conexão ao buscar offices: %s", exc)
-        raise FolhaAPIError("Erro de conexão com a API externa") from exc
+        logger.warning(
+            "Erro de conexão ao buscar offices (ano=%s mes=%s): %s — retornando vazio",
+            ano,
+            mes,
+            exc,
+        )
+        return []
 
     if not isinstance(data, list):
         logger.warning("Resposta inesperada (offices): %s", type(data))
@@ -132,24 +152,28 @@ async def fetch_offices(ano: int, mes: int) -> list[FolhaOfficeItem]:
                 dept_id = dept.get("id") or 0
                 dept_desc = dept.get("description") or ""
 
-                items.append(FolhaOfficeItem(
-                    office_id=int(office_id),
-                    office_description=str(office_desc).strip(),
-                    department_id=int(dept_id),
-                    department_description=str(dept_desc).strip(),
-                    ano=ano,
-                    mes=mes,
-                ))
+                items.append(
+                    FolhaOfficeItem(
+                        office_id=int(office_id),
+                        office_description=str(office_desc).strip(),
+                        department_id=int(dept_id),
+                        department_description=str(dept_desc).strip(),
+                        ano=ano,
+                        mes=mes,
+                    )
+                )
         else:
             # Caso não tenha departments, adiciona o office sozinho
-            items.append(FolhaOfficeItem(
-                office_id=int(office_id),
-                office_description=str(office_desc).strip(),
-                department_id=0,
-                department_description="",
-                ano=ano,
-                mes=mes,
-            ))
+            items.append(
+                FolhaOfficeItem(
+                    office_id=int(office_id),
+                    office_description=str(office_desc).strip(),
+                    department_id=0,
+                    department_description="",
+                    ano=ano,
+                    mes=mes,
+                )
+            )
 
     return items
 
@@ -169,10 +193,8 @@ async def fetch_employees(
         department_id: ID do departamento.
 
     Returns:
-        Lista de FolhaEmployeeItem.
-
-    Raises:
-        FolhaAPIError: Em caso de falha na comunicação.
+        Lista de FolhaEmployeeItem. Retorna lista vazia em caso de HTTP 404, 5xx,
+        ou erro de conexão — nunca lança exceção.
     """
     params = {
         "entity": _ENTITY,
@@ -186,20 +208,50 @@ async def fetch_employees(
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
             response = await client.get(url, params=params, headers=_HEADERS)
+
+            if response.status_code >= 500:
+                logger.warning(
+                    "API externa indisponível (HTTP %d) ao buscar employees (ano=%s mes=%s office=%s dept=%s) — retornando vazio",
+                    response.status_code,
+                    ano,
+                    mes,
+                    office_id,
+                    department_id,
+                )
+                return []
+
+            if response.status_code == 404:
+                logger.info(
+                    "Nenhum dado encontrado (HTTP 404) ao buscar employees (ano=%s mes=%s office=%s dept=%s)",
+                    ano,
+                    mes,
+                    office_id,
+                    department_id,
+                )
+                return []
+
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as exc:
-        logger.error(
-            "HTTP %s ao buscar employees (ano=%s mes=%s office=%s dept=%s)",
-            exc.response.status_code, ano, mes, office_id, department_id,
+        logger.warning(
+            "HTTP %s ao buscar employees (ano=%s mes=%s office=%s dept=%s) — retornando vazio",
+            exc.response.status_code,
+            ano,
+            mes,
+            office_id,
+            department_id,
         )
-        raise FolhaAPIError(
-            f"Erro ao buscar employees: HTTP {exc.response.status_code}",
-            status_code=exc.response.status_code,
-        ) from exc
+        return []
     except httpx.RequestError as exc:
-        logger.error("Erro de conexão ao buscar employees: %s", exc)
-        raise FolhaAPIError("Erro de conexão com a API externa") from exc
+        logger.warning(
+            "Erro de conexão ao buscar employees (ano=%s mes=%s office=%s dept=%s): %s — retornando vazio",
+            ano,
+            mes,
+            office_id,
+            department_id,
+            exc,
+        )
+        return []
 
     if not isinstance(data, list):
         logger.warning("Resposta inesperada (employees): %s", type(data))
@@ -248,7 +300,10 @@ async def search_employees(
     except httpx.HTTPStatusError as exc:
         logger.error(
             "HTTP %s ao buscar employees (keyword=%s ano=%s mes=%s)",
-            exc.response.status_code, keyword, ano, mes,
+            exc.response.status_code,
+            keyword,
+            ano,
+            mes,
         )
         raise FolhaAPIError(
             f"Erro ao buscar employees: HTTP {exc.response.status_code}",
@@ -281,7 +336,9 @@ def _parse_employee_item(
         ano=ano,
         mes=mes,
         office_id=office_id,
-        office_description=str(item.get("officeDescription") or item.get("office") or ""),
+        office_description=str(
+            item.get("officeDescription") or item.get("office") or ""
+        ),
         department_id=department_id,
         department_description=str(
             item.get("departmentDescription") or item.get("department") or ""
@@ -290,41 +347,27 @@ def _parse_employee_item(
         name=str(item.get("name") or item.get("nome") or ""),
         cpf=str(item.get("cpf") or ""),
         role=str(item.get("role") or item.get("cargo") or ""),
-        class_and_level=str(
-            item.get("classAndLevel") or item.get("classeNivel") or ""
-        ),
+        class_and_level=str(item.get("classAndLevel") or item.get("classeNivel") or ""),
         state=str(item.get("state") or item.get("situacao") or ""),
-        admission_date=str(
-            item.get("admissionDate") or item.get("dataAdmissao") or ""
-        ),
-        end_date=str(
-            item.get("dataEncerramento") or item.get("endDate") or ""
-        ),
-        base_salary=_normalize_money(
-            item.get("baseSalary") or item.get("salarioBase")
-        ),
+        admission_date=str(item.get("admissionDate") or item.get("dataAdmissao") or ""),
+        end_date=str(item.get("dataEncerramento") or item.get("endDate") or ""),
+        base_salary=_normalize_money(item.get("baseSalary") or item.get("salarioBase")),
         tenth_salary=_normalize_money(
-            item.get("tenthSalary") or item.get("decimoTerceiro") or item.get("13salario")
+            item.get("tenthSalary")
+            or item.get("decimoTerceiro")
+            or item.get("13salario")
         ),
-        vacation=_normalize_money(
-            item.get("vacation") or item.get("ferias")
-        ),
+        vacation=_normalize_money(item.get("vacation") or item.get("ferias")),
         gratification=_normalize_money(
             item.get("gratification") or item.get("gratificacao")
         ),
         others_earnings=_normalize_money(
             item.get("othersEarnings") or item.get("outrosProventos")
         ),
-        discounts=_normalize_money(
-            item.get("discounts") or item.get("descontos")
-        ),
+        discounts=_normalize_money(item.get("discounts") or item.get("descontos")),
         gross_salary=_normalize_money(
             item.get("grossSalary") or item.get("salarioBruto")
         ),
-        net_salary=_normalize_money(
-            item.get("netSalary") or item.get("liquido")
-        ),
-        role_type_id=str(
-            item.get("roleTypeId") or item.get("tipoVinculoId") or ""
-        ),
+        net_salary=_normalize_money(item.get("netSalary") or item.get("liquido")),
+        role_type_id=str(item.get("roleTypeId") or item.get("tipoVinculoId") or ""),
     )

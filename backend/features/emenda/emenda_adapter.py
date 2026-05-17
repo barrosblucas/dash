@@ -52,10 +52,8 @@ async def fetch_emendas(ano: int, tipo: str | None = None) -> list[EmendaItem]:
               com Finalidade Definida", None para todos).
 
     Returns:
-        Lista de EmendaItem.
-
-    Raises:
-        EmendaAPIError: Em caso de falha na comunicação.
+        Lista de EmendaItem. Retorna lista vazia em caso de HTTP 404, 5xx,
+        ou erro de conexão — nunca lança exceção.
     """
     params: dict[str, str] = {"ano": str(ano)}
     if tipo is not None:
@@ -66,22 +64,42 @@ async def fetch_emendas(ano: int, tipo: str | None = None) -> list[EmendaItem]:
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
             response = await client.get(url, params=params, headers=_HEADERS)
+
+            if response.status_code >= 500:
+                logger.warning(
+                    "API externa indisponível (HTTP %d) ao buscar emendas (ano=%s tipo=%s) — retornando vazio",
+                    response.status_code,
+                    ano,
+                    tipo,
+                )
+                return []
+
+            if response.status_code == 404:
+                logger.info(
+                    "Nenhum dado encontrado (HTTP 404) ao buscar emendas (ano=%s tipo=%s)",
+                    ano,
+                    tipo,
+                )
+                return []
+
             response.raise_for_status()
             data = response.json()
     except httpx.HTTPStatusError as exc:
-        logger.error(
-            "HTTP %s ao buscar emendas (ano=%s tipo=%s)",
+        logger.warning(
+            "HTTP %s ao buscar emendas (ano=%s tipo=%s) — retornando vazio",
             exc.response.status_code,
             ano,
             tipo,
         )
-        raise EmendaAPIError(
-            f"Erro ao buscar dados na API externa: HTTP {exc.response.status_code}",
-            status_code=exc.response.status_code,
-        ) from exc
+        return []
     except httpx.RequestError as exc:
-        logger.error("Erro de conexão ao buscar emendas: %s", exc)
-        raise EmendaAPIError("Erro de conexão com a API externa") from exc
+        logger.warning(
+            "Erro de conexão ao buscar emendas (ano=%s tipo=%s): %s — retornando vazio",
+            ano,
+            tipo,
+            exc,
+        )
+        return []
 
     if not isinstance(data, list):
         logger.warning("Resposta inesperada da API externa: %s", type(data))
@@ -116,12 +134,7 @@ def _parse_emenda_item(item: dict, ano: int) -> EmendaItem | None:
     Returns:
         EmendaItem ou None se inválido.
     """
-    emenda = (
-        item.get("emenda")
-        or item.get("Emenda")
-        or item.get("EMENDA")
-        or ""
-    )
+    emenda = item.get("emenda") or item.get("Emenda") or item.get("EMENDA") or ""
     if not emenda:
         return None
 
@@ -140,10 +153,7 @@ def _parse_emenda_item(item: dict, ano: int) -> EmendaItem | None:
         or ""
     )
     descricao = (
-        item.get("descricao")
-        or item.get("Descricao")
-        or item.get("Descrição")
-        or ""
+        item.get("descricao") or item.get("Descricao") or item.get("Descrição") or ""
     )
     detalhes_link = (
         item.get("detalhes_link")

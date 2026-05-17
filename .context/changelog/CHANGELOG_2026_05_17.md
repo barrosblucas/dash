@@ -61,8 +61,17 @@
 - `backend/api/main.py` — registro de 6 novos routers + scheduler integration
 - `backend/features/scraping/scraping_scheduler.py` — scraping de contratos, convênios, diárias, cargos, emendas no job periódico
 
+## Fixed
+
+### Backend — Resiliência no startup do scraping Quality
+- `backend/features/emenda/emenda_adapter.py` — `fetch_emendas()` agora retorna lista vazia em HTTP 404/5xx ou erro de conexão, evitando falha do startup quando o ano ainda não está disponível na origem
+- `backend/features/folha/folha_adapter.py` — `fetch_offices()` e `fetch_employees()` agora retornam lista vazia em HTTP 404/5xx ou erro de conexão, evitando erro repetitivo no startup e mantendo o scraper resiliente por mês/órgão
+- `backend/tests/test_etl/test_adapter_http_error_handling.py` — novos testes de regressão para 404/500/200 nos adapters de emenda e folha
+
 ## Verification
 - ruff check: all clean
 - mypy: no new issues
 - TypeScript: `tsc --noEmit` passed
 - App loads: 127 routes registered
+- backend startup fix: `ruff check .` OK; `ruff format --check` nos arquivos alterados OK; `pytest -q` OK; `mypy` nos arquivos alterados OK
+- observação: `mypy .` global falha em `alembic/versions/a1307f31be14_merge_heads_before_management_actions.py` e `ruff format --check .` global reporta drift pré-existente fora do escopo

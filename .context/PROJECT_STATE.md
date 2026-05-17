@@ -41,6 +41,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Proxy routes para licitações: ComprasBR (JSON paginado) e Quality (scraping HTML de dispensas)
 - [x] Bounded context `legislacao` com CRUD admin completo (listagem paginada com filtros por tipo/ano/status/busca, detalhe completo com texto integral, criação, atualização e remoção)
 - [x] Bounded context `emenda` com cache de emendas parlamentares e scraping periódico da API Quality
+- [x] Adapters `emenda` e `folha` degradam HTTP 404/5xx da API Quality para retorno vazio no startup, evitando erro quando ano/mês ainda não estão disponíveis na origem
 - [x] Bounded context `contrato` com cache local de contratos, detalhe por contrato e scraping periódico da API Quality
 - [x] Bounded context `convenio` com cache local de convênios e movimentações mensais, scraping periódico da API Quality
 - [x] Bounded context `diaria` com cache local de diárias e passagens por ano/mês, scraping periódico da API Quality
@@ -190,8 +191,9 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 
 ### Type checking (mypy)
 
-- `mypy .` **verde global** — débito técnico legado em `features/receita/`, `features/despesa/`, `features/scraping/` e scripts auxiliares foi limpo em 2026-04-23.
-- Gate CI (`ruff check . && mypy . && pytest`) passando sem erros.
+- `mypy .` **não está verde globalmente** neste momento: falha pré-existente em `alembic/versions/a1307f31be14_merge_heads_before_management_actions.py` por incompatibilidade de tipo em migration legada.
+- `ruff format --check .` também reporta drift pré-existente em múltiplos arquivos fora do escopo da tarefa.
+- Para a correção de startup de 2026-05-17: `ruff check .` passou, `pytest -q` passou e `mypy`/`ruff format --check` dos arquivos alterados passaram.
 
 ## Próximos passos planejados
 
