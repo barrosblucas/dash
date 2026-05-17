@@ -148,6 +148,9 @@ function CargoMobileCard({
             <span className="font-medium text-on-surface">Contratados:</span> {item.contratado}
           </p>
           <p className="text-xs text-on-surface-variant">
+            <span className="font-medium text-on-surface">Convocados:</span> {item.convocados}
+          </p>
+          <p className="text-xs text-on-surface-variant">
             <span className="font-medium text-on-surface">Eletivos:</span> {item.eletivo}
           </p>
         </div>

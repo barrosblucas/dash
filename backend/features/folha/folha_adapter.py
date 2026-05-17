@@ -15,12 +15,9 @@ from backend.features.folha.folha_types import FolhaEmployeeItem, FolhaOfficeIte
 
 logger = logging.getLogger(__name__)
 
-_BASE_URL = (
-    "https://web.qualitysistemas.com.br"
-    "/folha_de_pagamento/prefeitura_municipal_de_bandeirantes"
-)
+_BASE_URL = "https://web.qualitysistemas.com.br/folha_de_pagamento"
 
-_ENTITY = "1"
+_ENTITY = "prefeitura_municipal_de_bandeirantes"
 _REQUEST_TIMEOUT = 60.0
 
 _HEADERS = {
@@ -30,7 +27,7 @@ _HEADERS = {
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/120.0.0.0 Safari/537.36"
     ),
-    "Referer": _BASE_URL,
+    "Referer": f"{_BASE_URL}/{_ENTITY}",
     "Accept": "application/json, text/javascript, */*; q=0.01",
 }
 
@@ -133,12 +130,13 @@ async def fetch_offices(ano: int, mes: int) -> list[FolhaOfficeItem]:
         )
         return []
 
-    if not isinstance(data, list):
+    office_rows = _extract_office_rows(data)
+    if not office_rows:
         logger.warning("Resposta inesperada (offices): %s", type(data))
         return []
 
     items: list[FolhaOfficeItem] = []
-    for office in data:
+    for office in office_rows:
         if not isinstance(office, dict):
             continue
         office_id = office.get("id") or office.get("officeId") or 0
@@ -253,15 +251,14 @@ async def fetch_employees(
         )
         return []
 
-    if not isinstance(data, list):
+    employee_rows = _extract_employee_rows(data)
+    if not employee_rows:
         logger.warning("Resposta inesperada (employees): %s", type(data))
         return []
 
-    # Busca os nomes dos órgãos/departamentos para enriquecer os itens
-    # Se não conseguir, usa os IDs fornecidos
     return [
         _parse_employee_item(item, ano, mes, office_id, department_id)
-        for item in data
+        for item in employee_rows
         if isinstance(item, dict)
     ]
 
@@ -313,16 +310,41 @@ async def search_employees(
         logger.error("Erro de conexão ao buscar employees: %s", exc)
         raise FolhaAPIError("Erro de conexão com a API externa") from exc
 
-    if not isinstance(data, list):
+    employee_rows = _extract_employee_rows(data, nested_search=True)
+    if not employee_rows:
         logger.warning("Resposta inesperada (search): %s", type(data))
         return []
 
-    return [
-        _parse_employee_item(item, ano, mes, 0, 0)
-        for item in data
-        if isinstance(item, dict)
-    ]
+    return [_parse_employee_item(item, ano, mes, 0, 0) for item in employee_rows if isinstance(item, dict)]
 
+def _extract_office_rows(data: object) -> list[dict]:
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+    if isinstance(data, dict):
+        return [item for item in data.values() if isinstance(item, dict)]
+    return []
+
+def _extract_employee_rows(data: object, nested_search: bool = False) -> list[dict]:
+    if isinstance(data, list):
+        return [item for item in data if isinstance(item, dict)]
+    if not isinstance(data, dict):
+        return []
+    values: list[object] = []
+    if nested_search:
+        for value in data.values():
+            if isinstance(value, dict):
+                values.extend(value.values())
+    else:
+        values = list(data.values())
+
+    rows: list[dict] = []
+    for value in values:
+        if not isinstance(value, dict):
+            continue
+        role_rows = value.get("roles")
+        if isinstance(role_rows, list):
+            rows.extend(item for item in role_rows if isinstance(item, dict))
+    return rows
 
 def _parse_employee_item(
     item: dict,

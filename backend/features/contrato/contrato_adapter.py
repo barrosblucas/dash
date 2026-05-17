@@ -16,11 +16,10 @@ from backend.features.contrato.contrato_types import ContratoFiscal, ContratoIte
 
 logger = logging.getLogger(__name__)
 
-_BASE_URL = (
-    "https://web.qualitysistemas.com.br"
-    "/contratos_e_convenios/prefeitura_municipal_de_bandeirantes"
-)
-_ENDPOINT = "buscaContratoPorAno"
+_BASE_URL = "https://web.qualitysistemas.com.br/contratos_e_convenios"
+_ENTITY = "prefeitura_municipal_de_bandeirantes"
+_LIST_ENDPOINT = "SearchAgreementsInSiart"
+_DETAIL_ENDPOINT = "SearchContract"
 _REQUEST_TIMEOUT = 30.0
 
 _HEADERS = {
@@ -57,43 +56,60 @@ async def fetch_contratos(ano: int, tipo: str | None = None) -> list[ContratoIte
     Raises:
         ContratoAPIError: Em caso de falha na comunicação.
     """
-    params: dict[str, str] = {"ano": str(ano)}
-    if tipo is not None:
-        params["tipo"] = tipo
-
-    url = f"{_BASE_URL}/{_ENDPOINT}"
+    url = f"{_BASE_URL}/{_LIST_ENDPOINT}"
 
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
-            response = await client.get(url, params=params, headers=_HEADERS)
-
-            if response.status_code >= 500:
-                logger.warning(
-                    "API externa indisponível (HTTP %d) ao buscar contratos (ano=%s tipo=%s) — retornando vazio",
-                    response.status_code,
-                    ano,
-                    tipo,
+            dedup: dict[str, ContratoItem] = {}
+            for month in range(1, 13):
+                response = await client.get(
+                    url,
+                    params={
+                        "entity": _ENTITY,
+                        "month": str(month),
+                        "year": str(ano),
+                        "search": "",
+                        "page": "0",
+                        "tipocontrato": tipo or "",
+                        "modelo": "buscaMes",
+                    },
+                    headers=_HEADERS,
                 )
-                return []
 
-            if response.status_code == 404:
-                logger.info(
-                    "Nenhum dado encontrado (HTTP 404) ao buscar contratos (ano=%s tipo=%s)",
-                    ano,
-                    tipo,
-                )
-                return []
+                if response.status_code >= 500:
+                    logger.warning(
+                        "API externa indisponível (HTTP %d) ao buscar contratos (ano=%s tipo=%s mes=%s) — retornando vazio",
+                        response.status_code,
+                        ano,
+                        tipo,
+                        month,
+                    )
+                    return []
 
-            response.raise_for_status()
-            data = response.json()
-    except httpx.HTTPStatusError as exc:
-        logger.warning(
-            "HTTP %s ao buscar contratos (ano=%s tipo=%s) — retornando vazio",
-            exc.response.status_code,
-            ano,
-            tipo,
-        )
-        return []
+                if response.status_code == 404:
+                    continue
+
+                response.raise_for_status()
+                data = response.json()
+                if not isinstance(data, list):
+                    continue
+
+                for item in data:
+                    if not isinstance(item, dict):
+                        continue
+
+                    try:
+                        contrato_item = _parse_contrato_item(item, ano)
+                        if contrato_item is not None:
+                            dedup[contrato_item.numero] = contrato_item
+                    except Exception as exc:
+                        logger.warning(
+                            "Falha ao converter item de contrato: %s — item=%s",
+                            exc,
+                            item.get("contrato") or item.get("numero") or "?",
+                        )
+
+            return sorted(dedup.values(), key=lambda item: item.numero)
     except httpx.ConnectError:
         logger.warning(
             "API externa indisponível ao buscar contratos (ano=%s tipo=%s) — retornando vazio",
@@ -110,27 +126,7 @@ async def fetch_contratos(ano: int, tipo: str | None = None) -> list[ContratoIte
         )
         return []
 
-    if not isinstance(data, list):
-        logger.warning("Resposta inesperada da API externa: %s", type(data))
-        return []
-
-    items: list[ContratoItem] = []
-    for item in data:
-        if not isinstance(item, dict):
-            continue
-
-        try:
-            contrato_item = _parse_contrato_item(item, ano)
-            if contrato_item is not None:
-                items.append(contrato_item)
-        except Exception as exc:
-            logger.warning(
-                "Falha ao converter item de contrato: %s — item=%s",
-                exc,
-                item.get("numero", "?"),
-            )
-
-    return items
+    return []
 
 
 async def fetch_contrato_detalhe(
@@ -145,8 +141,13 @@ async def fetch_contrato_detalhe(
     Returns:
         Dict com dados brutos do detalhe, ou None se não encontrado.
     """
-    params: dict[str, str] = {"ano": str(ano), "numero": numero}
-    url = f"{_BASE_URL}/{_ENDPOINT}"
+    params: dict[str, str] = {
+        "entity": _ENTITY,
+        "codContrato": numero,
+        "anoContrato": str(ano),
+        "entContrato": "4",
+    }
+    url = f"{_BASE_URL}/{_DETAIL_ENDPOINT}"
 
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
@@ -212,7 +213,7 @@ def _parse_contrato_item(item: dict, ano: int) -> ContratoItem | None:
     Returns:
         ContratoItem ou None se inválido.
     """
-    numero = item.get("numero") or item.get("Contrato") or ""
+    numero = item.get("numero") or item.get("contrato") or item.get("Contrato") or ""
     if not numero:
         return None
 
@@ -224,7 +225,7 @@ def _parse_contrato_item(item: dict, ano: int) -> ContratoItem | None:
 
     valor_raw = item.get("valor") or item.get("Valor") or "0"
     try:
-        valor = float(valor_raw) if valor_raw not in ("", "-") else 0.0
+        valor = _parse_money(valor_raw)
     except (ValueError, TypeError):
         valor = 0.0
 
@@ -268,3 +269,10 @@ def parse_fiscais_from_json(fiscais_json: str | None) -> list[ContratoFiscal]:
     except (json.JSONDecodeError, TypeError):
         logger.warning("Falha ao parsear fiscais_json: %s", fiscais_json)
         return []
+
+
+def _parse_money(value: object) -> float:
+    raw = str(value or "").strip()
+    if raw in ("", "-"):
+        return 0.0
+    return float(raw.replace(".", "").replace(",", "."))

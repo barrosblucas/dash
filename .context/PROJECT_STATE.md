@@ -1,6 +1,6 @@
 # PROJECT_STATE
 
-Snapshot: 2026-05-17 (6 novos bounded contexts Quality + páginas públicas adicionais)
+Snapshot: 2026-05-17 (scrapers Quality corrigidos + todos os bounded contexts populando SQLite)
 
 ## Status geral
 
@@ -42,6 +42,7 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Bounded context `legislacao` com CRUD admin completo (listagem paginada com filtros por tipo/ano/status/busca, detalhe completo com texto integral, criação, atualização e remoção)
 - [x] Bounded context `emenda` com cache de emendas parlamentares e scraping periódico da API Quality
 - [x] Adapters `emenda` e `folha` degradam HTTP 404/5xx da API Quality para retorno vazio no startup, evitando erro quando ano/mês ainda não estão disponíveis na origem
+- [x] Adapters Quality de `contrato`, `convenio`, `emenda`, `diaria` e `folha` realinhados com os endpoints vigentes do portal (Quality/PortalQuality), com persistência novamente validada no SQLite para contratos, convênios, emendas e folha
 - [x] Bounded context `contrato` com cache local de contratos, detalhe por contrato e scraping periódico da API Quality
 - [x] Bounded context `convenio` com cache local de convênios e movimentações mensais, scraping periódico da API Quality
 - [x] Bounded context `diaria` com cache local de diárias e passagens por ano/mês, scraping periódico da API Quality
@@ -154,6 +155,13 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 - [x] Receitas detalhamento: 1.858 itens hierárquicos (2013–2025 via PDF; 459 de 2026 via API QualitySistemas)
 - [x] Despesas: 460 registros (2013–2025 via PDF; 4 registros de 2026 via API QualitySistemas)
 - [x] Despesas breakdown: 3.204 registros (órgão, função, elemento; 2013–2025 via API QualitySistemas com bootstrap histórico)
+- [x] Contratos: 34 registros (2026 via Quality Portal)
+- [x] Convênios: 1 registro (2026 via PortalQuality)
+- [x] Emendas: 3 registros (2026 via PortalQuality HTML parsing)
+- [x] Cargos: 155 registros (2026 via Quality Portal, agregados de FilterContractsList)
+- [x] Patrimônio: 1.396 registros (via Quality Portal, itens de /patrimonios)
+- [x] Folha offices: 102 registros (2026 via OfficeFinder)
+- [x] Folha employees: 1.807 registros (via RoleFinder)
 - [x] Forecasts: pendente de geração
 - [x] Metadata ETL: controle de processamento
 ## Débito técnico conhecido
@@ -191,13 +199,12 @@ Projeto em **bootstrap funcional** com pipeline ETL operacional, dashboard inter
 
 ### Type checking (mypy)
 
-- `mypy .` **não está verde globalmente** neste momento: falha pré-existente em `alembic/versions/a1307f31be14_merge_heads_before_management_actions.py` por incompatibilidade de tipo em migration legada.
-- `ruff format --check .` também reporta drift pré-existente em múltiplos arquivos fora do escopo da tarefa.
-- Para a correção de startup de 2026-05-17: `ruff check .` passou, `pytest -q` passou e `mypy`/`ruff format --check` dos arquivos alterados passaram.
+- `mypy .` está **verde globalmente** (246 source files, no issues).
+- Para a correção dos scrapers Quality em 2026-05-17: `ruff check .` ✅, `mypy .` ✅, `pytest` ✅ (259 passed).
 
 ## Próximos passos planejados
 
-1. Implementar a feature de Folha de Pagamento (dados individualizados + agregados por departamento)
+1. ~~Implementar a feature de Folha de Pagamento (dados individualizados + agregados por departamento)~~ ✅
 2. Melhorar cobertura de testes (especialmente handlers e business logic)
 3. Limpar re-exports backward-compatible restantes (`api/routes/`, `api/schemas_*`)
 3. ~~Configurar Alembic migrations~~ ✅ Concluído em 2026-04-23

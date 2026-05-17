@@ -117,6 +117,7 @@ def upsert_cargos(
             "comissionado": item.comissionado,
             "contratado": item.contratado,
             "eletivo": item.eletivo,
+            "convocados": item.convocados,
             "categoria": item.categoria,
             "fonte": "QUALITY_SCRAPER",
             "created_at": now,
@@ -137,6 +138,7 @@ def upsert_cargos(
             "comissionado": stmt.excluded.comissionado,
             "contratado": stmt.excluded.contratado,
             "eletivo": stmt.excluded.eletivo,
+            "convocados": stmt.excluded.convocados,
             "updated_at": now,
         },
     )
@@ -157,6 +159,7 @@ def _row_to_item(row: CargoModel) -> CargoItem:
         comissionado=row.comissionado,
         contratado=row.contratado,
         eletivo=row.eletivo,
+        convocados=row.convocados,
         categoria=row.categoria,
         ano=row.ano,
     )

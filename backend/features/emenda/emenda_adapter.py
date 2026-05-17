@@ -8,6 +8,8 @@ Não contém lógica de negócio — apenas busca e mapeamento de dados.
 from __future__ import annotations
 
 import logging
+import re
+from html import unescape
 
 import httpx
 
@@ -16,10 +18,9 @@ from backend.features.emenda.emenda_types import EmendaItem
 logger = logging.getLogger(__name__)
 
 _BASE_URL = (
-    "https://web.qualitysistemas.com.br"
+    "https://portalquality.qualitysistemas.com.br"
     "/emenda_parlamentar/prefeitura_municipal_de_bandeirantes"
 )
-_ENDPOINT = "buscaEmendaPorAno"
 _REQUEST_TIMEOUT = 30.0
 
 _HEADERS = {
@@ -55,35 +56,49 @@ async def fetch_emendas(ano: int, tipo: str | None = None) -> list[EmendaItem]:
         Lista de EmendaItem. Retorna lista vazia em caso de HTTP 404, 5xx,
         ou erro de conexão — nunca lança exceção.
     """
-    params: dict[str, str] = {"ano": str(ano)}
+    params: dict[str, str] = {"exercicio": str(ano)}
     if tipo is not None:
-        params["tipo"] = tipo
-
-    url = f"{_BASE_URL}/{_ENDPOINT}"
+        params["idTipoEmenda"] = tipo
 
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
-            response = await client.get(url, params=params, headers=_HEADERS)
-
-            if response.status_code >= 500:
-                logger.warning(
-                    "API externa indisponível (HTTP %d) ao buscar emendas (ano=%s tipo=%s) — retornando vazio",
-                    response.status_code,
-                    ano,
-                    tipo,
+            dedup: dict[tuple[str, str, str], EmendaItem] = {}
+            for mes in range(1, 13):
+                response = await client.get(
+                    _BASE_URL,
+                    params={**params, "mes": f"{mes:02d}"},
+                    headers=_HEADERS,
                 )
-                return []
 
-            if response.status_code == 404:
-                logger.info(
-                    "Nenhum dado encontrado (HTTP 404) ao buscar emendas (ano=%s tipo=%s)",
-                    ano,
-                    tipo,
-                )
-                return []
+                if response.status_code >= 500:
+                    logger.warning(
+                        "API externa indisponível (HTTP %d) ao buscar emendas (ano=%s tipo=%s mes=%s) — retornando vazio",
+                        response.status_code,
+                        ano,
+                        tipo,
+                        mes,
+                    )
+                    return []
 
-            response.raise_for_status()
-            data = response.json()
+                if response.status_code == 404:
+                    continue
+
+                response.raise_for_status()
+                for item in _parse_emendas_html(response.text, ano):
+                    collision_key = (item.emenda, item.numero_protocolo)
+                    same_item_key = (item.emenda, item.numero_protocolo, item.detalhes_link)
+                    if same_item_key in dedup:
+                        continue
+                    if any(k[:2] == collision_key for k in dedup):
+                        detail_suffix = item.detalhes_link.rstrip("/").split("/")[-1].split("?")[0]
+                        item = item.model_copy(
+                            update={
+                                "numero_protocolo": f"{item.numero_protocolo}#{detail_suffix}",
+                            }
+                        )
+                    dedup[(item.emenda, item.numero_protocolo, item.detalhes_link)] = item
+
+            return list(dedup.values())
     except httpx.HTTPStatusError as exc:
         logger.warning(
             "HTTP %s ao buscar emendas (ano=%s tipo=%s) — retornando vazio",
@@ -101,27 +116,7 @@ async def fetch_emendas(ano: int, tipo: str | None = None) -> list[EmendaItem]:
         )
         return []
 
-    if not isinstance(data, list):
-        logger.warning("Resposta inesperada da API externa: %s", type(data))
-        return []
-
-    items: list[EmendaItem] = []
-    for item in data:
-        if not isinstance(item, dict):
-            continue
-
-        try:
-            emenda_item = _parse_emenda_item(item, ano)
-            if emenda_item is not None:
-                items.append(emenda_item)
-        except Exception as exc:
-            logger.warning(
-                "Falha ao converter item de emenda: %s — item=%s",
-                exc,
-                item.get("emenda", "?"),
-            )
-
-    return items
+    return []
 
 
 def _parse_emenda_item(item: dict, ano: int) -> EmendaItem | None:
@@ -165,7 +160,7 @@ def _parse_emenda_item(item: dict, ano: int) -> EmendaItem | None:
 
     valor_raw = item.get("valor") or item.get("Valor") or "0"
     try:
-        valor = float(valor_raw) if valor_raw not in ("", "-") else 0.0
+        valor = _parse_money(valor_raw)
     except (ValueError, TypeError):
         valor = 0.0
 
@@ -178,3 +173,51 @@ def _parse_emenda_item(item: dict, ano: int) -> EmendaItem | None:
         detalhes_link=str(detalhes_link).strip(),
         ano=ano,
     )
+
+
+def _parse_emendas_html(html: str, ano: int) -> list[EmendaItem]:
+    table_match = re.search(r"<tbody>(.*?)</tbody>", html, flags=re.S | re.I)
+    if table_match is None:
+        return []
+
+    rows = re.findall(r"<tr[^>]*>(.*?)</tr>", table_match.group(1), flags=re.S | re.I)
+    items: list[EmendaItem] = []
+
+    for row_html in rows:
+        cells = re.findall(r"<td[^>]*>(.*?)</td>", row_html, flags=re.S | re.I)
+        if len(cells) < 6:
+            continue
+
+        emenda = _strip_html(cells[0])
+        if not emenda or emenda.lower().startswith("valor total"):
+            continue
+
+        detalhes_match = re.search(r'href="([^"]+)"', cells[5], flags=re.I)
+        parsed = _parse_emenda_item(
+            {
+                "emenda": emenda,
+                "tipo_emenda": _strip_html(cells[1]),
+                "numero_protocolo": _strip_html(cells[2]),
+                "descricao": _strip_html(cells[3]),
+                "valor": _strip_html(cells[4]),
+                "detalhes_link": detalhes_match.group(1) if detalhes_match else "",
+            },
+            ano,
+        )
+        if parsed is not None:
+            items.append(parsed)
+
+    return items
+
+
+def _strip_html(value: str) -> str:
+    text = re.sub(r"<[^>]+>", " ", value)
+    text = unescape(text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _parse_money(value: object) -> float:
+    raw = str(value or "").strip()
+    if raw in ("", "-"):
+        return 0.0
+    return float(raw.replace(".", "").replace(",", "."))

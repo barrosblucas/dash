@@ -17,6 +17,7 @@ class CargoItem(BaseModel):
     comissionado: int = Field(..., description="Quantidade de comissionados")
     contratado: int = Field(..., description="Quantidade de contratados")
     eletivo: int = Field(..., description="Quantidade de eletivos")
+    convocados: int = Field(default=0, description="Quantidade de convocados")
     categoria: str = Field(
         ...,
         description=(

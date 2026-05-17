@@ -305,6 +305,9 @@ function CargoTableRow({
                 <span className="font-medium text-on-surface">Contratados:</span> {item.contratado}
               </span>
               <span>
+                <span className="font-medium text-on-surface">Convocados:</span> {item.convocados}
+              </span>
+              <span>
                 <span className="font-medium text-on-surface">Eletivos:</span> {item.eletivo}
               </span>
               <span>

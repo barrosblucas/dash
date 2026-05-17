@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 class PatrimonioItem(BaseModel):
     """Item de patrimônio (listagem)."""
 
+    id: int | None = Field(default=None, description="ID único do item na API externa")
     tipo_bem: str = Field(..., description='Tipo do bem: "Móvel", "Imóvel" ou "Veículo"')
     descricao: str = Field(..., description="Descrição do bem")
     quantidade_anterior: int = Field(..., description="Quantidade saldo anterior")

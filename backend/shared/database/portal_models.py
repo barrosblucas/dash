@@ -247,6 +247,7 @@ class CargoModel(Base):
     comissionado = Column(Integer, nullable=False, default=0)
     contratado = Column(Integer, nullable=False, default=0)
     eletivo = Column(Integer, nullable=False, default=0)
+    convocados = Column(Integer, nullable=False, default=0)
     categoria = Column(String(50), nullable=False)
     fonte = Column(String(100), nullable=False, default="QUALITY_SCRAPER")
     created_at = Column(DateTime, default=func.current_timestamp(), nullable=False)

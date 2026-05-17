@@ -19,7 +19,8 @@ _BASE_URL = (
     "https://web.qualitysistemas.com.br"
     "/levantamento_patrimonial/prefeitura_municipal_de_bandeirantes"
 )
-_ENDPOINT = "buscaPatrimonioPorAno"
+_ORGAOS_ENDPOINT = "orgaos-unidades"
+_PATRIMONIOS_ENDPOINT = "patrimonios"
 _REQUEST_TIMEOUT = 30.0
 
 _HEADERS = {
@@ -31,6 +32,13 @@ _HEADERS = {
     ),
     "Referer": _BASE_URL,
     "Accept": "application/json, text/javascript, */*; q=0.01",
+}
+
+# Map user-facing tipo_bem to API codes
+_TIPO_BEM_MAP: dict[str, str] = {
+    "Móvel": "M",
+    "Imóvel": "I",
+    "Veículo": "V",
 }
 
 
@@ -49,53 +57,145 @@ async def fetch_patrimonio(
 ) -> list[PatrimonioItem]:
     """Busca dados patrimoniais do portal Quality para um ano.
 
+    Strategy:
+    1. Fetch orgaos-unidades to get org/unit pairs.
+    2. For each unique pair, fetch patrimonios.
+    3. Deduplicate by id, apply tipo_bem filter, parse into PatrimonioItem.
+
     Args:
-        ano: Ano de referência.
+        ano: Ano de referência (used for year inference from acquisition dates).
         tipo_bem: Filtrar por tipo ("Móvel", "Imóvel", "Veículo") ou None para todos.
 
     Returns:
         Lista de PatrimonioItem.
-
-    Raises:
-        PatrimonioAPIError: Em caso de falha na comunicação.
     """
-    params: dict[str, str] = {"ano": str(ano)}
-    if tipo_bem is not None:
-        params["tipo_bem"] = tipo_bem
-
-    url = f"{_BASE_URL}/{_ENDPOINT}"
+    tipo_code = _TIPO_BEM_MAP.get(tipo_bem, "") if tipo_bem else ""
 
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
-            response = await client.get(url, params=params, headers=_HEADERS)
+            # Step 1: Get org/unit pairs
+            orgaos_url = f"{_BASE_URL}/{_ORGAOS_ENDPOINT}"
+            response = await client.get(orgaos_url, headers=_HEADERS)
 
             if response.status_code >= 500:
                 logger.warning(
-                    "API externa indisponível (HTTP %d) ao buscar patrimônio (ano=%s tipo_bem=%s) — retornando vazio",
+                    "API externa indisponível (HTTP %d) ao buscar patrimônio (ano=%s) — retornando vazio",
                     response.status_code,
                     ano,
-                    tipo_bem,
                 )
                 return []
 
             if response.status_code == 404:
                 logger.info(
-                    "Nenhum dado encontrado (HTTP 404) ao buscar patrimônio (ano=%s tipo_bem=%s)",
+                    "Nenhum dado encontrado (HTTP 404) ao buscar patrimônio (ano=%s)",
                     ano,
-                    tipo_bem,
                 )
                 return []
 
             response.raise_for_status()
-            data = response.json()
-    except httpx.HTTPStatusError as exc:
-        logger.warning(
-            "HTTP %s ao buscar patrimônio (ano=%s tipo_bem=%s) — retornando vazio",
-            exc.response.status_code,
-            ano,
-            tipo_bem,
-        )
-        return []
+            orgaos_data = response.json()
+
+            if not isinstance(orgaos_data, list):
+                logger.warning(
+                    "Resposta inesperada da API externa (orgaos-unidades): %s",
+                    type(orgaos_data),
+                )
+                return []
+
+            # Build unique (organ, unit) pairs
+            seen_pairs: set[tuple[int, int]] = set()
+            pairs: list[tuple[int, int]] = []
+            for entry in orgaos_data:
+                if not isinstance(entry, dict):
+                    continue
+                organ_id = entry.get("organId")
+                unit_id = entry.get("idUnit")
+                if organ_id is None or unit_id is None:
+                    continue
+                pair = (int(organ_id), int(unit_id))
+                if pair not in seen_pairs:
+                    seen_pairs.add(pair)
+                    pairs.append(pair)
+
+            # Step 2: Fetch patrimonios for each pair
+            dedup: dict[int | str, PatrimonioItem] = {}
+            _fallback_counter = 0
+            patrimonios_url = f"{_BASE_URL}/{_PATRIMONIOS_ENDPOINT}"
+
+            for organ_id, unit_id in pairs:
+                params: dict[str, str] = {
+                    "unit": str(unit_id),
+                    "organ": str(organ_id),
+                    "tipoDeBem": tipo_code,
+                }
+
+                try:
+                    resp = await client.get(
+                        patrimonios_url, params=params, headers=_HEADERS
+                    )
+                except httpx.ConnectError:
+                    logger.warning(
+                        "Falha de conexão ao buscar patrimônio (organ=%d unit=%d) — pulando",
+                        organ_id,
+                        unit_id,
+                    )
+                    continue
+
+                if resp.status_code >= 500:
+                    logger.warning(
+                        "API externa indisponível (HTTP %d) ao buscar patrimônio (organ=%d unit=%d) — retornando vazio",
+                        resp.status_code,
+                        organ_id,
+                        unit_id,
+                    )
+                    return []
+
+                if resp.status_code == 404:
+                    continue
+
+                try:
+                    resp.raise_for_status()
+                    data = resp.json()
+                except Exception as exc:
+                    logger.warning(
+                        "Erro ao processar resposta patrimônio (organ=%d unit=%d): %s — pulando",
+                        organ_id,
+                        unit_id,
+                        exc,
+                    )
+                    continue
+
+                if not isinstance(data, list):
+                    continue
+
+                for item in data:
+                    if not isinstance(item, dict):
+                        continue
+
+                    try:
+                        patrimonio_item = _parse_patrimonio_item(item)
+                        if patrimonio_item is not None:
+                            dedup_key: int | str = (
+                                patrimonio_item.id
+                                if patrimonio_item.id is not None
+                                else f"_fallback_{_fallback_counter}"
+                            )
+                            _fallback_counter += 1
+                            dedup[dedup_key] = patrimonio_item
+                    except Exception as exc:
+                        logger.warning(
+                            "Falha ao converter item de patrimônio: %s — item=%s",
+                            exc,
+                            item.get("descriptionPatrimony", "?"),
+                        )
+
+            # Step 3: Apply tipo_bem filter on parsed items
+            items = list(dedup.values())
+            if tipo_bem:
+                items = [i for i in items if i.tipo_bem == tipo_bem]
+
+            return items
+
     except httpx.ConnectError:
         logger.warning(
             "API externa indisponível ao buscar patrimônio (ano=%s tipo_bem=%s) — retornando vazio",
@@ -112,90 +212,84 @@ async def fetch_patrimonio(
         )
         return []
 
-    if not isinstance(data, list):
-        logger.warning("Resposta inesperada da API externa: %s", type(data))
-        return []
 
-    items: list[PatrimonioItem] = []
-    for item in data:
-        if not isinstance(item, dict):
-            continue
+def _parse_money(value: object) -> float:
+    """Parse Brazilian number format to float.
 
+    Handles "1.234,56" → 1234.56, "1234,56" → 1234.56, plain numbers.
+    """
+    raw = str(value or "").strip()
+    if raw in ("", "-"):
+        return 0.0
+    return float(raw.replace(".", "").replace(",", "."))
+
+
+def _infer_ano_from_acquisition(acquisition: str) -> int:
+    """Extract year from acquisition date string (dd/mm/yyyy format)."""
+    if not acquisition or not isinstance(acquisition, str):
+        return 0
+    parts = acquisition.strip().split("/")
+    if len(parts) >= 3:
         try:
-            patrimonio_item = _parse_patrimonio_item(item, ano)
-            if patrimonio_item is not None:
-                items.append(patrimonio_item)
-        except Exception as exc:
-            logger.warning(
-                "Falha ao converter item de patrimônio: %s — item=%s",
-                exc,
-                item.get("descricao", "?"),
-            )
-
-    return items
+            return int(parts[2])
+        except (ValueError, IndexError):
+            pass
+    return 0
 
 
-def _parse_patrimonio_item(item: dict, ano: int) -> PatrimonioItem | None:
+def _map_tipo_bem(tipo_bem_code: str, tipo_veiculo: object) -> str:
+    """Map API tipoBem code + tipoVeiculo to user-facing tipo_bem string."""
+    code = str(tipo_bem_code).strip().upper()
+    if code == "M":
+        # Check if it's a vehicle
+        tv = tipo_veiculo
+        if tv is not None and str(tv).strip() == "1":
+            return "Veículo"
+        return "Móvel"
+    if code == "I":
+        return "Imóvel"
+    # Fallback: return the code itself
+    return code
+
+
+def _parse_patrimonio_item(item: dict) -> PatrimonioItem | None:
     """Converte um item do JSON da API para PatrimonioItem.
 
     Args:
         item: Dict do JSON da API.
-        ano: Ano de referência.
 
     Returns:
         PatrimonioItem ou None se inválido.
     """
-    tipo_bem = item.get("tipo_bem") or item.get("Tipo Bem") or ""
-    descricao = item.get("descricao") or item.get("Descrição") or item.get("Descricao") or ""
+    item_id = item.get("id")
+    if item_id is None:
+        return None
+
+    descricao = item.get("descriptionPatrimony") or ""
     if not descricao:
         return None
 
-    def _parse_float(raw: object) -> float:
-        if isinstance(raw, int | float):
-            return float(raw)
-        if isinstance(raw, str) and raw not in ("", "-"):
-            try:
-                return float(raw)
-            except (ValueError, TypeError):
-                pass
-        return 0.0
+    tipo_bem_code = item.get("tipoBem", "")
+    tipo_veiculo = item.get("tipoVeiculo")
+    tipo_bem = _map_tipo_bem(tipo_bem_code, tipo_veiculo)
 
-    def _parse_int(raw: object) -> int:
-        if isinstance(raw, int):
-            return raw
-        if isinstance(raw, str) and raw not in ("", "-"):
-            try:
-                return int(raw)
-            except (ValueError, TypeError):
-                pass
-        return 0
+    acquisition = item.get("acquisition", "")
+    ano = _infer_ano_from_acquisition(acquisition)
+
+    valor_atual = _parse_money(item.get("actualValueNoformated", 0))
+    valor_adquiridos = _parse_money(item.get("actualValueNoformated", 0))
 
     return PatrimonioItem(
-        tipo_bem=str(tipo_bem).strip(),
+        id=int(item_id),
+        tipo_bem=tipo_bem,
         descricao=str(descricao).strip(),
-        quantidade_anterior=_parse_int(
-            item.get("quantidade_anterior") or item.get("Qtde Anterior") or 0
-        ),
-        valor_anterior=_parse_float(
-            item.get("valor_anterior") or item.get("Valor Anterior") or 0
-        ),
-        quantidade_adquiridos=_parse_int(
-            item.get("quantidade_adquiridos") or item.get("Qtde Adquiridos") or 0
-        ),
-        valor_adquiridos=_parse_float(
-            item.get("valor_adquiridos") or item.get("Valor Adquiridos") or 0
-        ),
-        quantidade_baixados=_parse_int(
-            item.get("quantidade_baixados") or item.get("Qtde Baixados") or 0
-        ),
-        valor_baixados=_parse_float(
-            item.get("valor_baixados") or item.get("Valor Baixados") or 0
-        ),
-        quantidade_atual=_parse_int(
-            item.get("quantidade_atual") or item.get("Qtde Atual") or item.get("Saldo Total") or 0
-        ),
-        valor_atual=_parse_float(
-            item.get("valor_atual") or item.get("Valor Atual") or item.get("Valor Total") or 0
-        ),
+        quantidade_anterior=0,
+        valor_anterior=0.0,
+        quantidade_adquiridos=1,
+        valor_adquiridos=valor_adquiridos,
+        quantidade_baixados=0,
+        valor_baixados=0.0,
+        quantidade_atual=1,
+        valor_atual=valor_atual,
         ano=ano,
     )

@@ -15,11 +15,9 @@ from backend.features.diaria.diaria_types import DiariaItem
 
 logger = logging.getLogger(__name__)
 
-_BASE_URL = (
-    "https://web.qualitysistemas.com.br"
-    "/diarias_e_passagens/prefeitura_municipal_de_bandeirantes"
-)
-_ENDPOINT = "buscaDiariaPorAno"
+_BASE_URL = "https://web.qualitysistemas.com.br/diarias_e_passagens"
+_ENTITY = "prefeitura_municipal_de_bandeirantes"
+_ENDPOINT = "SearchExpenseInSiart"
 _REQUEST_TIMEOUT = 30.0
 
 _HEADERS = {
@@ -59,15 +57,18 @@ async def fetch_diarias(
     Raises:
         DiariaAPIError: Em caso de falha na comunicação.
     """
-    params: dict[str, str] = {"ano": str(ano)}
-    if mes is not None:
-        params["mes"] = str(mes)
+    payload: dict[str, str] = {
+        "entity": _ENTITY,
+        "year": str(ano),
+        "month": str(mes or 1),
+        "entidade": "",
+    }
 
     url = f"{_BASE_URL}/{_ENDPOINT}"
 
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
-            response = await client.get(url, params=params, headers=_HEADERS)
+            response = await client.post(url, data=payload, headers=_HEADERS)
 
             if response.status_code >= 500:
                 logger.warning(
@@ -112,13 +113,15 @@ async def fetch_diarias(
         )
         return []
 
-    if not isinstance(data, list):
+    if not isinstance(data, dict):
         logger.warning("Resposta inesperada da API externa: %s", type(data))
         return []
 
     items: list[DiariaItem] = []
-    for item in data:
+    for item in data.values():
         if not isinstance(item, dict):
+            continue
+        if "empenho" not in item:
             continue
 
         try:
@@ -129,7 +132,7 @@ async def fetch_diarias(
             logger.warning(
                 "Falha ao converter item de diária: %s — item=%s",
                 exc,
-                item.get("numero_empenho", "?"),
+                item.get("empenho") or item.get("numero_empenho") or "?",
             )
 
     return items
@@ -150,29 +153,29 @@ def _parse_diaria_item(
     Returns:
         DiariaItem ou None se inválido.
     """
-    emp = item.get("emp") or item.get("Emp") or item.get("Empenho") or item.get("numero_empenho") or "0"
-    liq = item.get("liq") or item.get("Liq") or item.get("Liquidacao") or item.get("numero_liquidacao") or "0"
+    emp = item.get("empenho") or item.get("emp") or item.get("Emp") or item.get("Empenho") or item.get("numero_empenho") or "0"
+    liq = item.get("liquidacao") or item.get("liq") or item.get("Liq") or item.get("Liquidacao") or item.get("numero_liquidacao") or "0"
     nome = item.get("nome") or item.get("Nome") or ""
-    historico = item.get("historico") or item.get("Histórico") or item.get("Historico") or ""
+    historico = item.get("justificativa") or item.get("historico") or item.get("Histórico") or item.get("Historico") or ""
     destino = item.get("destino") or item.get("Destino") or ""
     periodo = item.get("periodo") or item.get("Período") or item.get("Periodo") or ""
 
-    valor_total_raw = item.get("valor_total") or item.get("Valor Total") or item.get("valorTotal") or "0"
+    valor_total_raw = item.get("valor") or item.get("valor_total") or item.get("Valor Total") or item.get("valorTotal") or "0"
     valor_devolvido_raw = (
-        item.get("valor_devolvido")
+        item.get("valorDevolvido")
+        or item.get("valor_devolvido")
         or item.get("Valor Devolvido")
-        or item.get("valorDevolvido")
         or "0"
     )
 
     try:
-        valor_total = float(valor_total_raw) if valor_total_raw not in ("", "-") else 0.0
+        valor_total = _parse_money(valor_total_raw)
     except (ValueError, TypeError):
         valor_total = 0.0
 
     try:
         valor_devolvido = (
-            float(valor_devolvido_raw) if valor_devolvido_raw not in ("", "-") else 0.0
+            _parse_money(valor_devolvido_raw) if valor_devolvido_raw not in ("", "-") else 0.0
         )
     except (ValueError, TypeError):
         valor_devolvido = 0.0
@@ -196,3 +199,10 @@ def _parse_diaria_item(
         ano=ano,
         mes=item_mes,
     )
+
+
+def _parse_money(value: object) -> float:
+    raw = str(value or "").strip()
+    if raw in ("", "-"):
+        return 0.0
+    return float(raw.replace(".", "").replace(",", "."))

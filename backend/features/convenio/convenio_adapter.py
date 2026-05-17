@@ -18,12 +18,10 @@ from backend.features.convenio.convenio_types import (
 
 logger = logging.getLogger(__name__)
 
-_BASE_URL = (
-    "https://web.qualitysistemas.com.br"
-    "/contratos_e_convenios/prefeitura_municipal_de_bandeirantes"
-)
-_ENDPOINT_CONVENIOS = "buscaConvenioPorAno"
-_ENDPOINT_MOVIMENTACOES = "buscaMovimentacaoConvenioPorAno"
+_BASE_URL = "https://portalquality.qualitysistemas.com.br/convenio"
+_ENTITY = "prefeitura_municipal_de_bandeirantes"
+_ENDPOINT_CONVENIOS = "convenios-ano"
+_ENDPOINT_MOVIMENTACOES = "convenios-mov"
 _REQUEST_TIMEOUT = 30.0
 
 _HEADERS = {
@@ -60,7 +58,7 @@ async def fetch_convenios(ano: int) -> list[ConvenioItem]:
         ConvenioAPIError: Em caso de falha na comunicação.
     """
     params: dict[str, str] = {"ano": str(ano)}
-    url = f"{_BASE_URL}/{_ENDPOINT_CONVENIOS}"
+    url = f"{_BASE_URL}/{_ENTITY}/{_ENDPOINT_CONVENIOS}"
 
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
@@ -146,7 +144,7 @@ async def fetch_convenio_movimentacoes(
     if mes is not None:
         params["mes"] = str(mes)
 
-    url = f"{_BASE_URL}/{_ENDPOINT_MOVIMENTACOES}"
+    url = f"{_BASE_URL}/{_ENTITY}/{_ENDPOINT_MOVIMENTACOES}"
 
     try:
         async with httpx.AsyncClient(timeout=_REQUEST_TIMEOUT) as client:
@@ -230,7 +228,13 @@ def _parse_convenio_item(item: dict, ano: int) -> ConvenioItem | None:
     Returns:
         ConvenioItem ou None se inválido.
     """
-    numero = item.get("numero") or item.get("Número") or item.get("Convenio") or ""
+    numero = (
+        item.get("numero")
+        or item.get("Número")
+        or item.get("Convenio")
+        or item.get("CONV_NUMERO")
+        or ""
+    )
     if not numero:
         return None
 
@@ -238,24 +242,37 @@ def _parse_convenio_item(item: dict, ano: int) -> ConvenioItem | None:
         item.get("assinatura")
         or item.get("Assinatura")
         or item.get("data_assinatura")
+        or item.get("DATA_ASSINATURA")
         or ""
     )
-    tipo = item.get("tipo") or item.get("Tipo") or ""
-    esfera = item.get("esfera") or item.get("Esfera") or ""
-    concedente = item.get("concedente") or item.get("Concedente") or ""
+    tipo = item.get("tipo") or item.get("Tipo") or item.get("TIPO") or ""
+    esfera = item.get("esfera") or item.get("Esfera") or item.get("ESFERA") or item.get("ESFERA_GOVERNO") or ""
+    concedente = (
+        item.get("concedente")
+        or item.get("Concedente")
+        or item.get("CONV_CONCEDENTE")
+        or ""
+    )
     convenente = (
         item.get("convenente")
         or item.get("Convenente")
         or item.get("favorecido")
         or item.get("Favorecido")
+        or item.get("CONV_CONVENENTE")
         or ""
     )
-    situacao = item.get("situacao") or item.get("Situação") or item.get("Situacao") or ""
-    objeto = item.get("objeto") or item.get("Objeto") or ""
+    situacao = (
+        item.get("situacao")
+        or item.get("Situação")
+        or item.get("Situacao")
+        or item.get("SITUACAO")
+        or ""
+    )
+    objeto = item.get("objeto") or item.get("Objeto") or item.get("OBJETO") or ""
 
-    valor_raw = item.get("valor") or item.get("Valor") or "0"
+    valor_raw = item.get("valor") or item.get("Valor") or item.get("VALOR") or item.get("CONV_VALOR") or "0"
     try:
-        valor = float(valor_raw) if valor_raw not in ("", "-") else 0.0
+        valor = _parse_brazilian_float(valor_raw)
     except (ValueError, TypeError):
         valor = 0.0
 
@@ -286,25 +303,40 @@ def _parse_movimentacao_item(
     Returns:
         ConvenioMovimentacao ou None se inválido.
     """
-    convenio = item.get("convenio") or item.get("Convênio") or item.get("Convenio") or ""
+    convenio = (
+        item.get("convenio")
+        or item.get("Convênio")
+        or item.get("Convenio")
+        or item.get("CONV_NUMERO")
+        or ""
+    )
     if not convenio:
         return None
 
-    lancamento = item.get("lancamento") or item.get("Lançamento") or item.get("empenho") or item.get("Empenho") or ""
-    entidade = item.get("entidade") or item.get("Entidade") or ""
-    data = item.get("data") or item.get("Data") or ""
-    concedente = item.get("concedente") or item.get("Concedente") or ""
+    lancamento = (
+        item.get("lancamento")
+        or item.get("Lançamento")
+        or item.get("empenho")
+        or item.get("Empenho")
+        or item.get("REC_NLANC")
+        or item.get("EMP_N_EMPENHO")
+        or ""
+    )
+    entidade = item.get("entidade") or item.get("Entidade") or item.get("ENT_CODIGO") or ""
+    data = item.get("data") or item.get("Data") or item.get("REC_DATA") or item.get("EMP_DATA") or ""
+    concedente = item.get("concedente") or item.get("Concedente") or item.get("CONV_CONCEDENTE") or ""
     convenente = (
         item.get("convenente")
         or item.get("Convenente")
         or item.get("favorecido")
         or item.get("Favorecido")
+        or item.get("CONV_CONVENENTE")
         or ""
     )
 
-    valor_raw = item.get("valor") or item.get("Valor") or "0"
+    valor_raw = item.get("valor") or item.get("Valor") or item.get("REC_VALOR") or item.get("EMP_VALOR") or "0"
     try:
-        valor = float(valor_raw) if valor_raw not in ("", "-") else 0.0
+        valor = _parse_brazilian_float(valor_raw)
     except (ValueError, TypeError):
         valor = 0.0
 
@@ -332,3 +364,12 @@ def _parse_movimentacao_item(
         mes=item_mes,
         tipo=tipo,  # type: ignore[arg-type]
     )
+
+
+def _parse_brazilian_float(value: object) -> float:
+    if isinstance(value, int | float):
+        return float(value)
+    raw = str(value or "").strip()
+    if raw in ("", "-"):
+        return 0.0
+    return float(raw.replace(".", "").replace(",", "."))

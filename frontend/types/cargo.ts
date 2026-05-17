@@ -13,6 +13,7 @@ export interface CargoItem {
   comissionado: number;
   contratado: number;
   eletivo: number;
+  convocados: number;
   categoria: string;
   ano: number;
 }

@@ -17,6 +17,7 @@ def _make_response(status_code: int, json_data: Any = None) -> MagicMock:
     resp = MagicMock(spec=httpx.Response)
     resp.status_code = status_code
     resp.json.return_value = json_data if json_data is not None else []
+    resp.text = json_data if isinstance(json_data, str) else ""
     return resp
 
 
@@ -65,16 +66,20 @@ async def test_fetch_emendas_returns_empty_on_500(
 async def test_fetch_emendas_returns_data_on_200(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    payload = [
-        {
-            "emenda": "EM-001",
-            "tipo_emenda": "Individual",
-            "numero_protocolo": "123",
-            "descricao": "Test emenda",
-            "valor": "1000.00",
-            "detalhes_link": "/detalhes/1",
-        }
-    ]
+    payload = """
+    <table>
+      <tbody>
+        <tr>
+          <td>EM-001</td>
+          <td>Individual</td>
+          <td>123</td>
+          <td>Test emenda</td>
+          <td>1000,00</td>
+          <td><a href=\"/detalhes/1\">Detalhes</a></td>
+        </tr>
+      </tbody>
+    </table>
+    """
     fake_client = _make_async_client(200, payload)
     monkeypatch.setattr(emenda_adapter.httpx, "AsyncClient", lambda **_: fake_client)
 
@@ -116,15 +121,15 @@ async def test_fetch_offices_returns_empty_on_404(
 async def test_fetch_offices_returns_data_on_200(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    payload = [
-        {
+    payload = {
+        "1": {
             "id": 1,
             "description": "Secretaria de Educação",
             "departments": [
                 {"id": 10, "description": "Escola Municipal A"},
             ],
         }
-    ]
+    }
     fake_client = _make_async_client(200, payload)
     monkeypatch.setattr(folha_adapter.httpx, "AsyncClient", lambda **_: fake_client)
 
@@ -170,19 +175,24 @@ async def test_fetch_employees_returns_empty_on_404(
 async def test_fetch_employees_returns_data_on_200(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    payload = [
-        {
-            "name": "João Silva",
-            "cpf": "123.456.789-00",
-            "role": "Analista",
-            "officeDescription": "Secretaria de Educação",
-            "departmentDescription": "Escola A",
-            "contract": "001",
-            "baseSalary": "5000.00",
-            "grossSalary": "6000.00",
-            "netSalary": "4500.00",
+    payload = {
+        "Cargo Efetivo": {
+            "roleType": "Cargo Efetivo",
+            "roles": [
+                {
+                    "name": "João Silva",
+                    "cpf": "123.456.789-00",
+                    "role": "Analista",
+                    "officeDescription": "Secretaria de Educação",
+                    "departmentDescription": "Escola A",
+                    "contract": "001",
+                    "baseSalary": "5000.00",
+                    "grossSalary": "6000.00",
+                    "netSalary": "4500.00",
+                }
+            ],
         }
-    ]
+    }
     fake_client = _make_async_client(200, payload)
     monkeypatch.setattr(folha_adapter.httpx, "AsyncClient", lambda **_: fake_client)
 
