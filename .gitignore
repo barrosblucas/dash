@@ -51,9 +51,9 @@ Thumbs.db
 *.temp
 
 # SQLite
-*.db
-*.db-shm
-*.db-wal
+#*.db
+#*.db-shm
+#*.db-wal
 
 # Test artifacts
 .coverage
